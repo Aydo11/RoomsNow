@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { RegisterForm } from "@/components/auth-forms";
 
-export const metadata = { title: "Create an account" };
+export const metadata = { title: "Create an account", robots: { index: false, follow: false } };
 
 export default function RegisterPage() {
   return (

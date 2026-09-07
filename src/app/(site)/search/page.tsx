@@ -10,8 +10,13 @@ import { EmptyState } from "@/components/ui";
 import { searchFacets, searchListings, searchMapPins, type SearchParams } from "@/server/search";
 import { getCurrentUser } from "@/lib/session";
 import { matchScore } from "@/lib/matching";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Search housing and accommodation" };
+export const metadata = pageMetadata({
+  title: "Search HMO Rooms & Accommodation Across the UK",
+  description: "Search live HMO rooms, shared housing, supported accommodation and specialist vacancies across the UK by location, support, rent and availability.",
+  path: "/search",
+});
 export const dynamic = "force-dynamic";
 
 export default async function SearchPage({
@@ -109,10 +114,12 @@ export default async function SearchPage({
 
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-[22px]">
-              {results.total.toLocaleString("en-GB")} {results.total === 1 ? "advert" : "adverts"}
-              {where}
-            </h1>
+            <div>
+              <h1 className="text-[28px]">Search HMO rooms and accommodation</h1>
+              <p className="mt-1 text-[14px] text-ink-soft">
+                {results.total.toLocaleString("en-GB")} {results.total === 1 ? "live advert" : "live adverts"}{where}
+              </p>
+            </div>
             <div className="flex items-center gap-3">
               <Suspense fallback={null}>
                 <SortSelect />

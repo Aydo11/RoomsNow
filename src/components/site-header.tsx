@@ -22,10 +22,10 @@ export async function SiteHeader() {
         </Link>
 
         <nav aria-label="Main navigation" className="hidden items-center gap-5 whitespace-nowrap text-[14px] text-ink-soft xl:flex">
-          <Link href="/search" className="transition-colors hover:text-ink">Search accommodation</Link>
+          <Link href="/hmo-rooms" className="transition-colors hover:text-ink">HMO rooms</Link>
+          <Link href="/supported-accommodation" className="transition-colors hover:text-ink">Supported accommodation</Link>
           <Link href="/how-it-works" className="transition-colors hover:text-ink">How it works</Link>
-          <Link href="/people" className="transition-colors hover:text-ink">People looking</Link>
-          <Link href="/register?type=PROVIDER" className="transition-colors hover:text-ink">Advertise</Link>
+          <Link href="/advertise-accommodation" className="transition-colors hover:text-ink">Advertise</Link>
           <Link href="/pricing" className="transition-colors hover:text-ink">Membership</Link>
         </nav>
 
@@ -53,10 +53,12 @@ export async function SiteHeader() {
           )}
 
           <MobileMenu>
-              <MobileLink href="/search">Search accommodation</MobileLink>
+              <MobileLink href="/hmo-rooms">HMO rooms</MobileLink>
+              <MobileLink href="/supported-accommodation">Supported accommodation</MobileLink>
+              <MobileLink href="/search">Search all accommodation</MobileLink>
               <MobileLink href="/how-it-works">How it works</MobileLink>
               <MobileLink href="/people">People looking</MobileLink>
-              <MobileLink href="/register?type=PROVIDER">Advertise</MobileLink>
+              <MobileLink href="/advertise-accommodation">Advertise</MobileLink>
               <MobileLink href="/pricing">Membership</MobileLink>
               <div className="my-2 border-t border-line" />
               {user ? (
@@ -103,7 +105,10 @@ export function SiteFooter() {
         <FooterColumn
           title="Looking for a home"
           links={[
-            ["Search accommodation", "/search"],
+            ["HMO rooms to rent", "/hmo-rooms"],
+            ["Supported accommodation", "/supported-accommodation"],
+            ["Transitional accommodation", "/transitional-accommodation"],
+            ["Search all accommodation", "/search"],
             ["Post what you're looking for", "/dashboard/advert"],
             ["How it works", "/how-it-works"],
             ["Staying safe", "/safety"],
@@ -112,7 +117,7 @@ export function SiteFooter() {
         <FooterColumn
           title="Providers"
           links={[
-            ["Advertise accommodation", "/register?type=PROVIDER"],
+            ["Advertise accommodation", "/advertise-accommodation"],
             ["Membership and pricing", "/pricing"],
             ["Find people looking", "/people"],
             ["Get verified", "/verification"],
@@ -121,7 +126,7 @@ export function SiteFooter() {
         <FooterColumn
           title="Professionals"
           links={[
-            ["Make a referral", "/referrals/new"],
+            ["Accommodation referrals", "/accommodation-referrals"],
             ["Referrer accounts", "/register?type=REFERRER"],
             ["Privacy", "/privacy"],
             ["Terms", "/terms"],

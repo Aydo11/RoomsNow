@@ -2,11 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Suspense } from "react";
 import { db } from "@/lib/db";
-import { brand } from "@/brand.config";
 import { SearchPanel } from "@/components/search-panel";
 import { ListingCard } from "@/components/listing-card";
 import { searchListings } from "@/server/search";
 import { SUPPORT_TYPES } from "@/lib/taxonomy";
+import { JsonLd, locationSlug, pageMetadata } from "@/lib/seo";
 
 const POPULAR_LOCATIONS = [
   {
@@ -27,6 +27,11 @@ const POPULAR_LOCATIONS = [
 ] as const;
 
 export const dynamic = "force-dynamic";
+export const metadata = pageMetadata({
+  title: "HMO Rooms & Supported Accommodation UK",
+  description: "Find HMO rooms, supported and transitional accommodation, adult social care housing and shared homes across the UK, or advertise vacancies on RoomsNow.",
+  path: "/",
+});
 
 export default async function HomePage() {
   const [roomsAvailable, providers, cities, featured] = await Promise.all([
@@ -38,6 +43,12 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: "HMO rooms and supported accommodation across the UK",
+        description: "Search HMO rooms, supported housing and specialist accommodation across the UK.",
+      }} />
       {/* Hero: the search is the product, so it leads. */}
       <section className="surface-home relative overflow-hidden border-b border-line">
         <div aria-hidden="true" className="soft-orb absolute -left-32 top-0 h-[34rem] w-[34rem]" />
@@ -46,7 +57,7 @@ export default async function HomePage() {
           <div className="self-center">
             <span className="eyebrow"><span className="h-1.5 w-1.5 rounded-full bg-pine" />More housing, in one place</span>
             <h1 className="mt-5 max-w-[15ch] text-[42px] font-bold leading-[1.07] sm:text-[58px]">
-              Find the <span className="text-pine-dark">right housing</span> across the UK
+              Find <span className="text-pine-dark">HMO rooms and accommodation</span> across the UK
             </h1>
             <p className="mt-5 max-w-[52ch] text-[17px] leading-relaxed text-ink-soft">
               Search HMOs, supported and transitional accommodation, adult social care housing,
@@ -68,6 +79,30 @@ export default async function HomePage() {
 
           {/* Availability board — the thing this market actually runs on. */}
           <AvailabilityBoard />
+        </div>
+      </section>
+
+      <section className="border-y border-line bg-white">
+        <div className="shell py-14">
+          <span className="text-[13px] font-semibold tracking-[0.08em] text-pine-dark">SEARCH BY ACCOMMODATION TYPE</span>
+          <h2 className="mt-2 text-[30px]">Housing for different needs</h2>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">Explore HMO rooms, supported housing and specialist accommodation, or learn how to advertise vacancies and make professional referrals.</p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["HMO rooms to rent", "Shared homes and rooms in HMOs across the UK.", "/hmo-rooms"],
+              ["Supported accommodation", "Housing advertised with support for a range of needs.", "/supported-accommodation"],
+              ["Transitional accommodation", "Temporary, move-on and transitional housing options.", "/transitional-accommodation"],
+              ["Adult social care accommodation", "Specialist accommodation for adults with care or support needs.", "/adult-social-care-accommodation"],
+              ["Advertise accommodation", "List HMO rooms and housing vacancies for people and referrers.", "/advertise-accommodation"],
+              ["Accommodation referrals", "Search vacancies and refer someone you support.", "/accommodation-referrals"],
+            ].map(([title, body, href]) => (
+              <Link key={href} href={href} className="interactive-card card p-6">
+                <h3 className="text-[19px]">{title}</h3>
+                <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{body}</p>
+                <span className="mt-4 inline-block text-[14px] font-semibold text-pine-dark">Explore →</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -110,7 +145,9 @@ export default async function HomePage() {
           {POPULAR_LOCATIONS.map((location) => (
             <Link
               key={location.name}
-              href={`/search?where=${encodeURIComponent(location.name)}`}
+              href={cities.some(({ city }) => city.toLowerCase() === location.name.toLowerCase())
+                ? `/rooms/${locationSlug(location.name)}`
+                : `/search?where=${encodeURIComponent(location.name)}`}
               className="group relative aspect-[16/10] overflow-hidden rounded-card border border-line bg-ink shadow-raise transition duration-300 hover:-translate-y-1 hover:border-pine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
               aria-label={`Search for housing in ${location.name}`}
             >
@@ -129,6 +166,15 @@ export default async function HomePage() {
             </Link>
           ))}
         </div>
+
+        {cities.length > 0 && (
+          <div className="mt-6 flex flex-wrap items-center gap-2 text-[14px]">
+            <span className="font-semibold text-ink">Live areas:</span>
+            {cities.map(({ city }) => (
+              <Link key={city} href={`/rooms/${locationSlug(city)}`} className="chip hover:border-pine hover:text-pine-dark">Rooms in {city}</Link>
+            ))}
+          </div>
+        )}
 
         <Link href="/search" className="btn-secondary mt-5 w-full sm:hidden">View all locations</Link>
       </section>
@@ -202,6 +248,7 @@ export default async function HomePage() {
   );
 }
 
+// Keep homepage-only presentation helpers colocated with the page.
 function Stat({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex items-baseline gap-2 border-l border-line-strong pl-3 first:border-l-0 first:pl-0">
@@ -210,7 +257,6 @@ function Stat({ value, label }: { value: number; label: string }) {
     </div>
   );
 }
-
 async function AvailabilityBoard() {
   const rows = await db.listing.findMany({
     where: { status: "ACTIVE" },
@@ -306,5 +352,3 @@ function PathCard({
     </div>
   );
 }
-
-export const metadata = { title: `${brand.name} — ${brand.tagline}` };

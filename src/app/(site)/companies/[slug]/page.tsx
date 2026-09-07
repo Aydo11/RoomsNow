@@ -1,15 +1,27 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { ListingCard } from "@/components/listing-card";
 import { VerifiedBadge } from "@/components/badges";
 import { ORG_TYPES, supportLabel } from "@/lib/taxonomy";
+import { JsonLd, absoluteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const company = await db.company.findUnique({ where: { slug }, select: { name: true } });
-  return { title: company?.name ?? "Provider" };
+  const company = await db.company.findUnique({ where: { slug }, select: { name: true, about: true, city: true, status: true, logoUrl: true } });
+  if (!company) return { title: "Accommodation provider", robots: { index: false, follow: true } };
+  const title = `${company.name}${company.city ? ` — ${company.city} Accommodation Provider` : " — Accommodation Provider"}`;
+  const description = company.about ?? `View accommodation and live room vacancies from ${company.name}${company.city ? ` in ${company.city}` : ""} on RoomsNow.`;
+  const url = absoluteUrl(`/companies/${slug}`);
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    robots: { index: company.status === "ACTIVE", follow: true },
+    openGraph: { type: "website", siteName: "RoomsNow", locale: "en_GB", url, title, description, ...(company.logoUrl ? { images: [absoluteUrl(company.logoUrl)] } : {}) },
+  };
 }
 
 export default async function CompanyPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -31,8 +43,31 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
 
   if (!company || company.status !== "ACTIVE") notFound();
 
+  const companyUrl = absoluteUrl(`/companies/${company.slug}`);
+
   return (
     <div className="shell py-10">
+      <JsonLd data={[
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: company.name,
+          url: companyUrl,
+          description: company.about ?? undefined,
+          logo: company.logoUrl ? absoluteUrl(company.logoUrl) : undefined,
+          address: company.city ? { "@type": "PostalAddress", addressLocality: company.city, addressCountry: "GB" } : undefined,
+          areaServed: company.operatingAreas,
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+            { "@type": "ListItem", position: 2, name: "Accommodation providers", item: absoluteUrl("/search") },
+            { "@type": "ListItem", position: 3, name: company.name, item: companyUrl },
+          ],
+        },
+      ]} />
       <header className="card p-7">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

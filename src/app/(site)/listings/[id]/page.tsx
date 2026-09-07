@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getListing } from "@/server/search";
@@ -20,18 +21,45 @@ import { matchScore } from "@/lib/matching";
 import { recordSponsoredClickAction } from "@/server/actions/billing";
 import { brand } from "@/brand.config";
 import { callerIp, LIMITS, rateLimit } from "@/lib/rate-limit";
+import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const listing = await db.listing.findUnique({
     where: { id },
-    select: { title: true, summary: true, property: { select: { city: true } } },
+    select: {
+      title: true,
+      summary: true,
+      description: true,
+      status: true,
+      accommodationType: true,
+      weeklyRentFrom: true,
+      media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { position: "asc" }], take: 4, select: { url: true } },
+      property: { select: { city: true, area: true } },
+    },
   });
+  if (!listing) return { title: "Accommodation advert", robots: { index: false, follow: true } };
+  const location = [listing.property.area, listing.property.city].filter(Boolean).join(", ");
+  const title = `${listing.title} — ${listing.property.city}`;
+  const description = listing.summary ?? `View this ${listing.accommodationType.toLowerCase().replaceAll("_", " ")} in ${location}, including availability, rent, facilities and referral information.`;
+  const url = absoluteUrl(`/listings/${id}`);
   return {
-    title: listing ? `${listing.title} — ${listing.property.city}` : "Advert",
-    description: listing?.summary ?? brand.description,
+    title,
+    description,
+    alternates: { canonical: url },
+    robots: { index: listing.status === "ACTIVE", follow: true },
+    openGraph: {
+      type: "website",
+      siteName: brand.name,
+      locale: "en_GB",
+      url,
+      title,
+      description,
+      images: listing.media.map((image) => absoluteUrl(image.url)),
+    },
+    twitter: { card: listing.media.length ? "summary_large_image" : "summary", title, description },
   };
 }
 
@@ -71,6 +99,8 @@ export default async function ListingPage({
     : [null, null];
 
   const available = listing.rooms.filter((r) => r.status === "AVAILABLE");
+  const listingUrl = absoluteUrl(`/listings/${listing.id}`);
+  const listingDescription = listing.summary ?? `Accommodation in ${publicLocation(listing.property)} advertised by ${listing.company.name}.`;
   const match =
     user?.profile && !isOwner
       ? matchScore(
@@ -98,6 +128,39 @@ export default async function ListingPage({
 
   return (
     <div className="shell py-6 pb-28 sm:py-8 lg:pb-8">
+      <JsonLd data={[
+        {
+          "@context": "https://schema.org",
+          "@type": "Offer",
+          url: listingUrl,
+          name: listing.title,
+          description: listingDescription,
+          availability: available.length > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          priceCurrency: "GBP",
+          ...(listing.weeklyRentFrom ? { price: listing.weeklyRentFrom, priceSpecification: { "@type": "UnitPriceSpecification", price: listing.weeklyRentFrom, priceCurrency: "GBP", unitText: "WEEK" } } : {}),
+          itemOffered: {
+            "@type": "Accommodation",
+            name: listing.title,
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: listing.property.city,
+              postalCode: listing.property.postcode,
+              addressCountry: "GB",
+            },
+            numberOfRooms: listing.rooms.length,
+          },
+          offeredBy: { "@type": "Organization", name: listing.company.name, url: absoluteUrl(`/companies/${listing.company.slug}`) },
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+            { "@type": "ListItem", position: 2, name: `Rooms in ${listing.property.city}`, item: absoluteUrl(`/rooms/${locationSlug(listing.property.city)}`) },
+            { "@type": "ListItem", position: 3, name: listing.title, item: listingUrl },
+          ],
+        },
+      ]} />
       {listing.status !== "ACTIVE" && (
         <p className="mb-5 rounded-[10px] border border-clay/30 bg-clay-light px-4 py-3 text-[14px] text-clay">
           This advert is {listing.status.toLowerCase().replace("_", " ")} and isn&apos;t publicly visible.
@@ -107,7 +170,7 @@ export default async function ListingPage({
       <nav className="mb-5 text-[14px] text-ink-faint">
         <Link href="/search" className="hover:text-ink">Search</Link>
         <span className="mx-2">/</span>
-        <Link href={`/search?where=${encodeURIComponent(listing.property.city)}`} className="hover:text-ink">
+        <Link href={`/rooms/${locationSlug(listing.property.city)}`} className="hover:text-ink">
           {listing.property.city}
         </Link>
       </nav>

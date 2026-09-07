@@ -4,7 +4,7 @@ import { LoginForm } from "@/components/auth-forms";
 import { FormSuccess } from "@/components/ui";
 import { brand } from "@/brand.config";
 
-export const metadata = { title: "Sign in" };
+export const metadata = { title: "Sign in", robots: { index: false, follow: false } };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ changed?: string; reset?: string; verified?: string; oauth?: string }> }) {
   const query = await searchParams;
