@@ -43,8 +43,7 @@ export default async function HomePage() {
 
       <section className="surface-home border-b border-line">
         <div className="shell py-12 text-center sm:py-16 lg:py-20">
-          <span className="eyebrow"><span className="h-1.5 w-1.5 rounded-full bg-pine" />Housing vacancies across the UK</span>
-          <h1 className="mx-auto mt-5 max-w-[19ch] text-[40px] font-bold leading-[1.07] sm:text-[56px]">
+          <h1 className="mx-auto max-w-[19ch] text-[40px] font-bold leading-[1.07] sm:text-[56px]">
             Find an <span className="text-pine-dark">HMO room or accommodation</span> that fits
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-[17px] leading-relaxed text-ink-soft">
