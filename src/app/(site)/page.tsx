@@ -6,6 +6,7 @@ import { SearchPanel } from "@/components/search-panel";
 import { ListingCard } from "@/components/listing-card";
 import { searchListings } from "@/server/search";
 import { JsonLd, locationSlug, pageMetadata } from "@/lib/seo";
+import { guides } from "@/lib/guides";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
@@ -234,6 +235,28 @@ export default async function HomePage() {
               <span aria-hidden="true" className="text-pine-dark">→</span>
             </Link>
           ))}
+        </div>
+      </section>
+
+      <section className="border-t border-line bg-white">
+        <div className="shell py-12 sm:py-16">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">HELPFUL GUIDES</span>
+              <h2 className="mt-2 text-[28px]">Feel more prepared before you choose</h2>
+            </div>
+            <Link href="/guides" className="text-[14px] font-semibold text-pine-dark hover:underline">View all guides →</Link>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {guides.slice(0, 3).map((guide) => (
+              <Link key={guide.slug} href={`/guides/${guide.slug}`} className="card interactive-card group flex min-h-[190px] flex-col p-5">
+                <span className="text-[11px] font-semibold tracking-[0.07em] text-pine-dark">{guide.eyebrow}</span>
+                <h3 className="mt-3 text-[20px] leading-snug group-hover:text-pine-dark">{guide.title}</h3>
+                <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-ink-soft">{guide.description}</p>
+                <span className="mt-auto pt-4 text-[14px] font-semibold text-pine-dark">Read guide →</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
     </>

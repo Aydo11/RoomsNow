@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 import { absoluteUrl, locationSlug } from "@/lib/seo";
+import { guides } from "@/lib/guides";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ const staticPages: Array<[string, MetadataRoute.Sitemap[number]["changeFrequency
   ["/pricing", "monthly", 0.5],
   ["/safety", "monthly", 0.4],
   ["/verification", "monthly", 0.4],
+  ["/guides", "weekly", 0.7],
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -26,6 +28,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: now,
     changeFrequency,
     priority,
+  }));
+  const guidePages = guides.map((guide) => ({
+    url: absoluteUrl(`/guides/${guide.slug}`),
+    lastModified: new Date(guide.updatedAt),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
   }));
 
   try {
@@ -47,6 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [
       ...base,
+      ...guidePages,
       ...cities.map((city) => ({
         url: absoluteUrl(`/rooms/${locationSlug(city.city)}`),
         lastModified: city.updatedAt,
@@ -67,6 +76,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })),
     ];
   } catch {
-    return base;
+    return [...base, ...guidePages];
   }
 }

@@ -108,6 +108,7 @@ export function SiteFooter() {
             ["Search all accommodation", "/search"],
             ["Post what you're looking for", "/dashboard/advert"],
             ["How it works", "/how-it-works"],
+            ["Room and referral guides", "/guides"],
             ["Staying safe", "/safety"],
           ]}
         />
