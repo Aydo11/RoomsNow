@@ -45,7 +45,7 @@ export default async function AdminHome() {
       nav={nav}
       active="/admin"
     >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard compact label="Live adverts" value={live} hint={`${pending} awaiting review`} />
         <StatCard compact label="Rooms available" value={available} hint={`of ${rooms} rooms`} />
         <StatCard compact label="Users" value={users} hint={`+${newUsers7d} in 7 days · +${newUsers30d} in 30`} />
@@ -70,12 +70,12 @@ export default async function AdminHome() {
       </section>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <Link href="/admin/team" className="card p-5 transition hover:-translate-y-0.5 hover:border-pine/40 hover:shadow-soft">
+        <Link href="/admin/team" className="card p-4 transition hover:-translate-y-0.5 hover:border-pine/40 hover:shadow-raise sm:p-5">
           <p className="text-[13px] font-semibold uppercase tracking-wide text-pine-dark">Access control</p>
           <h2 className="mt-1 text-[19px]">Team & permissions</h2>
           <p className="mt-1 text-[14px] text-ink-soft">Add another administrator or moderator and control what they can manage.</p>
         </Link>
-        <Link href="/admin/audit" className="card p-5 transition hover:-translate-y-0.5 hover:border-pine/40 hover:shadow-soft">
+        <Link href="/admin/audit" className="card p-4 transition hover:-translate-y-0.5 hover:border-pine/40 hover:shadow-raise sm:p-5">
           <p className="text-[13px] font-semibold uppercase tracking-wide text-pine-dark">Accountability</p>
           <h2 className="mt-1 text-[19px]">Detailed audit log</h2>
           <p className="mt-1 text-[14px] text-ink-soft">Review sign-ins, moderation, document access and team changes.</p>
