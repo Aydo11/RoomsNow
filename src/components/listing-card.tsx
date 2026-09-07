@@ -27,7 +27,7 @@ export function ListingCard({
 
   return (
     <Link href={href} className="card interactive-card group flex h-full flex-col overflow-hidden">
-        <div className="relative aspect-[16/10] bg-paper-sunk">
+        <div className={`relative overflow-hidden bg-paper-sunk ${compact ? "h-40 sm:h-44" : "h-48"}`}>
           <ResilientImage
             src={image}
             fallbackSrc={fallback.url}

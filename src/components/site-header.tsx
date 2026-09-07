@@ -22,8 +22,7 @@ export async function SiteHeader() {
         </Link>
 
         <nav aria-label="Main navigation" className="hidden items-center gap-5 whitespace-nowrap text-[14px] text-ink-soft xl:flex">
-          <Link href="/hmo-rooms" className="transition-colors hover:text-ink">HMO rooms</Link>
-          <Link href="/supported-accommodation" className="transition-colors hover:text-ink">Supported accommodation</Link>
+          <Link href="/search" className="font-medium text-pine-dark transition-colors hover:text-ink">Search accommodation</Link>
           <Link href="/how-it-works" className="transition-colors hover:text-ink">How it works</Link>
           <Link href="/advertise-accommodation" className="transition-colors hover:text-ink">Advertise</Link>
           <Link href="/pricing" className="transition-colors hover:text-ink">Membership</Link>
@@ -53,9 +52,7 @@ export async function SiteHeader() {
           )}
 
           <MobileMenu>
-              <MobileLink href="/hmo-rooms">HMO rooms</MobileLink>
-              <MobileLink href="/supported-accommodation">Supported accommodation</MobileLink>
-              <MobileLink href="/search">Search all accommodation</MobileLink>
+              <MobileLink href="/search">Search accommodation</MobileLink>
               <MobileLink href="/how-it-works">How it works</MobileLink>
               <MobileLink href="/people">People looking</MobileLink>
               <MobileLink href="/advertise-accommodation">Advertise</MobileLink>

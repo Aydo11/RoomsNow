@@ -60,16 +60,18 @@ export default async function HomePage() {
         description: "Search HMO rooms, supported housing and specialist accommodation across the UK.",
       }} />
 
-      <section className="surface-home border-b border-line">
-        <div className="shell py-12 text-center sm:py-16 lg:py-20">
+      <section className="surface-home relative overflow-hidden border-b border-line">
+        <span aria-hidden="true" className="absolute -left-24 top-8 h-64 w-64 rounded-full bg-pine-light/55 blur-3xl" />
+        <span aria-hidden="true" className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-[#d8ebfb]/65 blur-3xl" />
+        <div className="shell relative py-10 text-center sm:py-14 lg:py-16">
           <h1 className="mx-auto max-w-[19ch] text-[40px] font-bold leading-[1.07] sm:text-[56px]">
             Find an <span className="text-pine-dark">HMO room or accommodation</span> that fits
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-[17px] leading-relaxed text-ink-soft">
+          <p className="mx-auto mt-4 max-w-2xl text-[17px] leading-relaxed text-ink-soft">
             Search live HMO rooms, supported housing and specialist accommodation for yourself or someone you support.
           </p>
 
-          <div className="mx-auto mt-8 max-w-4xl text-left">
+          <div className="mx-auto mt-7 max-w-4xl text-left">
             <Suspense fallback={<div className="h-[120px] rounded-card border border-line bg-white" />}>
               <SearchPanel />
             </Suspense>
@@ -88,6 +90,7 @@ export default async function HomePage() {
           <h2 className="text-center text-[26px]">What would you like to do?</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <AudienceCard
+              icon="search"
               eyebrow="LOOKING FOR A HOME"
               title="Search available rooms"
               body="Browse current vacancies and contact the provider directly."
@@ -95,6 +98,7 @@ export default async function HomePage() {
               cta="Find accommodation"
             />
             <AudienceCard
+              icon="referral"
               eyebrow="PROFESSIONAL REFERRER"
               title="Place someone you support"
               body="Find suitable vacancies and send a structured referral."
@@ -102,6 +106,7 @@ export default async function HomePage() {
               cta="Make a referral"
             />
             <AudienceCard
+              icon="provider"
               eyebrow="LANDLORD OR PROVIDER"
               title="Advertise your vacancies"
               body="List HMO rooms and accommodation for people and referrers to find."
@@ -124,7 +129,7 @@ export default async function HomePage() {
           </div>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {featured.items.slice(0, 3).map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+              <ListingCard key={listing.id} listing={listing} compact />
             ))}
           </div>
 
@@ -245,6 +250,7 @@ function Stat({ value, label }: { value: number; label: string }) {
 }
 
 function AudienceCard({
+  icon,
   eyebrow,
   title,
   body,
@@ -252,6 +258,7 @@ function AudienceCard({
   cta,
   highlighted = false,
 }: {
+  icon: "search" | "referral" | "provider";
   eyebrow: string;
   title: string;
   body: string;
@@ -260,11 +267,30 @@ function AudienceCard({
   highlighted?: boolean;
 }) {
   return (
-    <article className={highlighted ? "rounded-card bg-gradient-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card p-6"}>
-      <span className={highlighted ? "text-[11px] font-semibold tracking-[0.08em] text-pine-light" : "text-[11px] font-semibold tracking-[0.08em] text-pine-dark"}>{eyebrow}</span>
+    <article className={highlighted ? "rounded-card bg-gradient-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card border-t-4 border-t-pine/30 bg-pine-light/25 p-6"}>
+      <div className="flex items-center justify-between gap-4">
+        <span className={highlighted ? "text-[11px] font-semibold tracking-[0.08em] text-pine-light" : "text-[11px] font-semibold tracking-[0.08em] text-pine-dark"}>{eyebrow}</span>
+        <AudienceIcon type={icon} highlighted={highlighted} />
+      </div>
       <h3 className={highlighted ? "mt-3 text-[21px] text-white" : "mt-3 text-[21px]"}>{title}</h3>
       <p className={highlighted ? "mt-2 text-[14px] leading-relaxed text-white/80" : "mt-2 text-[14px] leading-relaxed text-ink-soft"}>{body}</p>
       <Link href={href} className={highlighted ? "btn mt-5 bg-white text-pine-dark hover:bg-pine-light" : "btn-secondary mt-5"}>{cta}</Link>
     </article>
+  );
+}
+
+function AudienceIcon({ type, highlighted }: { type: "search" | "referral" | "provider"; highlighted: boolean }) {
+  const paths = {
+    search: <><circle cx="10.5" cy="10.5" r="5.5" /><path d="m15 15 4 4" /></>,
+    referral: <><path d="M8 7a3 3 0 1 0 0-6 3 3 0 0 0 6Z" /><path d="M2.5 20v-2.5A4.5 4.5 0 0 1 7 13h2" /><path d="M14 14h7m-3-3 3 3-3 3" /></>,
+    provider: <><path d="M3 20V8l9-5 9 5v12" /><path d="M8 20v-6h8v6M8 10h.01M12 10h.01M16 10h.01" /></>,
+  };
+
+  return (
+    <span className={highlighted ? "grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15 text-white" : "grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-pine-dark shadow-sm"} aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        {paths[type]}
+      </svg>
+    </span>
   );
 }
