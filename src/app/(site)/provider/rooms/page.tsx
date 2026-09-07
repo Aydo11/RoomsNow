@@ -34,7 +34,7 @@ export default async function RoomsPage() {
       nav={nav}
       active="/provider/rooms"
     >
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Available" value={count("AVAILABLE")} hint={`of ${total} rooms`} />
         <StatCard label="Reserved" value={count("RESERVED")} />
         <StatCard label="Occupied" value={count("OCCUPIED")} />

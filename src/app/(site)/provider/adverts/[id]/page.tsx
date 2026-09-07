@@ -87,7 +87,7 @@ export default async function ProviderAdvertPage({
         </p>
       )}
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Views" value={listing.views} />
         <StatCard label="Requests" value={listing._count.requests} />
         <StatCard label="Referrals" value={listing._count.referrals} />

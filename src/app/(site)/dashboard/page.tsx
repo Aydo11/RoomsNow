@@ -74,10 +74,11 @@ export default async function UserDashboard() {
         </Link>
       }
     >
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard label="Saved properties" value={saved} />
         <StatCard label="Open requests" value={requests.filter((r) => !["DECLINED", "WITHDRAWN"].includes(r.status)).length} />
         <StatCard
+          className="col-span-2 sm:col-span-1"
           label="Your advert"
           value={ad ? (ad.status === "ACTIVE" ? "Live" : "Paused") : "None yet"}
           hint={ad ? `Seen ${ad.views} times` : "Providers can find you once it's live"}
@@ -85,7 +86,7 @@ export default async function UserDashboard() {
       </div>
 
       {!ad && (
-        <div className="card mt-6 p-6">
+        <div className="card mt-5 p-5 sm:mt-6 sm:p-6">
           <h2 className="text-[20px]">Let providers come to you</h2>
           <p className="mt-2 max-w-[62ch] text-[15px] leading-relaxed text-ink-soft">
             Post what you&apos;re looking for and providers searching their area can find you and
@@ -110,7 +111,7 @@ export default async function UserDashboard() {
         </section>
       )}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-7 grid gap-6 lg:mt-8 lg:grid-cols-2">
         <section>
           <h2 className="text-[20px]">Recent requests</h2>
           {requests.length === 0 ? (
@@ -120,12 +121,12 @@ export default async function UserDashboard() {
           ) : (
             <ul className="card mt-3 divide-y divide-line">
               {requests.map((request) => (
-                <li key={request.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                <li key={request.id} className="flex min-w-0 items-start justify-between gap-3 px-3.5 py-3 sm:items-center sm:px-4">
                   <Link href={`/listings/${request.listing.id}`} className="min-w-0 text-[15px] hover:text-pine-dark">
                     <span className="block truncate">{request.listing.title}</span>
                     <span className="block text-[13px] text-ink-faint">{timeAgo(request.updatedAt)}</span>
                   </Link>
-                  <span className="shrink-0 rounded-pill bg-paper-sunk px-2.5 py-1 text-[12px] text-ink-soft">
+                  <span className="max-w-[42%] shrink-0 rounded-pill bg-paper-sunk px-2.5 py-1 text-center text-[11px] leading-tight text-ink-soft sm:max-w-none sm:text-[12px]">
                     {PIPELINE_LABELS[request.status]}
                   </span>
                 </li>

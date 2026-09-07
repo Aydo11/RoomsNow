@@ -32,10 +32,10 @@ export default async function ReferralsPage() {
       active="/referrals"
       action={<Link href="/referrals/new" className="btn-primary">New referral</Link>}
     >
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard label="Open" value={open} />
         <StatCard label="People placed" value={placed} />
-        <StatCard label="Total made" value={referrals.length} />
+        <StatCard className="col-span-2 sm:col-span-1" label="Total made" value={referrals.length} />
       </div>
 
       <div className="mt-8">

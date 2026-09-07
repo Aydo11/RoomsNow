@@ -48,7 +48,7 @@ export default async function ReferrerMembershipPage({
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard
           label="Current plan"
           value={limits.membership.name}
@@ -60,6 +60,7 @@ export default async function ReferrerMembershipPage({
         />
         <StatCard label="Active clients" value={`${limits.used.clients} / ${limit(limits.membership.maxClients)}`} />
         <StatCard
+          className="col-span-2 sm:col-span-1"
           label="Sharing per client"
           value={limit(limits.membership.maxSharesPerClient)}
           hint="Providers you can share one profile with at once"

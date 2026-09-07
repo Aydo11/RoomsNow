@@ -35,7 +35,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       active="/provider/membership"
     >
       {query.billing === "complete" && <div className="mb-5"><FormSuccess message="Payment completed. Your membership will update as soon as Stripe confirms it." /></div>}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard
           label="Current plan"
           value={limits.membership.name}
@@ -49,7 +49,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
           label="Adverts"
           value={`${limits.used.listings} / ${limit(limits.membership.maxListings)}`}
         />
-        <StatCard label="Rooms" value={`${limits.used.rooms} / ${limit(limits.membership.maxRooms)}`} />
+        <StatCard className="col-span-2 sm:col-span-1" label="Rooms" value={`${limits.used.rooms} / ${limit(limits.membership.maxRooms)}`} />
       </div>
 
       <section className="mt-8">

@@ -67,7 +67,7 @@ export default async function ProviderDashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Rooms available" value={available} hint={`of ${totalRooms} rooms`} />
         <StatCard label="New requests" value={requests} hint={`${requests30d} received in 30 days`} />
         <StatCard label="New referrals" value={referrals} hint={`${referrals30d} received in 30 days`} />
