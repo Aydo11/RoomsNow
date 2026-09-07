@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { SearchPanel } from "@/components/search-panel";
@@ -18,6 +19,24 @@ const ACCOMMODATION_LINKS = [
   ["Supported accommodation", "Housing with support for different needs", "/supported-accommodation"],
   ["Transitional accommodation", "Temporary and move-on housing", "/transitional-accommodation"],
   ["Adult social care", "Specialist accommodation for adults", "/adult-social-care-accommodation"],
+] as const;
+
+const FEATURED_CITIES = [
+  {
+    name: "Birmingham",
+    description: "HMO rooms, supported housing and shared homes",
+    image: "/locations/birmingham.webp",
+  },
+  {
+    name: "Manchester",
+    description: "Supported, transitional and specialist accommodation",
+    image: "/locations/manchester.webp",
+  },
+  {
+    name: "London",
+    description: "Shared homes and accommodation across the capital",
+    image: "/locations/london.webp",
+  },
 ] as const;
 
 export default async function HomePage() {
@@ -121,6 +140,52 @@ export default async function HomePage() {
       )}
 
       <section className="border-y border-line bg-white">
+        <div className="shell py-12 sm:py-16">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">POPULAR UK LOCATIONS</span>
+              <h2 className="mt-2 text-[30px]">Explore accommodation by city</h2>
+              <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
+                Start with popular cities, then narrow your search by accommodation type and support need.
+              </p>
+            </div>
+            <Link href="/search" className="btn-secondary shrink-0">View all locations</Link>
+          </div>
+
+          <div className="mt-7 grid gap-5 sm:grid-cols-3">
+            {FEATURED_CITIES.map((city) => {
+              const hasLiveListings = cities.some(({ city: activeCity }) => activeCity.toLowerCase() === city.name.toLowerCase());
+              const href = hasLiveListings
+                ? `/rooms/${locationSlug(city.name)}`
+                : `/search?where=${encodeURIComponent(city.name)}`;
+
+              return (
+                <Link
+                  key={city.name}
+                  href={href}
+                  className="group relative aspect-[4/3] overflow-hidden rounded-card bg-ink shadow-raise transition duration-300 hover:-translate-y-1 hover:shadow-float focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
+                  aria-label={`Explore accommodation in ${city.name}`}
+                >
+                  <Image
+                    src={city.image}
+                    alt={`${city.name} city view`}
+                    fill
+                    sizes="(min-width: 640px) 33vw, 100vw"
+                    className="object-cover transition duration-500 group-hover:scale-[1.04]"
+                  />
+                  <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#092d4d]/95 via-[#092d4d]/20 to-transparent" />
+                  <span className="absolute inset-x-0 bottom-0 block p-5 text-left text-white">
+                    <span className="block text-[23px] font-bold leading-tight">{city.name}</span>
+                    <span className="mt-1 block max-w-[28ch] text-[13px] leading-snug text-white/85">{city.description}</span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-line bg-paper">
         <div className="shell grid gap-8 py-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:py-16">
           <div>
             <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">A SIMPLE PROCESS</span>
