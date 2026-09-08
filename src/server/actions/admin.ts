@@ -181,3 +181,127 @@ export async function upsertSupportTypeAction(slug: string, label: string) {
   await audit({ actorId: admin.id, action: "admin.support_type_saved", targetType: "SupportType", targetId: slug });
   revalidatePath("/admin/categories");
 }
+
+export type AdminMembershipGrantState = {
+  ok: boolean;
+  message?: string;
+  errors?: Record<string, string>;
+};
+
+const membershipGrantSchema = z.object({
+  companyId: z.string().cuid(),
+  intent: z.enum(["GRANT", "REVOKE"]),
+  tier: z.enum(["PROFESSIONAL", "BUSINESS"]).optional(),
+  expiresOn: z.string().optional(),
+  reason: z.string().trim().min(5, "Add a short reason for the audit record.").max(500),
+});
+
+/** Grant or revoke complimentary provider membership without altering Stripe billing. */
+export async function manageProviderMembershipGrantAction(
+  _state: AdminMembershipGrantState,
+  formData: FormData,
+): Promise<AdminMembershipGrantState> {
+  const admin = await requireAdmin();
+  const parsed = membershipGrantSchema.safeParse({
+    companyId: formData.get("companyId"),
+    intent: formData.get("intent"),
+    tier: formData.get("tier") || undefined,
+    expiresOn: formData.get("expiresOn") || undefined,
+    reason: formData.get("reason"),
+  });
+  if (!parsed.success) {
+    const fields = parsed.error.flatten().fieldErrors;
+    return {
+      ok: false,
+      errors: Object.fromEntries(
+        Object.entries(fields).flatMap(([key, messages]) => messages?.[0] ? [[key, messages[0]]] : []),
+      ),
+    };
+  }
+
+  const { companyId, intent, tier, expiresOn, reason } = parsed.data;
+  const company = await db.company.findUnique({ where: { id: companyId }, select: { name: true } });
+  if (!company) return { ok: false, errors: { form: "Provider not found." } };
+
+  if (intent === "REVOKE") {
+    const result = await db.membershipGrant.updateMany({
+      where: { companyId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    if (!result.count) return { ok: false, errors: { form: "This provider has no active admin grant." } };
+    await notifyCompany(companyId, {
+      type: "MEMBERSHIP",
+      title: "Complimentary membership ended",
+      body: "Your account now uses your paid membership, or the Free plan if you do not have an active subscription.",
+      href: "/provider/membership",
+      email: true,
+    });
+    await audit({
+      actorId: admin.id,
+      action: "admin.membership_grant_revoked",
+      targetType: "Company",
+      targetId: companyId,
+      metadata: { reason },
+    });
+    revalidateMembershipPaths();
+    return { ok: true, message: `Complimentary membership removed from ${company.name}.` };
+  }
+
+  if (!tier) return { ok: false, errors: { tier: "Choose a plan to grant." } };
+  const membership = await db.membership.findFirst({
+    where: { tier, audience: "PROVIDER", active: true },
+    select: { id: true, name: true },
+  });
+  if (!membership) return { ok: false, errors: { tier: "That provider plan is unavailable." } };
+
+  let expiresAt: Date | null = null;
+  if (expiresOn) {
+    expiresAt = new Date(`${expiresOn}T23:59:59.999Z`);
+    if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+      return { ok: false, errors: { expiresOn: "Choose a future expiry date." } };
+    }
+  }
+
+  const now = new Date();
+  const grant = await db.$transaction(async (tx) => {
+    await tx.membershipGrant.updateMany({
+      where: { companyId, revokedAt: null },
+      data: { revokedAt: now },
+    });
+    return tx.membershipGrant.create({
+      data: {
+        companyId,
+        membershipId: membership.id,
+        grantedById: admin.id,
+        reason,
+        expiresAt,
+      },
+    });
+  });
+
+  await notifyCompany(companyId, {
+    type: "MEMBERSHIP",
+    title: `${membership.name} membership granted`,
+    body: expiresAt
+      ? `Complimentary access is active until ${expiresAt.toLocaleDateString("en-GB")}.`
+      : "Complimentary access is active until an administrator ends it.",
+    href: "/provider/membership",
+    email: true,
+  });
+  await audit({
+    actorId: admin.id,
+    action: "admin.membership_grant_created",
+    targetType: "Company",
+    targetId: companyId,
+    metadata: { grantId: grant.id, tier, expiresAt: expiresAt?.toISOString() ?? null, reason },
+  });
+  revalidateMembershipPaths();
+  return { ok: true, message: `${membership.name} access granted to ${company.name}.` };
+}
+
+function revalidateMembershipPaths() {
+  revalidatePath("/admin/memberships");
+  revalidatePath("/admin/companies");
+  revalidatePath("/provider");
+  revalidatePath("/provider/membership");
+}

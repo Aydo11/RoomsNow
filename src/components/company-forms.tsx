@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, type DragEvent } from "react";
 
 import { requestVerificationAction, updateCompanyAction } from "@/server/actions/company";
 import { CheckGroup, Field, FormError, FormSuccess, SubmitButton } from "./ui";
@@ -8,6 +8,140 @@ import {
   OPTIONAL_VERIFICATION_DOCUMENTS,
   REQUIRED_VERIFICATION_DOCUMENTS,
 } from "@/lib/verification";
+
+const DOCUMENT_ACCEPT = "application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+function documentKind(file: File) {
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  if (file.type === "application/pdf" || extension === "pdf") return "PDF";
+  if (file.type.startsWith("image/") || ["jpg", "jpeg", "png"].includes(extension ?? "")) return "IMG";
+  if (file.type.includes("word") || ["doc", "docx"].includes(extension ?? "")) return "DOC";
+  return "FILE";
+}
+
+function documentSize(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function DocumentIcon({ file }: { file: File }) {
+  const kind = documentKind(file);
+  const colour = kind === "PDF" ? "bg-clay-light text-clay-dark" : kind === "IMG" ? "bg-sky-100 text-sky-700" : "bg-pine-light text-pine-dark";
+
+  return (
+    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[8px] ${colour}`} aria-hidden="true">
+      {kind === "IMG" ? (
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7">
+          <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+          <path d="m6.5 16.5 3.6-3.8 2.8 2.7 2.2-2 3.4 3.1M8.5 9h.01" />
+        </svg>
+      ) : kind === "FILE" ? (
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7">
+          <path d="M7 2.75h6.5L19 8.25V21.25H7zM13.5 2.75v5.5H19" />
+        </svg>
+      ) : (
+        <span className="text-[9px] font-extrabold tracking-tight">{kind === "DOC" ? "W" : "PDF"}</span>
+      )}
+    </span>
+  );
+}
+
+function DocumentDropzone({
+  id,
+  name,
+  files,
+  multiple = false,
+  required = false,
+  onFiles,
+}: {
+  id: string;
+  name: string;
+  files: File[];
+  multiple?: boolean;
+  required?: boolean;
+  onFiles: (files: File[]) => void;
+}) {
+  const [dragging, setDragging] = useState(false);
+
+  function selectFiles(incoming: File[]) {
+    const usable = incoming.filter((file) => file.size > 0);
+    if (!multiple) {
+      onFiles(usable.slice(0, 1));
+      return;
+    }
+
+    const combined = [...files, ...usable].filter(
+      (file, index, all) => all.findIndex((candidate) =>
+        candidate.name === file.name && candidate.size === file.size && candidate.lastModified === file.lastModified,
+      ) === index,
+    );
+    onFiles(combined.slice(0, 5));
+  }
+
+  function drop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    setDragging(false);
+    selectFiles(Array.from(event.dataTransfer.files));
+  }
+
+  return (
+    <div>
+      <label
+        htmlFor={id}
+        onDragEnter={(event) => { event.preventDefault(); setDragging(true); }}
+        onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+        }}
+        onDrop={drop}
+        className={`flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed px-4 py-5 text-center transition focus-within:ring-2 focus-within:ring-pine/30 ${
+          dragging ? "border-pine bg-pine-light/70" : "border-line-strong bg-paper hover:border-pine/60 hover:bg-pine-light/25"
+        }`}
+      >
+        <input
+          id={id}
+          name={name}
+          type="file"
+          multiple={multiple}
+          accept={DOCUMENT_ACCEPT}
+          aria-required={required || undefined}
+          onChange={(event) => selectFiles(Array.from(event.currentTarget.files ?? []))}
+          className="sr-only"
+        />
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-pine-light text-pine-dark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5" />
+            <path d="M5 14.5v4.75h14V14.5" />
+          </svg>
+        </span>
+        <span className="mt-2 text-[14px] font-semibold text-ink">Drop {multiple ? "documents" : "a document"} here</span>
+        <span className="mt-0.5 text-[12px] text-ink-faint">or click to browse · PDF, Word, JPG or PNG</span>
+      </label>
+
+      {files.length > 0 && (
+        <ul className="mt-2 space-y-2" aria-live="polite">
+          {files.map((file, index) => (
+            <li key={`${file.name}-${file.lastModified}-${index}`} className="flex items-center gap-3 rounded-[10px] border border-line bg-white px-3 py-2">
+              <DocumentIcon file={file} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-medium text-ink">{file.name}</span>
+                <span className="block text-[11px] text-ink-faint">{documentKind(file)} · {documentSize(file.size)}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => onFiles(files.filter((_, fileIndex) => fileIndex !== index))}
+                className="rounded-[8px] px-2 py-1 text-[12px] text-ink-faint hover:bg-paper-sunk hover:text-clay"
+                aria-label={`Remove ${file.name}`}
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function CompanyForm({
   company,
@@ -117,27 +251,37 @@ export function CompanyForm({
 export function VerificationForm() {
   const [state, action] = useActionState(requestVerificationAction, { ok: false });
   const [selectedFiles, setSelectedFiles] = useState<Record<string, File[]>>({});
+  const [insuranceExpiry, setInsuranceExpiry] = useState("");
+  const [note, setNote] = useState("");
+  const [declaration, setDeclaration] = useState(false);
 
   useEffect(() => {
-    if (state.ok) setSelectedFiles({});
+    if (state.ok) {
+      setSelectedFiles({});
+      setInsuranceExpiry("");
+      setNote("");
+      setDeclaration(false);
+    }
   }, [state.ok]);
 
-  function rememberFiles(name: string, list: FileList | null) {
-    setSelectedFiles((current) => ({ ...current, [name]: list ? Array.from(list) : [] }));
+  function rememberFiles(name: string, files: File[]) {
+    setSelectedFiles((current) => ({ ...current, [name]: files }));
   }
 
   function submitWithRememberedFiles(formData: FormData) {
+    // React can hand this callback a snapshot taken before controlled values have
+    // finished syncing to the DOM. Send the values we display explicitly so the
+    // server always receives the declaration and date the provider confirmed.
+    formData.set("insuranceExpiry", insuranceExpiry);
+    formData.set("note", note);
+    if (declaration) formData.set("declaration", "1");
+    else formData.delete("declaration");
+
     for (const [name, files] of Object.entries(selectedFiles)) {
       formData.delete(name);
       for (const file of files) formData.append(name, file);
     }
     action(formData);
-  }
-
-  function fileSummary(name: string) {
-    const files = selectedFiles[name] ?? [];
-    if (!files.length) return null;
-    return <span className="mt-1 block text-[12px] font-medium text-pine-dark">Selected: {files.map((file) => file.name).join(", ")}</span>;
   }
 
   return (
@@ -160,15 +304,13 @@ export function VerificationForm() {
             required
             error={state.errors?.[document.input]}
           >
-            <input
+            <DocumentDropzone
               id={document.input}
               name={document.input}
-              type="file"
-              onChange={(event) => rememberFiles(document.input, event.currentTarget.files)}
-              accept="application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              className="field"
+              required
+              files={selectedFiles[document.input] ?? []}
+              onFiles={(files) => rememberFiles(document.input, files)}
             />
-            {fileSummary(document.input)}
           </Field>
         ))}
       </div>
@@ -180,36 +322,46 @@ export function VerificationForm() {
         required
         error={state.errors?.insuranceExpiry}
       >
-        <input id="insuranceExpiry" name="insuranceExpiry" type="date" required className="field max-w-xs" />
+        <input
+          id="insuranceExpiry"
+          name="insuranceExpiry"
+          type="date"
+          required
+          value={insuranceExpiry}
+          onChange={(event) => setInsuranceExpiry(event.currentTarget.value)}
+          className="field max-w-xs"
+        />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
         {OPTIONAL_VERIFICATION_DOCUMENTS.map((document) => (
           <Field key={document.input} label={`${document.label} (if applicable)`} name={document.input} hint={document.hint}>
-            <input
+            <DocumentDropzone
               id={document.input}
               name={document.input}
-              type="file"
-              onChange={(event) => rememberFiles(document.input, event.currentTarget.files)}
-              accept="application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              className="field"
+              files={selectedFiles[document.input] ?? []}
+              onFiles={(files) => rememberFiles(document.input, files)}
             />
-            {fileSummary(document.input)}
           </Field>
         ))}
       </div>
 
       <Field label="Additional due-diligence evidence" name="additionalDocuments" hint="Optional policies, accreditations or commissioning evidence. Up to five files.">
-        <input id="additionalDocuments" name="additionalDocuments" type="file" multiple onChange={(event) => rememberFiles("additionalDocuments", event.currentTarget.files)} accept="application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="field" />
-        {fileSummary("additionalDocuments")}
+        <DocumentDropzone
+          id="additionalDocuments"
+          name="additionalDocuments"
+          multiple
+          files={selectedFiles.additionalDocuments ?? []}
+          onFiles={(files) => rememberFiles("additionalDocuments", files)}
+        />
       </Field>
 
       <Field label="Anything we should know" name="note">
-        <textarea id="note" name="note" rows={3} className="field" />
+        <textarea id="note" name="note" rows={3} value={note} onChange={(event) => setNote(event.currentTarget.value)} className="field" />
       </Field>
 
       <label className="flex items-start gap-3 rounded-card border border-line bg-paper p-4 text-[14px] leading-relaxed text-ink-soft">
-        <input name="declaration" type="checkbox" value="1" required className="mt-1 h-4 w-4 accent-pine" />
+        <input name="declaration" type="checkbox" value="1" required checked={declaration} onChange={(event) => setDeclaration(event.currentTarget.checked)} className="mt-1 h-4 w-4 accent-pine" />
         <span>
           I am authorised to submit this evidence. I confirm it is accurate, current and relates to
           this organisation, and I will tell RoomsNow if anything material changes.

@@ -2,6 +2,28 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { hasAdminPermission } from "../src/lib/admin-permissions";
 import { sanitiseError } from "../src/lib/sentry-options";
+import { bool } from "../src/server/form";
+import { decodeFeedback, encodeFeedback } from "../src/lib/feedback";
+import { highestProviderMembership } from "../src/lib/membership-access";
+
+test("boolean form values accept native checkboxes and explicit one values", () => {
+  for (const value of ["on", "true", "1"]) {
+    const data = new FormData();
+    data.set("accepted", value);
+    assert.equal(bool(data, "accepted"), true);
+  }
+  assert.equal(bool(new FormData(), "accepted"), false);
+});
+
+test("site feedback keeps its category, title, page and message in the review queue", () => {
+  const encoded = encodeFeedback("FEATURE", "Map controls", "Please add a clearer zoom control.", "https://www.roomsnow.co.uk/search");
+  assert.deepEqual(decodeFeedback(encoded), {
+    category: "FEATURE",
+    title: "Map controls",
+    pageUrl: "https://www.roomsnow.co.uk/search",
+    message: "Please add a clearer zoom control.",
+  });
+});
 
 test("non-admins cannot gain access from the default permissions field", () => {
   for (const role of ["USER", "PROVIDER", "REFERRER"]) {
@@ -20,6 +42,16 @@ test("full administrators retain moderation access", () => {
   const admin = { role: "ADMIN", adminPermissions: ["ALL"] };
   assert.equal(hasAdminPermission(admin), true);
   assert.equal(hasAdminPermission(admin, "MODERATION"), true);
+});
+test("an admin grant raises access without reducing a higher paid plan", () => {
+  const free = { id: "free", tier: "FREE" };
+  const professional = { id: "professional", tier: "PROFESSIONAL" };
+  const business = { id: "business", tier: "BUSINESS" };
+
+  assert.equal(highestProviderMembership(null, professional, free)?.id, "professional");
+  assert.equal(highestProviderMembership(professional, business, free)?.id, "business");
+  assert.equal(highestProviderMembership(business, professional, free)?.id, "business");
+  assert.equal(highestProviderMembership(null, null, free)?.id, "free");
 });
 test("error monitoring strips submitted data and identity", () => {
   const event = sanitiseError({

@@ -200,3 +200,14 @@
 .leaflet-control-attribution {
   font-size: 11px;
 }
+/* Single-advert map marker. Kept separate from the search-map price pins. */
+.property-map-pin {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border: 4px solid white;
+  border-radius: 50% 50% 50% 0;
+  background: #1666aa;
+  box-shadow: 0 3px 12px rgb(23 31 46 / 30%);
+  transform: rotate(-45deg);
+}

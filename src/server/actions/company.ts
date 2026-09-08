@@ -183,5 +183,7 @@ export async function requestVerificationAction(_prev: FormState, formData: Form
   );
 
   revalidatePath("/provider/settings");
+  revalidatePath("/admin");
+  revalidatePath("/admin/verification");
   return { ok: true, message: "Submitted securely. Our verification team will review the evidence and record each check." };
 }

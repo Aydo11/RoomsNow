@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { notify, notifyCompany } from "@/lib/notify";
 import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 import type { SponsorPackage } from "@/lib/sponsor-packages";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 
@@ -50,7 +51,7 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
     const userId = session.metadata?.userId ?? session.client_reference_id;
     const tier = session.metadata?.tier as MembershipTier | undefined;
     const subscriptionId = stringId(session.subscription);
-    if (!userId || !tier || !subscriptionId) return;
+    if (!userId || tier !== "REFERRER_PRO" || !subscriptionId) return;
     const remote = await stripe().subscriptions.retrieve(subscriptionId);
     await applyReferrerSubscriptionChange({
       userId,
@@ -69,6 +70,7 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
       body: `Your ${tier.replace("REFERRER_", "").toLowerCase()} plan is now active.`,
       href: "/referrals/membership",
     });
+    await audit({ action: "billing.referrer_membership_activated", targetType: "User", targetId: userId, metadata: { tier, subscriptionId: remote.id } });
     return;
   }
 
@@ -78,7 +80,7 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
   if (kind === "membership") {
     const tier = session.metadata?.tier as MembershipTier | undefined;
     const subscriptionId = stringId(session.subscription);
-    if (!tier || !subscriptionId) return;
+    if (!tier || !["PROFESSIONAL", "BUSINESS"].includes(tier) || !subscriptionId) return;
     const remote = await stripe().subscriptions.retrieve(subscriptionId);
     const existing = await db.subscription.findUnique({ where: { companyId }, select: { externalSubscriptionId: true } });
     await applySubscriptionChange({
@@ -95,6 +97,7 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
       await stripe().subscriptions.cancel(existing.externalSubscriptionId).catch((error) => console.error("Old subscription cancellation failed:", error));
     }
     await notifyCompany(companyId, { type: "MEMBERSHIP", title: "Membership upgraded", body: `Your ${tier.toLowerCase()} plan is now active.`, href: "/provider/membership" });
+    await audit({ action: "billing.membership_activated", targetType: "Company", targetId: companyId, metadata: { tier, subscriptionId: remote.id } });
   }
 
   if (kind === "sponsorship") {
@@ -112,7 +115,7 @@ async function subscriptionChanged(subscription: Stripe.Subscription) {
 
   if (subscription.metadata.kind === "referrer_membership") {
     const userId = subscription.metadata.userId;
-    if (!userId) return;
+    if (!userId || tier !== "REFERRER_PRO") return;
     const current = await db.referrerSubscription.findUnique({ where: { userId }, select: { externalSubscriptionId: true } });
     if (current?.externalSubscriptionId && current.externalSubscriptionId !== subscription.id) return;
     await applyReferrerSubscriptionChange({
@@ -129,7 +132,7 @@ async function subscriptionChanged(subscription: Stripe.Subscription) {
   }
 
   const companyId = subscription.metadata.companyId;
-  if (!companyId) return;
+  if (!companyId || !["PROFESSIONAL", "BUSINESS"].includes(tier)) return;
   const current = await db.subscription.findUnique({ where: { companyId }, select: { externalSubscriptionId: true } });
   if (current?.externalSubscriptionId && current.externalSubscriptionId !== subscription.id) return;
   await applySubscriptionChange({

@@ -35,12 +35,25 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       active="/provider/membership"
     >
       {query.billing === "complete" && <div className="mb-5"><FormSuccess message="Payment completed. Your membership will update as soon as Stripe confirms it." /></div>}
+      {limits.grant && (
+        <div className="mb-5">
+          <FormSuccess
+            message={`RoomsNow has granted your organisation complimentary ${limits.grant.membership.name} access${
+              limits.grant.expiresAt ? ` until ${shortDate(limits.grant.expiresAt)}` : ""
+            }. Your billing history remains separate.`}
+          />
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard
           label="Current plan"
           value={limits.membership.name}
           hint={
-            limits.subscription?.currentPeriodEnd
+            limits.source === "ADMIN_GRANT"
+              ? limits.grant?.expiresAt
+                ? `Admin access ends ${shortDate(limits.grant.expiresAt)}`
+                : "Complimentary admin access"
+              : limits.subscription?.currentPeriodEnd
               ? `Renews ${shortDate(limits.subscription.currentPeriodEnd)}`
               : "No renewal date"
           }
@@ -57,6 +70,11 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
         <div className="mt-3">
           <PlanPicker
             currentTier={limits.membership.tier}
+            paidTier={
+              limits.subscription && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(limits.subscription.status)
+                ? limits.subscription.membership.tier
+                : null
+            }
             cancelling={limits.subscription?.cancelAtPeriodEnd ?? false}
             billingLive={billingLive}
             paymentsEnabled={paymentsEnabled}

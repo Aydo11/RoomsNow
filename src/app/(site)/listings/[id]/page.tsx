@@ -22,6 +22,8 @@ import { recordSponsoredClickAction } from "@/server/actions/billing";
 import { brand } from "@/brand.config";
 import { callerIp, LIMITS, rateLimit } from "@/lib/rate-limit";
 import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
+import { PropertyMap } from "@/components/property-map";
+import { hasPaidMapAccess } from "@/lib/entitlements";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +101,10 @@ export default async function ListingPage({
     : [null, null];
 
   const available = listing.rooms.filter((r) => r.status === "AVAILABLE");
+  const canViewMap = hasPaidMapAccess(user);
+  const hasCoordinates = listing.property.latitude != null && listing.property.longitude != null;
+  const mapLatitude = listing.property.showExactAddress ? listing.property.latitude : listing.property.latitude == null ? null : Math.round(listing.property.latitude * 1000) / 1000;
+  const mapLongitude = listing.property.showExactAddress ? listing.property.longitude : listing.property.longitude == null ? null : Math.round(listing.property.longitude * 1000) / 1000;
   const listingUrl = absoluteUrl(`/listings/${listing.id}`);
   const listingDescription = listing.summary ?? `Accommodation in ${publicLocation(listing.property)} advertised by ${listing.company.name}.`;
   const match =
@@ -210,6 +216,35 @@ export default async function ListingPage({
             <Fact label="Housing benefit" value={listing.housingBenefit ? "Accepted" : "Not accepted"} />
             <Fact label="Facilities" value={listing.selfContained ? "Self-contained" : listing.ensuite ? "Ensuite room" : "Shared facilities"} />
             <Fact label="Access" value={listing.wheelchairAccess ? "Step-free" : "Not step-free"} />
+          </section>
+
+          <section className="mt-8">
+            <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h2 className="text-[22px]">Location map</h2>
+                <p className="mt-1 text-[13px] text-ink-faint">
+                  {listing.property.showExactAddress ? "Exact location supplied by the provider." : "Approximate area shown to protect the property's address."}
+                </p>
+              </div>
+              {canViewMap && <span className="chip chip-active">Member feature</span>}
+            </div>
+            {canViewMap ? (
+              hasCoordinates && mapLatitude != null && mapLongitude != null ? (
+                <div className="overflow-hidden rounded-card border border-line bg-paper">
+                  <PropertyMap latitude={mapLatitude} longitude={mapLongitude} title={listing.title} approximate={!listing.property.showExactAddress} />
+                </div>
+              ) : (
+                <div className="card p-5 text-[14px] text-ink-soft">The provider has not added map coordinates for this property yet.</div>
+              )
+            ) : (
+              <div className="rounded-card border border-pine/20 bg-pine-light/35 p-5">
+                <p className="font-medium text-ink">Maps are available with any paid membership.</p>
+                <p className="mt-1 max-w-[62ch] text-[14px] leading-relaxed text-ink-soft">Upgrade a provider or professional referrer account to view the property area directly on each advert.</p>
+                <Link href={user ? "/pricing" : `/login?next=/listings/${listing.id}`} className="btn-secondary mt-4">
+                  {user ? "View membership options" : "Sign in to check access"}
+                </Link>
+              </div>
+            )}
           </section>
 
           {listing.description && (

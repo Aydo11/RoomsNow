@@ -134,6 +134,7 @@ export const LIMITS = {
   request: { limit: 10, windowMs: 60 * 60_000 },
   referral: { limit: 20, windowMs: 60 * 60_000 },
   report: { limit: 10, windowMs: 60 * 60_000 },
+  feedback: { limit: 6, windowMs: 60 * 60_000 },
   upload: { limit: 40, windowMs: 60 * 60_000 },
   view: { limit: 1, windowMs: 30 * 60_000 },
 } as const;

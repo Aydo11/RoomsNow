@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/rbac";
 import { DashboardShell, MetricBar, StatCard } from "@/components/dashboard-shell";
 import { adminNav } from "./nav";
 import { timeAgo } from "@/lib/format";
+import { FEEDBACK_MARKER } from "@/lib/feedback";
 
 export const metadata = { title: "Admin" };
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ export default async function AdminHome() {
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60_000);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60_000);
-  const [users, newUsers7d, newUsers30d, companies, live, pending, rooms, available, requests, newRequests30d, referrals, newReferrals30d, reports, verification, requestStatuses, referralStatuses, recent] =
+  const [users, newUsers7d, newUsers30d, companies, live, pending, rooms, available, requests, newRequests30d, referrals, newReferrals30d, reports, feedback, verification, requestStatuses, referralStatuses, recent] =
     await Promise.all([
       db.user.count({ where: { deletedAt: null } }),
       db.user.count({ where: { deletedAt: null, createdAt: { gte: sevenDaysAgo } } }),
@@ -31,7 +32,8 @@ export default async function AdminHome() {
       db.accommodationRequest.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
       db.referral.count(),
       db.referral.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
-      db.report.count({ where: { status: { in: ["OPEN", "REVIEWING"] } } }),
+      db.report.count({ where: { status: { in: ["OPEN", "REVIEWING"] }, NOT: { detail: { startsWith: FEEDBACK_MARKER } } } }),
+      db.report.count({ where: { status: { in: ["OPEN", "REVIEWING"] }, detail: { startsWith: FEEDBACK_MARKER } } }),
       db.verificationRequest.count({ where: { status: "PENDING" } }),
       db.accommodationRequest.groupBy({ by: ["status"], _count: true }),
       db.referral.groupBy({ by: ["status"], _count: true }),
@@ -51,7 +53,7 @@ export default async function AdminHome() {
         <StatCard compact label="Users" value={users} hint={`+${newUsers7d} in 7 days · +${newUsers30d} in 30`} />
         <StatCard compact label="Requests" value={requests} hint={`+${newRequests30d} in 30 days`} />
         <StatCard compact label="Referrals" value={referrals} hint={`+${newReferrals30d} in 30 days`} />
-        <StatCard compact label="Trust queue" value={reports + verification} hint={`${reports} reports · ${verification} checks`} />
+        <StatCard compact label="Review queue" value={reports + feedback + verification} hint={`${reports} reports · ${feedback} feedback · ${verification} checks`} />
       </div>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-2">

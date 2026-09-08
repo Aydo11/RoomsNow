@@ -3,19 +3,58 @@ import { requireAdmin } from "@/lib/rbac";
 import { DashboardShell, DataTable, StatCard } from "@/components/dashboard-shell";
 import { adminNav } from "../nav";
 import { money, shortDate } from "@/lib/format";
+import { AdminMembershipGrantForm } from "@/components/admin-membership-grant-form";
 
 export const metadata = { title: "Memberships" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminMembershipsPage() {
+export default async function AdminMembershipsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   await requireAdmin();
-  const [nav, plans, subscriptions, payments, revenue] = await Promise.all([
+  const query = await searchParams;
+  const q = query.q?.trim().slice(0, 100);
+  const now = new Date();
+  const [nav, plans, subscriptions, providers, payments, revenue] = await Promise.all([
     adminNav(),
-    db.membership.findMany({ orderBy: { priceMonthly: "asc" } }),
+    db.membership.findMany({ where: { audience: "PROVIDER" }, orderBy: { priceMonthly: "asc" } }),
     db.subscription.findMany({
       orderBy: { createdAt: "desc" },
       take: 100,
       include: { company: { select: { name: true } }, membership: { select: { name: true } } },
+    }),
+    db.company.findMany({
+      where: q
+        ? {
+            OR: [
+              { name: { contains: q, mode: "insensitive" } },
+              { tradingName: { contains: q, mode: "insensitive" } },
+              { email: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : undefined,
+      orderBy: { name: "asc" },
+      take: q ? 250 : 100,
+      select: {
+        id: true,
+        name: true,
+        subscription: {
+          select: { status: true, membership: { select: { name: true, tier: true } } },
+        },
+        membershipGrants: {
+          where: {
+            revokedAt: null,
+            startsAt: { lte: now },
+            membership: { audience: "PROVIDER", tier: { in: ["PROFESSIONAL", "BUSINESS"] } },
+            OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+          },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { expiresAt: true, membership: { select: { name: true, tier: true } } },
+        },
+      },
     }),
     db.payment.findMany({ orderBy: { createdAt: "desc" }, take: 50, include: { company: { select: { name: true } } } }),
     db.payment.aggregate({ where: { status: "PAID" }, _sum: { amount: true } }),
@@ -24,7 +63,7 @@ export default async function AdminMembershipsPage() {
   return (
     <DashboardShell
       title="Memberships"
-      subtitle="Plans, subscriptions and payments. Billing runs through an adapter, so this is test data until a provider is configured."
+      subtitle="Manage complimentary provider access and review paid subscriptions confirmed through Stripe."
       nav={nav}
       active="/admin/memberships"
     >
@@ -33,6 +72,55 @@ export default async function AdminMembershipsPage() {
         <StatCard label="Plans" value={plans.length} />
         <StatCard label="Collected" value={money(revenue._sum.amount ?? 0)} />
       </div>
+
+      <section className="mt-8">
+        <h2 className="text-[20px]">Provider access</h2>
+        <p className="mt-1 max-w-3xl text-[14px] text-ink-soft">
+          Grant Professional or Business access without recording a payment. Paid Stripe subscriptions continue separately and still activate automatically after payment.
+        </p>
+        <form className="mt-4 flex max-w-xl gap-2" method="get">
+          <label className="sr-only" htmlFor="provider-search">Find a provider</label>
+          <input
+            id="provider-search"
+            className="field"
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="Search provider name or email"
+          />
+          <button className="btn-secondary" type="submit">Search</button>
+        </form>
+        <div className="mt-3">
+          <DataTable head={["Provider", "Paid plan", "Admin grant", ""]}>
+            {providers.map((provider) => {
+              const paid = provider.subscription && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(provider.subscription.status)
+                ? provider.subscription.membership.name
+                : "Free";
+              const grant = provider.membershipGrants[0];
+              const expiresOn = grant?.expiresAt ? grant.expiresAt.toISOString().slice(0, 10) : null;
+              return (
+                <tr key={provider.id}>
+                  <td className="px-4 py-3 font-medium">{provider.name}</td>
+                  <td className="px-4 py-3 text-ink-soft">{paid}</td>
+                  <td className="px-4 py-3 text-ink-soft">
+                    {grant ? `${grant.membership.name}${grant.expiresAt ? ` · ends ${shortDate(grant.expiresAt)}` : " · no expiry"}` : "—"}
+                  </td>
+                  <td className="px-4 py-3 align-top">
+                    <AdminMembershipGrantForm
+                      companyId={provider.id}
+                      currentGrant={grant ? {
+                        tier: grant.membership.tier as "PROFESSIONAL" | "BUSINESS",
+                        name: grant.membership.name,
+                        expiresOn,
+                      } : null}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </DataTable>
+        </div>
+      </section>
 
       <section className="mt-8">
         <h2 className="text-[20px]">Plans</h2>

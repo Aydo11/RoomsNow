@@ -126,6 +126,7 @@ export function SiteFooter() {
           links={[
             ["Accommodation referrals", "/accommodation-referrals"],
             ["Referrer accounts", "/register?type=REFERRER"],
+            ["Send feedback", "/feedback"],
             ["Privacy", "/privacy"],
             ["Terms", "/terms"],
           ]}

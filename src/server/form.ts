@@ -1,5 +1,8 @@
 /** Small helpers for reading FormData into the shapes zod expects. */
-export const bool = (fd: FormData, key: string) => fd.get(key) === "on" || fd.get(key) === "true";
+export const bool = (fd: FormData, key: string) => {
+  const value = fd.get(key);
+  return value === "on" || value === "true" || value === "1";
+};
 export const list = (fd: FormData, key: string) => fd.getAll(key).map(String).filter(Boolean);
 export const text = (fd: FormData, key: string) => (fd.get(key) ?? "").toString();
 export const num = (fd: FormData, key: string) => {

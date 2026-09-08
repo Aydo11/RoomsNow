@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { assertCompanyAccess, requireCompany } from "@/lib/rbac";
 import { audit } from "@/lib/audit";
-import { billing, billingIsLive } from "@/lib/billing";
+import { billing, billingIsLive, planLimits } from "@/lib/billing";
 import { notifyCompany } from "@/lib/notify";
 import { SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import type { MembershipTier } from "@prisma/client";
@@ -31,7 +31,7 @@ export async function changePlanAction(tier: MembershipTier) {
 
   await audit({
     actorId: user.id,
-    action: "membership.changed",
+    action: "membership.checkout_started",
     targetType: "Company",
     targetId: companyId,
     metadata: { tier, provider: session.provider },
@@ -80,11 +80,8 @@ export async function featureListingAction(listingId: string, pkg: SponsorPackag
   }
 
   const plan = SPONSOR_PACKAGES[pkg];
-  const subscription = await db.subscription.findUnique({
-    where: { companyId },
-    include: { membership: true },
-  });
-  const credits = subscription?.membership.featuredCredits ?? 0;
+  const limits = await planLimits(companyId);
+  const credits = limits.membership.featuredCredits;
   const used = await db.listing.count({
     where: { companyId, featured: true, OR: [{ featuredUntil: null }, { featuredUntil: { gte: new Date() } }] },
   });

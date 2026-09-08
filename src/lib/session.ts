@@ -62,12 +62,32 @@ async function readToken(): Promise<SessionPayload | null> {
 export const getCurrentUser = cache(async () => {
   const session = await readToken();
   if (!session) return null;
+  const now = new Date();
 
   const user = await db.user.findUnique({
     where: { id: session.sub },
     include: {
       profile: true,
-      staffOf: { include: { company: { include: { subscription: { include: { membership: true } } } } } },
+      staffOf: {
+        include: {
+          company: {
+            include: {
+              subscription: { include: { membership: true } },
+              membershipGrants: {
+                where: {
+                  revokedAt: null,
+                  startsAt: { lte: now },
+                  membership: { audience: "PROVIDER", tier: { in: ["PROFESSIONAL", "BUSINESS"] } },
+                  OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+                },
+                include: { membership: true },
+                orderBy: { createdAt: "desc" },
+              },
+            },
+          },
+        },
+      },
+      referrerSubscription: { include: { membership: true } },
     },
   });
 

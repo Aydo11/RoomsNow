@@ -2,6 +2,7 @@ import "server-only";
 import Stripe from "stripe";
 import { db } from "./db";
 import { SPONSOR_PACKAGES, type SponsorPackage } from "./sponsor-packages";
+import { highestProviderMembership } from "./membership-access";
 import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 
 export type CheckoutRequest = {
@@ -117,7 +118,7 @@ const stripeDriver: BillingDriver = {
       billing_address_collection: "required",
       client_reference_id: companyId,
       metadata: { kind: "membership", companyId, tier },
-      subscription_data: { metadata: { companyId, tier } },
+      subscription_data: { metadata: { kind: "membership", companyId, tier } },
     });
     if (!session.url) throw new Error("Stripe did not return a checkout page.");
     return { url: session.url, externalId: session.id, provider: "stripe" };
@@ -277,6 +278,26 @@ export async function applySubscriptionChange(params: {
   });
 }
 
+/**
+ * Returns the current complimentary plan without touching the provider's paid
+ * subscription. Expired and revoked grants remain available for audit history
+ * but never contribute permissions.
+ */
+export async function activeProviderMembershipGrant(companyId: string) {
+  const now = new Date();
+  return db.membershipGrant.findFirst({
+    where: {
+      companyId,
+      startsAt: { lte: now },
+      revokedAt: null,
+      membership: { audience: "PROVIDER", tier: { in: ["PROFESSIONAL", "BUSINESS"] } },
+      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+    },
+    include: { membership: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function activateSponsorship(params: {
   companyId: string;
   listingId: string;
@@ -299,9 +320,14 @@ export async function activateSponsorship(params: {
 }
 
 export async function planLimits(companyId: string) {
-  const subscription = await db.subscription.findUnique({ where: { companyId }, include: { membership: true } });
+  const [subscription, grant, freeMembership] = await Promise.all([
+    db.subscription.findUnique({ where: { companyId }, include: { membership: true } }),
+    activeProviderMembershipGrant(companyId),
+    db.membership.findUnique({ where: { tier: "FREE" } }),
+  ]);
   const entitled = subscription && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(subscription.status);
-  const membership = (entitled ? subscription.membership : null) ?? (await db.membership.findUnique({ where: { tier: "FREE" } }));
+  const paidMembership = entitled ? subscription.membership : null;
+  const membership = highestProviderMembership(paidMembership, grant?.membership ?? null, freeMembership);
   if (!membership) throw new Error("Membership catalogue is empty. Run npm run db:seed.");
   const [listings, rooms, staff] = await Promise.all([
     db.listing.count({ where: { companyId, status: { in: ["ACTIVE", "PENDING_REVIEW", "PAUSED"] } } }),
@@ -309,7 +335,16 @@ export async function planLimits(companyId: string) {
     db.companyStaff.count({ where: { companyId } }),
   ]);
   const under = (used: number, max: number) => max === -1 || used < max;
-  return { membership, subscription, used: { listings, rooms, staff }, canAddListing: under(listings, membership.maxListings), canAddRoom: under(rooms, membership.maxRooms), canAddStaff: under(staff, membership.maxStaff) };
+  return {
+    membership,
+    subscription,
+    grant,
+    source: grant?.membershipId === membership.id ? "ADMIN_GRANT" as const : entitled ? "PAID_SUBSCRIPTION" as const : "FREE" as const,
+    used: { listings, rooms, staff },
+    canAddListing: under(listings, membership.maxListings),
+    canAddRoom: under(rooms, membership.maxRooms),
+    canAddStaff: under(staff, membership.maxStaff),
+  };
 }
 
 export async function applyReferrerSubscriptionChange(params: {
