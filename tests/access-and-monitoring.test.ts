@@ -2,6 +2,27 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { hasAdminPermission } from "../src/lib/admin-permissions";
 import { sanitiseError } from "../src/lib/sentry-options";
+import { bool } from "../src/server/form";
+import { decodeFeedback, encodeFeedback } from "../src/lib/feedback";
+
+test("boolean form values accept native checkboxes and explicit one values", () => {
+  for (const value of ["on", "true", "1"]) {
+    const data = new FormData();
+    data.set("accepted", value);
+    assert.equal(bool(data, "accepted"), true);
+  }
+  assert.equal(bool(new FormData(), "accepted"), false);
+});
+
+test("site feedback keeps its category, title, page and message in the review queue", () => {
+  const encoded = encodeFeedback("FEATURE", "Map controls", "Please add a clearer zoom control.", "https://www.roomsnow.co.uk/search");
+  assert.deepEqual(decodeFeedback(encoded), {
+    category: "FEATURE",
+    title: "Map controls",
+    pageUrl: "https://www.roomsnow.co.uk/search",
+    message: "Please add a clearer zoom control.",
+  });
+});
 
 test("non-admins cannot gain access from the default permissions field", () => {
   for (const role of ["USER", "PROVIDER", "REFERRER"]) {

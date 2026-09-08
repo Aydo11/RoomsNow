@@ -68,6 +68,7 @@ export const getCurrentUser = cache(async () => {
     include: {
       profile: true,
       staffOf: { include: { company: { include: { subscription: { include: { membership: true } } } } } },
+      referrerSubscription: { include: { membership: true } },
     },
   });
 

@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui";
 import { AdminFilters, AdminFilterField } from "@/components/admin-filters";
 import { AdminPagination, ADMIN_PAGE_SIZE, pageNumber } from "@/components/admin-pagination";
 import { adminNav } from "../nav";
+import { FEEDBACK_MARKER } from "@/lib/feedback";
 import { shortDate } from "@/lib/format";
 
 export const metadata = { title: "Reports" };
@@ -32,6 +33,7 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
   const from = dateBoundary(query.from);
   const to = dateBoundary(query.to, true);
   const where: Prisma.ReportWhereInput = {
+    NOT: { detail: { startsWith: FEEDBACK_MARKER } },
     ...(status ? { status } : {}),
     ...(targetType ? { targetType } : {}),
     ...(archive === "active" ? { archivedAt: null } : archive === "archived" ? { archivedAt: { not: null } } : {}),

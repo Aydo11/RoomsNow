@@ -117,9 +117,17 @@ export function CompanyForm({
 export function VerificationForm() {
   const [state, action] = useActionState(requestVerificationAction, { ok: false });
   const [selectedFiles, setSelectedFiles] = useState<Record<string, File[]>>({});
+  const [insuranceExpiry, setInsuranceExpiry] = useState("");
+  const [note, setNote] = useState("");
+  const [declaration, setDeclaration] = useState(false);
 
   useEffect(() => {
-    if (state.ok) setSelectedFiles({});
+    if (state.ok) {
+      setSelectedFiles({});
+      setInsuranceExpiry("");
+      setNote("");
+      setDeclaration(false);
+    }
   }, [state.ok]);
 
   function rememberFiles(name: string, list: FileList | null) {
@@ -180,7 +188,15 @@ export function VerificationForm() {
         required
         error={state.errors?.insuranceExpiry}
       >
-        <input id="insuranceExpiry" name="insuranceExpiry" type="date" required className="field max-w-xs" />
+        <input
+          id="insuranceExpiry"
+          name="insuranceExpiry"
+          type="date"
+          required
+          value={insuranceExpiry}
+          onChange={(event) => setInsuranceExpiry(event.currentTarget.value)}
+          className="field max-w-xs"
+        />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -205,11 +221,11 @@ export function VerificationForm() {
       </Field>
 
       <Field label="Anything we should know" name="note">
-        <textarea id="note" name="note" rows={3} className="field" />
+        <textarea id="note" name="note" rows={3} value={note} onChange={(event) => setNote(event.currentTarget.value)} className="field" />
       </Field>
 
       <label className="flex items-start gap-3 rounded-card border border-line bg-paper p-4 text-[14px] leading-relaxed text-ink-soft">
-        <input name="declaration" type="checkbox" value="1" required className="mt-1 h-4 w-4 accent-pine" />
+        <input name="declaration" type="checkbox" value="1" required checked={declaration} onChange={(event) => setDeclaration(event.currentTarget.checked)} className="mt-1 h-4 w-4 accent-pine" />
         <span>
           I am authorised to submit this evidence. I confirm it is accurate, current and relates to
           this organisation, and I will tell RoomsNow if anything material changes.
