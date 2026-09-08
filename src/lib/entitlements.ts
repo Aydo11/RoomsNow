@@ -1,6 +1,6 @@
 import type { CurrentUser } from "./session";
 
-const ENTITLED_STATUSES = new Set(["ACTIVE", "TRIALING", "PAST_DUE"]);
+const ENTITLED_STATUSES = new Set(["ACTIVE"]);
 
 /** Paid provider or referrer membership; admins retain access for moderation. */
 export function hasPaidMapAccess(user: CurrentUser | null) {
