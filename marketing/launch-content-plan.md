@@ -59,9 +59,9 @@ Share one genuinely useful post into a relevant group at a time. Read the group'
 | Date | Channel | Content | Status |
 | --- | --- | --- | --- |
 | 8 Sep 2026 | RoomsNow Facebook Page | HMO room viewing checklist launch | Published |
-| 8 Sep 2026 | Facebook Reel | 15-second HMO viewing checklist | Prepared for approval |
-| 8 Sep 2026 | HMO-Supported accommodation- Birmingham | Free Birmingham HMO viewing checklist | Prepared for approval |
-| 8 Sep 2026 | SOCIAL HOUSING AND SUPPORT IN BIRMINGHAM! | Checklist for applicants, families and support workers | Prepared for approval |
+| 8 Sep 2026 | Facebook Reel | 15-second HMO viewing checklist | Upload accepted; Facebook publish error, retry required |
+| 8 Sep 2026 | HMO-Supported accommodation- Birmingham | Free Birmingham HMO viewing checklist | Submitted; awaiting admin approval |
+| 8 Sep 2026 | SOCIAL HOUSING AND SUPPORT IN BIRMINGHAM! | Checklist for applicants, families and support workers | Published |
 
 ## Next Page posts
 
