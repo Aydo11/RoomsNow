@@ -135,6 +135,14 @@ export function VerificationForm() {
   }
 
   function submitWithRememberedFiles(formData: FormData) {
+    // React can hand this callback a snapshot taken before controlled values have
+    // finished syncing to the DOM. Send the values we display explicitly so the
+    // server always receives the declaration and date the provider confirmed.
+    formData.set("insuranceExpiry", insuranceExpiry);
+    formData.set("note", note);
+    if (declaration) formData.set("declaration", "1");
+    else formData.delete("declaration");
+
     for (const [name, files] of Object.entries(selectedFiles)) {
       formData.delete(name);
       for (const file of files) formData.append(name, file);
