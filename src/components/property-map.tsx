@@ -36,6 +36,7 @@ export function PropertyMap({
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [amenitiesFound, setAmenitiesFound] = useState<number | null>(null);
+  const [amenitiesAvailable, setAmenitiesAvailable] = useState(true);
 
   useEffect(() => {
     if (!container.current) return;
@@ -60,13 +61,16 @@ export function PropertyMap({
 
     async function addNearbyAmenities() {
       try {
+        setAmenitiesFound(null);
+        setAmenitiesAvailable(true);
         const response = await fetch(`/api/amenities?lat=${latitude}&lng=${longitude}`, {
           signal: controller.signal,
         });
-        if (!response.ok) return;
-        const data = await response.json() as { amenities?: Amenity[] };
+        if (!response.ok) throw new Error(`Amenities request returned ${response.status}`);
+        const data = await response.json() as { amenities?: Amenity[]; available?: boolean };
         if (!active) return;
         const amenities = data.amenities ?? [];
+        setAmenitiesAvailable(data.available !== false);
         setAmenitiesFound(amenities.length);
         for (const amenity of amenities) {
           const meta = AMENITY_META[amenity.type];
@@ -89,7 +93,10 @@ export function PropertyMap({
           marker.bindPopup(popup);
         }
       } catch {
-        if (active) setAmenitiesFound(0);
+        if (active) {
+          setAmenitiesAvailable(false);
+          setAmenitiesFound(0);
+        }
       }
     }
 
@@ -117,11 +124,13 @@ export function PropertyMap({
           </span>
         ))}
         <span className="ml-auto text-ink-faint">
-          {amenitiesFound === null
+          {!amenitiesAvailable
+            ? "Nearby places are temporarily unavailable"
+            : amenitiesFound === null
             ? "Finding useful places…"
             : amenitiesFound
               ? `${amenitiesFound} places shown`
-              : "Map labels still available"}
+              : "No mapped places found nearby"}
         </span>
       </div>
     </div>

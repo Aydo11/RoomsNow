@@ -11,6 +11,11 @@ type OverpassElement = {
 
 type AmenityType = "BUS_STOP" | "SHOP" | "JOB_CENTRE" | "PHARMACY";
 
+const OVERPASS_ENDPOINTS = [
+  { url: "https://overpass-api.de/api/interpreter", timeoutMs: 18_000 },
+  { url: "https://lz4.overpass-api.de/api/interpreter", timeoutMs: 8_000 },
+] as const;
+
 function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
   const radians = (value: number) => value * Math.PI / 180;
   const dLat = radians(lat2 - lat1);
@@ -37,25 +42,42 @@ export async function GET(request: NextRequest) {
   const lookupLatitude = Math.round(latitude * 1000) / 1000;
   const lookupLongitude = Math.round(longitude * 1000) / 1000;
 
-  const query = `[out:json][timeout:8];(
-    nwr(around:1600,${lookupLatitude},${lookupLongitude})["highway"="bus_stop"];
+  const query = `[out:json][timeout:18];(
+    node(around:1600,${lookupLatitude},${lookupLongitude})["highway"="bus_stop"];
     nwr(around:1600,${lookupLatitude},${lookupLongitude})["shop"~"^(supermarket|convenience)$"];
     nwr(around:2500,${lookupLatitude},${lookupLongitude})["office"="employment_agency"];
     nwr(around:2500,${lookupLatitude},${lookupLongitude})["government"="employment_agency"];
     nwr(around:2500,${lookupLatitude},${lookupLongitude})["amenity"="jobcentre"];
     nwr(around:1600,${lookupLatitude},${lookupLongitude})["amenity"="pharmacy"];
-  );out center 60;`;
+  );out center;`;
 
   try {
-    const response = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "RoomsNow/1.0 (roomsnow.co.uk)" },
-      body: new URLSearchParams({ data: query }),
-      signal: AbortSignal.timeout(9000),
-      next: { revalidate: 86_400 },
-    });
-    if (!response.ok) throw new Error(`Overpass returned ${response.status}`);
-    const data = await response.json() as { elements?: OverpassElement[] };
+    let data: { elements?: OverpassElement[]; remark?: string } | null = null;
+    let lastError: unknown = null;
+
+    // GET requests can use Next's data cache. That prevents every advert view
+    // from waiting on a public Overpass server and makes the first successful
+    // lookup reusable by every visitor to the same approximate area.
+    for (const endpoint of OVERPASS_ENDPOINTS) {
+      try {
+        const url = `${endpoint.url}?data=${encodeURIComponent(query)}`;
+        const response = await fetch(url, {
+          headers: { Accept: "application/json", "User-Agent": "RoomsNow/1.0 (https://roomsnow.co.uk)" },
+          signal: AbortSignal.timeout(endpoint.timeoutMs),
+          cache: "force-cache",
+          next: { revalidate: 86_400 },
+        });
+        if (!response.ok) throw new Error(`Overpass returned ${response.status}`);
+        const candidate = await response.json() as { elements?: OverpassElement[]; remark?: string };
+        if (candidate.remark?.toLowerCase().includes("timed out")) throw new Error(candidate.remark);
+        data = candidate;
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!data) throw lastError ?? new Error("No OpenStreetMap amenities response");
     const seen = new Set<string>();
     const sortedAmenities = (data.elements ?? []).flatMap((element) => {
       const lat = element.lat ?? element.center?.lat;
@@ -78,8 +100,16 @@ export async function GET(request: NextRequest) {
       return true;
     });
 
-    return NextResponse.json({ amenities }, { headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400" } });
+    return NextResponse.json(
+      { amenities, available: true },
+      { headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800" } },
+    );
   } catch {
-    return NextResponse.json({ amenities: [] }, { headers: { "Cache-Control": "public, max-age=300" } });
+    // Never cache a temporary upstream outage. A later advert view can retry
+    // immediately instead of receiving an empty result for five minutes.
+    return NextResponse.json(
+      { amenities: [], available: false },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   }
 }
