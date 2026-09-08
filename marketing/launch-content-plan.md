@@ -43,3 +43,48 @@ New on RoomsNow: straightforward guides for finding an HMO room, checking a prop
 - Improve one existing page or publish one useful answer based on that evidence.
 - Prepare one social post that links to the improved page.
 - Record the change, target query and result so the next update builds on evidence.
+
+## Facebook publishing cadence
+
+Use three Page posts each week so RoomsNow stays visible without repeating itself:
+
+- **Monday — practical help:** a checklist or simple answer for room seekers.
+- **Wednesday — how RoomsNow works:** search, referrals, provider contact or safety.
+- **Friday — live marketplace:** a real vacancy, active city or provider update. Publish this only when the listing is live and the details are current.
+
+Share one genuinely useful post into a relevant group at a time. Read the group's rules, adapt the introduction for its members and avoid reposting identical promotional copy across many groups on the same day.
+
+## Campaign log
+
+| Date | Channel | Content | Status |
+| --- | --- | --- | --- |
+| 8 Sep 2026 | RoomsNow Facebook Page | HMO room viewing checklist launch | Published |
+| 8 Sep 2026 | Facebook Reel | 15-second HMO viewing checklist | Prepared for approval |
+| 8 Sep 2026 | HMO-Supported accommodation- Birmingham | Free Birmingham HMO viewing checklist | Prepared for approval |
+| 8 Sep 2026 | SOCIAL HOUSING AND SUPPORT IN BIRMINGHAM! | Checklist for applicants, families and support workers | Prepared for approval |
+
+## Next Page posts
+
+### What is an HMO?
+
+What does HMO actually mean? It usually describes a home shared by people from more than one household who share facilities such as a kitchen or bathroom. Licensing can depend on the property and local council rules.
+
+Our simple guide explains what to check before renting an HMO room: https://www.roomsnow.co.uk/guides/what-is-an-hmo
+
+#HMORooms #SharedHousing #RoomToRent #HousingUK #RoomsNow
+
+### For professional referrers
+
+Searching for supported accommodation for someone you work with? Start with the placement requirements, current vacancy details and the provider's accepted referral route before sharing personal information.
+
+RoomsNow's referral guide covers a clear, proportionate process: https://www.roomsnow.co.uk/guides/supported-accommodation-referral-guide
+
+#SupportedAccommodation #SocialWorkUK #HousingSupport #ProfessionalReferrals #RoomsNow
+
+### For accommodation providers
+
+Current availability helps people and referral teams avoid chasing rooms that have already been filled.
+
+RoomsNow lets providers advertise HMO, supported and specialist accommodation, manage room-level availability and receive direct enquiries: https://www.roomsnow.co.uk/advertise-accommodation
+
+#HousingProviders #SupportedHousing #HMOManagement #PropertyMarketing #RoomsNow
