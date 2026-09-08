@@ -8,6 +8,17 @@ export function hasPaidMapAccess(user: CurrentUser | null) {
   if (user.role === "ADMIN") return true;
 
   const providerAccess = user.staffOf.some(({ company }) => {
+    const now = Date.now();
+    const grant = company.membershipGrants.find(
+      (item) =>
+        item.startsAt.getTime() <= now &&
+        !item.revokedAt &&
+        (!item.expiresAt || item.expiresAt.getTime() > now),
+    );
+    if (grant && (grant.membership.priceMonthly > 0 || (grant.membership.priceYearly ?? 0) > 0)) {
+      return true;
+    }
+
     const subscription = company.subscription;
     if (!subscription || !ENTITLED_STATUSES.has(subscription.status)) return false;
     return subscription.membership.priceMonthly > 0 || (subscription.membership.priceYearly ?? 0) > 0;

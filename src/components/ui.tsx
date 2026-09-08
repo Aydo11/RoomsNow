@@ -9,15 +9,19 @@ export function SubmitButton({
   pendingLabel,
   className = "btn-primary",
   disabled = false,
+  name,
+  value,
 }: {
   children: React.ReactNode;
   pendingLabel?: string;
   className?: string;
   disabled?: boolean;
+  name?: string;
+  value?: string;
 }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" className={className} disabled={pending || disabled} aria-busy={pending}>
+    <button type="submit" name={name} value={value} className={className} disabled={pending || disabled} aria-busy={pending}>
       {pending && (
         <svg
           className="h-4 w-4 animate-spin"

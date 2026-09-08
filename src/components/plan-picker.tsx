@@ -22,12 +22,14 @@ type Plan = {
 export function PlanPicker({
   plans,
   currentTier,
+  paidTier,
   cancelling,
   billingLive,
   paymentsEnabled,
 }: {
   plans: Plan[];
   currentTier: string;
+  paidTier?: string | null;
   cancelling: boolean;
   billingLive: boolean;
   paymentsEnabled: boolean;
@@ -79,12 +81,12 @@ export function PlanPicker({
         })}
       </ul>
 
-      {currentTier !== "FREE" && (
+      {paidTier && paidTier !== "FREE" && (
         <div className="card flex flex-wrap items-center justify-between gap-4 p-5">
           <p className="text-[15px] text-ink-soft">
             {cancelling
-              ? "Your plan is set to end when the current period finishes."
-              : "Cancelling keeps your plan running until the end of the period you've paid for."}
+              ? "Your paid subscription is set to end when the current period finishes."
+              : "Cancelling keeps your paid subscription running until the end of the period you've paid for."}
           </p>
           {!cancelling && (
             <div className="flex flex-wrap gap-2">
