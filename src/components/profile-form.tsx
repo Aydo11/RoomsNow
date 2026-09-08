@@ -1,5 +1,5 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 
 import { updateProfileAction } from "@/server/actions/profile";
 import { CheckGroup, Field, FormError, FormSuccess, SubmitButton, Toggle } from "./ui";
@@ -31,6 +31,13 @@ export function ProfileForm({
   };
 }) {
   const [state, action] = useActionState(updateProfileAction, { ok: false });
+  const [photoPreview, setPhotoPreview] = useState(profile.photoUrl);
+
+  useEffect(() => {
+    return () => {
+      if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
 
   return (
     <form action={action} className="space-y-6">
@@ -40,17 +47,27 @@ export function ProfileForm({
       <section className="card space-y-4 p-6">
         <h2 className="text-[20px]">About you</h2>
         <div className="flex items-center gap-4">
-          {profile.photoUrl ? (
+          {photoPreview ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.photoUrl} alt="" className="h-16 w-16 rounded-full object-cover" />
+            <img src={photoPreview} alt="Profile picture preview" className="h-24 w-24 rounded-full border-4 border-white object-cover shadow-raise" />
           ) : (
-            <span className="grid h-16 w-16 place-items-center rounded-full bg-paper-sunk text-[13px] text-ink-faint">
+            <span className="grid h-24 w-24 place-items-center rounded-full bg-paper-sunk text-[13px] text-ink-faint">
               No photo
             </span>
           )}
           <div className="flex-1">
             <Field label="Profile photo" name="photo" hint="Optional." error={state.errors?.photo}>
-              <input id="photo" name="photo" type="file" accept="image/*" className="field" />
+              <input
+                id="photo"
+                name="photo"
+                type="file"
+                accept="image/*"
+                className="field"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  if (file) setPhotoPreview(URL.createObjectURL(file));
+                }}
+              />
             </Field>
           </div>
         </div>

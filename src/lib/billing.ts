@@ -2,7 +2,7 @@ import "server-only";
 import Stripe from "stripe";
 import { db } from "./db";
 import { SPONSOR_PACKAGES, type SponsorPackage } from "./sponsor-packages";
-import { highestProviderMembership } from "./membership-access";
+import { highestProviderMembership, highestReferrerMembership } from "./membership-access";
 import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 
 export type CheckoutRequest = {
@@ -378,6 +378,21 @@ export async function applyReferrerSubscriptionChange(params: {
   });
 }
 
+export async function activeReferrerMembershipGrant(userId: string) {
+  const now = new Date();
+  return db.userMembershipGrant.findFirst({
+    where: {
+      userId,
+      startsAt: { lte: now },
+      revokedAt: null,
+      membership: { audience: "REFERRER", tier: "REFERRER_PRO" },
+      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+    },
+    include: { membership: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 /**
  * A referrer's plan gates two things: how many active clients they can hold at
  * once, and (inside shareClientAction) how many providers one client's
@@ -386,11 +401,26 @@ export async function applyReferrerSubscriptionChange(params: {
  */
 export async function referrerPlanLimits(userId: string) {
   await ensureReferrerMembershipCatalogue();
-  const subscription = await db.referrerSubscription.findUnique({ where: { userId }, include: { membership: true } });
+  const [subscription, grant, freeMembership] = await Promise.all([
+    db.referrerSubscription.findUnique({ where: { userId }, include: { membership: true } }),
+    activeReferrerMembershipGrant(userId),
+    db.membership.findUnique({ where: { tier: "REFERRER_FREE" } }),
+  ]);
   const entitled = subscription && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(subscription.status);
-  const membership = (entitled ? subscription.membership : null) ?? (await db.membership.findUnique({ where: { tier: "REFERRER_FREE" } }));
+  const membership = highestReferrerMembership(
+    entitled ? subscription.membership : null,
+    grant?.membership ?? null,
+    freeMembership,
+  );
   if (!membership) throw new Error("Referrer membership catalogue is empty. Run npm run db:seed.");
   const clients = await db.client.count({ where: { referrerId: userId, status: { not: "ARCHIVED" } } });
   const canAddClient = membership.maxClients === -1 || clients < membership.maxClients;
-  return { membership, subscription, used: { clients }, canAddClient };
+  return {
+    membership,
+    subscription,
+    grant,
+    source: grant?.membershipId === membership.id ? "ADMIN_GRANT" as const : entitled ? "PAID_SUBSCRIPTION" as const : "FREE" as const,
+    used: { clients },
+    canAddClient,
+  };
 }

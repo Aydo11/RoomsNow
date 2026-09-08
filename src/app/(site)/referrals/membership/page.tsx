@@ -48,12 +48,26 @@ export default async function ReferrerMembershipPage({
         </div>
       )}
 
+      {limits.grant && (
+        <div className="mb-5 animate-fade-in-up">
+          <FormSuccess
+            message={`RoomsNow has granted this account complimentary ${limits.grant.membership.name} access${
+              limits.grant.expiresAt ? ` until ${shortDate(limits.grant.expiresAt)}` : ""
+            }.`}
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard
           label="Current plan"
           value={limits.membership.name}
           hint={
-            limits.subscription?.currentPeriodEnd
+            limits.source === "ADMIN_GRANT"
+              ? limits.grant?.expiresAt
+                ? `Admin access ends ${shortDate(limits.grant.expiresAt)}`
+                : "Granted by RoomsNow"
+              : limits.subscription?.currentPeriodEnd
               ? `Renews ${shortDate(limits.subscription.currentPeriodEnd)}`
               : "No renewal date"
           }

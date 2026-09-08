@@ -51,30 +51,29 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
       ) : (
         <ul className="space-y-4">
           {requests.map((request) => (
-            <li key={request.id} className="card p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-[18px]">
-                    <Link href={`/listings/${request.listing.id}`} className="hover:text-pine-dark">
-                      {request.listing.title}
-                    </Link>
-                  </h2>
-                  <p className="mt-0.5 text-[14px] text-ink-soft">
-                    {request.listing.company.name} · requested {shortDate(request.createdAt)}
-                  </p>
+            <li key={request.id}>
+              <details className="card group overflow-hidden">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 hover:bg-paper [&::-webkit-details-marker]:hidden">
+                  <span className="min-w-0">
+                    <span className="block truncate text-[16px] font-semibold">{request.listing.title}</span>
+                    <span className="mt-0.5 block truncate text-[13px] text-ink-soft">{request.listing.company.name} · requested {shortDate(request.createdAt)}</span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-3">
+                    <span className="chip capitalize">{request.status.replace(/_/g, " ").toLowerCase()}</span>
+                    <svg viewBox="0 0 20 20" className="h-4 w-4 text-ink-faint transition group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg>
+                  </span>
+                </summary>
+                <div className="border-t border-line p-5">
+                  <div className="flex flex-wrap gap-2">
+                    <Link href={`/listings/${request.listing.id}`} className="btn-secondary">View advert</Link>
+                    <Link href="/messages" className="btn-secondary">Message provider</Link>
+                  </div>
+                  <div className="mt-5"><PipelineTrail status={request.status} /></div>
+                  {request.statusNote && (
+                    <p className="mt-4 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft">{request.statusNote}</p>
+                  )}
                 </div>
-                <Link href="/messages" className="btn-secondary">Message provider</Link>
-              </div>
-
-              <div className="mt-5">
-                <PipelineTrail status={request.status} />
-              </div>
-
-              {request.statusNote && (
-                <p className="mt-4 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft">
-                  {request.statusNote}
-                </p>
-              )}
+              </details>
             </li>
           ))}
         </ul>

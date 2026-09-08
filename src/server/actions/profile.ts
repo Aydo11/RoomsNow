@@ -85,6 +85,8 @@ export async function updateProfileAction(_prev: FormState, formData: FormData):
 
   await audit({ actorId: user.id, action: "profile.updated", targetType: "UserProfile", targetId: user.id });
   revalidatePath("/dashboard/profile");
+  revalidatePath("/people/[id]", "page");
+  revalidatePath("/people");
   return { ok: true, message: "Profile saved." };
 }
 

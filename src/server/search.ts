@@ -381,6 +381,12 @@ export async function getListing(id: string) {
         select: {
           id: true, name: true, slug: true, about: true, logoUrl: true,
           verification: true, orgType: true, city: true, status: true,
+          subscription: { include: { membership: true } },
+          membershipGrants: {
+            where: { revokedAt: null },
+            include: { membership: true },
+            orderBy: { createdAt: "desc" },
+          },
         },
       },
       property: true,

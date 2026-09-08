@@ -275,6 +275,8 @@ model User {
   clients                 Client[]                  @relation("ReferrerClients")
   clientSharesSent        ClientShare[]             @relation("ClientSharesSent")
   membershipGrantsMade    MembershipGrant[]         @relation("MembershipGrantAdmin")
+  userMembershipGrants    UserMembershipGrant[]     @relation("UserMembershipGrantRecipient")
+  userMembershipGrantsMade UserMembershipGrant[]    @relation("UserMembershipGrantAdmin")
 
   @@index([role, status])
 }
@@ -347,6 +349,7 @@ model Company {
   orgType            OrgType            @default(SUPPORTED_ACCOMMODATION_PROVIDER)
   about              String?
   logoUrl            String?
+  bannerUrl          String?
   supportTypes       String[]           @default([])
   verification       VerificationStatus @default(NOT_REQUESTED)
   verifiedAt         DateTime?
@@ -823,6 +826,7 @@ model Membership {
   subscriptions         Subscription[]
   referrerSubscriptions ReferrerSubscription[]
   adminGrants           MembershipGrant[]
+  userAdminGrants       UserMembershipGrant[]
 }
 
 /// A complimentary provider plan granted by a full administrator. This is
@@ -844,6 +848,27 @@ model MembershipGrant {
   updatedAt    DateTime   @updatedAt
 
   @@index([companyId, revokedAt, expiresAt])
+  @@index([grantedById, createdAt])
+}
+
+/// Complimentary access granted to one referrer account. Kept separate from
+/// ReferrerSubscription so an admin grant cannot alter Stripe billing records.
+model UserMembershipGrant {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation("UserMembershipGrantRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  membershipId String
+  membership   Membership @relation(fields: [membershipId], references: [id])
+  grantedById  String
+  grantedBy    User       @relation("UserMembershipGrantAdmin", fields: [grantedById], references: [id])
+  reason       String
+  startsAt     DateTime   @default(now())
+  expiresAt    DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([userId, revokedAt, expiresAt])
   @@index([grantedById, createdAt])
 }
 

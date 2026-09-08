@@ -51,6 +51,10 @@ export default async function HomePage() {
     }),
     searchListings({ sort: "featured" }),
   ]);
+  const homepageListings = [
+    ...featured.sponsored.map((listing) => ({ listing, sponsored: true })),
+    ...featured.items.map((listing) => ({ listing, sponsored: false })),
+  ].slice(0, 3);
 
   return (
     <>
@@ -119,7 +123,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {featured.items.length > 0 && (
+      {homepageListings.length > 0 && (
         <section className="shell py-12 sm:py-16">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -129,8 +133,8 @@ export default async function HomePage() {
             <Link href="/search" className="btn-secondary shrink-0">View all vacancies</Link>
           </div>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.items.slice(0, 3).map((listing) => (
-              <ListingCard key={listing.id} listing={listing} compact />
+            {homepageListings.map(({ listing, sponsored }) => (
+              <ListingCard key={listing.id} listing={listing} compact sponsored={sponsored} />
             ))}
           </div>
 

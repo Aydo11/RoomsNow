@@ -41,6 +41,7 @@ export async function updateCompanyAction(_prev: FormState, formData: FormData):
   const d = parsed.data;
 
   let logoUrl: string | undefined;
+  let bannerUrl: string | undefined;
   const logo = formData.get("logo");
   if (logo instanceof File && logo.size > 0) {
     const invalid = validateUpload(logo, "image");
@@ -49,6 +50,15 @@ export async function updateCompanyAction(_prev: FormState, formData: FormData):
     if (mismatch) return { ok: false, errors: { logo: mismatch } };
     const stored = await storage.put(logo, `companies/${companyId}`);
     logoUrl = stored.url;
+  }
+
+  const banner = formData.get("banner");
+  if (banner instanceof File && banner.size > 0) {
+    const invalid = validateUpload(banner, "image");
+    if (invalid) return { ok: false, errors: { banner: invalid } };
+    const mismatch = await verifyFileContents(banner, Buffer.from(await banner.arrayBuffer()));
+    if (mismatch) return { ok: false, errors: { banner: mismatch } };
+    bannerUrl = (await storage.put(banner, `companies/${companyId}/banners`)).url;
   }
 
   await db.company.update({
@@ -69,11 +79,13 @@ export async function updateCompanyAction(_prev: FormState, formData: FormData):
       operatingAreas: d.operatingAreas,
       supportTypes: d.supportTypes,
       ...(logoUrl ? { logoUrl } : {}),
+      ...(bannerUrl ? { bannerUrl } : {}),
     },
   });
 
   await audit({ actorId: user.id, action: "company.updated", targetType: "Company", targetId: companyId });
   revalidatePath("/provider/settings");
+  revalidatePath("/companies/[slug]", "page");
   return { ok: true, message: "Company profile saved." };
 }
 

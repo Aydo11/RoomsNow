@@ -46,6 +46,7 @@ export default async function ProviderSettingsPage() {
           operatingAreas: company.operatingAreas,
           supportTypes: company.supportTypes,
           logoUrl: company.logoUrl,
+          bannerUrl: company.bannerUrl,
         }}
       />
 
