@@ -96,7 +96,7 @@ export function ListingCard({
               {listing.company.logoUrl ? (
                 <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[9px] border border-line bg-white p-1">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={listing.company.logoUrl} alt="" className="h-full w-full object-contain" loading="lazy" />
+                  <img src={listing.company.logoUrl} alt="" className="h-full w-full rounded-full object-cover" loading="lazy" />
                 </span>
               ) : (
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-pine-light text-[12px] font-semibold text-pine-dark" aria-hidden="true">

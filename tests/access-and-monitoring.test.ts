@@ -4,7 +4,8 @@ import { hasAdminPermission } from "../src/lib/admin-permissions";
 import { sanitiseError } from "../src/lib/sentry-options";
 import { bool } from "../src/server/form";
 import { decodeFeedback, encodeFeedback } from "../src/lib/feedback";
-import { highestProviderMembership } from "../src/lib/membership-access";
+import { highestProviderMembership, highestReferrerMembership } from "../src/lib/membership-access";
+import { hasProviderMapAccess } from "../src/lib/entitlements";
 
 test("boolean form values accept native checkboxes and explicit one values", () => {
   for (const value of ["on", "true", "1"]) {
@@ -52,6 +53,21 @@ test("an admin grant raises access without reducing a higher paid plan", () => {
   assert.equal(highestProviderMembership(professional, business, free)?.id, "business");
   assert.equal(highestProviderMembership(business, professional, free)?.id, "business");
   assert.equal(highestProviderMembership(null, null, free)?.id, "free");
+
+  const referrerFree = { id: "referrer-free", tier: "REFERRER_FREE" };
+  const referrerPro = { id: "referrer-pro", tier: "REFERRER_PRO" };
+  assert.equal(highestReferrerMembership(null, referrerPro, referrerFree)?.id, "referrer-pro");
+  assert.equal(highestReferrerMembership(referrerPro, null, referrerFree)?.id, "referrer-pro");
+});
+test("a provider subscription or active admin grant makes advert maps public", () => {
+  const free = { priceMonthly: 0, priceYearly: null };
+  const paid = { priceMonthly: 4900, priceYearly: 49000 };
+  const activeGrant = { startsAt: new Date(Date.now() - 1000), expiresAt: null, revokedAt: null, membership: paid };
+
+  assert.equal(hasProviderMapAccess({ subscription: { status: "ACTIVE", membership: paid }, membershipGrants: [] }), true);
+  assert.equal(hasProviderMapAccess({ subscription: null, membershipGrants: [activeGrant] }), true);
+  assert.equal(hasProviderMapAccess({ subscription: { status: "CANCELLED", membership: paid }, membershipGrants: [] }), false);
+  assert.equal(hasProviderMapAccess({ subscription: { status: "ACTIVE", membership: free }, membershipGrants: [] }), false);
 });
 test("error monitoring strips submitted data and identity", () => {
   const event = sanitiseError({

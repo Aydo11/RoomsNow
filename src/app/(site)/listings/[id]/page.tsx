@@ -23,7 +23,7 @@ import { brand } from "@/brand.config";
 import { callerIp, LIMITS, rateLimit } from "@/lib/rate-limit";
 import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
 import { PropertyMap } from "@/components/property-map";
-import { hasPaidMapAccess } from "@/lib/entitlements";
+import { hasProviderMapAccess } from "@/lib/entitlements";
 
 export const dynamic = "force-dynamic";
 
@@ -101,7 +101,7 @@ export default async function ListingPage({
     : [null, null];
 
   const available = listing.rooms.filter((r) => r.status === "AVAILABLE");
-  const canViewMap = hasPaidMapAccess(user);
+  const canViewMap = hasProviderMapAccess(listing.company);
   const hasCoordinates = listing.property.latitude != null && listing.property.longitude != null;
   const mapLatitude = listing.property.showExactAddress ? listing.property.latitude : listing.property.latitude == null ? null : Math.round(listing.property.latitude * 1000) / 1000;
   const mapLongitude = listing.property.showExactAddress ? listing.property.longitude : listing.property.longitude == null ? null : Math.round(listing.property.longitude * 1000) / 1000;
@@ -226,7 +226,7 @@ export default async function ListingPage({
                   {listing.property.showExactAddress ? "Exact location supplied by the provider." : "Approximate area shown to protect the property's address."}
                 </p>
               </div>
-              {canViewMap && <span className="chip chip-active">Member feature</span>}
+              {canViewMap && <span className="chip chip-active">Provided with this advert</span>}
             </div>
             {canViewMap ? (
               hasCoordinates && mapLatitude != null && mapLongitude != null ? (
@@ -238,11 +238,8 @@ export default async function ListingPage({
               )
             ) : (
               <div className="rounded-card border border-pine/20 bg-pine-light/35 p-5">
-                <p className="font-medium text-ink">Maps are available with any paid membership.</p>
-                <p className="mt-1 max-w-[62ch] text-[14px] leading-relaxed text-ink-soft">Upgrade a provider or professional referrer account to view the property area directly on each advert.</p>
-                <Link href={user ? "/pricing" : `/login?next=/listings/${listing.id}`} className="btn-secondary mt-4">
-                  {user ? "View membership options" : "Sign in to check access"}
-                </Link>
+                <p className="font-medium text-ink">The provider has not included a map with this advert.</p>
+                <p className="mt-1 max-w-[62ch] text-[14px] leading-relaxed text-ink-soft">Providers can add public advert maps with any paid or complimentary upgraded membership.</p>
               </div>
             )}
           </section>
@@ -359,13 +356,13 @@ export default async function ListingPage({
                 <img
                   src={listing.company.logoUrl}
                   alt={`${listing.company.name} logo`}
-                  className="h-14 w-14 shrink-0 rounded-[12px] border border-line bg-white object-contain p-1.5"
+                  className="h-14 w-14 shrink-0 rounded-full border border-line bg-white object-cover"
                   loading="lazy"
                 />
               ) : (
                 <span
                   aria-hidden="true"
-                  className="grid h-14 w-14 shrink-0 place-items-center rounded-[12px] bg-pine-light text-[15px] font-semibold uppercase text-pine-dark"
+                  className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-pine-light text-[15px] font-semibold uppercase text-pine-dark"
                 >
                   {companyInitials(listing.company.name)}
                 </span>

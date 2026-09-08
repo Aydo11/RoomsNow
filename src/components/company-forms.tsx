@@ -162,28 +162,72 @@ export function CompanyForm({
     operatingAreas: string[];
     supportTypes: string[];
     logoUrl: string | null;
+    bannerUrl: string | null;
   };
 }) {
   const [state, action] = useActionState(updateCompanyAction, { ok: false });
+  const [logoPreview, setLogoPreview] = useState(company.logoUrl);
+  const [bannerPreview, setBannerPreview] = useState(company.bannerUrl);
+
+  useEffect(() => {
+    return () => {
+      if (logoPreview?.startsWith("blob:")) URL.revokeObjectURL(logoPreview);
+      if (bannerPreview?.startsWith("blob:")) URL.revokeObjectURL(bannerPreview);
+    };
+  }, [bannerPreview, logoPreview]);
 
   return (
     <form action={action} className="card space-y-4 p-6">
       <FormError message={state.errors?.form} />
       <FormSuccess message={state.ok ? state.message : undefined} />
 
-      <div className="flex items-center gap-4">
-        {company.logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={company.logoUrl} alt="" className="h-16 w-16 rounded-[10px] object-contain" />
-        ) : (
-          <span className="grid h-16 w-16 place-items-center rounded-[10px] bg-paper-sunk text-[12px] text-ink-faint">
-            No logo
-          </span>
-        )}
-        <div className="flex-1">
-          <Field label="Logo" name="logo" error={state.errors?.logo}>
-            <input id="logo" name="logo" type="file" accept="image/*" className="field" />
-          </Field>
+      <div>
+        <div className="relative h-40 overflow-hidden rounded-[14px] bg-gradient-to-br from-pine-dark to-pine-light">
+          {bannerPreview && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={bannerPreview} alt="Provider banner preview" className="h-full w-full object-cover" />
+          )}
+          <label htmlFor="banner" className="btn absolute bottom-3 right-3 cursor-pointer bg-white/95 text-pine-dark shadow-raise hover:bg-white">
+            Change banner
+          </label>
+          <input
+            id="banner"
+            name="banner"
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              if (file) setBannerPreview(URL.createObjectURL(file));
+            }}
+          />
+        </div>
+        {state.errors?.banner && <p className="mt-1 text-[13px] text-clay" role="alert">{state.errors.banner}</p>}
+
+        <div className="relative -mt-10 ml-5 flex items-end gap-4">
+          {logoPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoPreview} alt="Provider profile preview" className="h-24 w-24 rounded-full border-4 border-white bg-white object-cover shadow-raise" />
+          ) : (
+            <span className="grid h-24 w-24 place-items-center rounded-full border-4 border-white bg-pine-light text-[20px] font-semibold uppercase text-pine-dark shadow-raise">
+              {company.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("")}
+            </span>
+          )}
+          <div className="mb-1">
+            <label htmlFor="logo" className="btn-secondary cursor-pointer">Change profile picture</label>
+            <input
+              id="logo"
+              name="logo"
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                if (file) setLogoPreview(URL.createObjectURL(file));
+              }}
+            />
+            {state.errors?.logo && <p className="mt-1 text-[13px] text-clay" role="alert">{state.errors.logo}</p>}
+          </div>
         </div>
       </div>
 
@@ -211,7 +255,7 @@ export function CompanyForm({
           <input id="phone" name="phone" defaultValue={company.phone} className="field" />
         </Field>
         <Field label="Website" name="website">
-          <input id="website" name="website" defaultValue={company.website} className="field" />
+          <input id="website" name="website" inputMode="url" placeholder="https://yourwebsite.co.uk" defaultValue={company.website} className="field" />
         </Field>
         <Field label="Areas you cover" name="operatingAreas" hint="Separate with commas.">
           <input id="operatingAreas" name="operatingAreas" defaultValue={company.operatingAreas.join(", ")} className="field" />
@@ -230,7 +274,7 @@ export function CompanyForm({
         </Field>
       </div>
 
-      <Field label="About your organisation" name="about">
+      <Field label="About your organisation" name="about" hint="Explain who you support, your approach, experience and what makes your accommodation suitable.">
         <textarea id="about" name="about" rows={6} defaultValue={company.about} className="field" />
       </Field>
 

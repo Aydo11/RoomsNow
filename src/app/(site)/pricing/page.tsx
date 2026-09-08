@@ -51,7 +51,7 @@ export default async function PricingPage() {
             <ul className="mt-5 space-y-2.5 text-[15px]">
               <Feature>{plan.maxListings === -1 ? "Unlimited adverts" : `${plan.maxListings} live advert${plan.maxListings === 1 ? "" : "s"}`}</Feature>
               <Feature>{plan.maxRooms === -1 ? "Unlimited rooms" : `Up to ${plan.maxRooms} rooms`}</Feature>
-              <Feature>{plan.maxStaff === 1 ? "Single user" : `${plan.maxStaff} staff accounts`}</Feature>
+              <Feature>{plan.maxStaff === -1 ? "Unlimited staff accounts" : plan.maxStaff === 1 ? "Single user" : `${plan.maxStaff} staff accounts`}</Feature>
               <Feature enabled={plan.videoUploads}>Video uploads</Feature>
               <Feature enabled={plan.analytics}>Advert analytics</Feature>
               <Feature enabled={plan.priorityPlacement}>Priority placement in search</Feature>

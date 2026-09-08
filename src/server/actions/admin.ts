@@ -299,9 +299,127 @@ export async function manageProviderMembershipGrantAction(
   return { ok: true, message: `${membership.name} access granted to ${company.name}.` };
 }
 
+const userMembershipGrantSchema = z.object({
+  userId: z.string().cuid(),
+  intent: z.enum(["GRANT", "REVOKE"]),
+  tier: z.literal("REFERRER_PRO").optional(),
+  expiresOn: z.string().optional(),
+  reason: z.string().trim().min(5, "Add a short reason for the audit record.").max(500),
+});
+
+/** Grant complimentary Pro access to one professional referrer without altering Stripe billing. */
+export async function manageUserMembershipGrantAction(
+  _state: AdminMembershipGrantState,
+  formData: FormData,
+): Promise<AdminMembershipGrantState> {
+  const admin = await requireAdmin();
+  const parsed = userMembershipGrantSchema.safeParse({
+    userId: formData.get("userId"),
+    intent: formData.get("intent"),
+    tier: formData.get("tier") || undefined,
+    expiresOn: formData.get("expiresOn") || undefined,
+    reason: formData.get("reason"),
+  });
+  if (!parsed.success) {
+    const fields = parsed.error.flatten().fieldErrors;
+    return {
+      ok: false,
+      errors: Object.fromEntries(
+        Object.entries(fields).flatMap(([key, messages]) => messages?.[0] ? [[key, messages[0]]] : []),
+      ),
+    };
+  }
+
+  const { userId, intent, tier, expiresOn, reason } = parsed.data;
+  const target = await db.user.findFirst({
+    where: { id: userId, role: "REFERRER", status: "ACTIVE", deletedAt: null },
+    select: { firstName: true, lastName: true },
+  });
+  if (!target) return { ok: false, errors: { form: "Active professional-referrer account not found." } };
+  const targetName = `${target.firstName} ${target.lastName}`.trim();
+
+  if (intent === "REVOKE") {
+    const result = await db.userMembershipGrant.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    if (!result.count) return { ok: false, errors: { form: "This user has no active admin grant." } };
+    await notify({
+      userId,
+      type: "MEMBERSHIP",
+      title: "Complimentary membership ended",
+      body: "Your account now uses your paid membership, or the Free plan if you do not have an active subscription.",
+      href: "/referrals/membership",
+      email: true,
+    });
+    await audit({
+      actorId: admin.id,
+      action: "admin.user_membership_grant_revoked",
+      targetType: "User",
+      targetId: userId,
+      metadata: { reason },
+    });
+    revalidateUserMembershipPaths();
+    return { ok: true, message: `Complimentary membership removed from ${targetName}.` };
+  }
+
+  if (!tier) return { ok: false, errors: { tier: "Choose a plan to grant." } };
+  const membership = await db.membership.findFirst({
+    where: { tier, audience: "REFERRER", active: true },
+    select: { id: true, name: true },
+  });
+  if (!membership) return { ok: false, errors: { tier: "That referrer plan is unavailable." } };
+
+  let expiresAt: Date | null = null;
+  if (expiresOn) {
+    expiresAt = new Date(`${expiresOn}T23:59:59.999Z`);
+    if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+      return { ok: false, errors: { expiresOn: "Choose a future expiry date." } };
+    }
+  }
+
+  const now = new Date();
+  const grant = await db.$transaction(async (tx) => {
+    await tx.userMembershipGrant.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: now },
+    });
+    return tx.userMembershipGrant.create({
+      data: { userId, membershipId: membership.id, grantedById: admin.id, reason, expiresAt },
+    });
+  });
+
+  await notify({
+    userId,
+    type: "MEMBERSHIP",
+    title: `${membership.name} membership granted`,
+    body: expiresAt
+      ? `Complimentary access is active until ${expiresAt.toLocaleDateString("en-GB")}.`
+      : "Complimentary access is active until an administrator ends it.",
+    href: "/referrals/membership",
+    email: true,
+  });
+  await audit({
+    actorId: admin.id,
+    action: "admin.user_membership_grant_created",
+    targetType: "User",
+    targetId: userId,
+    metadata: { grantId: grant.id, tier, expiresAt: expiresAt?.toISOString() ?? null, reason },
+  });
+  revalidateUserMembershipPaths();
+  return { ok: true, message: `${membership.name} access granted to ${targetName}.` };
+}
+
 function revalidateMembershipPaths() {
   revalidatePath("/admin/memberships");
   revalidatePath("/admin/companies");
   revalidatePath("/provider");
   revalidatePath("/provider/membership");
+}
+
+function revalidateUserMembershipPaths() {
+  revalidatePath("/admin/memberships");
+  revalidatePath("/referrals");
+  revalidatePath("/referrals/clients");
+  revalidatePath("/referrals/membership");
 }
