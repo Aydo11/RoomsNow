@@ -16,3 +16,17 @@ export const reference = (prefix: string) =>
   `${prefix}-${Date.now().toString(36).toUpperCase().slice(-5)}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
 export const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+/**
+ * Reads the repeatable "socialPlatform" / "socialUrl" row pairs written by
+ * <SocialLinksField> back into an array, dropping rows left blank.
+ */
+export const socialLinks = (fd: FormData) => {
+  const platforms = fd.getAll("socialPlatform").map(String);
+  const urls = fd.getAll("socialUrl").map(String);
+  const out: { platform: string; url: string }[] = [];
+  platforms.forEach((platform, i) => {
+    const url = (urls[i] ?? "").trim();
+    if (url) out.push({ platform, url });
+  });
+  return out;
+};
