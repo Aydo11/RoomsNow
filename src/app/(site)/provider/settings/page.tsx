@@ -47,6 +47,9 @@ export default async function ProviderSettingsPage() {
           supportTypes: company.supportTypes,
           logoUrl: company.logoUrl,
           bannerUrl: company.bannerUrl,
+          socialLinks: Array.isArray(company.socialLinks)
+            ? (company.socialLinks as { platform: string; url: string }[])
+            : [],
         }}
       />
 
