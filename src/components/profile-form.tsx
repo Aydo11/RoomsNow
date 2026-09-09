@@ -1,7 +1,9 @@
 "use client";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState } from "react";
 
 import { updateProfileAction } from "@/server/actions/profile";
+import { AvatarDropzone } from "./avatar-dropzone";
+import { SocialLinksField, type SocialLink } from "./social-links-field";
 import { CheckGroup, Field, FormError, FormSuccess, SubmitButton, Toggle } from "./ui";
 import { ACCOMMODATION_TYPES, GENDER_ARRANGEMENTS, SUPPORT_TYPES } from "@/lib/taxonomy";
 
@@ -28,16 +30,10 @@ export function ProfileForm({
     showAge: boolean;
     showLocation: boolean;
     discoverable: boolean;
+    socialLinks: SocialLink[];
   };
 }) {
   const [state, action] = useActionState(updateProfileAction, { ok: false });
-  const [photoPreview, setPhotoPreview] = useState(profile.photoUrl);
-
-  useEffect(() => {
-    return () => {
-      if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
-    };
-  }, [photoPreview]);
 
   return (
     <form action={action} className="space-y-6">
@@ -46,31 +42,13 @@ export function ProfileForm({
 
       <section className="card space-y-4 p-6">
         <h2 className="text-[20px]">About you</h2>
-        <div className="flex items-center gap-4">
-          {photoPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoPreview} alt="Profile picture preview" className="h-24 w-24 rounded-full border-4 border-white object-cover shadow-raise" />
-          ) : (
-            <span className="grid h-24 w-24 place-items-center rounded-full bg-paper-sunk text-[13px] text-ink-faint">
-              No photo
-            </span>
-          )}
-          <div className="flex-1">
-            <Field label="Profile photo" name="photo" hint="Optional." error={state.errors?.photo}>
-              <input
-                id="photo"
-                name="photo"
-                type="file"
-                accept="image/*"
-                className="field"
-                onChange={(event) => {
-                  const file = event.currentTarget.files?.[0];
-                  if (file) setPhotoPreview(URL.createObjectURL(file));
-                }}
-              />
-            </Field>
-          </div>
-        </div>
+        <AvatarDropzone
+          id="photo"
+          name="photo"
+          initialPreview={profile.photoUrl}
+          fallback={<span className="text-[13px] normal-case text-pine-dark">No photo</span>}
+          error={state.errors?.photo}
+        />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="First name" name="firstName">
@@ -142,6 +120,14 @@ export function ProfileForm({
         <Field label="Anything else" name="otherRequirements">
           <textarea id="otherRequirements" name="otherRequirements" rows={3} defaultValue={profile.otherRequirements} className="field" />
         </Field>
+      </section>
+
+      <section className="card space-y-3 p-6">
+        <h2 className="text-[20px]">Social media</h2>
+        <p className="text-[15px] leading-relaxed text-ink-soft">
+          Optional. These only show on your profile if you switch &quot;Show my profile publicly&quot; on below.
+        </p>
+        <SocialLinksField initial={profile.socialLinks} error={state.errors?.socialUrl} />
       </section>
 
       <section className="card space-y-3 p-6">
