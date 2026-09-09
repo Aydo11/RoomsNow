@@ -2,6 +2,8 @@
 import { useActionState, useEffect, useState, type DragEvent } from "react";
 
 import { requestVerificationAction, updateCompanyAction } from "@/server/actions/company";
+import { AvatarDropzone } from "./avatar-dropzone";
+import { SocialLinksField, type SocialLink } from "./social-links-field";
 import { CheckGroup, Field, FormError, FormSuccess, SubmitButton } from "./ui";
 import { ORG_TYPES, SUPPORT_TYPES } from "@/lib/taxonomy";
 import {
@@ -163,18 +165,17 @@ export function CompanyForm({
     supportTypes: string[];
     logoUrl: string | null;
     bannerUrl: string | null;
+    socialLinks: SocialLink[];
   };
 }) {
   const [state, action] = useActionState(updateCompanyAction, { ok: false });
-  const [logoPreview, setLogoPreview] = useState(company.logoUrl);
   const [bannerPreview, setBannerPreview] = useState(company.bannerUrl);
 
   useEffect(() => {
     return () => {
-      if (logoPreview?.startsWith("blob:")) URL.revokeObjectURL(logoPreview);
       if (bannerPreview?.startsWith("blob:")) URL.revokeObjectURL(bannerPreview);
     };
-  }, [bannerPreview, logoPreview]);
+  }, [bannerPreview]);
 
   return (
     <form action={action} className="card space-y-4 p-6">
@@ -204,30 +205,14 @@ export function CompanyForm({
         </div>
         {state.errors?.banner && <p className="mt-1 text-[13px] text-clay" role="alert">{state.errors.banner}</p>}
 
-        <div className="relative -mt-10 ml-5 flex items-end gap-4">
-          {logoPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoPreview} alt="Provider profile preview" className="h-24 w-24 rounded-full border-4 border-white bg-white object-cover shadow-raise" />
-          ) : (
-            <span className="grid h-24 w-24 place-items-center rounded-full border-4 border-white bg-pine-light text-[20px] font-semibold uppercase text-pine-dark shadow-raise">
-              {company.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("")}
-            </span>
-          )}
-          <div className="mb-1">
-            <label htmlFor="logo" className="btn-secondary cursor-pointer">Change profile picture</label>
-            <input
-              id="logo"
-              name="logo"
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={(event) => {
-                const file = event.currentTarget.files?.[0];
-                if (file) setLogoPreview(URL.createObjectURL(file));
-              }}
-            />
-            {state.errors?.logo && <p className="mt-1 text-[13px] text-clay" role="alert">{state.errors.logo}</p>}
-          </div>
+        <div className="relative -mt-10 ml-5">
+          <AvatarDropzone
+            id="logo"
+            name="logo"
+            initialPreview={company.logoUrl}
+            fallback={company.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("")}
+            error={state.errors?.logo}
+          />
         </div>
       </div>
 
@@ -286,6 +271,14 @@ export function CompanyForm({
           columns={3}
         />
       </Field>
+
+      <div>
+        <label className="label">Social media</label>
+        <p className="mt-1 text-[13px] text-ink-faint">Shown on your public provider page.</p>
+        <div className="mt-2">
+          <SocialLinksField initial={company.socialLinks} error={state.errors?.socialUrl} />
+        </div>
+      </div>
 
       <SubmitButton pendingLabel="Saving…">Save company profile</SubmitButton>
     </form>
