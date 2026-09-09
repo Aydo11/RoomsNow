@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
 import { rateLimit } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/notify";
+import { renderEmail } from "@/lib/email-template";
 import type { FormState } from "@/lib/validation";
 
 const input = z.object({
@@ -56,7 +57,14 @@ export async function createTeamMember(_previous: FormState, form: FormData): Pr
       to: parsed.data.email,
       subject: "You have been invited to the RoomsNow admin team",
       text: `Set up your RoomsNow admin password using this one-use link (valid for one hour): ${setupUrl}`,
-      html: `<p>You have been invited to the RoomsNow admin team.</p><p><a href="${setupUrl}">Set up your account</a></p><p>This one-use link expires in one hour.</p>`,
+      html: renderEmail({
+        preheader: "Set up your RoomsNow admin account.",
+        heading: "You've been invited to the admin team",
+        bodyHtml: "You have been invited to join the RoomsNow admin team. Set up your password to get started.",
+        ctaLabel: "Set up your account",
+        ctaUrl: setupUrl,
+        note: "This one-use link expires in one hour.",
+      }),
     });
   } catch (error) {
     console.error("Admin invitation email failed:", error);
