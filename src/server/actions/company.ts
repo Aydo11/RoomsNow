@@ -6,8 +6,8 @@ import { requireCompany } from "@/lib/rbac";
 import { audit } from "@/lib/audit";
 import { storage, validateUpload, verifyFileContents } from "@/lib/storage";
 import { notify } from "@/lib/notify";
-import { fieldErrors, companySchema, type FormState } from "@/lib/validation";
-import { bool, list, text } from "../form";
+import { companySchema, fieldErrors, socialLinksSchema, type FormState } from "@/lib/validation";
+import { bool, list, socialLinks, text } from "../form";
 import {
   OPTIONAL_VERIFICATION_DOCUMENTS,
   REQUIRED_VERIFICATION_DOCUMENTS,
@@ -39,6 +39,9 @@ export async function updateCompanyAction(_prev: FormState, formData: FormData):
 
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
   const d = parsed.data;
+
+  const parsedSocial = socialLinksSchema.safeParse(socialLinks(formData));
+  if (!parsedSocial.success) return { ok: false, errors: { socialUrl: "Enter valid links, including https://." } };
 
   let logoUrl: string | undefined;
   let bannerUrl: string | undefined;
@@ -78,6 +81,7 @@ export async function updateCompanyAction(_prev: FormState, formData: FormData):
       about: d.about || null,
       operatingAreas: d.operatingAreas,
       supportTypes: d.supportTypes,
+      socialLinks: parsedSocial.data,
       ...(logoUrl ? { logoUrl } : {}),
       ...(bannerUrl ? { bannerUrl } : {}),
     },
