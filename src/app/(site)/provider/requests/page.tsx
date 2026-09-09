@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { EmptyState } from "@/components/ui";
 import { PipelineTrail } from "@/components/pipeline";
 import { StatusUpdater } from "@/components/status-updater";
+import { ArchiveRequestButton } from "@/components/archive-request-button";
 import { providerNav } from "../nav";
 import { PIPELINE, PIPELINE_LABELS } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
@@ -19,6 +20,7 @@ const REQUEST_FILTERS = [
   { value: "offers", label: "Offers", statuses: ["OFFERED", "ACCEPTED"] },
   { value: "completed", label: "Completed", statuses: ["MOVED_IN"] },
   { value: "closed", label: "Closed", statuses: ["DECLINED", "WITHDRAWN"] },
+  { value: "archived", label: "Archived", statuses: null },
 ] as const;
 
 export default async function ProviderRequestsPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
@@ -44,9 +46,13 @@ export default async function ProviderRequestsPage({ searchParams }: { searchPar
       },
     }),
   ]);
-  const visibleRequests = activeFilter.statuses
-    ? requests.filter((request) => (activeFilter.statuses as readonly string[]).includes(request.status))
-    : requests;
+  const unarchived = requests.filter((request) => !request.archivedAt);
+  const visibleRequests =
+    activeFilter.value === "archived"
+      ? requests.filter((request) => request.archivedAt)
+      : activeFilter.statuses
+        ? unarchived.filter((request) => (activeFilter.statuses as readonly string[]).includes(request.status))
+        : unarchived;
 
   return (
     <DashboardShell
@@ -61,9 +67,12 @@ export default async function ProviderRequestsPage({ searchParams }: { searchPar
         <>
           <nav className="mb-5 flex flex-wrap gap-2" aria-label="Filter accommodation requests">
             {REQUEST_FILTERS.map((filter) => {
-              const count = filter.statuses
-                ? requests.filter((request) => (filter.statuses as readonly string[]).includes(request.status)).length
-                : requests.length;
+              const count =
+                filter.value === "archived"
+                  ? requests.filter((request) => request.archivedAt).length
+                  : filter.statuses
+                    ? unarchived.filter((request) => (filter.statuses as readonly string[]).includes(request.status)).length
+                    : unarchived.length;
               const selected = filter.value === activeFilter.value;
               return (
                 <Link
@@ -87,11 +96,15 @@ export default async function ProviderRequestsPage({ searchParams }: { searchPar
                   <details className="card group overflow-hidden">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 hover:bg-paper [&::-webkit-details-marker]:hidden">
                       <span className="min-w-0">
-                        <span className="block truncate text-[16px] font-semibold text-ink">
+                        <Link
+                          href={`/provider/applicants/${request.applicant.id}`}
+                          className="block truncate text-[16px] font-semibold text-ink hover:text-pine-dark hover:underline"
+                        >
                           {request.applicant.firstName} {request.applicant.lastName}
-                        </span>
+                        </Link>
                         <span className="mt-0.5 block truncate text-[13px] text-ink-soft">
                           {request.listing.title} · applied {shortDate(request.createdAt)}
+                          {request.archivedAt ? " · Archived" : ""}
                         </span>
                       </span>
                       <span className="flex shrink-0 items-center gap-3">
@@ -115,7 +128,11 @@ export default async function ProviderRequestsPage({ searchParams }: { searchPar
                             </Link>
                           </p>
                         </div>
-                        <Link href="/messages" className="btn-secondary">Message</Link>
+                        <div className="flex flex-wrap gap-2">
+                          <Link href={`/provider/applicants/${request.applicant.id}`} className="btn-secondary">View profile</Link>
+                          <Link href="/messages" className="btn-secondary">Message</Link>
+                          <ArchiveRequestButton requestId={request.id} archived={Boolean(request.archivedAt)} />
+                        </div>
                       </div>
 
                       <div className="mt-4"><PipelineTrail status={request.status} /></div>
