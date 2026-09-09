@@ -15,6 +15,28 @@ Build trust with Birmingham and UK housing audiences, send qualified visitors to
 | Wed 23 Sep | Professional referrers | Branded image | A clear supported-accommodation referral starts with requirements and a live vacancy check. Link to `/guides/supported-accommodation-referral-guide`. |
 | Fri 25 Sep | Marketplace update | Listing or city image | Feature one real, currently available room. Use the exact location, price, support offered and listing link. Skip this post if the room is no longer live. |
 
+## Prepared Page post — Wednesday 9 September
+
+**Audience:** Professional referrers
+
+**Visual:** `marketing/assets/facebook/roomsnow-referrer-search.png`
+
+**Tagged destination:** https://www.roomsnow.co.uk/accommodation-referrals?utm_source=facebook&utm_medium=organic&utm_campaign=roomsnow_launch&utm_content=referrer_workflow_sep9
+
+Finding suitable accommodation can start with a long list of calls: checking the location, support offered, move-in date and whether a room is still available.
+
+RoomsNow brings those first checks together. Housing officers, support workers and other professional referrers can search current adverts by location and support need, review the details, and contact the accommodation provider directly.
+
+It is designed to make the first conversation clearer while keeping decisions and information sharing with the people responsible for the referral.
+
+Visit RoomsNow to see how accommodation search and referrals work: https://www.roomsnow.co.uk/accommodation-referrals?utm_source=facebook&utm_medium=organic&utm_campaign=roomsnow_launch&utm_content=referrer_workflow_sep9
+
+#SupportedAccommodation #HousingSupport #RoomsNow
+
+**Call to action:** Visit RoomsNow to see how accommodation search and referrals work.
+
+**Publishing status:** Ready for owner approval. Do not publish or share to a group until the destination Page and the group's current rules have been checked at action time.
+
 ## Ready Page posts
 
 ### Room-viewing checklist
