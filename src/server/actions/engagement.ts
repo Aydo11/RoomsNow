@@ -400,6 +400,31 @@ export async function updateRequestStatusAction(requestId: string, status: Reque
   revalidatePath("/dashboard/requests");
 }
 
+/**
+ * Archiving is purely a provider-side view filter — it never touches status
+ * or notifies the applicant, so it's safe for a provider to tidy up their
+ * queue without it looking like anything changed on the applicant's side.
+ */
+export async function archiveRequestAction(requestId: string) {
+  const user = await requireUser();
+  const request = await assertRequestAccess(user, requestId);
+  if (!canActForCompany(user, request.listing.companyId)) return;
+
+  await db.accommodationRequest.update({ where: { id: requestId }, data: { archivedAt: new Date() } });
+  await audit({ actorId: user.id, action: "request.archived", targetType: "AccommodationRequest", targetId: requestId });
+  revalidatePath("/provider/requests");
+}
+
+export async function unarchiveRequestAction(requestId: string) {
+  const user = await requireUser();
+  const request = await assertRequestAccess(user, requestId);
+  if (!canActForCompany(user, request.listing.companyId)) return;
+
+  await db.accommodationRequest.update({ where: { id: requestId }, data: { archivedAt: null } });
+  await audit({ actorId: user.id, action: "request.unarchived", targetType: "AccommodationRequest", targetId: requestId });
+  revalidatePath("/provider/requests");
+}
+
 // ------------------------------------------------------------------ reporting
 
 export async function createReportAction(_prev: FormState, formData: FormData): Promise<FormState> {
