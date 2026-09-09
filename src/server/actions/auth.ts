@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { createSession, destroySession, getCurrentUser } from "@/lib/session";
 import { audit } from "@/lib/audit";
 import { notify, sendEmail } from "@/lib/notify";
+import { renderEmail } from "@/lib/email-template";
 import { callerIp, LIMITS, rateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { fieldErrors, loginSchema, password, passwordChangeSchema, registerSchema, type FormState } from "@/lib/validation";
 import { bool, slugify, text } from "../form";
@@ -32,7 +33,14 @@ async function createEmailVerification(userId: string, email: string) {
     to: email,
     subject: "Verify your RoomsNow email",
     text: `Confirm your email address using this link (valid for 24 hours): ${verifyUrl}\n\nIf you did not create this account, you can ignore this email.`,
-    html: `<p>Welcome to RoomsNow. Confirm your email address using the button below.</p><p><a href="${verifyUrl}">Verify email address</a></p><p>This link expires in 24 hours. If you did not create this account, you can ignore this email.</p>`,
+    html: renderEmail({
+      preheader: "Confirm your email address to activate your RoomsNow account.",
+      heading: "Confirm your email address",
+      bodyHtml: "Welcome to RoomsNow — you're almost set up. Confirm your email address to activate your account.",
+      ctaLabel: "Verify email address",
+      ctaUrl: verifyUrl,
+      note: "This link expires in 24 hours. If you did not create this account, you can safely ignore this email.",
+    }),
   });
 }
 
@@ -318,12 +326,20 @@ export async function forgotPasswordAction(_prev: FormState, formData: FormData)
   ]);
 
   const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
   try {
     await sendEmail({
       to: user.email,
       subject: "Reset your RoomsNow password",
-      text: `Reset your password using this link (valid for one hour): ${appUrl}/reset-password?token=${encodeURIComponent(token)}\n\nIf you did not request this, you can ignore this email.`,
-      html: `<p>Reset your password using the link below. It is valid for one hour.</p><p><a href="${appUrl}/reset-password?token=${encodeURIComponent(token)}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`,
+      text: `Reset your password using this link (valid for one hour): ${resetUrl}\n\nIf you did not request this, you can ignore this email.`,
+      html: renderEmail({
+        preheader: "Reset the password on your RoomsNow account.",
+        heading: "Reset your password",
+        bodyHtml: "We received a request to reset the password on your RoomsNow account. Click below to choose a new one.",
+        ctaLabel: "Reset password",
+        ctaUrl: resetUrl,
+        note: "This link expires in 1 hour. If you did not request this, you can safely ignore this email — your password will not be changed.",
+      }),
     });
   } catch (error) {
     console.error("Password reset email failed:", error);
