@@ -14,6 +14,7 @@ type Plan = {
   priceMonthly: number;
   maxListings: number;
   maxRooms: number;
+  maxStaff: number;
   featuredCredits: number;
   analytics: boolean;
   priorityPlacement: boolean;
@@ -55,6 +56,8 @@ export function PlanPicker({
               <ul className="mt-4 flex-1 space-y-1.5 text-[14px] text-ink-soft">
                 <li>{limit(plan.maxListings)} live adverts</li>
                 <li>{limit(plan.maxRooms)} rooms</li>
+                <li>{limit(plan.maxStaff)} staff accounts</li>
+                <li>{plan.priceMonthly > 0 ? "Public advert maps with nearby amenities" : "No public advert maps"}</li>
                 <li>{plan.featuredCredits} promoted slots included</li>
                 <li>{plan.analytics ? "Analytics included" : "No analytics"}</li>
                 <li>{plan.priorityPlacement ? "Priority placement in search" : "Standard placement"}</li>
