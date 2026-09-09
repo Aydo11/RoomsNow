@@ -47,6 +47,9 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
   const websiteHref = company.website
     ? /^https?:\/\//i.test(company.website) ? company.website : `https://${company.website}`
     : null;
+  const socialLinks = Array.isArray(company.socialLinks)
+    ? (company.socialLinks as { platform: string; url: string }[])
+    : [];
 
   return (
     <div className="shell py-10">
@@ -123,6 +126,21 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
                 <a href={websiteHref} target="_blank" rel="noopener noreferrer" className="btn-secondary mt-4 w-full">
                   Visit provider website
                 </a>
+              )}
+              {socialLinks.length > 0 && (
+                <p className="mt-3 flex flex-wrap gap-2">
+                  {socialLinks.map((link, index) => (
+                    <a
+                      key={index}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="chip capitalize hover:border-pine hover:text-pine-dark"
+                    >
+                      {link.platform}
+                    </a>
+                  ))}
+                </p>
               )}
               <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">Use an advert below to contact the provider through RoomsNow.</p>
             </aside>
