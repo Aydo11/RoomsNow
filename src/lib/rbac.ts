@@ -105,6 +105,24 @@ export async function assertRequestAccess(user: CurrentUser, requestId: string) 
 }
 
 /**
+ * An applicant's full profile is visible to a provider only once that
+ * applicant has actually applied to one of their listings — never to browse
+ * arbitrary accounts. Admins can always view it.
+ */
+export async function assertApplicantAccess(user: CurrentUser, applicantId: string) {
+  if (hasAdminPermission(user)) return true;
+  const applied = await db.accommodationRequest.findFirst({
+    where: {
+      applicantId,
+      listing: { companyId: { in: user.staffOf.map((s) => s.companyId) } },
+    },
+    select: { id: true },
+  });
+  if (!applied) throw new AuthorisationError("Applicant not found.");
+  return true;
+}
+
+/**
  * A client record is visible to: the referrer who owns it, staff at any
  * company it has been actively shared with (a revoked share loses access
  * immediately), and admins.
