@@ -93,6 +93,9 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
       locationLabel: data.locationLabel || null,
       contactMethod: data.contactMethod,
       emailVerificationRequired: true,
+      ...(data.accountType === "REFERRER"
+        ? { organisation: data.organisation || null, jobTitle: data.jobTitle || null }
+        : {}),
       profile:
         data.accountType === "USER"
           ? { create: { preferredLocations: data.locationLabel ? [data.locationLabel] : [] } }
