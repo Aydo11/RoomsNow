@@ -23,7 +23,7 @@ const REQUEST_FILTERS = [
   { value: "archived", label: "Archived", statuses: null },
 ] as const;
 
-export default async function ProviderRequestsPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
+export default async function ProviderRequestsPage({ searchParams }: { searchParams: Promise<{ view?: string; request?: string }> }) {
   const { companyId } = await requireCompany();
   const query = await searchParams;
   const activeFilter = REQUEST_FILTERS.find((filter) => filter.value === query.view) ?? REQUEST_FILTERS[0];
@@ -92,8 +92,8 @@ export default async function ProviderRequestsPage({ searchParams }: { searchPar
           ) : (
             <ul className="space-y-3">
               {visibleRequests.map((request) => (
-                <li key={request.id}>
-                  <details className="card group overflow-hidden">
+                <li key={request.id} id={`request-${request.id}`} className="scroll-mt-24">
+                  <details className="card group overflow-hidden" open={query.request === request.id}>
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 hover:bg-paper [&::-webkit-details-marker]:hidden">
                       <span className="min-w-0">
                         <Link

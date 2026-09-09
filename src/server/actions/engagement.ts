@@ -361,7 +361,7 @@ export async function createRequestAction(_prev: FormState, formData: FormData):
     type: "REQUEST",
     title: "New accommodation request",
     body: `${user.firstName} ${user.lastName.charAt(0)}. requested ${listing.title}.`,
-    href: `/provider/requests/${request.id}`,
+    href: `/provider/requests?request=${encodeURIComponent(request.id)}`,
     email: true,
   });
   await audit({ actorId: user.id, action: "request.created", targetType: "AccommodationRequest", targetId: request.id });
