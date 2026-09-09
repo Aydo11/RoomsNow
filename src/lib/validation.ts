@@ -65,6 +65,21 @@ export const registerSchema = z.object({
   terms: z.literal("on", { errorMap: () => ({ message: "Please accept the terms to continue." }) }),
 });
 
+export const socialLinkSchema = z.object({
+  platform: z.enum(["instagram", "facebook", "twitter", "linkedin", "tiktok", "youtube", "website", "other"]),
+  url: z.string().trim().url("Enter a valid link, including https://.").max(300),
+});
+export const socialLinksSchema = z.array(socialLinkSchema).max(8, "Add up to 8 links.");
+
+export const referrerProfileSchema = z.object({
+  firstName: z.string().trim().min(1, "Enter your first name.").max(80),
+  lastName: z.string().trim().min(1, "Enter your last name.").max(80),
+  phone: z.string().trim().max(30).optional().or(z.literal("")),
+  locationLabel: z.string().trim().max(120).optional().or(z.literal("")),
+  organisation: z.string().trim().max(160).optional().or(z.literal("")),
+  jobTitle: z.string().trim().max(120).optional().or(z.literal("")),
+});
+
 export const loginSchema = z.object({
   email,
   password: z.string().min(1, "Enter your password."),
