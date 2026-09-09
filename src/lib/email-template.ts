@@ -2,11 +2,13 @@ import "server-only";
 import { brand } from "@/brand.config";
 
 /**
- * Shared visual shell for transactional emails (verification, password
- * reset, and similar link-based emails). Table-based layout with inline
- * styles for compatibility with clients that ignore <style> blocks (Outlook
- * desktop chief among them). Matches the site's pine/ink/paper palette
- * defined in tailwind.config.ts.
+ * Shared visual shell for every transactional email RoomsNow sends
+ * (verification, password reset, admin invites, and every system
+ * notification that also emails — advert status, verification,
+ * membership, referrals). Table-based layout with inline styles for
+ * compatibility with clients that ignore <style> blocks (Outlook desktop
+ * chief among them). Matches the site's pine/ink/paper palette defined in
+ * tailwind.config.ts.
  */
 const COLORS = {
   pine: "#1666AA",
@@ -19,18 +21,30 @@ const COLORS = {
   line: "#D9E2EC",
 };
 
+/** Escapes text pulled from user/company-supplied data before it goes into an HTML email. */
+export function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 export function renderEmail(params: {
   /** Hidden preview text shown next to the subject line in most inboxes. */
   preheader: string;
   heading: string;
-  /** Body copy as HTML (plain text is fine — no need for <p> wrapping). */
+  /** Body copy as HTML (plain text is fine — no need for <p> wrapping). Escape any user-supplied values first. */
   bodyHtml: string;
-  ctaLabel: string;
-  ctaUrl: string;
+  /** Omit both to render a plain notice with no button (e.g. "your password was changed"). */
+  ctaLabel?: string;
+  ctaUrl?: string;
   /** Small muted note under the link, e.g. an expiry or ignore-this notice. */
   note?: string;
 }) {
   const { preheader, heading, bodyHtml, ctaLabel, ctaUrl, note } = params;
+  const hasCta = Boolean(ctaLabel && ctaUrl);
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -55,7 +69,9 @@ export function renderEmail(params: {
                 <div style="font-size:15px; line-height:1.6; color:${COLORS.inkSoft};">${bodyHtml}</div>
               </td>
             </tr>
-            <tr>
+            ${
+              hasCta
+                ? `<tr>
               <td style="padding:12px 36px 8px;">
                 <table role="presentation" cellpadding="0" cellspacing="0">
                   <tr>
@@ -73,7 +89,9 @@ export function renderEmail(params: {
                   <a href="${ctaUrl}" style="color:${COLORS.pine}; word-break:break-all;">${ctaUrl}</a>
                 </p>
               </td>
-            </tr>
+            </tr>`
+                : ""
+            }
             ${
               note
                 ? `<tr><td style="padding:16px 36px 0;"><p style="margin:0; font-size:13px; color:${COLORS.inkFaint};">${note}</p></td></tr>`
