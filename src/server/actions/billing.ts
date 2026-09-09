@@ -60,12 +60,15 @@ export async function cancelMembershipAction(atPeriodEnd = true) {
 
 /**
  * Sponsored placement packages. Stripe Checkout is required unless the plan
- * includes a placement credit. The bid decides the order of slots on page one;
+ * includes a free placement credit â and a credit only ever covers the 7-day
+ * (WEEK) package. Choosing MONTH or QUARTER always goes to Stripe, even with
+ * credits remaining, and using up the free 7-day slot(s) also sends further
+ * WEEK requests to Stripe. The bid decides the order of slots on page one;
  * it has no effect on organic ranking, and sponsored adverts never appear on
  * later pages.
  */
 /** Buys a sponsored slot for one advert. Sponsored placement is always labelled. */
-export async function featureListingAction(listingId: string, pkg: SponsorPackage = "MONTH") {
+export async function featureListingAction(listingId: string, pkg: SponsorPackage = "WEEK") {
   const { user, companyId } = await requireCompany();
   const listing = await db.listing.findUnique({
     where: { id: listingId },
@@ -74,7 +77,7 @@ export async function featureListingAction(listingId: string, pkg: SponsorPackag
   if (!listing) return { ok: false, message: "Advert not found." };
   await assertCompanyAccess(user, listing.companyId);
 
-  // Only a live advert can be sponsored — no paying to promote something unapproved.
+  // Only a live advert can be sponsored â no paying to promote something unapproved.
   if (listing.status !== "ACTIVE") {
     return { ok: false, message: "Only live adverts can be sponsored." };
   }
@@ -85,7 +88,9 @@ export async function featureListingAction(listingId: string, pkg: SponsorPackag
   const used = await db.listing.count({
     where: { companyId, featured: true, OR: [{ featuredUntil: null }, { featuredUntil: { gte: new Date() } }] },
   });
-  const usingCredit = used < credits;
+  // A plan's free credits only ever pay for the 7-day package â a longer
+  // sponsorship (or a 7-day one beyond the included count) always goes to Stripe.
+  const usingCredit = pkg === "WEEK" && used < credits;
 
   if (!usingCredit) {
     const appUrl = process.env.APP_URL ?? "http://localhost:3000";
