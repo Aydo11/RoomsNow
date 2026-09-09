@@ -5,12 +5,15 @@ import { db } from "@/lib/db";
 import { requireUser } from "@/lib/rbac";
 import { audit } from "@/lib/audit";
 import { storage, validateUpload, verifyFileContents } from "@/lib/storage";
-import { fieldErrors, profileSchema, type FormState } from "@/lib/validation";
-import { bool, date, list, text } from "../form";
+import { fieldErrors, profileSchema, socialLinksSchema, type FormState } from "@/lib/validation";
+import { bool, date, list, socialLinks, text } from "../form";
 import type { AccommodationType } from "@prisma/client";
 
 export async function updateProfileAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
+
+  const parsedSocial = socialLinksSchema.safeParse(socialLinks(formData));
+  if (!parsedSocial.success) return { ok: false, errors: { socialUrl: "Enter valid links, including https://." } };
 
   const parsed = profileSchema.safeParse({
     about: text(formData, "about"),
@@ -64,6 +67,7 @@ export async function updateProfileAction(_prev: FormState, formData: FormData):
     showAge: d.showAge,
     showLocation: d.showLocation,
     discoverable: d.discoverable,
+    socialLinks: parsedSocial.data,
     ...(photoUrl ? { photoUrl } : {}),
   };
 
