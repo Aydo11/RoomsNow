@@ -41,6 +41,9 @@ export default async function ProfilePage() {
           showAge: user.profile?.showAge ?? true,
           showLocation: user.profile?.showLocation ?? true,
           discoverable: user.profile?.discoverable ?? false,
+          socialLinks: Array.isArray(user.profile?.socialLinks)
+            ? (user.profile!.socialLinks as { platform: string; url: string }[])
+            : [],
         }}
       />
     </DashboardShell>
