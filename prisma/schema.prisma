@@ -240,6 +240,14 @@ model User {
   phone                     String?
   locationLabel             String?
   contactMethod             ContactMethod @default(MESSAGE)
+  /// Account-level profile picture. Used by roles (REFERRER) that don't have
+  /// their own profile record with a photo field.
+  avatarUrl                 String?
+  /// Referrer-only: organisation and role, captured at registration.
+  organisation               String?
+  jobTitle                   String?
+  /// Array of { platform, url }. Shown on the account's own profile pages.
+  socialLinks                Json?
   emailVerified             DateTime?
   emailVerificationRequired Boolean       @default(false)
   lastLoginAt               DateTime?
@@ -326,6 +334,8 @@ model UserProfile {
   showAge            Boolean             @default(true)
   showLocation       Boolean             @default(true)
   discoverable       Boolean             @default(false)
+  /// Array of { platform, url }. Shown on the public profile when publicProfile is on.
+  socialLinks        Json?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -350,6 +360,8 @@ model Company {
   about              String?
   logoUrl            String?
   bannerUrl          String?
+  /// Array of { platform, url }. Shown on the public company profile page.
+  socialLinks        Json?
   supportTypes       String[]           @default([])
   verification       VerificationStatus @default(NOT_REQUESTED)
   verifiedAt         DateTime?
@@ -565,6 +577,9 @@ model AccommodationRequest {
   statusNote         String?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
+  /// Set when a provider archives this request from their queue. Purely a
+  /// view filter — never changes status or notifies the applicant.
+  archivedAt         DateTime?
 
   application Application?
   documents   Document[]
