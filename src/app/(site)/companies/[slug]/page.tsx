@@ -89,7 +89,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
                   {company.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("")}
                 </span>
               )}
-              <div className="min-w-0 pb-1">
+              <div className="min-w-0 translate-y-2 pb-1">
                 <h1 className="truncate text-[28px] leading-tight sm:text-[34px]">{company.name}</h1>
                 <p className="mt-1 text-[14px] text-ink-soft">
                   {ORG_TYPES[company.orgType]}{company.city ? ` · ${company.city}` : ""}
