@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "./db";
+import { escapeHtml, renderEmail } from "./email-template";
 import type { NotificationType } from "@prisma/client";
 
 /**
@@ -29,7 +30,21 @@ export async function notify(params: {
 
   if (params.email) {
     const user = await db.user.findUnique({ where: { id: params.userId }, select: { email: true } });
-    if (user) await sendEmail({ to: user.email, subject: params.title, text: params.body ?? params.title });
+    if (user) {
+      const appUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+      const ctaUrl = params.href ? `${appUrl}${params.href}` : undefined;
+      await sendEmail({
+        to: user.email,
+        subject: params.title,
+        text: [params.body ?? params.title, ctaUrl].filter(Boolean).join("\n\n"),
+        html: renderEmail({
+          preheader: params.body ?? params.title,
+          heading: params.title,
+          bodyHtml: params.body ? `<p style="margin:0;">${escapeHtml(params.body)}</p>` : "",
+          ...(ctaUrl ? { ctaLabel: "View in RoomsNow", ctaUrl } : {}),
+        }),
+      });
+    }
   }
 
   return notification;
