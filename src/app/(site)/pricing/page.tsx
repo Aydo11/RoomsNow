@@ -120,11 +120,11 @@ export default async function PricingPage() {
                     <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-pine-dark">Referral agency membership</p>
                     <h2 className="mt-1 text-[20px]">A simple launch price for professional teams</h2>
                   </div>
-                  <span className="rounded-pill bg-pine-light px-3 py-1.5 text-[13px] font-medium text-pine-dark">Â£19 per referrer account / month</span>
+                  <span className="rounded-pill bg-pine-light px-3 py-1.5 text-[13px] font-medium text-pine-dark">£19 per referrer account / month</span>
                 </div>
                 <p className="mt-2 max-w-[68ch] text-[15px] leading-relaxed text-ink-soft">
                   Save the people you support once as clients, then refer them to a live advert or
-                  share their profile with any provider â no re-typing the same details into a new
+                  share their profile with any provider — no re-typing the same details into a new
                   form each time. Pro removes the caseload limit and lets you share one profile with
                   as many providers as you're approaching at once, which matters when you're placing
                   someone urgently.
