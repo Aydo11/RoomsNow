@@ -7,6 +7,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { PipelineTrail } from "@/components/pipeline";
 import { WithdrawReferral } from "@/components/withdraw-referral";
 import { DirectMessageForm } from "@/components/direct-message-form";
+import { AddReferralDocumentForm } from "@/components/add-referral-document-form";
 import { referrerNav } from "../nav";
 import { PIPELINE_LABELS, URGENCY_LABELS } from "@/lib/taxonomy";
 import { ageFrom, shortDate, timeAgo } from "@/lib/format";
@@ -108,6 +109,13 @@ export default async function ReferralPage({ params }: { params: Promise<{ id: s
                 ))}
               </ul>
             </>
+          )}
+
+          {isReferrer && (
+            <div className="mt-6 border-t border-line pt-5">
+              <h3 className="text-[16px]">Add another document</h3>
+              <AddReferralDocumentForm referralId={referral.id} />
+            </div>
           )}
         </div>
 
