@@ -41,9 +41,8 @@ const FEATURED_CITIES = [
 ] as const;
 
 export default async function HomePage() {
-  const [roomsAvailable, providers, cities, featured] = await Promise.all([
+  const [roomsAvailable, cities, featured] = await Promise.all([
     db.room.count({ where: { status: "AVAILABLE", listing: { status: "ACTIVE" } } }),
-    db.company.count({ where: { status: "ACTIVE" } }),
     db.property.findMany({
       where: { listings: { some: { status: "ACTIVE" } } },
       select: { city: true },
@@ -85,7 +84,6 @@ export default async function HomePage() {
 
           <dl className="mt-7 flex flex-wrap justify-center gap-x-8 gap-y-3 text-[14px]">
             <Stat value={roomsAvailable} label="rooms available" />
-            <Stat value={providers} label="active providers" />
             <Stat value={cities.length} label="areas with vacancies" />
           </dl>
         </div>
