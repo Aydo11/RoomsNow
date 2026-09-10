@@ -127,10 +127,13 @@ export function renderEmail(params: {
 export function renderPreLaunchInviteEmail(params: {
   /** First name only, already trusted (pulled from our own outreach list, not user input) — escaped anyway. */
   recipientName?: string;
+  /** Whoever is sending this send — set from the admin form, so it can change per outreach batch. */
+  senderName: string;
   ctaUrl: string;
 }) {
-  const { recipientName, ctaUrl } = params;
+  const { recipientName, senderName, ctaUrl } = params;
   const greeting = recipientName ? `Hi ${escapeHtml(recipientName)},` : "Hi,";
+  const sender = escapeHtml(senderName);
   const stat = (value: string, label: string, source: string) => `
                     <td width="33.33%" valign="top" style="padding:16px 10px; text-align:center;">
                       <div style="font-size:26px; font-weight:700; color:${COLORS.pineDark}; letter-spacing:-0.01em;">${value}</div>
@@ -162,10 +165,10 @@ export function renderPreLaunchInviteEmail(params: {
                 <h1 style="margin:0 0 14px; font-size:24px; line-height:1.3; color:${COLORS.ink};">One Birmingham provider to another: come and fill your rooms before we go live</h1>
                 <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">${greeting}</p>
                 <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  I'm Ayden — I run Valor Housing here in Birmingham, so this isn't a platform
-                  cold-emailing you about something abstract. I carry the same voids you do, and
-                  I built ${brand.name} because I was tired of filling them with phone calls and
-                  whoever happened to be free that week.
+                  I'm ${sender} — I run a supported accommodation business here in Birmingham
+                  myself, so this isn't a platform cold-emailing you about something abstract. I
+                  carry the same voids you do, and I built ${brand.name} because I was tired of
+                  filling them with phone calls and whoever happened to be free that week.
                 </p>
                 <p style="margin:0 0 4px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
                   Here's the size of the problem we're both dealing with:
@@ -257,8 +260,8 @@ export function renderPreLaunchInviteEmail(params: {
             <tr>
               <td style="padding:24px 40px 8px;">
                 <p style="margin:0; font-size:14.5px; line-height:1.65; color:${COLORS.inkSoft};">
-                  Ayden<br />
-                  Founder, ${brand.name} &middot; Managing Director, Valor Housing
+                  ${sender}<br />
+                  Founder, ${brand.name}
                 </p>
                 <p style="margin:14px 0 0; font-size:13px; line-height:1.6; color:${COLORS.inkFaint}; font-style:italic;">
                   P.S. This is genuinely new, not a rebrand of something established &mdash; so
@@ -287,12 +290,12 @@ export function renderPreLaunchInviteEmail(params: {
 }
 
 /** Plain-text fallback for renderPreLaunchInviteEmail, for email clients that don't render HTML. */
-export function renderPreLaunchInviteText(params: { recipientName?: string; ctaUrl: string }) {
-  const { recipientName, ctaUrl } = params;
+export function renderPreLaunchInviteText(params: { recipientName?: string; senderName: string; ctaUrl: string }) {
+  const { recipientName, senderName, ctaUrl } = params;
   const greeting = recipientName ? `Hi ${recipientName},` : "Hi,";
   return `${greeting}
 
-I'm Ayden — I run Valor Housing here in Birmingham, so this isn't a platform cold-emailing you about something abstract. I carry the same voids you do, and I built ${brand.name} because I was tired of filling them with phone calls and whoever happened to be free that week.
+I'm ${senderName} — I run a supported accommodation business here in Birmingham myself, so this isn't a platform cold-emailing you about something abstract. I carry the same voids you do, and I built ${brand.name} because I was tired of filling them with phone calls and whoever happened to be free that week.
 
 The size of the problem we're both dealing with:
 - 21,800+ Housing Benefit claims tied to exempt/supported accommodation in Birmingham — the largest concentration of any UK city (Birmingham City Council)
@@ -311,8 +314,8 @@ Claim your free 3 months: ${ctaUrl}
 
 Sign up as a provider and reply to this email — I'm upgrading pre-launch accounts to Professional by hand, so there's nothing to pay and nothing to cancel later.
 
-Ayden
-Founder, ${brand.name} · Managing Director, Valor Housing
+${senderName}
+Founder, ${brand.name}
 
 P.S. This is genuinely new, not a rebrand of something established — so what you tell us in the first few weeks will shape what providers see for years after. That's worth more to us than a bigger list right now.
 
