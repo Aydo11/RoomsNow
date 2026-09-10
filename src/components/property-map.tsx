@@ -1,7 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import type L from "leaflet";
 import { useEffect, useRef, useState } from "react";
 
 const TILE_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -41,39 +41,46 @@ export function PropertyMap({
     if (!container.current) return;
     const controller = new AbortController();
     let active = true;
-    const map = L.map(container.current, {
-      center: [latitude, longitude],
-      zoom: approximate ? 14 : 15,
-      scrollWheelZoom: false,
-    });
-    L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 }).addTo(map);
-    L.marker([latitude, longitude], {
-      title,
-      zIndexOffset: 1000,
-      icon: L.divIcon({
-        className: "",
-        html: '<span class="property-map-pin" aria-hidden="true"></span>',
-        iconSize: [34, 42],
-        iconAnchor: [17, 42],
-      }),
-    }).addTo(map);
+    // Leaflet touches `window` at module-evaluation time, so it must be
+    // imported dynamically here rather than at module scope — a static
+    // import would run during server-side rendering and crash the page.
+    let map: L.Map | undefined;
 
-    async function addNearbyAmenities() {
+    void (async () => {
+      const { default: Leaflet } = await import("leaflet");
+      if (!active || !container.current) return;
+      map = Leaflet.map(container.current, {
+        center: [latitude, longitude],
+        zoom: approximate ? 14 : 15,
+        scrollWheelZoom: false,
+      });
+      Leaflet.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 }).addTo(map);
+      Leaflet.marker([latitude, longitude], {
+        title,
+        zIndexOffset: 1000,
+        icon: Leaflet.divIcon({
+          className: "",
+          html: '<span class="property-map-pin" aria-hidden="true"></span>',
+          iconSize: [34, 42],
+          iconAnchor: [17, 42],
+        }),
+      }).addTo(map);
+
       try {
         const response = await fetch(`/api/amenities?lat=${latitude}&lng=${longitude}`, {
           signal: controller.signal,
         });
         if (!response.ok) return;
         const data = await response.json() as { amenities?: Amenity[] };
-        if (!active) return;
+        if (!active || !map) return;
         const amenities = data.amenities ?? [];
         setAmenitiesFound(amenities.length);
         for (const amenity of amenities) {
           const meta = AMENITY_META[amenity.type];
           if (!meta) continue;
-          const marker = L.marker([amenity.latitude, amenity.longitude], {
+          const marker = Leaflet.marker([amenity.latitude, amenity.longitude], {
             title: amenity.name,
-            icon: L.divIcon({
+            icon: Leaflet.divIcon({
               className: "",
               html: `<span class="amenity-map-pin ${meta.className}" aria-hidden="true">${meta.short}</span>`,
               iconSize: [42, 28],
@@ -91,13 +98,12 @@ export function PropertyMap({
       } catch {
         if (active) setAmenitiesFound(0);
       }
-    }
+    })();
 
-    void addNearbyAmenities();
     return () => {
       active = false;
       controller.abort();
-      map.remove();
+      map?.remove();
     };
   }, [approximate, latitude, longitude, title]);
 
