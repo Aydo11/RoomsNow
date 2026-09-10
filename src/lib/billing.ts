@@ -248,6 +248,105 @@ export async function ensureReferrerMembershipCatalogue() {
   ]);
 }
 
+/**
+ * Keeps the PROVIDER membership catalogue (Free / Professional / Business)
+ * in sync with the limits defined here. Unlike ensureReferrerMembershipCatalogue
+ * above, this updates existing rows too — plan limits are a product decision
+ * made in code, and a deploy that changes them should take effect everywhere
+ * that reads the catalogue (pricing page, enforcement, admin) without a
+ * separate manual database step. Pricing (priceMonthly/priceYearly) is left
+ * out of `update` so it isn't clobbered if it's ever adjusted by hand.
+ */
+export async function ensureProviderMembershipCatalogue() {
+  const pence = (pounds: number) => Math.round(pounds * 100);
+  await db.$transaction([
+    db.membership.upsert({
+      where: { tier: "FREE" },
+      update: { maxListings: 2, maxRooms: 10, maxStaff: 2, maxPhotos: 8, featuredCredits: 0 },
+      create: {
+        tier: "FREE",
+        audience: "PROVIDER",
+        name: "Free",
+        priceMonthly: 0,
+        maxListings: 2,
+        maxRooms: 10,
+        maxStaff: 2,
+        maxPhotos: 8,
+        featuredCredits: 0,
+        description: "Get started and see whether the site works for you.",
+      },
+    }),
+    db.membership.upsert({
+      where: { tier: "PROFESSIONAL" },
+      update: {
+        maxListings: 15,
+        maxRooms: -1,
+        maxStaff: 8,
+        maxPhotos: 20,
+        videoUploads: true,
+        analytics: true,
+        featuredCredits: 1,
+        enhancedProfile: true,
+        description:
+          "For growing providers managing up to 15 live adverts, with no cap on rooms per property. Includes one free 7-day sponsored placement running at a time.",
+      },
+      create: {
+        tier: "PROFESSIONAL",
+        audience: "PROVIDER",
+        name: "Professional",
+        priceMonthly: pence(49),
+        priceYearly: pence(490),
+        maxListings: 15,
+        maxRooms: -1,
+        maxStaff: 8,
+        maxPhotos: 20,
+        videoUploads: true,
+        analytics: true,
+        featuredCredits: 1,
+        enhancedProfile: true,
+        description:
+          "For growing providers managing up to 15 live adverts, with no cap on rooms per property. Includes one free 7-day sponsored placement running at a time.",
+      },
+    }),
+    db.membership.upsert({
+      where: { tier: "BUSINESS" },
+      update: {
+        maxListings: 25,
+        maxRooms: -1,
+        maxStaff: 25,
+        maxPhotos: 40,
+        videoUploads: true,
+        analytics: true,
+        priorityPlacement: true,
+        featuredCredits: 2,
+        enhancedProfile: true,
+        prioritySupport: true,
+        description:
+          "For larger portfolios managing up to 25 live adverts, with no cap on rooms per property, priority placement and support. Includes two free 7-day sponsored placements running at a time.",
+      },
+      create: {
+        tier: "BUSINESS",
+        audience: "PROVIDER",
+        name: "Business",
+        priceMonthly: pence(149),
+        priceYearly: pence(1490),
+        maxListings: 25,
+        maxRooms: -1,
+        maxStaff: 25,
+        maxPhotos: 40,
+        videoUploads: true,
+        analytics: true,
+        priorityPlacement: true,
+        featuredCredits: 2,
+        enhancedProfile: true,
+        prioritySupport: true,
+        description:
+          "For larger portfolios managing up to 25 live adverts, with no cap on rooms per property, priority placement and support. Includes two free 7-day sponsored placements running at a time.",
+      },
+    }),
+  ]);
+}
+
 export async function applySubscriptionChange(params: {
   companyId: string;
   tier: MembershipTier;
@@ -320,6 +419,7 @@ export async function activateSponsorship(params: {
 }
 
 export async function planLimits(companyId: string) {
+  await ensureProviderMembershipCatalogue();
   const [subscription, grant, freeMembership] = await Promise.all([
     db.subscription.findUnique({ where: { companyId }, include: { membership: true } }),
     activeProviderMembershipGrant(companyId),
