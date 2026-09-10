@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/rbac";
 import { db } from "@/lib/db";
+import { mailshotRecipientEmails } from "@/lib/audit";
 import { DashboardShell, DataTable } from "@/components/dashboard-shell";
 import { PreLaunchInviteForm } from "@/components/marketing-forms";
 import { AdminMembershipGrantForm } from "@/components/admin-membership-grant-form";
@@ -20,39 +21,42 @@ export default async function PreLaunchInvitePage({
   const query = await searchParams;
   const q = query.q?.trim().slice(0, 100);
   const now = new Date();
-  const providers = await db.company.findMany({
-    where: q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { tradingName: { contains: q, mode: "insensitive" } },
-            { email: { contains: q, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
-    orderBy: q ? { name: "asc" } : { createdAt: "desc" },
-    take: q ? 50 : 10,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      createdAt: true,
-      subscription: {
-        select: { status: true, membership: { select: { name: true } } },
-      },
-      membershipGrants: {
-        where: {
-          revokedAt: null,
-          startsAt: { lte: now },
-          membership: { audience: "PROVIDER", tier: { in: ["PROFESSIONAL", "BUSINESS"] } },
-          OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+  const [providers, mailshotEmails] = await Promise.all([
+    db.company.findMany({
+      where: q
+        ? {
+            OR: [
+              { name: { contains: q, mode: "insensitive" } },
+              { tradingName: { contains: q, mode: "insensitive" } },
+              { email: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : undefined,
+      orderBy: q ? { name: "asc" } : { createdAt: "desc" },
+      take: q ? 50 : 10,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        subscription: {
+          select: { status: true, membership: { select: { name: true } } },
         },
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: { expiresAt: true, membership: { select: { name: true, tier: true } } },
+        membershipGrants: {
+          where: {
+            revokedAt: null,
+            startsAt: { lte: now },
+            membership: { audience: "PROVIDER", tier: { in: ["PROFESSIONAL", "BUSINESS"] } },
+            OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+          },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { expiresAt: true, membership: { select: { name: true, tier: true } } },
+        },
       },
-    },
-  });
+    }),
+    mailshotRecipientEmails(),
+  ]);
   return (
     <DashboardShell
       title="Pre-launch mailshot"
@@ -100,9 +104,9 @@ export default async function PreLaunchInvitePage({
       <section className="mt-8">
         <h2 className="text-[20px]">Grant access</h2>
         <p className="mt-1 max-w-3xl text-[14px] text-ink-soft">
-          Search for a provider who registered from this mailshot and grant them Professional or
-          Business without recording a payment. Showing the 10 most recently registered providers
-          by default.
+          Search for a provider and grant them Professional or Business without recording a
+          payment. The Source column marks anyone who registered with an address this mailshot
+          was sent to. Showing the 10 most recently registered providers by default.
         </p>
         <form className="mt-4 flex max-w-xl gap-2" method="get">
           <label className="sr-only" htmlFor="provider-search">Find a provider</label>
@@ -122,18 +126,28 @@ export default async function PreLaunchInvitePage({
               {q ? "No providers matched that search." : "No providers have registered yet."}
             </p>
           ) : (
-            <DataTable head={["Provider", "Registered", "Paid plan", "Admin grant", ""]}>
+            <DataTable head={["Provider", "Source", "Registered", "Paid plan", "Admin grant", ""]}>
               {providers.map((provider) => {
                 const paid = provider.subscription && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(provider.subscription.status)
                   ? provider.subscription.membership.name
                   : "Free";
                 const grant = provider.membershipGrants[0];
                 const expiresOn = grant?.expiresAt ? grant.expiresAt.toISOString().slice(0, 10) : null;
+                const fromMailshot = mailshotEmails.has(provider.email.toLowerCase());
                 return (
                   <tr key={provider.id}>
                     <td className="px-4 py-3 font-medium">
                       {provider.name}
                       <div className="text-[12px] font-normal text-ink-faint">{provider.email}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {fromMailshot ? (
+                        <span className="inline-block rounded-full bg-pine-light px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-pine-dark">
+                          Mailshot
+                        </span>
+                      ) : (
+                        <span className="text-[12px] text-ink-faint">Organic</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-ink-soft">{shortDate(provider.createdAt)}</td>
                     <td className="px-4 py-3 text-ink-soft">{paid}</td>
