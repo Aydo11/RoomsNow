@@ -3,6 +3,7 @@ import { useActionState } from "react";
 
 import { createReferralAction } from "@/server/actions/referrals";
 import { CheckGroup, Field, FormError, SubmitButton } from "./ui";
+import { Dropzone } from "./dropzone";
 import { SUPPORT_TYPES, URGENCY_LABELS } from "@/lib/taxonomy";
 
 export function ReferralForm({
@@ -106,7 +107,7 @@ export function ReferralForm({
           hint="Assessments, risk assessments, support plans. Stored privately and only shown to the provider you refer to."
           error={state.errors?.documents}
         >
-          <input id="documents" name="documents" type="file" multiple accept="application/pdf,image/*" className="field" />
+          <Dropzone name="documents" accept="application/pdf,image/*" hint="PDF or image, up to 15MB each" />
         </Field>
       </section>
 
