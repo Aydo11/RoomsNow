@@ -298,6 +298,48 @@ export async function markConversationReadAction(conversationId: string) {
   });
 }
 
+export async function archiveConversationAction(conversationId: string) {
+  const user = await requireUser();
+  await assertConversationAccess(user.id, conversationId);
+  await db.conversationParticipant.update({
+    where: { conversationId_userId: { conversationId, userId: user.id } },
+    data: { archived: true },
+  });
+  revalidatePath("/messages");
+  revalidatePath(`/messages/${conversationId}`);
+}
+
+export async function unarchiveConversationAction(conversationId: string) {
+  const user = await requireUser();
+  await assertConversationAccess(user.id, conversationId);
+  await db.conversationParticipant.update({
+    where: { conversationId_userId: { conversationId, userId: user.id } },
+    data: { archived: false },
+  });
+  revalidatePath("/messages");
+  revalidatePath(`/messages/${conversationId}`);
+}
+
+/**
+ * Removes the conversation from the caller's own inbox only — the other
+ * participant keeps their copy, since deleting your side of a conversation
+ * must never delete someone else's messages. Once every participant has
+ * deleted their side, the conversation and its messages are cleaned up.
+ */
+export async function deleteConversationAction(conversationId: string) {
+  const user = await requireUser();
+  await assertConversationAccess(user.id, conversationId);
+  await db.conversationParticipant.delete({
+    where: { conversationId_userId: { conversationId, userId: user.id } },
+  });
+  const remaining = await db.conversationParticipant.count({ where: { conversationId } });
+  if (remaining === 0) {
+    await db.conversation.delete({ where: { id: conversationId } });
+  }
+  await audit({ actorId: user.id, action: "conversation.deleted", targetType: "Conversation", targetId: conversationId });
+  revalidatePath("/messages");
+}
+
 export async function blockUserAction(blockedId: string, reason?: string) {
   const user = await requireUser();
   if (blockedId === user.id) return;
