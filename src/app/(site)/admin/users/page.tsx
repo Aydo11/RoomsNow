@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AccountStatus, Prisma, Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
@@ -49,8 +50,29 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
     db.user.count({ where }),
   ]);
 
+  const exportQuery = new URLSearchParams();
+  if (q) exportQuery.set("q", q);
+  if (role) exportQuery.set("role", role);
+  if (query.status) exportQuery.set("status", query.status);
+  const exportQs = exportQuery.toString() ? `?${exportQuery.toString()}` : "";
+
   return (
-    <DashboardShell title="Users" subtitle="Compact account management, 25 records per page." nav={nav} active="/admin/users">
+    <DashboardShell
+      title="Users"
+      subtitle="Compact account management, 25 records per page."
+      nav={nav}
+      active="/admin/users"
+      action={
+        <div className="flex gap-2">
+          <Link href={`/api/admin/users/export${exportQs}`} className="btn-secondary" prefetch={false}>
+            Export CSV
+          </Link>
+          <Link href={`/admin/users/print${exportQs}`} className="btn-secondary" prefetch={false}>
+            Export PDF
+          </Link>
+        </div>
+      }
+    >
       <AdminFilters>
         <AdminFilterField label="Search" wide><input className="field" name="q" defaultValue={q} placeholder="Name or email" /></AdminFilterField>
         <AdminFilterField label="Role"><select className="field" name="role" defaultValue={role ?? ""}><option value="">All roles</option>{Object.values(Role).map((value) => <option key={value} value={value}>{value.toLowerCase()}</option>)}</select></AdminFilterField>
