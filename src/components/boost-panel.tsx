@@ -66,16 +66,24 @@ export function BoostPanel({
               <div><dt className="text-ink-faint">Clicks</dt><dd className="mt-1 text-[18px] font-bold">{clicks.toLocaleString("en-GB")}</dd></div>
               <div><dt className="text-ink-faint">Click rate</dt><dd className="mt-1 text-[18px] font-bold">{impressions ? `${((clicks / impressions) * 100).toFixed(1)}%` : "—"}</dd></div>
             </dl>
+            <BoostBalance
+              total={totalRemaining}
+              included={includedRemaining}
+              includedTotal={includedTotal}
+              purchased={purchasedRemaining}
+            />
           </>
         ) : (
           <>
             <p className="text-[15px] leading-relaxed text-ink-soft">
               A boost lasts exactly 24 hours. It leads the boosted lane for its first three hours, then rotates hourly with other active boosts. Use it when your own enquiry data shows people are active.
             </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <span className="rounded-pill bg-pine-light px-3 py-1.5 text-[13px] font-semibold text-pine-dark">{includedRemaining} of {includedTotal} membership boosts left</span>
-              <span className="rounded-pill bg-paper-sunk px-3 py-1.5 text-[13px] font-semibold text-ink-soft">{purchasedRemaining} purchased credits</span>
-            </div>
+            <BoostBalance
+              total={totalRemaining}
+              included={includedRemaining}
+              includedTotal={includedTotal}
+              purchased={purchasedRemaining}
+            />
             <button
               className="btn-primary mt-5"
               disabled={pending || !live || totalRemaining === 0}
@@ -128,6 +136,37 @@ export function BoostPanel({
 
         {result && <p className="mt-4 text-[14px] text-ink-soft">{result}</p>}
       </div>
+    </div>
+  );
+}
+
+function BoostBalance({
+  total,
+  included,
+  includedTotal,
+  purchased,
+}: {
+  total: number;
+  included: number;
+  includedTotal?: number;
+  purchased: number;
+}) {
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-pine/20 bg-pine-light/55 px-4 py-3" aria-label="Boost balance">
+      <div className="flex items-center gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-pine text-white">
+          <LightningIcon />
+        </span>
+        <span>
+          <strong className="block text-[18px] leading-tight text-pine-dark">
+            {total.toLocaleString("en-GB")} {total === 1 ? "boost" : "boosts"} available
+          </strong>
+          <span className="text-[12px] text-ink-soft">Ready to use on any live advert</span>
+        </span>
+      </div>
+      <span className="text-[13px] font-semibold text-ink-soft">
+        {included.toLocaleString("en-GB")}{includedTotal === undefined ? " membership" : ` of ${includedTotal.toLocaleString("en-GB")} membership`} + {purchased.toLocaleString("en-GB")} purchased
+      </span>
     </div>
   );
 }
