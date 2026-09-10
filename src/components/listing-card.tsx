@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BenefitsBadge, FeaturedBadge, MatchScore, RoomStrip, VerifiedBadge } from "./badges";
+import { FeaturedBadge, MatchScore, RoomStrip, VerifiedBadge } from "./badges";
 import { monthYear, publicLocation, rentRange } from "@/lib/format";
 import { supportLabel, ACCOMMODATION_TYPES } from "@/lib/taxonomy";
 import type { SearchResult } from "@/server/search";
@@ -62,7 +62,6 @@ export function ListingCard({
             {boosted ? (
               <span className="inline-flex items-center gap-1 rounded-pill bg-pine/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-white"><LightningIcon /> Boosted now</span>
             ) : activelySponsored ? <FeaturedBadge /> : null}
-            {listing.housingBenefit && <BenefitsBadge />}
             {available > 0 && (
               <span className="rounded-pill bg-white/95 px-2.5 py-1 text-[12px] font-medium text-pine-dark">
                 {available} room{available === 1 ? "" : "s"} available
@@ -70,10 +69,10 @@ export function ListingCard({
             )}
           </div>
         </div>
-      {sponsored && !boosted && (
-        <div className="flex items-center justify-between gap-3 bg-clay px-4 py-2 text-white">
-          <strong className="text-[13px] uppercase tracking-[0.08em]">Sponsored placement</strong>
-          <span className="text-[12px] font-semibold">Matched to this search</span>
+      {listing.housingBenefit && (
+        <div className="flex items-center justify-between gap-3 bg-pine px-4 py-2 text-white">
+          <strong className="text-[13px] uppercase tracking-[0.08em]">Benefits accepted</strong>
+          <span className="text-[12px] font-semibold">Incl. Universal Credit</span>
         </div>
       )}
       <div className="flex flex-1 flex-col p-4">
