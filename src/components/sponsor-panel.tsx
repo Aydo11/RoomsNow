@@ -40,7 +40,7 @@ export function SponsorPanel({
   const [choice, setChoice] = useState<SponsorPackage>(initialDuration ?? "WEEK");
   const [result, setResult] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  // Free credits only ever cover the 7-day package â choosing a longer one
+  // Free credits only ever cover the 7-day package — choosing a longer one
   // always requires payment, even with credits still remaining.
   const hasFreeWeek = choice === "WEEK" && usedSlots < includedSlots;
   const isActive = featured && (!featuredUntil || new Date(featuredUntil) > new Date());
@@ -91,7 +91,7 @@ export function SponsorPanel({
             </div>
             <div>
               <dt className="text-[13px] text-ink-faint">Click rate</dt>
-              <dd>{impressions ? `${((clicks / impressions) * 100).toFixed(1)}%` : "â"}</dd>
+              <dd>{impressions ? `${((clicks / impressions) * 100).toFixed(1)}%` : "—"}</dd>
             </div>
           </dl>
 
@@ -147,7 +147,7 @@ export function SponsorPanel({
       {includedSlots > 0 && (
         <p className="mt-3 text-[14px] text-pine-dark">
           Your plan includes {includedSlots} free 7-day sponsored slot{includedSlots === 1 ? "" : "s"} at a time
-          {usedSlots < includedSlots ? ` â ${includedSlots - usedSlots} still free right now.` : " â all in use right now; this one will be paid."}
+          {usedSlots < includedSlots ? ` — ${includedSlots - usedSlots} still free right now.` : " — all in use right now; this one will be paid."}
         </p>
       )}
 
@@ -165,7 +165,7 @@ export function SponsorPanel({
         }
       >
         {pending
-          ? "Setting upâ¦"
+          ? "Setting up…"
           : !hasFreeWeek && !paymentsEnabled
             ? "Payments unavailable"
             : hasFreeWeek
