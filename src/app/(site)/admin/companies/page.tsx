@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AccountStatus, Prisma, VerificationStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
+import { mailshotRecipientEmails } from "@/lib/audit";
 import { DashboardShell, DataTable } from "@/components/dashboard-shell";
 import { AccountToggle } from "@/components/admin-controls";
 import { AdminFilters, AdminFilterField } from "@/components/admin-filters";
@@ -13,12 +14,13 @@ import { highestProviderMembership } from "@/lib/membership-access";
 export const metadata = { title: "Providers" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminCompaniesPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; verification?: string; page?: string }> }) {
+export default async function AdminCompaniesPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; verification?: string; source?: string; page?: string }> }) {
   await requireAdmin();
   const query = await searchParams;
   const q = query.q?.trim();
   const status = Object.values(AccountStatus).includes(query.status as AccountStatus) ? query.status as AccountStatus : undefined;
   const verification = Object.values(VerificationStatus).includes(query.verification as VerificationStatus) ? query.verification as VerificationStatus : undefined;
+  const source = query.source === "MAILSHOT" || query.source === "ORGANIC" ? query.source : undefined;
   const page = pageNumber(query.page);
   const now = new Date();
   const where: Prisma.CompanyWhereInput = {
@@ -26,6 +28,13 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
     ...(status ? { status } : {}),
     ...(verification ? { verification } : {}),
   };
+
+  // Company/User emails are always stored lowercase (see the shared `email` schema in
+  // lib/validation.ts), and mailshotRecipientEmails() returns lowercase addresses too,
+  // so a plain in/notIn match is reliable here without needing case-insensitive mode.
+  const mailshotEmails = await mailshotRecipientEmails();
+  if (source === "MAILSHOT") where.email = { in: Array.from(mailshotEmails) };
+  if (source === "ORGANIC") where.email = { notIn: Array.from(mailshotEmails) };
 
   const [nav, companies, total] = await Promise.all([
     adminNav(),
@@ -59,20 +68,37 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
         <AdminFilterField label="Search" wide><input className="field" name="q" defaultValue={q} placeholder="Name, email or city" /></AdminFilterField>
         <AdminFilterField label="Account status"><select className="field" name="status" defaultValue={status ?? ""}><option value="">All statuses</option>{Object.values(AccountStatus).map((value) => <option key={value} value={value}>{value.toLowerCase()}</option>)}</select></AdminFilterField>
         <AdminFilterField label="Verification"><select className="field" name="verification" defaultValue={verification ?? ""}><option value="">All verification</option>{Object.values(VerificationStatus).map((value) => <option key={value} value={value}>{value.replace(/_/g, " ").toLowerCase()}</option>)}</select></AdminFilterField>
+        <AdminFilterField label="Source">
+          <select className="field" name="source" defaultValue={source ?? ""}>
+            <option value="">All sources</option>
+            <option value="MAILSHOT">Mailshot</option>
+            <option value="ORGANIC">Organic</option>
+          </select>
+        </AdminFilterField>
       </AdminFilters>
       <div className="mt-4">
-        <DataTable compact head={["Provider", "Plan", "Adverts", "Verification", "Status", "Joined", ""]}>
+        <DataTable compact head={["Provider", "Source", "Plan", "Adverts", "Verification", "Status", "Joined", ""]}>
           {companies.map((company) => {
             const paid = company.subscription && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(company.subscription.status)
               ? company.subscription.membership
               : null;
             const granted = company.membershipGrants[0]?.membership ?? null;
             const effective = highestProviderMembership(paid, granted, null);
+            const fromMailshot = mailshotEmails.has(company.email.toLowerCase());
             return <tr key={company.id}>
               <td className="px-4 py-3">
                 <Link href={`/companies/${company.slug}`} className="hover:text-pine-dark">
                   {company.name}
                 </Link>
+              </td>
+              <td className="px-4 py-3">
+                {fromMailshot ? (
+                  <span className="inline-block rounded-full bg-pine-light px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-pine-dark">
+                    Mailshot
+                  </span>
+                ) : (
+                  <span className="text-[12px] text-ink-faint">Organic</span>
+                )}
               </td>
               <td className="px-4 py-3 text-ink-soft">
                 {effective?.name ?? "Free"}{granted?.id === effective?.id ? " (admin access)" : ""}
@@ -89,7 +115,7 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
             </tr>;
           })}
         </DataTable>
-        <AdminPagination page={page} total={total} query={{ q, status, verification }} />
+        <AdminPagination page={page} total={total} query={{ q, status, verification, source }} />
       </div>
     </DashboardShell>
   );
