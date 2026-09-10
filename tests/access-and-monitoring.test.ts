@@ -6,6 +6,7 @@ import { bool } from "../src/server/form";
 import { decodeFeedback, encodeFeedback } from "../src/lib/feedback";
 import { highestProviderMembership, highestReferrerMembership } from "../src/lib/membership-access";
 import { hasProviderMapAccess } from "../src/lib/entitlements";
+import { BOOST_PACKAGES, rankBoosted } from "../src/lib/boost-packages";
 
 test("boolean form values accept native checkboxes and explicit one values", () => {
   for (const value of ["on", "true", "1"]) {
@@ -68,6 +69,35 @@ test("a provider subscription or active admin grant makes advert maps public", (
   assert.equal(hasProviderMapAccess({ subscription: null, membershipGrants: [activeGrant] }), true);
   assert.equal(hasProviderMapAccess({ subscription: { status: "CANCELLED", membership: paid }, membershipGrants: [] }), false);
   assert.equal(hasProviderMapAccess({ subscription: { status: "ACTIVE", membership: free }, membershipGrants: [] }), false);
+});
+test("boost packs keep the advertised prices and credit counts", () => {
+  assert.deepEqual(
+    Object.values(BOOST_PACKAGES).map(({ credits, amount }) => [credits, amount]),
+    [[1, 500], [3, 1000], [10, 3000]],
+  );
+});
+test("active boosts prioritise new placements, expire truthfully and rotate hourly", () => {
+  const now = new Date("2026-09-10T12:00:00.000Z");
+  const hour = 60 * 60 * 1000;
+  const item = (id: string, startHoursAgo: number, priorityHoursLeft: number, expiryHoursLeft: number) => ({
+    id,
+    boostStartsAt: new Date(now.getTime() - startHoursAgo * hour),
+    boostPriorityUntil: new Date(now.getTime() + priorityHoursLeft * hour),
+    boostedUntil: new Date(now.getTime() + expiryHoursLeft * hour),
+  });
+  const items = [
+    item("old-a", 8, -5, 16),
+    item("new", 1, 2, 23),
+    item("old-b", 7, -4, 17),
+    item("expired", 25, -22, -1),
+  ];
+
+  const firstHour = rankBoosted(items, now);
+  const nextHour = rankBoosted(items, new Date(now.getTime() + hour));
+  assert.equal(firstHour[0]?.id, "new");
+  assert.equal(nextHour[0]?.id, "new");
+  assert.equal(firstHour.some(({ id }) => id === "expired"), false);
+  assert.notEqual(firstHour[1]?.id, nextHour[1]?.id);
 });
 test("error monitoring strips submitted data and identity", () => {
   const event = sanitiseError({

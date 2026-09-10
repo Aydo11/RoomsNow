@@ -5,12 +5,16 @@ import { supportLabel, ACCOMMODATION_TYPES } from "@/lib/taxonomy";
 import type { SearchResult } from "@/server/search";
 import { demoListingImage } from "@/lib/demo-listings";
 import { ResilientImage } from "./resilient-image";
+import { BoostCountdown } from "./boost-countdown";
+import { clsx } from "@/lib/clsx";
 
 export function ListingCard({
   listing,
   match,
   compact = false,
   sponsored = false,
+  boosted = false,
+  memberListing = false,
   distance,
 }: {
   listing: SearchResult;
@@ -18,15 +22,34 @@ export function ListingCard({
   compact?: boolean;
   /** Paid placement. Always labelled, never mixed silently into organic results. */
   sponsored?: boolean;
+  /** A separate 24-hour paid placement with a truthful live countdown. */
+  boosted?: boolean;
+  /** Organic advert from a provider with an active paid membership. */
+  memberListing?: boolean;
   distance?: number | null;
 }) {
   const image = listing.media[0]?.url;
   const fallback = demoListingImage(listing.id);
-  const href = sponsored ? `/listings/${listing.id}?ref=sponsored` : `/listings/${listing.id}`;
+  const activelySponsored = sponsored || (
+    listing.featured && (!listing.featuredUntil || listing.featuredUntil > new Date())
+  );
+  const href = boosted
+    ? `/listings/${listing.id}?ref=boosted`
+    : sponsored
+      ? `/listings/${listing.id}?ref=sponsored`
+      : `/listings/${listing.id}`;
   const available = listing.rooms.filter((r) => r.status === "AVAILABLE").length;
 
   return (
-    <Link href={href} className="card interactive-card group flex h-full flex-col overflow-hidden">
+    <Link
+      href={href}
+      className={clsx(
+        "card interactive-card group flex h-full flex-col overflow-hidden",
+        sponsored && "border-2 border-clay/45 shadow-raise",
+        boosted && "border-2 border-pine/70 bg-white shadow-raise ring-4 ring-pine-light/70",
+        memberListing && !sponsored && !boosted && "border-pine/35",
+      )}
+    >
         <div className={`relative overflow-hidden bg-paper-sunk ${compact ? "h-40 sm:h-44" : "h-48"}`}>
           <ResilientImage
             src={image}
@@ -37,7 +60,9 @@ export function ListingCard({
             loading="lazy"
           />
           <div className="absolute left-3 top-3 flex gap-2">
-            {(sponsored || listing.featured) && <FeaturedBadge />}
+            {boosted ? (
+              <span className="inline-flex items-center gap-1.5 rounded-pill bg-pine px-3 py-1 text-[12px] font-extrabold uppercase tracking-[0.08em] text-white"><LightningIcon /> Boosted now</span>
+            ) : activelySponsored ? <FeaturedBadge /> : null}
             {available > 0 && (
               <span className="rounded-pill bg-white/95 px-2.5 py-1 text-[12px] font-medium text-pine-dark">
                 {available} room{available === 1 ? "" : "s"} available
@@ -45,10 +70,22 @@ export function ListingCard({
             )}
           </div>
         </div>
+      {boosted && listing.boostedUntil && (
+        <div className="flex items-center justify-between gap-3 bg-pine px-4 py-2 text-white">
+          <strong className="text-[13px] uppercase tracking-[0.08em]">24-hour boost</strong>
+          <BoostCountdown until={listing.boostedUntil.toISOString()} compact />
+        </div>
+      )}
+      {sponsored && !boosted && (
+        <div className="flex items-center justify-between gap-3 bg-clay px-4 py-2 text-white">
+          <strong className="text-[13px] uppercase tracking-[0.08em]">Sponsored placement</strong>
+          <span className="text-[12px] font-semibold">Matched to this search</span>
+        </div>
+      )}
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="truncate text-[17px] hover:text-pine-dark">{listing.title}</h3>
+            <h3 className={clsx("truncate hover:text-pine-dark", sponsored || boosted ? "text-[19px] font-bold" : "text-[17px]")}>{listing.title}</h3>
             <p className="mt-0.5 truncate text-[14px] text-ink-soft">
               {publicLocation(listing.property)}
               {typeof distance === "number" && (
@@ -120,4 +157,12 @@ function companyInitials(name: string) {
     .slice(0, 2)
     .map((word) => word[0]?.toUpperCase())
     .join("") || "RN";
+}
+
+function LightningIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
+      <path d="M13.2 1.8 4.7 13.1a1 1 0 0 0 .8 1.6h5.1l-.8 7a.5.5 0 0 0 .9.4l8.6-11.3a1 1 0 0 0-.8-1.6h-5.2l.8-7a.5.5 0 0 0-.9-.4Z" />
+    </svg>
+  );
 }

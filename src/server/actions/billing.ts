@@ -5,9 +5,16 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { assertCompanyAccess, requireCompany } from "@/lib/rbac";
 import { audit } from "@/lib/audit";
-import { billing, billingIsLive, planLimits } from "@/lib/billing";
+import {
+  activateListingBoost,
+  billing,
+  billingIsLive,
+  boostAllowance,
+  planLimits,
+} from "@/lib/billing";
 import { notifyCompany } from "@/lib/notify";
 import { SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
+import { BOOST_PACKAGES, isBoostPack, type BoostPack } from "@/lib/boost-packages";
 import type { MembershipTier } from "@prisma/client";
 
 export async function changePlanAction(tier: MembershipTier) {
@@ -152,5 +159,86 @@ export async function recordSponsoredClickAction(listingId: string) {
   await db.listing.updateMany({
     where: { id: listingId, featured: true },
     data: { sponsoredClicks: { increment: 1 } },
+  });
+}
+
+/** Purchases credits that can later be used on any live advert. */
+export async function purchaseBoostPackAction(pack: BoostPack) {
+  const { user, companyId } = await requireCompany();
+  if (!isBoostPack(pack)) return { ok: false, message: "Unknown boost pack." };
+  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const session = await billing.startBoostCheckout({
+    companyId,
+    pack,
+    successUrl: `${appUrl}/provider/adverts`,
+    cancelUrl: `${appUrl}/provider/adverts`,
+  });
+  await audit({
+    actorId: user.id,
+    action: "boost.pack_checkout_started",
+    targetType: "Company",
+    targetId: companyId,
+    metadata: { pack, credits: BOOST_PACKAGES[pack].credits, amount: BOOST_PACKAGES[pack].amount, provider: session.provider },
+  });
+  redirect(session.url);
+}
+
+/** Uses an included boost first, then a purchased credit. */
+export async function boostListingAction(listingId: string) {
+  const { user, companyId } = await requireCompany();
+  const listing = await db.listing.findUnique({
+    where: { id: listingId },
+    select: { companyId: true, status: true, boostedUntil: true },
+  });
+  if (!listing) return { ok: false, message: "Advert not found." };
+  await assertCompanyAccess(user, listing.companyId);
+  if (listing.status !== "ACTIVE") return { ok: false, message: "Only live adverts can be boosted." };
+  if (listing.boostedUntil && listing.boostedUntil > new Date()) {
+    return { ok: false, message: "This advert already has an active boost." };
+  }
+
+  const allowance = await boostAllowance(companyId);
+  const source = allowance.includedRemaining > 0 ? "INCLUDED" : allowance.purchasedRemaining > 0 ? "PURCHASED" : null;
+  if (!source) return { ok: false, message: "Buy a boost pack or wait for your next included allowance." };
+
+  let result;
+  try {
+    result = await activateListingBoost({
+      companyId,
+      listingId,
+      source,
+      includedTotal: allowance.includedTotal,
+      includedPeriodStart: allowance.periodStart,
+    });
+  } catch (error) {
+    const message = error instanceof Error && [
+      "This advert already has an active boost.",
+      "No membership boosts remain in this billing period.",
+      "No purchased boost credits remain.",
+    ].includes(error.message)
+      ? error.message
+      : "The boost could not be started. Please try again.";
+    return { ok: false, message };
+  }
+  await audit({
+    actorId: user.id,
+    action: "listing.boosted",
+    targetType: "Listing",
+    targetId: listingId,
+    metadata: { source, priorityUntil: result.priorityUntil.toISOString(), expiresAt: result.expiresAt.toISOString() },
+  });
+  revalidatePath("/");
+  revalidatePath("/search");
+  revalidatePath("/provider/adverts");
+  revalidatePath(`/provider/adverts/${listingId}`);
+  return { ok: true, message: "Boost active for 24 hours." };
+}
+
+/** Click-through counting for active boosted adverts. */
+export async function recordBoostedClickAction(listingId: string) {
+  const now = new Date();
+  await db.listing.updateMany({
+    where: { id: listingId, boostStartsAt: { lte: now }, boostedUntil: { gt: now } },
+    data: { boostedClicks: { increment: 1 } },
   });
 }

@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { boundingBox, distanceMiles, resolveArea, type Point } from "@/lib/geo";
+import { BOOST_SLOTS, rankBoosted, rotateHourly } from "@/lib/boost-packages";
 import type { Prisma } from "@prisma/client";
 
 // Search results, facets and map pins all resolve the same location during one
@@ -34,6 +35,7 @@ export type SearchParams = {
 export const PAGE_SIZE = 24;
 /** Sponsored slots are capped and only ever shown on the first page. */
 export const SPONSORED_SLOTS = 3;
+const PROMOTED_POOL_LIMIT = 200;
 /** Deep paging is pointless and expensive; past this we ask people to refine. */
 export const MAX_PAGES = 40;
 /** How many pins the map will draw before it asks for a tighter area. */
@@ -176,55 +178,123 @@ function orderFor(sort: string | undefined): Prisma.ListingOrderByWithRelationIn
   }
 }
 
+function paidMemberLane(now: Date): Prisma.ListingWhereInput {
+  return {
+    OR: [
+      {
+        company: {
+          subscription: {
+            is: {
+              status: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] },
+              membership: { audience: "PROVIDER", priceMonthly: { gt: 0 } },
+            },
+          },
+        },
+      },
+      {
+        company: {
+          membershipGrants: {
+            some: {
+              startsAt: { lte: now },
+              revokedAt: null,
+              OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+              membership: { audience: "PROVIDER", priceMonthly: { gt: 0 } },
+            },
+          },
+        },
+      },
+    ],
+  };
+}
+
+function rankSponsored<T extends { id: string }>(items: T[], now: Date) {
+  return rotateHourly([...items].sort((a, b) => a.id.localeCompare(b.id)), now);
+}
+
 /**
  * Public search. Only ACTIVE adverts from ACTIVE companies are ever returned.
  *
- * Sponsored adverts are fetched separately and only on page one, so a provider
- * can never buy their way through every page of results, and organic ranking is
- * untouched by who is paying.
+ * Four separate lanes keep placement clear and predictable: boosted, sponsored,
+ * paid members, then free adverts. Rotation within promoted lanes prevents one
+ * provider holding the same top position indefinitely.
  */
 export async function searchListings(params: SearchParams) {
   const requestedPage = Math.max(1, Number(params.page ?? 1) || 1);
   const page = Math.min(requestedPage, MAX_PAGES);
   const { where, centre, radius, bbox } = await buildWhere(params);
+  const now = new Date();
 
   const sponsoredWhere: Prisma.ListingWhereInput = {
-    ...where,
-    featured: true,
-    OR: [{ featuredUntil: null }, { featuredUntil: { gte: new Date() } }],
+    AND: [
+      where,
+      { featured: true, OR: [{ featuredUntil: null }, { featuredUntil: { gt: now } }] },
+      { NOT: { boostStartsAt: { lte: now }, boostedUntil: { gt: now } } },
+    ],
   };
+  const boostedWhere: Prisma.ListingWhereInput = {
+    AND: [where, { boostStartsAt: { lte: now }, boostedUntil: { gt: now } }],
+  };
+  const organicWhere: Prisma.ListingWhereInput = {
+    AND: [
+      where,
+      {
+        NOT: {
+          OR: [
+            { featured: true, OR: [{ featuredUntil: null }, { featuredUntil: { gt: now } }] },
+            { boostStartsAt: { lte: now }, boostedUntil: { gt: now } },
+          ],
+        },
+      },
+    ],
+  };
+  const memberLane = paidMemberLane(now);
+  const paidWhere: Prisma.ListingWhereInput = { AND: [organicWhere, memberLane] };
+  const freeWhere: Prisma.ListingWhereInput = { AND: [organicWhere, { NOT: memberLane }] };
 
-  const sponsored =
+  const [boostedPool, sponsoredPool, paidCount, freeCount, total] = await Promise.all([
     page === 1
-      ? await db.listing.findMany({
-          where: sponsoredWhere,
-          orderBy: [{ sponsoredBid: "desc" }, { publishedAt: "desc" }],
-          take: SPONSORED_SLOTS,
-          include: LISTING_CARD_SELECT,
-        })
-      : [];
-
-  const sponsoredIds = sponsored.map((listing) => listing.id);
-  const organicWhere: Prisma.ListingWhereInput = sponsoredIds.length
-    ? { ...where, id: { notIn: sponsoredIds } }
-    : where;
-
-  const [items, total] = await Promise.all([
-    db.listing.findMany({
-      where: organicWhere,
-      orderBy: orderFor(params.sort),
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      include: LISTING_CARD_SELECT,
-    }),
+      ? db.listing.findMany({ where: boostedWhere, orderBy: { boostStartsAt: "desc" }, take: PROMOTED_POOL_LIMIT, include: LISTING_CARD_SELECT })
+      : Promise.resolve([]),
+    page === 1
+      ? db.listing.findMany({ where: sponsoredWhere, orderBy: { publishedAt: "desc" }, take: PROMOTED_POOL_LIMIT, include: LISTING_CARD_SELECT })
+      : Promise.resolve([]),
+    db.listing.count({ where: paidWhere }),
+    db.listing.count({ where: freeWhere }),
     db.listing.count({ where }),
   ]);
+  const boosted = rankBoosted(boostedPool, now).slice(0, BOOST_SLOTS);
+  const sponsored = rankSponsored(sponsoredPool, now).slice(0, SPONSORED_SLOTS);
 
-  // Sponsored impressions are counted where they are shown, not where they are clicked.
+  const offset = (page - 1) * PAGE_SIZE;
+  const paidSkip = Math.min(offset, paidCount);
+  const paidTake = Math.min(PAGE_SIZE, Math.max(0, paidCount - paidSkip));
+  const freeSkip = Math.max(0, offset - paidCount);
+  const freeTake = PAGE_SIZE - paidTake;
+  const [paidItems, freeItems] = await Promise.all([
+    paidTake
+      ? db.listing.findMany({ where: paidWhere, orderBy: orderFor(params.sort), skip: paidSkip, take: paidTake, include: LISTING_CARD_SELECT })
+      : Promise.resolve([]),
+    freeTake
+      ? db.listing.findMany({ where: freeWhere, orderBy: orderFor(params.sort), skip: freeSkip, take: freeTake, include: LISTING_CARD_SELECT })
+      : Promise.resolve([]),
+  ]);
+  const items = [
+    ...paidItems.map((listing) => ({ ...listing, memberListing: true })),
+    ...freeItems.map((listing) => ({ ...listing, memberListing: false })),
+  ];
+
+  const sponsoredIds = sponsored.map((listing) => listing.id);
+  const boostedIds = boosted.map((listing) => listing.id);
   if (sponsoredIds.length) {
     await db.listing.updateMany({
       where: { id: { in: sponsoredIds } },
       data: { sponsoredImpressions: { increment: 1 } },
+    });
+  }
+  if (boostedIds.length) {
+    await db.listing.updateMany({
+      where: { id: { in: boostedIds } },
+      data: { boostedImpressions: { increment: 1 } },
     });
   }
 
@@ -237,21 +307,28 @@ export async function searchListings(params: SearchParams) {
 
   return {
     items: items.map((listing) => ({ ...listing, distanceMiles: distanceFrom(listing.property) })),
+    boosted: boosted.map((listing) => ({
+      ...listing,
+      memberListing: true,
+      distanceMiles: distanceFrom(listing.property),
+    })),
     sponsored: sponsored.map((listing) => ({
       ...listing,
+      memberListing: true,
       distanceMiles: distanceFrom(listing.property),
     })),
     total,
     page,
-    pages: Math.min(MAX_PAGES, Math.max(1, Math.ceil(total / PAGE_SIZE))),
-    truncated: Math.ceil(total / PAGE_SIZE) > MAX_PAGES,
+    pages: Math.min(MAX_PAGES, Math.max(1, Math.ceil((paidCount + freeCount) / PAGE_SIZE))),
+    truncated: Math.ceil((paidCount + freeCount) / PAGE_SIZE) > MAX_PAGES,
     centre,
     radius,
     bbox,
   };
 }
 
-export type SearchResult = Awaited<ReturnType<typeof searchListings>>["items"][number];
+type RankedSearchResult = Awaited<ReturnType<typeof searchListings>>["items"][number];
+export type SearchResult = Omit<RankedSearchResult, "memberListing"> & { memberListing?: boolean };
 
 /**
  * Counts for the refine panel, so people can narrow a big result set without

@@ -30,7 +30,7 @@ export function VerifiedBadge({
  */
 export function FeaturedBadge({ label = "Sponsored" }: { label?: string }) {
   return (
-    <span className="inline-flex items-center rounded-pill bg-clay-light px-2.5 py-1 text-[12px] font-medium text-clay">
+    <span className="inline-flex items-center rounded-pill border border-clay/25 bg-clay px-3 py-1 text-[12px] font-extrabold uppercase tracking-[0.08em] text-white">
       {label}
     </span>
   );

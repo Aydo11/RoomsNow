@@ -16,6 +16,7 @@ type Plan = {
   maxRooms: number;
   maxStaff: number;
   featuredCredits: number;
+  includedBoosts: number;
   analytics: boolean;
   priorityPlacement: boolean;
 };
@@ -59,6 +60,7 @@ export function PlanPicker({
                 <li>{limit(plan.maxStaff)} staff accounts</li>
                 <li>{plan.priceMonthly > 0 ? "Public advert maps with nearby amenities" : "No public advert maps"}</li>
                 <li>{plan.featuredCredits} free 7-day promoted slot{plan.featuredCredits === 1 ? "" : "s"} at a time</li>
+                <li>{plan.includedBoosts} included 24-hour boost{plan.includedBoosts === 1 ? "" : "s"} per billing period</li>
                 <li>{plan.analytics ? "Analytics included" : "No analytics"}</li>
                 <li>{plan.priorityPlacement ? "Priority placement in search" : "Standard placement"}</li>
               </ul>

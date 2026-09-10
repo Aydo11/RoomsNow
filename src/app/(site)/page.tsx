@@ -52,8 +52,9 @@ export default async function HomePage() {
     searchListings({ sort: "featured" }),
   ]);
   const homepageListings = [
-    ...featured.sponsored.map((listing) => ({ listing, sponsored: true })),
-    ...featured.items.map((listing) => ({ listing, sponsored: false })),
+    ...featured.boosted.map((listing) => ({ listing, placement: "boosted" as const })),
+    ...featured.sponsored.map((listing) => ({ listing, placement: "sponsored" as const })),
+    ...featured.items.map((listing) => ({ listing, placement: listing.memberListing ? "member" as const : "free" as const })),
   ].slice(0, 3);
 
   return (
@@ -128,13 +129,20 @@ export default async function HomePage() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">LIVE VACANCIES</span>
-              <h2 className="mt-2 text-[28px]">Recently listed accommodation</h2>
+              <h2 className="mt-2 text-[28px]">Accommodation available now</h2>
             </div>
             <Link href="/search" className="btn-secondary shrink-0">View all vacancies</Link>
           </div>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {homepageListings.map(({ listing, sponsored }) => (
-              <ListingCard key={listing.id} listing={listing} compact sponsored={sponsored} />
+            {homepageListings.map(({ listing, placement }) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                compact
+                boosted={placement === "boosted"}
+                sponsored={placement === "sponsored"}
+                memberListing={placement === "member"}
+              />
             ))}
           </div>
 

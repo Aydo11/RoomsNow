@@ -94,6 +94,8 @@ export default async function SearchPage({
     : params.where
       ? ` within ${results.radius} miles of ${params.where}`
       : " across the UK";
+  const memberListings = results.items.filter((listing) => listing.memberListing);
+  const freeListings = results.items.filter((listing) => !listing.memberListing);
 
   return (
     <>
@@ -141,7 +143,7 @@ export default async function SearchPage({
                 total={map.total}
               />
             </div>
-          ) : results.items.length === 0 && results.sponsored.length === 0 ? (
+          ) : results.items.length === 0 && results.sponsored.length === 0 && results.boosted.length === 0 ? (
             <div className="mt-6">
               <EmptyState
                 title="Nothing matches those filters yet"
@@ -152,10 +154,27 @@ export default async function SearchPage({
             </div>
           ) : (
             <>
+              {results.boosted.length > 0 && (
+                <section className="mt-6 rounded-card border border-pine/25 bg-pine-light/45 p-4 sm:p-5" aria-label="Boosted adverts">
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                      <span className="text-[12px] font-extrabold uppercase tracking-[0.1em] text-pine-dark">Boosted now</span>
+                      <h2 className="mt-1 text-[22px] font-bold">Boosted accommodation</h2>
+                    </div>
+                    <p className="text-[13px] text-ink-soft">24-hour placements rotate fairly</p>
+                  </div>
+                  <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {results.boosted.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} boosted />
+                    ))}
+                  </div>
+                </section>
+              )}
+
               {results.sponsored.length > 0 && (
                 <section className="mt-6" aria-label="Sponsored adverts">
                   <div className="flex items-baseline justify-between gap-3">
-                    <h2 className="text-[15px] font-medium text-ink-soft">Sponsored</h2>
+                    <h2 className="text-[18px] font-bold text-clay">Sponsored accommodation</h2>
                     <Link href="/pricing#sponsored" className="text-[13px] text-ink-faint hover:text-ink-soft">
                       Why am I seeing these?
                     </Link>
@@ -175,16 +194,30 @@ export default async function SearchPage({
                 </section>
               )}
 
-              <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {results.items.map((listing) => (
-                  <ListingCard
-                    key={listing.id}
-                    listing={listing}
-                    match={scoreFor(listing)}
-                    distance={listing.distanceMiles}
-                  />
-                ))}
-              </div>
+              {memberListings.length > 0 && (
+                <section className="mt-6" aria-label="Member adverts">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="text-[16px] font-bold text-ink">Provider member listings</h2>
+                    <span className="text-[12px] text-ink-faint">Paid members · ordered by your chosen sort</span>
+                  </div>
+                  <div className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {memberListings.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} memberListing />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {freeListings.length > 0 && (
+                <section className="mt-8 border-t border-line pt-6" aria-label="Free adverts">
+                  <h2 className="text-[15px] font-medium text-ink-soft">More accommodation</h2>
+                  <div className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {freeListings.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} />
+                    ))}
+                  </div>
+                </section>
+              )}
 
               <Pagination page={results.page} pages={results.pages} truncated={results.truncated} />
             </>

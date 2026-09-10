@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { activateSponsorship, applyReferrerSubscriptionChange, applySubscriptionChange, stripe } from "@/lib/billing";
+import { activateSponsorship, applyReferrerSubscriptionChange, applySubscriptionChange, grantBoostPack, stripe } from "@/lib/billing";
 import { db } from "@/lib/db";
 import { notify, notifyCompany } from "@/lib/notify";
 import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 import type { SponsorPackage } from "@/lib/sponsor-packages";
+import { BOOST_PACKAGES, isBoostPack } from "@/lib/boost-packages";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -60,6 +61,7 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
       status: stripeStatus(remote.status),
       externalCustomerId: stringId(session.customer) ?? undefined,
       externalSubscriptionId: remote.id,
+      periodStart: periodStart(remote),
       periodEnd: periodEnd(remote),
       cancelAtPeriodEnd: remote.cancel_at_period_end,
     });
@@ -90,6 +92,7 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
       status: stripeStatus(remote.status),
       externalCustomerId: stringId(session.customer) ?? undefined,
       externalSubscriptionId: remote.id,
+      periodStart: periodStart(remote),
       periodEnd: periodEnd(remote),
       cancelAtPeriodEnd: remote.cancel_at_period_end,
     });
@@ -106,6 +109,31 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
     if (!listingId || !pkg || !(["WEEK", "MONTH", "QUARTER"] as string[]).includes(pkg)) return;
     await activateSponsorship({ companyId, listingId, pkg, provider: "stripe", externalPaymentId: `checkout:${session.id}` });
     await notifyCompany(companyId, { type: "LISTING", title: "Sponsored advert is active", body: "Your paid placement is now running.", href: `/provider/adverts/${listingId}` });
+    return;
+  }
+
+  if (kind === "boost_pack") {
+    const pack = session.metadata?.pack;
+    if (!isBoostPack(pack)) return;
+    const grant = await grantBoostPack({
+      companyId,
+      pack,
+      externalPaymentId: `checkout:${session.id}`,
+      amountPaid: session.amount_total ?? undefined,
+    });
+    if (!grant.granted) return;
+    await notifyCompany(companyId, {
+      type: "MEMBERSHIP",
+      title: "Boost credits added",
+      body: `${BOOST_PACKAGES[pack].credits} boost credit${BOOST_PACKAGES[pack].credits === 1 ? "" : "s"} added to your account.`,
+      href: "/provider/adverts",
+    });
+    await audit({
+      action: "billing.boost_pack_activated",
+      targetType: "Company",
+      targetId: companyId,
+      metadata: { pack, credits: BOOST_PACKAGES[pack].credits, checkoutSessionId: session.id },
+    });
   }
 }
 
@@ -125,6 +153,7 @@ async function subscriptionChanged(subscription: Stripe.Subscription) {
       status: stripeStatus(subscription.status),
       externalCustomerId: stringId(subscription.customer) ?? undefined,
       externalSubscriptionId: subscription.id,
+      periodStart: periodStart(subscription),
       periodEnd: periodEnd(subscription),
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
     });
@@ -142,6 +171,7 @@ async function subscriptionChanged(subscription: Stripe.Subscription) {
     status: stripeStatus(subscription.status),
     externalCustomerId: stringId(subscription.customer) ?? undefined,
     externalSubscriptionId: subscription.id,
+    periodStart: periodStart(subscription),
     periodEnd: periodEnd(subscription),
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   });
@@ -177,6 +207,11 @@ function stringId(value: string | { id: string } | null): string | null {
 
 function periodEnd(subscription: Stripe.Subscription) {
   const seconds = (subscription as unknown as { current_period_end?: number }).current_period_end;
+  return seconds ? new Date(seconds * 1000) : undefined;
+}
+
+function periodStart(subscription: Stripe.Subscription) {
+  const seconds = (subscription as unknown as { current_period_start?: number }).current_period_start;
   return seconds ? new Date(seconds * 1000) : undefined;
 }
 

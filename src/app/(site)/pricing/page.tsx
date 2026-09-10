@@ -6,6 +6,7 @@ import { billingIsLive, ensureProviderMembershipCatalogue } from "@/lib/billing"
 import { getCurrentUser } from "@/lib/session";
 import { PricingTabs } from "@/components/pricing-tabs";
 import { SponsorDurationPicker } from "@/components/sponsor-duration-picker";
+import { BOOST_PACKAGES } from "@/lib/boost-packages";
 
 export const metadata = { title: "Membership and pricing" };
 export const dynamic = "force-dynamic";
@@ -60,6 +61,11 @@ export default async function PricingPage() {
                 {plan.featuredCredits > 0
                   ? `${plan.featuredCredits} free 7-day promoted slot${plan.featuredCredits === 1 ? "" : "s"} at a time`
                   : "Promoted slots"}
+              </Feature>
+              <Feature enabled={plan.includedBoosts > 0}>
+                {plan.includedBoosts > 0
+                  ? `${plan.includedBoosts} included 24-hour boost${plan.includedBoosts === 1 ? "" : "s"} per billing period`
+                  : "Included 24-hour boosts"}
               </Feature>
               <Feature enabled={plan.prioritySupport}>Priority support</Feature>
             </ul>
@@ -137,6 +143,32 @@ export default async function PricingPage() {
         />
       </div>
 
+      <section id="boosts" className="mt-12 overflow-hidden rounded-card border border-pine/25 bg-white shadow-[0_1px_2px_rgba(21,42,58,.03)]">
+        <div className="bg-pine p-6 text-white sm:p-8">
+          <span className="text-[12px] font-bold uppercase tracking-[0.1em] text-white/70">Short visibility push</span>
+          <h2 className="mt-2 text-[28px] font-bold">24-hour advert boosts</h2>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-white/80">
+            A boosted advert leads for its first three hours, then rotates hourly with other active boosts. Every boost displays a real countdown and ends automatically after 24 hours.
+          </p>
+        </div>
+        <div className="p-6 sm:p-8">
+          <div className="grid gap-4 sm:grid-cols-3">
+            {Object.entries(BOOST_PACKAGES).map(([key, pack]) => (
+              <div key={key} className="rounded-[14px] border border-line p-5">
+                <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-pine-dark">{pack.shortLabel}</span>
+                <h3 className="mt-1 text-[20px] font-bold">{pack.label}</h3>
+                <p className="mt-3 font-display text-[30px]">{money(pack.amount)}</p>
+                <p className="text-[13px] text-ink-faint">{money(Math.round(pack.amount / pack.credits))} per boost</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+            <p className="text-[13px] text-ink-faint">One-off payment. Credits can be used on any live advert and do not expire.</p>
+            <Link href={provider ? "/provider/adverts" : "/register?type=PROVIDER"} className="btn-primary">Choose an advert to boost</Link>
+          </div>
+        </div>
+      </section>
+
       <section id="sponsored" className="mt-12 overflow-hidden rounded-card border border-line bg-white shadow-[0_1px_2px_rgba(21,42,58,.03)]">
         <div className="grid gap-6 border-b border-line bg-paper-sunk/60 p-6 lg:grid-cols-[1.1fr_.9fr] lg:p-8">
           <div>
@@ -149,6 +181,8 @@ export default async function PricingPage() {
           <ul className="flex flex-col gap-2.5 text-[14px] text-ink-soft">
             <Feature>Only shown when the advert matches the person&apos;s filters</Feature>
             <Feature>Always labelled Sponsored, including on the map</Feature>
+            <Feature>Reserved sponsored lane — active placements never drop into the free-advert section</Feature>
+            <Feature>Hourly rotation shares the visible sponsored positions fairly</Feature>
             <Feature>Does not affect verification, moderation or organic ranking</Feature>
           </ul>
         </div>
