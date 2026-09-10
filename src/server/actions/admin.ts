@@ -188,15 +188,31 @@ export type AdminMembershipGrantState = {
   errors?: Record<string, string>;
 };
 
+/** Quick expiry presets shown in the admin grant form, in months from today. "NONE" means no expiry; "CUSTOM" means the admin picked their own date. */
+const GRANT_DURATION_MONTHS: Record<string, number | null> = {
+  "1": 1,
+  "2": 2,
+  "3": 3,
+  "6": 6,
+  "12": 12,
+  NONE: null,
+};
+
 const membershipGrantSchema = z.object({
   companyId: z.string().cuid(),
   intent: z.enum(["GRANT", "REVOKE"]),
   tier: z.enum(["PROFESSIONAL", "BUSINESS"]).optional(),
+  duration: z.enum(["1", "2", "3", "6", "12", "NONE", "CUSTOM"]).optional(),
   expiresOn: z.string().optional(),
+  boostCredits: z.coerce.number().int().min(0).max(50).optional(),
   reason: z.string().trim().min(5, "Add a short reason for the audit record.").max(500),
 });
 
-/** Grant or revoke complimentary provider membership without altering Stripe billing. */
+/**
+ * Grant or revoke complimentary provider membership, and/or add promotional boost credits,
+ * without altering Stripe billing. A grant can be membership-only, boost-only, or both in one
+ * submission — whichever the admin fills in.
+ */
 export async function manageProviderMembershipGrantAction(
   _state: AdminMembershipGrantState,
   formData: FormData,
@@ -206,7 +222,9 @@ export async function manageProviderMembershipGrantAction(
     companyId: formData.get("companyId"),
     intent: formData.get("intent"),
     tier: formData.get("tier") || undefined,
+    duration: formData.get("duration") || undefined,
     expiresOn: formData.get("expiresOn") || undefined,
+    boostCredits: formData.get("boostCredits") || undefined,
     reason: formData.get("reason"),
   });
   if (!parsed.success) {
@@ -219,7 +237,7 @@ export async function manageProviderMembershipGrantAction(
     };
   }
 
-  const { companyId, intent, tier, expiresOn, reason } = parsed.data;
+  const { companyId, intent, tier, duration, expiresOn, boostCredits, reason } = parsed.data;
   const company = await db.company.findUnique({ where: { id: companyId }, select: { name: true } });
   if (!company) return { ok: false, errors: { form: "Provider not found." } };
 
@@ -247,44 +265,78 @@ export async function manageProviderMembershipGrantAction(
     return { ok: true, message: `Complimentary membership removed from ${company.name}.` };
   }
 
-  if (!tier) return { ok: false, errors: { tier: "Choose a plan to grant." } };
-  const membership = await db.membership.findFirst({
-    where: { tier, audience: "PROVIDER", active: true },
-    select: { id: true, name: true },
-  });
-  if (!membership) return { ok: false, errors: { tier: "That provider plan is unavailable." } };
+  if (!tier && !boostCredits) {
+    return { ok: false, errors: { tier: "Choose a plan and/or add boost credits to grant." } };
+  }
 
+  let membership: { id: string; name: string } | null = null;
   let expiresAt: Date | null = null;
-  if (expiresOn) {
-    expiresAt = new Date(`${expiresOn}T23:59:59.999Z`);
-    if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
-      return { ok: false, errors: { expiresOn: "Choose a future expiry date." } };
+  if (tier) {
+    membership = await db.membership.findFirst({
+      where: { tier, audience: "PROVIDER", active: true },
+      select: { id: true, name: true },
+    });
+    if (!membership) return { ok: false, errors: { tier: "That provider plan is unavailable." } };
+
+    if (duration === "CUSTOM") {
+      if (expiresOn) {
+        expiresAt = new Date(`${expiresOn}T23:59:59.999Z`);
+        if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+          return { ok: false, errors: { expiresOn: "Choose a future expiry date." } };
+        }
+      }
+    } else if (duration && duration in GRANT_DURATION_MONTHS) {
+      const months = GRANT_DURATION_MONTHS[duration];
+      if (months) {
+        const d = new Date();
+        d.setUTCMonth(d.getUTCMonth() + months);
+        expiresAt = d;
+      }
     }
   }
 
   const now = new Date();
-  const grant = await db.$transaction(async (tx) => {
-    await tx.membershipGrant.updateMany({
-      where: { companyId, revokedAt: null },
-      data: { revokedAt: now },
-    });
-    return tx.membershipGrant.create({
-      data: {
-        companyId,
-        membershipId: membership.id,
-        grantedById: admin.id,
-        reason,
-        expiresAt,
-      },
-    });
-  });
+  const grant = membership
+    ? await db.$transaction(async (tx) => {
+        await tx.membershipGrant.updateMany({
+          where: { companyId, revokedAt: null },
+          data: { revokedAt: now },
+        });
+        const created = await tx.membershipGrant.create({
+          data: {
+            companyId,
+            membershipId: membership!.id,
+            grantedById: admin.id,
+            reason,
+            expiresAt,
+          },
+        });
+        if (boostCredits) {
+          await tx.company.update({ where: { id: companyId }, data: { boostCredits: { increment: boostCredits } } });
+        }
+        return created;
+      })
+    : null;
+
+  if (!membership && boostCredits) {
+    await db.company.update({ where: { id: companyId }, data: { boostCredits: { increment: boostCredits } } });
+  }
+
+  const parts: string[] = [];
+  if (membership) parts.push(`${membership.name} access`);
+  if (boostCredits) parts.push(`${boostCredits} promotional boost credit${boostCredits === 1 ? "" : "s"}`);
 
   await notifyCompany(companyId, {
     type: "MEMBERSHIP",
-    title: `${membership.name} membership granted`,
-    body: expiresAt
-      ? `Complimentary access is active until ${expiresAt.toLocaleDateString("en-GB")}.`
-      : "Complimentary access is active until an administrator ends it.",
+    title: membership ? `${membership.name} membership granted` : "Promotional boost credits added",
+    body: [
+      membership
+        ? expiresAt
+          ? `Complimentary access is active until ${expiresAt.toLocaleDateString("en-GB")}.`
+          : "Complimentary access is active until an administrator ends it."
+        : null,
+      boostCredits ? `${boostCredits} promotional boost credit${boostCredits === 1 ? "" : "s"} added to your account.` : null,
+    ].filter(Boolean).join(" "),
     href: "/provider/membership",
     email: true,
   });
@@ -293,10 +345,16 @@ export async function manageProviderMembershipGrantAction(
     action: "admin.membership_grant_created",
     targetType: "Company",
     targetId: companyId,
-    metadata: { grantId: grant.id, tier, expiresAt: expiresAt?.toISOString() ?? null, reason },
+    metadata: {
+      grantId: grant?.id ?? null,
+      tier: tier ?? null,
+      expiresAt: expiresAt?.toISOString() ?? null,
+      boostCredits: boostCredits ?? 0,
+      reason,
+    },
   });
   revalidateMembershipPaths();
-  return { ok: true, message: `${membership.name} access granted to ${company.name}.` };
+  return { ok: true, message: `${parts.join(" and ")} granted to ${company.name}.` };
 }
 
 const userMembershipGrantSchema = z.object({
