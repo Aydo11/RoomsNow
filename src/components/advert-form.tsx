@@ -201,7 +201,14 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
           />
         </Field>
         <Field label="What support is provided" name="supportDescription">
-          <textarea id="supportDescription" name="supportDescription" rows={5} defaultValue={defaults.supportDescription} className="field" />
+          <textarea
+            id="supportDescription"
+            name="supportDescription"
+            rows={5}
+            defaultValue={defaults.supportDescription}
+            placeholder={"e.g. Daily welfare checks, help with budgeting and benefits claims, support to register with a GP and access local services, and move-on planning towards independent living."}
+            className="field"
+          />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Support hours" name="supportAvailability" hint="e.g. 24/7 on site, or weekdays 9–5.">
@@ -218,9 +225,6 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
             options={Object.entries(REFERRAL_ROUTES).map(([value, label]) => ({ value, label }))}
             columns={2}
           />
-        </Field>
-        <Field label="Who this is for" name="eligibility">
-          <textarea id="eligibility" name="eligibility" rows={4} defaultValue={defaults.eligibility} className="field" />
         </Field>
         <Field label="Referral process" name="referralProcess">
           <textarea id="referralProcess" name="referralProcess" rows={4} defaultValue={defaults.referralProcess} className="field" />
