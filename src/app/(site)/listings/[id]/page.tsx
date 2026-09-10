@@ -261,7 +261,6 @@ export default async function ListingPage({
               )}
               <Fact label="Support hours" value={listing.supportAvailability ?? "Ask the provider"} />
               <Fact label="Support delivered by" value={listing.supportProvider ?? "The provider"} />
-              {listing.eligibility && <Fact label="Eligibility" value={listing.eligibility} wide />}
               {listing.referralProcess && <Fact label="How to apply" value={listing.referralProcess} wide />}
               <Fact
                 label="Referral routes accepted"
