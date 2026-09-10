@@ -31,6 +31,23 @@ export function escapeHtml(value: string) {
     .replaceAll("'", "&#39;");
 }
 
+/**
+ * Splits admin-typed plain text into paragraphs (blank line = new paragraph,
+ * single newline = line break within one), escaping first so nothing in a
+ * provider mailshot body can inject markup.
+ */
+function paragraphsHtml(text: string, color: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map(
+      (block) =>
+        `<p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${color};">${escapeHtml(block).replace(/\n/g, "<br />")}</p>`,
+    )
+    .join("");
+}
+
 export function renderEmail(params: {
   /** Hidden preview text shown next to the subject line in most inboxes. */
   preheader: string;
@@ -321,4 +338,124 @@ P.S. This is genuinely new, not a rebrand of something established — so what y
 ---
 ${brand.name} · ${brand.tagline}
 Questions? Email ${brand.supportEmail}`;
+}
+
+/**
+ * The AIO provider mailshot (see sendProviderMailshot in
+ * server/actions/provider-mailshot.ts) — reaches already-registered
+ * providers, unlike renderPreLaunchInviteEmail above which reaches people
+ * who haven't signed up yet. One shared shell for both of its "kinds":
+ * a promo-code send shows the dashed-border code block, a news/update
+ * send just skips it. Subject and body are admin-typed per send, so
+ * everything user-supplied is escaped before it reaches the HTML.
+ */
+export function renderProviderMailshotEmail(params: {
+  kind: "PROMO" | "NEWS";
+  recipientName?: string;
+  senderName: string;
+  heading: string;
+  bodyText: string;
+  promoCode?: string;
+  promoBlurb?: string;
+  ctaLabel: string;
+  ctaUrl: string;
+}) {
+  const { kind, recipientName, senderName, heading, bodyText, promoCode, promoBlurb, ctaLabel, ctaUrl } = params;
+  const greeting = recipientName ? `Hi ${escapeHtml(recipientName)},` : "Hi,";
+  const sender = escapeHtml(senderName);
+  const badgeLabel = kind === "PROMO" ? "Promotional offer" : "News & updates";
+  const promoBlock =
+    kind === "PROMO" && promoCode
+      ? `<tr>
+              <td style="padding:6px 30px 6px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EAF2FA; border:1px solid #CFE1F2; border-radius:12px;">
+                  <tr>
+                    <td style="padding:20px 26px; text-align:center;">
+                      ${promoBlurb ? `<p style="margin:0 0 10px; font-size:14.5px; line-height:1.6; color:${COLORS.inkSoft};">${escapeHtml(promoBlurb)}</p>` : ""}
+                      <span style="display:inline-block; padding:10px 22px; font-size:18px; font-weight:700; letter-spacing:0.04em; color:${COLORS.pineDark}; background-color:#FFFFFF; border:1.5px dashed ${COLORS.pine}; border-radius:8px;">${escapeHtml(promoCode)}</span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>`
+      : "";
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${brand.name}</title>
+  </head>
+  <body style="margin:0; padding:0; background-color:${COLORS.paper}; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <span style="display:none; font-size:1px; color:${COLORS.paper}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">${escapeHtml(heading)}</span>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.paper};">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px; width:100%; background-color:${COLORS.card}; border-radius:14px; border:1px solid ${COLORS.line};">
+            <tr>
+              <td style="padding:28px 36px 20px; border-bottom:1px solid ${COLORS.line};">
+                <span style="font-size:20px; font-weight:700; color:${COLORS.pineDark}; letter-spacing:-0.01em;">${brand.name}</span>
+                <span style="margin-left:10px; display:inline-block; padding:3px 10px; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark}; background-color:#EAF2FA; border-radius:999px;">${badgeLabel}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px 36px 4px;">
+                <h1 style="margin:0 0 14px; font-size:22px; line-height:1.3; color:${COLORS.ink};">${escapeHtml(heading)}</h1>
+                <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">${greeting}</p>
+                ${paragraphsHtml(bodyText, COLORS.inkSoft)}
+              </td>
+            </tr>
+            ${promoBlock}
+            <tr>
+              <td style="padding:12px 36px 8px;">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="border-radius:8px; background-color:${COLORS.pine};">
+                      <a href="${ctaUrl}" style="display:inline-block; padding:12px 28px; font-size:15px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">${escapeHtml(ctaLabel)}</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 36px 4px;">
+                <p style="margin:0; font-size:14.5px; line-height:1.65; color:${COLORS.inkSoft};">${sender}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 36px 28px;">
+                <div style="border-top:1px solid ${COLORS.line}; padding-top:20px;">
+                  <p style="margin:0; font-size:12px; line-height:1.6; color:${COLORS.inkFaint};">
+                    ${brand.name} &middot; ${brand.tagline}<br />
+                    Questions? Email <a href="mailto:${brand.supportEmail}" style="color:${COLORS.inkFaint};">${brand.supportEmail}</a>
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
+
+/** Plain-text fallback for renderProviderMailshotEmail. */
+export function renderProviderMailshotText(params: {
+  recipientName?: string;
+  senderName: string;
+  bodyText: string;
+  promoCode?: string;
+  promoBlurb?: string;
+  ctaLabel: string;
+  ctaUrl: string;
+}) {
+  const { recipientName, senderName, bodyText, promoCode, promoBlurb, ctaLabel, ctaUrl } = params;
+  const greeting = recipientName ? `Hi ${recipientName},` : "Hi,";
+  const lines = [greeting, "", bodyText.trim()];
+  if (promoCode) {
+    lines.push("", promoBlurb || "Your code:", `CODE: ${promoCode}`);
+  }
+  lines.push("", `${ctaLabel}: ${ctaUrl}`, "", senderName, "", "---", `${brand.name} · ${brand.tagline}`, `Questions? Email ${brand.supportEmail}`);
+  return lines.join("\n");
 }
