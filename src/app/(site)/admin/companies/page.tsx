@@ -62,8 +62,30 @@ export default async function AdminCompaniesPage({ searchParams }: { searchParam
     db.company.count({ where }),
   ]);
 
+  const exportQuery = new URLSearchParams();
+  if (q) exportQuery.set("q", q);
+  if (status) exportQuery.set("status", status);
+  if (verification) exportQuery.set("verification", verification);
+  if (source) exportQuery.set("source", source);
+  const exportQs = exportQuery.toString() ? `?${exportQuery.toString()}` : "";
+
   return (
-    <DashboardShell title="Providers" subtitle="Search and filter provider accounts before taking action." nav={nav} active="/admin/companies">
+    <DashboardShell
+      title="Providers"
+      subtitle="Search and filter provider accounts before taking action."
+      nav={nav}
+      active="/admin/companies"
+      action={
+        <div className="flex gap-2">
+          <Link href={`/api/admin/companies/export${exportQs}`} className="btn-secondary" prefetch={false}>
+            Export CSV
+          </Link>
+          <Link href={`/admin/companies/print${exportQs}`} className="btn-secondary" prefetch={false}>
+            Export PDF
+          </Link>
+        </div>
+      }
+    >
       <AdminFilters>
         <AdminFilterField label="Search" wide><input className="field" name="q" defaultValue={q} placeholder="Name, email or city" /></AdminFilterField>
         <AdminFilterField label="Account status"><select className="field" name="status" defaultValue={status ?? ""}><option value="">All statuses</option>{Object.values(AccountStatus).map((value) => <option key={value} value={value}>{value.toLowerCase()}</option>)}</select></AdminFilterField>
