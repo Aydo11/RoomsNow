@@ -55,7 +55,7 @@ export function PlanPicker({
 
               <ul className="mt-4 flex-1 space-y-1.5 text-[14px] text-ink-soft">
                 <li>{limit(plan.maxListings)} live adverts</li>
-                <li>{limit(plan.maxRooms)} rooms</li>
+                <li>{plan.maxRooms === -1 ? "Unlimited rooms across your properties" : `${limit(plan.maxRooms)} rooms`}</li>
                 <li>{limit(plan.maxStaff)} staff accounts</li>
                 <li>{plan.priceMonthly > 0 ? "Public advert maps with nearby amenities" : "No public advert maps"}</li>
                 <li>{plan.featuredCredits} promoted slots included</li>
