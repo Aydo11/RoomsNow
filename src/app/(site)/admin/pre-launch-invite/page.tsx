@@ -4,7 +4,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { PreLaunchInviteForm } from "@/components/marketing-forms";
 import { adminNav } from "../nav";
 
-export const metadata = { title: "Pre-launch invite" };
+export const metadata = { title: "Pre-launch mailshot" };
 export const dynamic = "force-dynamic";
 
 export default async function PreLaunchInvitePage() {
@@ -12,8 +12,8 @@ export default async function PreLaunchInvitePage() {
   const nav = await adminNav();
   return (
     <DashboardShell
-      title="Pre-launch invite"
-      subtitle="A hand-picked outreach email to real Birmingham providers before public launch, offering 3 months of Professional free."
+      title="Pre-launch mailshot"
+      subtitle="A hand-picked outreach mailshot to real Birmingham providers before public launch, offering 3 months of Professional free."
       nav={nav}
       active="/admin/pre-launch-invite"
     >
@@ -22,12 +22,13 @@ export default async function PreLaunchInvitePage() {
         <div className="card space-y-4 p-5">
           <h2 className="text-lg">What this sends</h2>
           <p className="text-sm text-ink-soft">
-            A founder-voice invitation (signed with whatever name you enter, framed as one
-            managing agent to another) covering: the cost of a void and how RoomsNow shortens it,
-            sourced Birmingham and UK
+            A founder-voice invitation (signed with whatever name you enter, framed as someone
+            with hands-on experience in the sector) covering: the cost of a void and how RoomsNow
+            shortens it, sourced Birmingham and UK
             demand statistics, the pre-launch &ldquo;founding provider&rdquo; framing, and a free
             3-month Professional offer (worth &pound;147) so they can trial it before paying
-            anything.
+            anything. One submission sends to every address you paste in, each as its own email
+            (never a group BCC) &mdash; up to 150 at a time.
           </p>
           <div className="rounded-[10px] border border-line bg-paper-sunk/60 p-4 text-[13px] leading-relaxed text-ink-soft">
             <p className="font-medium text-ink">Fulfilling the offer</p>
