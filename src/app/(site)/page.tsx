@@ -74,7 +74,7 @@ export default async function HomePage() {
             Find an <span className="text-pine-dark">HMO room or accommodation</span> that fits
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-[17px] leading-relaxed text-ink-soft">
-            Search live HMO rooms, supported housing and specialist accommodation for yourself or someone you support.
+            Some people need more than a room — they need the right support alongside it. RoomsNow makes that connection.
           </p>
 
           <div className="mx-auto mt-7 max-w-4xl text-left">
