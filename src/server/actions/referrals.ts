@@ -164,3 +164,53 @@ export async function updateReferralStatusAction(referralId: string, status: Ref
   revalidatePath(`/referrals/${referralId}`);
   revalidatePath("/provider/referrals");
 }
+
+/**
+ * Attaches more supporting documents to a referral after it's already been
+ * sent — the referrer often doesn't have everything to hand at submission
+ * time. Referrer-only and ownership-checked; the provider sees the new files
+ * appear on the referral they already have, no separate notification (the
+ * referral thread is where they'd look).
+ */
+export async function addReferralDocumentAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireReferrer();
+
+  const referralId = text(formData, "referralId");
+  if (!referralId) return { ok: false, errors: { form: "Referral not found." } };
+
+  const referral = await db.referral.findUnique({ where: { id: referralId }, select: { id: true, referrerId: true, reference: true } });
+  if (!referral || referral.referrerId !== user.id) return { ok: false, errors: { form: "Referral not found." } };
+
+  const files = formData.getAll("documents").filter((f): f is File => f instanceof File && f.size > 0);
+  if (files.length === 0) return { ok: false, errors: { documents: "Choose at least one file." } };
+
+  for (const file of files) {
+    const invalid = validateUpload(file, "document");
+    if (invalid) return { ok: false, errors: { documents: invalid } };
+    const mismatch = await verifyFileContents(file, Buffer.from(await file.arrayBuffer()));
+    if (mismatch) return { ok: false, errors: { documents: mismatch } };
+    const stored = await storage.put(file, `referrals/${referral.id}`, "private");
+    await db.document.create({
+      data: {
+        referralId: referral.id,
+        ownerId: user.id,
+        name: file.name,
+        url: stored.url,
+        mimeType: stored.mimeType,
+        sizeBytes: stored.sizeBytes,
+        isPrivate: true,
+      },
+    });
+  }
+
+  await audit({
+    actorId: user.id,
+    action: "referral.documents_added",
+    targetType: "Referral",
+    targetId: referral.id,
+    metadata: { count: files.length },
+  });
+
+  revalidatePath(`/referrals/${referral.id}`);
+  return { ok: true, message: files.length === 1 ? "Document added." : `${files.length} documents added.` };
+}
