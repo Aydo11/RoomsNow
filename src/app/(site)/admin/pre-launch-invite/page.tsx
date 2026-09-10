@@ -22,8 +22,9 @@ export default async function PreLaunchInvitePage() {
         <div className="card space-y-4 p-5">
           <h2 className="text-lg">What this sends</h2>
           <p className="text-sm text-ink-soft">
-            A founder-voice invitation (from Ayden, framed as one managing agent to another)
-            covering: the cost of a void and how RoomsNow shortens it, sourced Birmingham and UK
+            A founder-voice invitation (signed with whatever name you enter, framed as one
+            managing agent to another) covering: the cost of a void and how RoomsNow shortens it,
+            sourced Birmingham and UK
             demand statistics, the pre-launch &ldquo;founding provider&rdquo; framing, and a free
             3-month Professional offer (worth &pound;147) so they can trial it before paying
             anything.
