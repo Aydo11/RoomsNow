@@ -36,6 +36,19 @@ export function FeaturedBadge({ label = "Sponsored" }: { label?: string }) {
   );
 }
 
+/**
+ * Shown on every advert with benefits accepted, whatever the provider's
+ * membership tier — this is an eligibility fact for the applicant, not a
+ * paid placement, so it never gets folded into the sponsored/boosted lanes.
+ */
+export function BenefitsBadge({ label = "Benefits accepted" }: { label?: string }) {
+  return (
+    <span className="inline-flex items-center rounded-pill bg-pine px-3 py-1 text-[12px] font-extrabold uppercase tracking-[0.08em] text-white">
+      {label}
+    </span>
+  );
+}
+
 const ROOM_TONE: Record<string, string> = {
   AVAILABLE: "bg-pine text-white",
   RESERVED: "bg-clay/15 text-clay",
