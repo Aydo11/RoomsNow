@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireUser } from "@/lib/rbac";
 import { Thread } from "@/components/thread";
 import { ConversationMenu } from "@/components/conversation-menu";
+import { ConversationActions } from "@/components/conversation-actions";
 
 export const metadata = { title: "Conversation" };
 export const dynamic = "force-dynamic";
@@ -47,10 +48,10 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     : false;
 
   return (
-    <div className="shell max-w-3xl py-6 lg:py-10">
-      <Link href="/messages" className="text-[14px] text-ink-soft hover:text-ink">← All messages</Link>
+    <div className="flex h-full flex-col p-4 sm:p-6">
+      <Link href="/messages" className="text-[14px] text-ink-soft hover:text-ink lg:hidden">← All messages</Link>
 
-      <header className="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+      <header className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4 lg:mt-0">
         <div>
           <h1 className="text-[22px]">
             {others.map((p) => `${p.user.firstName} ${p.user.lastName.charAt(0)}.`).join(", ") || "Conversation"}
@@ -66,13 +67,16 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
             </Link>
           )}
         </div>
-        {others[0] && (
-          <ConversationMenu
-            otherUserId={others[0].userId}
-            otherName={others[0].user.firstName}
-            initiallyBlocked={alreadyBlocked}
-          />
-        )}
+        <div className="flex items-center gap-3">
+          <ConversationActions conversationId={conversation.id} archived={participant.archived} variant="header" />
+          {others[0] && (
+            <ConversationMenu
+              otherUserId={others[0].userId}
+              otherName={others[0].user.firstName}
+              initiallyBlocked={alreadyBlocked}
+            />
+          )}
+        </div>
       </header>
 
       <Thread
