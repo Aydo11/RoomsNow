@@ -261,8 +261,7 @@ export function renderPreLaunchInviteEmail(params: {
             <tr>
               <td style="padding:24px 40px 8px;">
                 <p style="margin:0; font-size:14.5px; line-height:1.65; color:${COLORS.inkSoft};">
-                  ${sender}<br />
-                  Founder, ${brand.name}
+                  ${sender}
                 </p>
                 <p style="margin:14px 0 0; font-size:13px; line-height:1.6; color:${COLORS.inkFaint}; font-style:italic;">
                   P.S. This is genuinely new, not a rebrand of something established &mdash; so
@@ -316,7 +315,6 @@ Claim your free 3 months: ${ctaUrl}
 Sign up as a provider and reply to this email — I'm upgrading pre-launch accounts to Professional by hand, so there's nothing to pay and nothing to cancel later.
 
 ${senderName}
-Founder, ${brand.name}
 
 P.S. This is genuinely new, not a rebrand of something established — so what you tell us in the first few weeks will shape what providers see for years after. That's worth more to us than a bigger list right now.
 
