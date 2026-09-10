@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
-import { revokeClientShareAction, searchCompaniesAction, shareClientAction } from "@/server/actions/clients";
+import {
+  deleteClientShareAction,
+  revokeClientShareAction,
+  searchCompaniesAction,
+  shareClientAction,
+} from "@/server/actions/clients";
 import { FormError, FormSuccess, SubmitButton } from "./ui";
 import { DirectMessageForm } from "./direct-message-form";
 import { toast } from "./toast";
@@ -16,10 +21,12 @@ export function ShareClientPanel({
   clientId,
   clientName,
   activeShares,
+  revokedShares = [],
 }: {
   clientId: string;
   clientName: string;
   activeShares: ActiveShare[];
+  revokedShares?: ActiveShare[];
 }) {
   const [state, action] = useActionState(shareClientAction, { ok: false });
   const [query, setQuery] = useState("");
@@ -138,6 +145,20 @@ export function ShareClientPanel({
           </ul>
         </div>
       )}
+
+      {revokedShares.length > 0 && (
+        <div className="mt-6 border-t border-line pt-5">
+          <h3 className="text-[15px] font-medium text-ink-soft">Previously shared</h3>
+          <p className="mt-1 text-[12.5px] text-ink-faint">
+            Access was revoked — the provider can no longer see this profile. Delete removes the record entirely.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {revokedShares.map((share) => (
+              <RevokedShareRow key={share.id} share={share} />
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -152,18 +173,62 @@ function ActiveShareRow({ share }: { share: ActiveShare }) {
         <p className="truncate text-[14px]">{share.companyName}</p>
         <p className="truncate text-[12px] text-ink-faint">Shared {shortDate(new Date(share.createdAt))}</p>
       </div>
+      <div className="flex shrink-0 items-center gap-3">
+        <button
+          className="text-[13px] text-clay-dark underline hover:text-clay"
+          disabled={pending}
+          onClick={() =>
+            startTransition(async () => {
+              await revokeClientShareAction(share.id);
+              toast.success(`Revoked ${share.companyName}'s access.`);
+              router.refresh();
+            })
+          }
+        >
+          Revoke
+        </button>
+        <button
+          className="text-[13px] text-ink-faint underline hover:text-clay-dark"
+          disabled={pending}
+          onClick={() => {
+            if (!window.confirm(`Delete this share with ${share.companyName}? This can't be undone.`)) return;
+            startTransition(async () => {
+              await deleteClientShareAction(share.id);
+              toast.success(`Deleted the share with ${share.companyName}.`);
+              router.refresh();
+            });
+          }}
+        >
+          Delete
+        </button>
+      </div>
+    </li>
+  );
+}
+
+function RevokedShareRow({ share }: { share: ActiveShare }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+
+  return (
+    <li className="flex items-center justify-between gap-3 rounded-[10px] border border-line bg-paper-sunk px-3.5 py-2.5">
+      <div className="min-w-0">
+        <p className="truncate text-[14px] text-ink-soft">{share.companyName}</p>
+        <p className="truncate text-[12px] text-ink-faint">Shared {shortDate(new Date(share.createdAt))} · revoked</p>
+      </div>
       <button
         className="shrink-0 text-[13px] text-clay-dark underline hover:text-clay"
         disabled={pending}
-        onClick={() =>
+        onClick={() => {
+          if (!window.confirm(`Permanently delete this record for ${share.companyName}?`)) return;
           startTransition(async () => {
-            await revokeClientShareAction(share.id);
-            toast.success(`Revoked ${share.companyName}'s access.`);
+            await deleteClientShareAction(share.id);
+            toast.success(`Deleted the record for ${share.companyName}.`);
             router.refresh();
-          })
-        }
+          });
+        }}
       >
-        Revoke
+        Delete
       </button>
     </li>
   );
