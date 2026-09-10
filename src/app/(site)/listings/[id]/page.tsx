@@ -7,7 +7,7 @@ import { getCurrentUser } from "@/lib/session";
 import { Gallery } from "@/components/gallery";
 import { SaveButton } from "@/components/save-button";
 import { ReportForm } from "@/components/report-form";
-import { MatchScore, RoomStrip, StatusPill, VerifiedBadge } from "@/components/badges";
+import { BenefitsBadge, MatchScore, RoomStrip, StatusPill, VerifiedBadge } from "@/components/badges";
 import { MessageProviderForm } from "@/components/message-provider-form";
 import { monthYear, publicLocation, rentRange, shortDate } from "@/lib/format";
 import {
@@ -196,6 +196,7 @@ export default async function ListingPage({
             </div>
 
             <p className="mt-4 flex flex-wrap gap-1.5">
+              {listing.housingBenefit && <BenefitsBadge />}
               {listing.supportTypes.map((slug) => (
                 <span key={slug} className="chip chip-active">{supportLabel(slug)}</span>
               ))}
@@ -247,7 +248,7 @@ export default async function ListingPage({
 
           {listing.description && (
             <section className="mt-8">
-              <h2 className="text-[22px]">About this accommodation</h2>
+              <h2 className="text-[22px]">About the property</h2>
               <div className="prose-advert mt-3" dangerouslySetInnerHTML={{ __html: listing.description }} />
             </section>
           )}
