@@ -26,7 +26,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         include: { listing: { select: { id: true, title: true, company: { select: { name: true } } } } },
       },
       shares: {
-        where: { revokedAt: null },
         orderBy: { createdAt: "desc" },
         include: { company: { select: { name: true } } },
       },
@@ -142,12 +141,22 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <ShareClientPanel
             clientId={client.id}
             clientName={`${client.firstName} ${client.lastName}`}
-            activeShares={client.shares.map((share) => ({
-              id: share.id,
-              companyName: share.company.name,
-              note: share.note,
-              createdAt: share.createdAt.toISOString(),
-            }))}
+            activeShares={client.shares
+              .filter((share) => !share.revokedAt)
+              .map((share) => ({
+                id: share.id,
+                companyName: share.company.name,
+                note: share.note,
+                createdAt: share.createdAt.toISOString(),
+              }))}
+            revokedShares={client.shares
+              .filter((share) => share.revokedAt)
+              .map((share) => ({
+                id: share.id,
+                companyName: share.company.name,
+                note: share.note,
+                createdAt: share.createdAt.toISOString(),
+              }))}
           />
         </aside>
       </div>
