@@ -182,7 +182,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
           <Toggle name="sharedFacilities" label="Shared facilities" defaultChecked={defaults.sharedFacilities ?? true} />
           <Toggle name="wheelchairAccess" label="Wheelchair accessible" defaultChecked={defaults.wheelchairAccess} />
           <Toggle name="billsIncluded" label="Bills included" defaultChecked={defaults.billsIncluded ?? true} />
-          <Toggle name="housingBenefit" label="Housing benefit accepted" defaultChecked={defaults.housingBenefit ?? true} />
+          <Toggle name="housingBenefit" label="Benefits accepted (incl. Universal Credit)" defaultChecked={defaults.housingBenefit ?? true} />
         </div>
 
         <Field label="Accessibility notes" name="accessibilityNotes">
@@ -204,7 +204,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
           <textarea id="supportDescription" name="supportDescription" rows={5} defaultValue={defaults.supportDescription} className="field" />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Staffing hours" name="supportAvailability" hint="e.g. 24/7 on site, or weekdays 9–5.">
+          <Field label="Support hours" name="supportAvailability" hint="e.g. 24/7 on site, or weekdays 9–5.">
             <input id="supportAvailability" name="supportAvailability" defaultValue={defaults.supportAvailability} className="field" />
           </Field>
           <Field label="Support delivered by" name="supportProvider">
@@ -229,8 +229,15 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
 
       <section className={clsx("card space-y-4 p-6", step !== 3 && "hidden")}>
         <h2 className="text-[20px]">Full description</h2>
-        <Field label="Description" name="description" hint="Basic formatting is kept; scripts and styling are stripped.">
-          <textarea id="description" name="description" rows={12} defaultValue={defaults.description} className="field" />
+        <Field label="About the property" name="description" hint="Basic formatting is kept; scripts and styling are stripped.">
+          <textarea
+            id="description"
+            name="description"
+            rows={12}
+            defaultValue={defaults.description}
+            placeholder={"e.g. A newly refurbished 6-bed supported house in a quiet residential street, five minutes' walk from the town centre and bus routes. Each room has its own lock, with a shared kitchen, lounge and garden. On-site support staff are based here during the day, with an on-call line overnight."}
+            className="field"
+          />
         </Field>
         <Field label="House rules" name="houseRules">
           <textarea id="houseRules" name="houseRules" rows={4} defaultValue={defaults.houseRules} className="field" />
