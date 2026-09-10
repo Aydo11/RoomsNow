@@ -190,6 +190,26 @@ export async function revokeClientShareAction(shareId: string) {
   revalidatePath(`/referrals/clients/${share.client.id}`);
 }
 
+/**
+ * Permanent removal of a share record — distinct from revoke, which cuts the
+ * provider's access but keeps a timestamped row for the client's history.
+ * Delete is for a mistaken share or tidying old history away entirely; the
+ * provider is not notified either way since access was already revoked (or
+ * never confirmed) by the time this runs.
+ */
+export async function deleteClientShareAction(shareId: string) {
+  const user = await requireReferrer();
+  const share = await db.clientShare.findUnique({
+    where: { id: shareId },
+    include: { client: { select: { referrerId: true, id: true } } },
+  });
+  if (!share || share.client.referrerId !== user.id) return;
+
+  await db.clientShare.delete({ where: { id: shareId } });
+  await audit({ actorId: user.id, action: "client.share_deleted", targetType: "ClientShare", targetId: shareId });
+  revalidatePath(`/referrals/clients/${share.client.id}`);
+}
+
 
 /** Lightweight provider search for the "share with a provider" picker. */
 export async function searchCompaniesAction(query: string) {
