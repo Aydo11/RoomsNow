@@ -5,7 +5,7 @@ import { adminNav } from "../nav";
 import { money, shortDate } from "@/lib/format";
 import { AdminMembershipGrantForm } from "@/components/admin-membership-grant-form";
 import { AdminUserMembershipGrantForm } from "@/components/admin-user-membership-grant-form";
-import { ensureReferrerMembershipCatalogue } from "@/lib/billing";
+import { ensureReferrerMembershipCatalogue, ensureProviderMembershipCatalogue } from "@/lib/billing";
 
 export const metadata = { title: "Memberships" };
 export const dynamic = "force-dynamic";
@@ -20,6 +20,7 @@ export default async function AdminMembershipsPage({
   const q = query.q?.trim().slice(0, 100);
   const now = new Date();
   await ensureReferrerMembershipCatalogue();
+  await ensureProviderMembershipCatalogue();
   const [nav, plans, subscriptions, referrerSubscriptions, providers, referrers, payments, revenue] = await Promise.all([
     adminNav(),
     db.membership.findMany({ where: { audience: "PROVIDER" }, orderBy: { priceMonthly: "asc" } }),
