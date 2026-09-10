@@ -60,7 +60,7 @@ export function ListingCard({
           />
           <div className="absolute left-3 top-3 flex gap-2">
             {boosted ? (
-              <span className="inline-flex items-center gap-1.5 rounded-pill bg-pine px-3 py-1 text-[12px] font-extrabold uppercase tracking-[0.08em] text-white"><LightningIcon /> Boosted now</span>
+              <span className="inline-flex items-center gap-1 rounded-pill bg-pine/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-white"><LightningIcon /> Boosted now</span>
             ) : activelySponsored ? <FeaturedBadge /> : null}
             {available > 0 && (
               <span className="rounded-pill bg-white/95 px-2.5 py-1 text-[12px] font-medium text-pine-dark">
@@ -154,7 +154,7 @@ function companyInitials(name: string) {
 
 function LightningIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor" aria-hidden="true">
       <path d="M13.2 1.8 4.7 13.1a1 1 0 0 0 .8 1.6h5.1l-.8 7a.5.5 0 0 0 .9.4l8.6-11.3a1 1 0 0 0-.8-1.6h-5.2l.8-7a.5.5 0 0 0-.9-.4Z" />
     </svg>
   );

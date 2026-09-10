@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireCompany } from "@/lib/rbac";
-import { planLimits } from "@/lib/billing";
+import { boostAllowance, planLimits } from "@/lib/billing";
 import { DashboardShell, MetricBar, StatCard } from "@/components/dashboard-shell";
 import { RoomStrip, StatusPill } from "@/components/badges";
 import { providerNav } from "./nav";
@@ -15,10 +15,23 @@ export default async function ProviderDashboard() {
   const { companyId, user } = await requireCompany();
   const nav = await providerNav(companyId);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60_000);
+  const now = new Date();
 
-  const [company, limits, listings, rooms, requests, referrals, views, requests30d, referrals30d, requestStatuses, referralStatuses, unreadThreads, topListings] = await Promise.all([
+  const [company, limits, boosts, activeBoosts, activeSponsored, listings, rooms, requests, referrals, views, requests30d, referrals30d, requestStatuses, referralStatuses, unreadThreads, topListings] = await Promise.all([
     db.company.findUniqueOrThrow({ where: { id: companyId } }),
     planLimits(companyId),
+    boostAllowance(companyId),
+    db.listing.count({
+      where: { companyId, status: "ACTIVE", boostStartsAt: { lte: now }, boostedUntil: { gt: now } },
+    }),
+    db.listing.count({
+      where: {
+        companyId,
+        status: "ACTIVE",
+        featured: true,
+        OR: [{ featuredUntil: null }, { featuredUntil: { gt: now } }],
+      },
+    }),
     db.listing.findMany({
       where: { companyId },
       orderBy: { updatedAt: "desc" },
@@ -77,6 +90,33 @@ export default async function ProviderDashboard() {
           hint={`${views._sum.enquiries ?? 0} enquiries`}
         />
       </div>
+
+      <section className="card mt-5 overflow-hidden" aria-labelledby="promotion-summary-heading">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-paper-sunk/45 px-5 py-4">
+          <div>
+            <h2 id="promotion-summary-heading" className="text-[18px]">Promotion summary</h2>
+            <p className="mt-1 text-[13px] text-ink-soft">Purchased boost credits stack without a maximum and do not expire.</p>
+          </div>
+          <Link href="/provider/adverts" className="text-[14px] font-semibold text-pine-dark hover:underline">Manage promotions →</Link>
+        </div>
+        <div className="grid sm:grid-cols-3 sm:divide-x sm:divide-line">
+          <div className="border-b border-line px-5 py-4 sm:border-b-0">
+            <p className="text-[13px] font-medium text-ink-soft">Boosts available</p>
+            <p className="mt-1 font-display text-[28px] text-ink">{boosts.totalRemaining}</p>
+            <p className="mt-1 text-[12px] text-ink-faint">{boosts.includedRemaining} membership + {boosts.purchasedRemaining} purchased</p>
+          </div>
+          <div className="border-b border-line px-5 py-4 sm:border-b-0">
+            <p className="text-[13px] font-medium text-ink-soft">Boosted adverts now</p>
+            <p className="mt-1 font-display text-[28px] text-ink">{activeBoosts}</p>
+            <p className="mt-1 text-[12px] text-ink-faint">24-hour placements currently running</p>
+          </div>
+          <div className="px-5 py-4">
+            <p className="text-[13px] font-medium text-ink-soft">Sponsored adverts</p>
+            <p className="mt-1 font-display text-[28px] text-ink">{activeSponsored}</p>
+            <p className="mt-1 text-[12px] text-ink-faint">Currently active in the sponsored tier</p>
+          </div>
+        </div>
+      </section>
 
       {unreadThreads > 0 && (
         <Link href="/messages" className="card mt-5 flex items-center justify-between gap-4 border-pine/30 bg-pine-light/40 p-4 transition hover:border-pine">
