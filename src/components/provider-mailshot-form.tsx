@@ -3,8 +3,9 @@
 import { useActionState, useState } from "react";
 import { sendProviderMailshot } from "@/server/actions/provider-mailshot";
 import { Field, FormError, FormSuccess, SubmitButton } from "./ui";
+import type { FormState } from "@/lib/validation";
 
-const initialState = { ok: false };
+const initialState: FormState = { ok: false };
 
 const TABS = [
   {
