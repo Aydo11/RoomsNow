@@ -162,13 +162,14 @@ export function renderPreLaunchInviteEmail(params: {
 
             <tr>
               <td style="padding:32px 40px 4px;">
-                <h1 style="margin:0 0 14px; font-size:24px; line-height:1.3; color:${COLORS.ink};">One Birmingham provider to another: come and fill your rooms before we go live</h1>
+                <h1 style="margin:0 0 14px; font-size:24px; line-height:1.3; color:${COLORS.ink};">One Birmingham housing voice to another: come and fill your rooms before we go live</h1>
                 <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">${greeting}</p>
                 <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  I'm ${sender} — I run a supported accommodation business here in Birmingham
-                  myself, so this isn't a platform cold-emailing you about something abstract. I
-                  carry the same voids you do, and I built ${brand.name} because I was tired of
-                  filling them with phone calls and whoever happened to be free that week.
+                  I'm ${sender} — I've got years of hands-on experience in supported housing here
+                  in Birmingham, so this isn't a platform cold-emailing you about something
+                  abstract. I've seen the same voids you have, and I built ${brand.name} because I
+                  was tired of watching good rooms sit empty over phone calls and whoever happened
+                  to be free that week.
                 </p>
                 <p style="margin:0 0 4px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
                   Here's the size of the problem we're both dealing with:
@@ -295,7 +296,7 @@ export function renderPreLaunchInviteText(params: { recipientName?: string; send
   const greeting = recipientName ? `Hi ${recipientName},` : "Hi,";
   return `${greeting}
 
-I'm ${senderName} — I run a supported accommodation business here in Birmingham myself, so this isn't a platform cold-emailing you about something abstract. I carry the same voids you do, and I built ${brand.name} because I was tired of filling them with phone calls and whoever happened to be free that week.
+I'm ${senderName} — I've got years of hands-on experience in supported housing here in Birmingham, so this isn't a platform cold-emailing you about something abstract. I've seen the same voids you have, and I built ${brand.name} because I was tired of watching good rooms sit empty over phone calls and whoever happened to be free that week.
 
 The size of the problem we're both dealing with:
 - 21,800+ Housing Benefit claims tied to exempt/supported accommodation in Birmingham — the largest concentration of any UK city (Birmingham City Council)
