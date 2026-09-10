@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireCompany } from "@/lib/rbac";
-import { planLimits } from "@/lib/billing";
+import { boostAllowance, planLimits } from "@/lib/billing";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { EmptyState } from "@/components/ui";
 import { FeaturedBadge, RoomStrip, StatusPill } from "@/components/badges";
@@ -21,12 +21,12 @@ function isSponsorPackage(value: string | undefined): value is SponsorPackage {
 export default async function ProviderAdvertsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sponsor?: string }>;
+  searchParams: Promise<{ sponsor?: string; boost_pack?: string }>;
 }) {
-  const { sponsor } = await searchParams;
+  const { sponsor, boost_pack: boostPurchase } = await searchParams;
   const sponsorChoice = isSponsorPackage(sponsor) ? sponsor : null;
   const { companyId } = await requireCompany();
-  const [nav, limits, listings] = await Promise.all([
+  const [nav, limits, listings, boosts] = await Promise.all([
     providerNav(companyId),
     planLimits(companyId),
     db.listing.findMany({
@@ -39,6 +39,7 @@ export default async function ProviderAdvertsPage({
         _count: { select: { requests: true, referrals: true } },
       },
     }),
+    boostAllowance(companyId),
   ]);
 
   return (
@@ -59,6 +60,11 @@ export default async function ProviderAdvertsPage({
         )
       }
     >
+      {boostPurchase === "complete" && (
+        <p className="mb-4 rounded-[10px] border border-pine/30 bg-pine-light px-4 py-3 text-[14px] text-pine-dark">
+          Boost credits added. Choose a live advert below to use one. You now have {boosts.totalRemaining} available.
+        </p>
+      )}
       {sponsorChoice && (
         <p className="mb-4 rounded-[10px] border border-clay/30 bg-clay-light px-4 py-3 text-[14px] text-clay-dark">
           Pick which live advert to sponsor for {SPONSOR_PACKAGES[sponsorChoice].label} — click{" "}
@@ -111,13 +117,20 @@ export default async function ProviderAdvertsPage({
                     Not approved: {listing.rejectionNote}
                   </p>
                 )}
-                {sponsorChoice && listing.status === "ACTIVE" && (
-                  <Link
-                    href={`/provider/adverts/${listing.id}?duration=${sponsorChoice}#sponsored`}
-                    className="btn-secondary mt-3 inline-flex"
-                  >
-                    Sponsor this advert
-                  </Link>
+                {listing.status === "ACTIVE" && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {sponsorChoice && (
+                      <Link
+                        href={`/provider/adverts/${listing.id}?duration=${sponsorChoice}#sponsored`}
+                        className="btn-secondary inline-flex"
+                      >
+                        Sponsor this advert
+                      </Link>
+                    )}
+                    <Link href={`/provider/adverts/${listing.id}#boost`} className="btn-primary inline-flex items-center gap-2">
+                      <LightningIcon /> Boost for 24 hours
+                    </Link>
+                  </div>
                 )}
               </div>
 
@@ -127,5 +140,13 @@ export default async function ProviderAdvertsPage({
         </ul>
       )}
     </DashboardShell>
+  );
+}
+
+function LightningIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+      <path d="M13.2 1.8 4.7 13.1a1 1 0 0 0 .8 1.6h5.1l-.8 7a.5.5 0 0 0 .9.4l8.6-11.3a1 1 0 0 0-.8-1.6h-5.2l.8-7a.5.5 0 0 0-.9-.4Z" />
+    </svg>
   );
 }

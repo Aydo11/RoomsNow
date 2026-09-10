@@ -18,7 +18,7 @@ import {
   supportLabel,
 } from "@/lib/taxonomy";
 import { matchScore } from "@/lib/matching";
-import { recordSponsoredClickAction } from "@/server/actions/billing";
+import { recordBoostedClickAction, recordSponsoredClickAction } from "@/server/actions/billing";
 import { brand } from "@/brand.config";
 import { callerIp, LIMITS, rateLimit } from "@/lib/rate-limit";
 import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
@@ -79,6 +79,7 @@ export default async function ListingPage({
   // Sponsored click-through, counted here rather than in the browser so it works
   // without JavaScript and can't be inflated by a script.
   if (query.ref === "sponsored") await recordSponsoredClickAction(id);
+  if (query.ref === "boosted") await recordBoostedClickAction(id);
 
   const isOwner = user?.staffOf.some((s) => s.companyId === listing.companyId) ?? false;
   if (listing.status !== "ACTIVE" && !isOwner && user?.role !== "ADMIN") notFound();

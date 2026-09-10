@@ -87,6 +87,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
               maxRooms: plan.maxRooms,
               maxStaff: plan.maxStaff,
               featuredCredits: plan.featuredCredits,
+              includedBoosts: plan.includedBoosts,
               analytics: plan.analytics,
               priorityPlacement: plan.priorityPlacement,
             }))}

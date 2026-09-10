@@ -2,12 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireCompany } from "@/lib/rbac";
-import { billingAvailable, planLimits } from "@/lib/billing";
+import { billingAvailable, boostAllowance, planLimits } from "@/lib/billing";
 import { DashboardShell, StatCard } from "@/components/dashboard-shell";
 import { FeaturedBadge, RoomStrip, StatusPill } from "@/components/badges";
 import { ListingRowActions } from "@/components/listing-row-actions";
 import { RoomBoard } from "@/components/room-board";
 import { SponsorPanel } from "@/components/sponsor-panel";
+import { BoostPanel } from "@/components/boost-panel";
+import { BoostCountdown } from "@/components/boost-countdown";
 import { providerNav } from "../../nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, shortDate } from "@/lib/format";
@@ -41,7 +43,7 @@ export default async function ProviderAdvertPage({
   });
   if (!listing) notFound();
 
-  const [nav, limits, usedSlots] = await Promise.all([
+  const [nav, limits, usedSlots, boosts] = await Promise.all([
     providerNav(companyId),
     planLimits(companyId),
     db.listing.count({
@@ -51,6 +53,7 @@ export default async function ProviderAdvertPage({
         OR: [{ featuredUntil: null }, { featuredUntil: { gte: new Date() } }],
       },
     }),
+    boostAllowance(companyId),
   ]);
   const includedSlots = limits.membership.featuredCredits;
 
@@ -76,6 +79,9 @@ export default async function ProviderAdvertPage({
           {listing.featured && (!listing.featuredUntil || listing.featuredUntil > new Date()) && <FeaturedBadge />}
           {listing.featured && listing.featuredUntil && listing.featuredUntil > new Date() && (
             <span className="text-[13px] text-ink-soft">Promoted until {shortDate(listing.featuredUntil)}</span>
+          )}
+          {listing.boostedUntil && listing.boostedUntil > new Date() && (
+            <span className="rounded-pill bg-pine px-3 py-1 text-white"><BoostCountdown until={listing.boostedUntil.toISOString()} compact /></span>
           )}
         </div>
         <div className="p-4 sm:px-5"><ListingRowActions id={listing.id} status={listing.status} /></div>
@@ -129,6 +135,24 @@ export default async function ProviderAdvertPage({
             ))}
           </ul>
         )}
+      </section>
+
+      <section id="boost" className="mt-8 scroll-mt-20">
+        <h2 className="text-[20px]">Boost this advert</h2>
+        <div className="mt-3">
+          <BoostPanel
+            listingId={listing.id}
+            live={listing.status === "ACTIVE"}
+            boostedUntil={listing.boostedUntil?.toISOString() ?? null}
+            priorityUntil={listing.boostPriorityUntil?.toISOString() ?? null}
+            impressions={listing.boostedImpressions}
+            clicks={listing.boostedClicks}
+            includedTotal={boosts.includedTotal}
+            includedRemaining={boosts.includedRemaining}
+            purchasedRemaining={boosts.purchasedRemaining}
+            paymentsEnabled={billingAvailable()}
+          />
+        </div>
       </section>
 
       <section id="sponsored" className="mt-8 scroll-mt-20">

@@ -176,6 +176,8 @@ enum PaymentStatus {
 enum PaymentKind {
   SUBSCRIPTION
   FEATURED_LISTING
+  BOOST
+  BOOST_PACK
   OTHER
 }
 
@@ -366,6 +368,9 @@ model Company {
   verification       VerificationStatus @default(NOT_REQUESTED)
   verifiedAt         DateTime?
   status             AccountStatus      @default(ACTIVE)
+  /// Purchased 24-hour boost credits. Membership allowances are calculated
+  /// separately per billing period so paid packs never expire.
+  boostCredits       Int                @default(0)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
@@ -488,6 +493,13 @@ model Listing {
   sponsoredBid         Int       @default(0)
   sponsoredImpressions Int       @default(0)
   sponsoredClicks      Int       @default(0)
+  /// A boost is a separate, short promotion. The first three hours receive
+  /// newest-boost priority; after that active boosts rotate fairly.
+  boostStartsAt        DateTime?
+  boostPriorityUntil   DateTime?
+  boostedUntil         DateTime?
+  boostedImpressions   Int       @default(0)
+  boostedClicks        Int       @default(0)
   views                Int       @default(0)
   enquiries            Int       @default(0)
   publishedAt          DateTime?
@@ -504,6 +516,7 @@ model Listing {
   applications  Application[]
 
   @@index([status, featured, featuredUntil])
+  @@index([status, boostedUntil, boostStartsAt])
   @@index([status, publishedAt])
   @@index([status, weeklyRentFrom])
   @@index([status, availableFrom, publishedAt])
@@ -823,6 +836,8 @@ model Membership {
   analytics          Boolean            @default(false)
   priorityPlacement  Boolean            @default(false)
   featuredCredits    Int                @default(0)
+  /// Included 24-hour boosts available in each paid billing period.
+  includedBoosts     Int                @default(0)
   enhancedProfile    Boolean            @default(false)
   prioritySupport    Boolean            @default(false)
   externalPriceId    String?
@@ -958,7 +973,13 @@ model Payment {
   description       String?
   externalPaymentId String?       @unique
   invoiceUrl        String?
+  /// Present for boost activations so included allowance use can be counted
+  /// independently from non-expiring purchased credits.
+  boostSource       String?
+  boostListingId    String?
   createdAt         DateTime      @default(now())
+
+  @@index([companyId, kind, boostSource, createdAt])
 }
 
 // ---------------------------------------------------------------- trust & safety

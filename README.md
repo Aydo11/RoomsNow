@@ -116,14 +116,27 @@ Built for a catalogue in the thousands rather than the dozens:
 
 ### Sponsored placement
 
-- Sponsored adverts fill up to three labelled slots at the top of **page one only** — never page two
-  onwards — and are fetched separately so they can't distort organic ranking.
+- Search uses four explicit lanes: active boosts, active sponsored placements, other paid-member
+  adverts, then free adverts. An active promoted advert is never mixed into the free lane.
+- Sponsored adverts fill up to three labelled slots at the top of **page one only**. The eligible
+  pool rotates hourly, so every active sponsor shares the visible positions regardless of package length.
 - They still have to match the query. Paying can't put an advert in front of someone it doesn't fit.
-- Slot order is by package length (`sponsoredBid`), and buying again extends the end date rather
-  than replacing it. Expiry is enforced in the query, not by a cron job.
+- Buying again extends the end date rather than replacing it. Expiry is enforced in the query,
+  not by a cron job.
 - Impressions are counted where they're shown, clicks via `?ref=sponsored` on the advert link, and
   both appear in the provider's sponsor panel.
 - Paying changes nothing about verification, moderation, or whether an advert is approved.
+
+### 24-hour boosts
+
+- A provider can spend one boost on any live advert. It receives newest-boost priority for three
+  hours, then rotates hourly with the other active boosts until its real 24-hour countdown ends.
+- Boost packs are one-off Stripe payments: 1 for £5, 3 for £10 or 10 for £30. Purchased credits do
+  not expire. Professional includes three per billing period and Business includes one.
+- Stripe Checkout can use `STRIPE_PRICE_BOOST_1`, `STRIPE_PRICE_BOOST_3` and
+  `STRIPE_PRICE_BOOST_10`; if they are blank, Checkout creates equivalent one-off price data.
+- Credits are granted only by the signed `checkout.session.completed` webhook. Webhook retries are
+  idempotent, and credit use is protected by a serializable database transaction.
 
 ### Swapping the external services
 
@@ -165,10 +178,10 @@ minutes to avoid a write on every refresh.
   is development-only and cannot deliver a link to a real user.
 - Forgotten-password links are hashed in the database, expire after one hour and can only be used
   once. Set `EMAIL_DRIVER=resend`, `RESEND_API_KEY` and a verified `EMAIL_FROM` address for delivery.
-- Set `BILLING_DRIVER=stripe`, the Stripe secret/webhook secrets and the Professional/Business Price
-  IDs. Point the Stripe webhook at `https://YOUR-DOMAIN/api/billing/webhook` and subscribe it to
+- Set `BILLING_DRIVER=stripe`, the Stripe secret/webhook secrets, membership Price IDs and optional
+  boost-pack Price IDs. Point the Stripe webhook at `https://YOUR-DOMAIN/api/billing/webhook` and subscribe it to
   `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`,
-  `invoice.paid` and `invoice.payment_failed`. Paid memberships and sponsored adverts are activated
+  `invoice.paid` and `invoice.payment_failed`. Paid memberships, boost packs and sponsored adverts are activated
   only by a signed webhook. Production will not fall back to fake payments.
 
 ---
