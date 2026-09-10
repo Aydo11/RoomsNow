@@ -6,6 +6,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { EmptyState } from "@/components/ui";
 import { FeaturedBadge, RoomStrip, StatusPill } from "@/components/badges";
 import { ListingRowActions } from "@/components/listing-row-actions";
+import { ProviderAdvertBoost } from "@/components/provider-advert-boost";
 import { providerNav } from "../nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, timeAgo } from "@/lib/format";
@@ -127,9 +128,11 @@ export default async function ProviderAdvertsPage({
                         Sponsor this advert
                       </Link>
                     )}
-                    <Link href={`/provider/adverts/${listing.id}#boost`} className="btn-primary inline-flex items-center gap-2">
-                      <LightningIcon /> Boost for 24 hours
-                    </Link>
+                    <ProviderAdvertBoost
+                      listingId={listing.id}
+                      boostedUntil={listing.boostedUntil?.toISOString() ?? null}
+                      initiallyActive={!!listing.boostedUntil && listing.boostedUntil.getTime() > Date.now()}
+                    />
                   </div>
                 )}
               </div>
@@ -140,13 +143,5 @@ export default async function ProviderAdvertsPage({
         </ul>
       )}
     </DashboardShell>
-  );
-}
-
-function LightningIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
-      <path d="M13.2 1.8 4.7 13.1a1 1 0 0 0 .8 1.6h5.1l-.8 7a.5.5 0 0 0 .9.4l8.6-11.3a1 1 0 0 0-.8-1.6h-5.2l.8-7a.5.5 0 0 0-.9-.4Z" />
-    </svg>
   );
 }
