@@ -319,7 +319,7 @@ export async function ensureProviderMembershipCatalogue() {
   await db.$transaction([
     db.membership.upsert({
       where: { tier: "FREE" },
-      update: { maxListings: 2, maxRooms: 10, maxStaff: 2, maxPhotos: 8, featuredCredits: 0 },
+      update: { maxListings: 2, maxRooms: 10, maxStaff: 2, maxPhotos: 8, featuredCredits: 0, includedBoosts: 0 },
       create: {
         tier: "FREE",
         audience: "PROVIDER",
@@ -330,6 +330,7 @@ export async function ensureProviderMembershipCatalogue() {
         maxStaff: 2,
         maxPhotos: 8,
         featuredCredits: 0,
+        includedBoosts: 0,
         description: "Get started and see whether the site works for you.",
       },
     }),
@@ -343,9 +344,10 @@ export async function ensureProviderMembershipCatalogue() {
         videoUploads: true,
         analytics: true,
         featuredCredits: 1,
+        includedBoosts: 3,
         enhancedProfile: true,
         description:
-          "For growing providers managing up to 15 live adverts, with no cap on rooms per property. Includes one free 7-day sponsored placement running at a time.",
+          "For growing providers managing up to 15 live property adverts, with unlimited rooms, public location maps and 3 included 24-hour boosts per billing period. Includes one free 7-day sponsored placement running at a time.",
       },
       create: {
         tier: "PROFESSIONAL",
@@ -360,9 +362,10 @@ export async function ensureProviderMembershipCatalogue() {
         videoUploads: true,
         analytics: true,
         featuredCredits: 1,
+        includedBoosts: 3,
         enhancedProfile: true,
         description:
-          "For growing providers managing up to 15 live adverts, with no cap on rooms per property. Includes one free 7-day sponsored placement running at a time.",
+          "For growing providers managing up to 15 live property adverts, with unlimited rooms, public location maps and 3 included 24-hour boosts per billing period. Includes one free 7-day sponsored placement running at a time.",
       },
     }),
     db.membership.upsert({
@@ -376,10 +379,11 @@ export async function ensureProviderMembershipCatalogue() {
         analytics: true,
         priorityPlacement: true,
         featuredCredits: 2,
+        includedBoosts: 1,
         enhancedProfile: true,
         prioritySupport: true,
         description:
-          "For larger portfolios managing up to 25 live adverts, with no cap on rooms per property, priority placement and support. Includes two free 7-day sponsored placements running at a time.",
+          "For larger portfolios managing up to 25 live property adverts, with unlimited rooms, 25 staff accounts, public location maps and 1 included 24-hour boost per billing period. Includes two free 7-day sponsored placements running at a time.",
       },
       create: {
         tier: "BUSINESS",
@@ -395,10 +399,11 @@ export async function ensureProviderMembershipCatalogue() {
         analytics: true,
         priorityPlacement: true,
         featuredCredits: 2,
+        includedBoosts: 1,
         enhancedProfile: true,
         prioritySupport: true,
         description:
-          "For larger portfolios managing up to 25 live adverts, with no cap on rooms per property, priority placement and support. Includes two free 7-day sponsored placements running at a time.",
+          "For larger portfolios managing up to 25 live property adverts, with unlimited rooms, 25 staff accounts, public location maps and 1 included 24-hour boost per billing period. Includes two free 7-day sponsored placements running at a time.",
       },
     }),
   ]);
