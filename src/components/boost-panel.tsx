@@ -47,7 +47,7 @@ export function BoostPanel({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="flex items-center gap-1.5 text-[12px] font-extrabold uppercase tracking-[0.1em] text-white/75"><LightningIcon /> 24-hour visibility boost</p>
-            <h3 className="mt-1 text-[22px] font-bold">Put this advert at the front</h3>
+            <h3 className="mt-1 text-[22px] font-bold text-white">Put this advert at the front</h3>
           </div>
           {active && <BoostCountdown until={boostedUntil} />}
         </div>
