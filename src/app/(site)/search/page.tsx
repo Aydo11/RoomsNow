@@ -161,7 +161,7 @@ export default async function SearchPage({
                       <span className="text-[12px] font-extrabold uppercase tracking-[0.1em] text-pine-dark">Boosted now</span>
                       <h2 className="mt-1 text-[22px] font-bold">Boosted accommodation</h2>
                     </div>
-                    <p className="text-[13px] text-ink-soft">24-hour placements rotate fairly</p>
+                    <p className="text-[13px] text-ink-soft">Priority placements rotate fairly</p>
                   </div>
                   <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {results.boosted.map((listing) => (

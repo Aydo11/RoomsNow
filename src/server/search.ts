@@ -224,28 +224,37 @@ export async function searchListings(params: SearchParams) {
   const { where, centre, radius, bbox } = await buildWhere(params);
   const now = new Date();
 
-  const sponsoredWhere: Prisma.ListingWhereInput = {
-    AND: [
-      where,
-      { featured: true, OR: [{ featuredUntil: null }, { featuredUntil: { gt: now } }] },
-      { NOT: { boostStartsAt: { lte: now }, boostedUntil: { gt: now } } },
+  const activeBoost: Prisma.ListingWhereInput = {
+    boostStartsAt: { lte: now },
+    boostedUntil: { gt: now },
+  };
+  // Spell out inactive states instead of negating date comparisons. SQL treats
+  // comparisons with NULL as unknown, which previously hid ordinary adverts
+  // that had never been boosted.
+  const inactiveBoost: Prisma.ListingWhereInput = {
+    OR: [
+      { boostStartsAt: null },
+      { boostedUntil: null },
+      { boostStartsAt: { gt: now } },
+      { boostedUntil: { lte: now } },
     ],
+  };
+  const activeSponsor: Prisma.ListingWhereInput = {
+    featured: true,
+    OR: [{ featuredUntil: null }, { featuredUntil: { gt: now } }],
+  };
+  const inactiveSponsor: Prisma.ListingWhereInput = {
+    OR: [{ featured: false }, { featuredUntil: { lte: now } }],
+  };
+
+  const sponsoredWhere: Prisma.ListingWhereInput = {
+    AND: [where, activeSponsor, inactiveBoost],
   };
   const boostedWhere: Prisma.ListingWhereInput = {
-    AND: [where, { boostStartsAt: { lte: now }, boostedUntil: { gt: now } }],
+    AND: [where, activeBoost],
   };
   const organicWhere: Prisma.ListingWhereInput = {
-    AND: [
-      where,
-      {
-        NOT: {
-          OR: [
-            { featured: true, OR: [{ featuredUntil: null }, { featuredUntil: { gt: now } }] },
-            { boostStartsAt: { lte: now }, boostedUntil: { gt: now } },
-          ],
-        },
-      },
-    ],
+    AND: [where, inactiveSponsor, inactiveBoost],
   };
   const memberLane = paidMemberLane(now);
   const paidWhere: Prisma.ListingWhereInput = { AND: [organicWhere, memberLane] };
