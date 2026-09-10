@@ -21,6 +21,21 @@ const COLORS = {
   line: "#D9E2EC",
 };
 
+/**
+ * Absolute URL to the PNG wordmark used in email headers. A flattened PNG
+ * (not the site's SVG) because Outlook desktop and several other clients
+ * don't render inline SVG reliably; hosted rather than embedded as a data
+ * URI because Outlook desktop also drops those, and a hosted image survives
+ * a "show images" click the way a data URI can't.
+ */
+const APP_URL = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const LOGO_URL = `${APP_URL}/brand/roomsnow-logo-email.png`;
+
+/** Email-header logo — same markup wherever a template shows the wordmark. */
+function logoImgHtml() {
+  return `<img src="${LOGO_URL}" width="139" height="28" alt="${brand.name}" style="display:block; border:0; outline:none; text-decoration:none;" />`;
+}
+
 /** Escapes text pulled from user/company-supplied data before it goes into an HTML email. */
 export function escapeHtml(value: string) {
   return value
@@ -77,7 +92,7 @@ export function renderEmail(params: {
           <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px; width:100%; background-color:${COLORS.card}; border-radius:14px; border:1px solid ${COLORS.line};">
             <tr>
               <td style="padding:28px 36px 20px; border-bottom:1px solid ${COLORS.line};">
-                <span style="font-size:20px; font-weight:700; color:${COLORS.pineDark}; letter-spacing:-0.01em;">${brand.name}</span>
+                ${logoImgHtml()}
               </td>
             </tr>
             <tr>
@@ -172,7 +187,7 @@ export function renderPreLaunchInviteEmail(params: {
           <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background-color:${COLORS.card}; border-radius:14px; border:1px solid ${COLORS.line};">
             <tr>
               <td style="padding:28px 40px 20px; border-bottom:1px solid ${COLORS.line};">
-                <span style="font-size:20px; font-weight:700; color:${COLORS.pineDark}; letter-spacing:-0.01em;">${brand.name}</span>
+                ${logoImgHtml()}
                 <span style="margin-left:10px; display:inline-block; padding:3px 10px; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark}; background-color:#EAF2FA; border-radius:999px;">Pre-launch invite</span>
               </td>
             </tr>
@@ -394,7 +409,7 @@ export function renderProviderMailshotEmail(params: {
           <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px; width:100%; background-color:${COLORS.card}; border-radius:14px; border:1px solid ${COLORS.line};">
             <tr>
               <td style="padding:28px 36px 20px; border-bottom:1px solid ${COLORS.line};">
-                <span style="font-size:20px; font-weight:700; color:${COLORS.pineDark}; letter-spacing:-0.01em;">${brand.name}</span>
+                ${logoImgHtml()}
                 <span style="margin-left:10px; display:inline-block; padding:3px 10px; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark}; background-color:#EAF2FA; border-radius:999px;">${badgeLabel}</span>
               </td>
             </tr>
