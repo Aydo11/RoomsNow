@@ -84,7 +84,7 @@ export function MapView({
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
-  const leaflet = useRef<LeafletModule["default"] | null>(null);
+  const leaflet = useRef<LeafletModule | null>(null);
   const fitted = useRef(false);
   const [moved, setMoved] = useState(false);
   const [selected, setSelected] = useState<Pin | null>(null);
