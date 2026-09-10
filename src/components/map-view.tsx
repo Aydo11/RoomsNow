@@ -1,9 +1,14 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import type L from "leaflet";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+
+// Leaflet touches `window` at module-evaluation time, so it must be loaded
+// dynamically (never a static top-level import) — a static import would run
+// during server-side rendering and crash the page.
+type LeafletModule = typeof import("leaflet");
 
 export type Pin = {
   id: string;
@@ -79,27 +84,38 @@ export function MapView({
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
+  const leaflet = useRef<LeafletModule["default"] | null>(null);
   const fitted = useRef(false);
   const [moved, setMoved] = useState(false);
   const [selected, setSelected] = useState<Pin | null>(null);
+  const [ready, setReady] = useState(false);
 
-  // Create the map once.
+  // Create the map once, loading Leaflet dynamically first (browser-only).
   useEffect(() => {
     if (!container.current || map.current) return;
+    let cancelled = false;
 
-    const instance = L.map(container.current, {
-      center: centre ? [centre.latitude, centre.longitude] : UK_CENTRE,
-      zoom: centre ? 12 : 6,
-      scrollWheelZoom: true,
-    });
+    void (async () => {
+      const { default: Leaflet } = await import("leaflet");
+      if (cancelled || !container.current || map.current) return;
+      leaflet.current = Leaflet;
 
-    L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 }).addTo(instance);
-    layer.current = L.layerGroup().addTo(instance);
-    instance.on("moveend", () => setMoved(true));
-    map.current = instance;
+      const instance = Leaflet.map(container.current, {
+        center: centre ? [centre.latitude, centre.longitude] : UK_CENTRE,
+        zoom: centre ? 12 : 6,
+        scrollWheelZoom: true,
+      });
+
+      Leaflet.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 }).addTo(instance);
+      layer.current = Leaflet.layerGroup().addTo(instance);
+      instance.on("moveend", () => setMoved(true));
+      map.current = instance;
+      setReady(true);
+    })();
 
     return () => {
-      instance.remove();
+      cancelled = true;
+      map.current?.remove();
       map.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,27 +124,29 @@ export function MapView({
   // Fit to the results the first time they arrive, then leave the view alone.
   useEffect(() => {
     const instance = map.current;
-    if (!instance || fitted.current || pins.length === 0) return;
+    const Leaflet = leaflet.current;
+    if (!instance || !Leaflet || fitted.current || pins.length === 0) return;
     fitted.current = true;
     if (params.get("bbox")) return;
 
-    const bounds = L.latLngBounds(pins.map((pin) => [pin.latitude, pin.longitude] as [number, number]));
+    const bounds = Leaflet.latLngBounds(pins.map((pin) => [pin.latitude, pin.longitude] as [number, number]));
     instance.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
     setTimeout(() => setMoved(false), 0);
-  }, [pins, params]);
+  }, [pins, params, ready]);
 
   // Redraw markers whenever the pins or the zoom change.
   useEffect(() => {
     const instance = map.current;
     const group = layer.current;
-    if (!instance || !group) return;
+    const Leaflet = leaflet.current;
+    if (!instance || !group || !Leaflet) return;
 
     const draw = () => {
       group.clearLayers();
       for (const item of cluster(pins, instance.getZoom())) {
         if (item.kind === "cluster") {
-          L.marker([item.latitude, item.longitude], {
-            icon: L.divIcon({
+          Leaflet.marker([item.latitude, item.longitude], {
+            icon: Leaflet.divIcon({
               className: "",
               html: `<span class="map-cluster">${item.count}</span>`,
               iconSize: [40, 40],
@@ -143,8 +161,8 @@ export function MapView({
         }
 
         const { pin } = item;
-        L.marker([pin.latitude, pin.longitude], {
-          icon: L.divIcon({
+        Leaflet.marker([pin.latitude, pin.longitude], {
+          icon: Leaflet.divIcon({
             className: "",
             html: `<span class="map-pin${pin.available ? "" : " map-pin-full"}${
               pin.sponsored ? " map-pin-sponsored" : ""
@@ -164,7 +182,7 @@ export function MapView({
     return () => {
       instance.off("zoomend", draw);
     };
-  }, [pins]);
+  }, [pins, ready]);
 
   function searchThisArea() {
     const instance = map.current;
