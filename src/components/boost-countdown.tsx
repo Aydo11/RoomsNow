@@ -21,8 +21,20 @@ export function BoostCountdown({ until, compact = false }: { until: string; comp
   }, [until]);
 
   return (
-    <span className={compact ? "text-[12px] font-semibold" : "text-[14px] font-semibold"} aria-live="polite">
-      <span aria-hidden="true">⏳</span> {label}
+    <span className={`${compact ? "text-[12px]" : "text-[14px]"} inline-flex items-center gap-1.5 font-semibold`} aria-live="polite">
+      <TimerIcon />
+      {label}
     </span>
+  );
+}
+
+function TimerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 2h6" />
+      <path d="M12 14V9" />
+      <path d="m16.5 5.5 1.5-1.5" />
+      <circle cx="12" cy="14" r="7" />
+    </svg>
   );
 }

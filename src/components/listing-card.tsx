@@ -5,7 +5,6 @@ import { supportLabel, ACCOMMODATION_TYPES } from "@/lib/taxonomy";
 import type { SearchResult } from "@/server/search";
 import { demoListingImage } from "@/lib/demo-listings";
 import { ResilientImage } from "./resilient-image";
-import { BoostCountdown } from "./boost-countdown";
 import { clsx } from "@/lib/clsx";
 
 export function ListingCard({
@@ -22,7 +21,7 @@ export function ListingCard({
   compact?: boolean;
   /** Paid placement. Always labelled, never mixed silently into organic results. */
   sponsored?: boolean;
-  /** A separate 24-hour paid placement with a truthful live countdown. */
+  /** A separate paid placement shown ahead of the other result lanes. */
   boosted?: boolean;
   /** Organic advert from a provider with an active paid membership. */
   memberListing?: boolean;
@@ -70,12 +69,6 @@ export function ListingCard({
             )}
           </div>
         </div>
-      {boosted && listing.boostedUntil && (
-        <div className="flex items-center justify-between gap-3 bg-pine px-4 py-2 text-white">
-          <strong className="text-[13px] uppercase tracking-[0.08em]">24-hour boost</strong>
-          <BoostCountdown until={listing.boostedUntil.toISOString()} compact />
-        </div>
-      )}
       {sponsored && !boosted && (
         <div className="flex items-center justify-between gap-3 bg-clay px-4 py-2 text-white">
           <strong className="text-[13px] uppercase tracking-[0.08em]">Sponsored placement</strong>
