@@ -57,7 +57,9 @@ export default async function PricingPage() {
               <Feature enabled={plan.analytics}>Advert analytics</Feature>
               <Feature enabled={plan.priorityPlacement}>Priority placement in search</Feature>
               <Feature enabled={plan.featuredCredits > 0}>
-                {plan.featuredCredits > 0 ? `${plan.featuredCredits} promoted slots included` : "Promoted slots"}
+                {plan.featuredCredits > 0
+                  ? `${plan.featuredCredits} free 7-day promoted slot${plan.featuredCredits === 1 ? "" : "s"} at a time`
+                  : "Promoted slots"}
               </Feature>
               <Feature enabled={plan.prioritySupport}>Priority support</Feature>
             </ul>

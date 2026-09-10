@@ -58,7 +58,7 @@ export function PlanPicker({
                 <li>{plan.maxRooms === -1 ? "Unlimited rooms across your properties" : `${limit(plan.maxRooms)} rooms`}</li>
                 <li>{limit(plan.maxStaff)} staff accounts</li>
                 <li>{plan.priceMonthly > 0 ? "Public advert maps with nearby amenities" : "No public advert maps"}</li>
-                <li>{plan.featuredCredits} promoted slots included</li>
+                <li>{plan.featuredCredits} free 7-day promoted slot{plan.featuredCredits === 1 ? "" : "s"} at a time</li>
                 <li>{plan.analytics ? "Analytics included" : "No analytics"}</li>
                 <li>{plan.priorityPlacement ? "Priority placement in search" : "Standard placement"}</li>
               </ul>

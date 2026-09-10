@@ -309,7 +309,7 @@ function AudienceCard({
 function AudienceIcon({ type, highlighted }: { type: "search" | "referral" | "provider"; highlighted: boolean }) {
   const paths = {
     search: <><circle cx="10.5" cy="10.5" r="5.5" /><path d="m15 15 4 4" /></>,
-    referral: <><path d="M8 7a3 3 0 1 0 0-6 3 3 0 0 0 6Z" /><path d="M2.5 20v-2.5A4.5 4.5 0 0 1 7 13h2" /><path d="M14 14h7m-3-3 3 3-3 3" /></>,
+    referral: <><path d="M8 7a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /><path d="M2.5 20v-2.5A4.5 4.5 0 0 1 7 13h2" /><path d="M14 14h7m-3-3 3 3-3 3" /></>,
     provider: <><path d="M3 20V8l9-5 9 5v12" /><path d="M8 20v-6h8v6M8 10h.01M12 10h.01M16 10h.01" /></>,
   };
 

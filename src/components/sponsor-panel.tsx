@@ -37,10 +37,12 @@ export function SponsorPanel({
   initialDuration?: SponsorPackage;
 }) {
   const router = useRouter();
-  const [choice, setChoice] = useState<SponsorPackage>(initialDuration ?? "MONTH");
+  const [choice, setChoice] = useState<SponsorPackage>(initialDuration ?? "WEEK");
   const [result, setResult] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const hasCredit = usedSlots < includedSlots;
+  // Free credits only ever cover the 7-day package — choosing a longer one
+  // always requires payment, even with credits still remaining.
+  const hasFreeWeek = choice === "WEEK" && usedSlots < includedSlots;
   const isActive = featured && (!featuredUntil || new Date(featuredUntil) > new Date());
 
   if (!live) {
@@ -130,18 +132,22 @@ export function SponsorPanel({
               )}
             </span>
             <span className="block text-[15px] font-medium">{option.label}</span>
-            <span className="mt-2 block font-display text-[25px] leading-none">{hasCredit ? "Included" : money(option.price)}</span>
-            {!hasCredit && <span className="mt-1 block text-[12px] text-ink-faint">{money(Math.round(option.price / (option.key === "WEEK" ? 7 : option.key === "MONTH" ? 30 : 90)))}/day</span>}
+            <span className="mt-2 block font-display text-[25px] leading-none">
+              {option.key === "WEEK" && usedSlots < includedSlots ? "Included" : money(option.price)}
+            </span>
+            {!(option.key === "WEEK" && usedSlots < includedSlots) && (
+              <span className="mt-1 block text-[12px] text-ink-faint">{money(Math.round(option.price / (option.key === "WEEK" ? 7 : option.key === "MONTH" ? 30 : 90)))}/day</span>
+            )}
             <span className="mt-3 block text-[13px] leading-relaxed text-ink-soft">{option.note}</span>
           </button>
         ))}
       </div>
       </fieldset>
 
-      {hasCredit && (
+      {includedSlots > 0 && (
         <p className="mt-3 text-[14px] text-pine-dark">
-          Your plan includes {includedSlots} sponsored slot{includedSlots === 1 ? "" : "s"} —{" "}
-          {includedSlots - usedSlots} still free.
+          Your plan includes {includedSlots} free 7-day sponsored slot{includedSlots === 1 ? "" : "s"} at a time
+          {usedSlots < includedSlots ? ` — ${includedSlots - usedSlots} still free right now.` : " — all in use right now; this one will be paid."}
         </p>
       )}
 
@@ -149,7 +155,7 @@ export function SponsorPanel({
       <p className="max-w-md text-[13px] text-ink-faint">One-off payment. Sponsorship ends automatically; this does not start another subscription.</p>
       <button
         className="btn-primary"
-        disabled={pending || (!hasCredit && !paymentsEnabled)}
+        disabled={pending || (!hasFreeWeek && !paymentsEnabled)}
         onClick={() =>
           startTransition(async () => {
             const response = await featureListingAction(listingId, choice);
@@ -158,7 +164,15 @@ export function SponsorPanel({
           })
         }
       >
-        {pending ? "Setting up…" : !hasCredit && !paymentsEnabled ? "Payments unavailable" : isActive ? "Extend sponsorship" : "Continue to payment"}
+        {pending
+          ? "Setting up…"
+          : !hasFreeWeek && !paymentsEnabled
+            ? "Payments unavailable"
+            : hasFreeWeek
+              ? "Use free 7-day slot"
+              : isActive
+                ? "Extend sponsorship"
+                : "Continue to payment"}
       </button>
       </div>
 

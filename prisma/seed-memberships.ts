@@ -40,7 +40,7 @@ videoUploads: true,
 analytics: true,
 featuredCredits: 1,
 enhancedProfile: true,
-description: "For growing providers managing up to 15 live property adverts, with unlimited rooms across those properties and public location maps.",
+description: "For growing providers managing up to 15 live property adverts, with unlimited rooms across those properties and public location maps. Includes one free 7-day sponsored placement running at a time.",
 },
 {
 tier: "BUSINESS",
@@ -55,10 +55,10 @@ maxPhotos: 40,
 videoUploads: true,
 analytics: true,
 priorityPlacement: true,
-featuredCredits: 5,
+featuredCredits: 2,
 enhancedProfile: true,
 prioritySupport: true,
-description: "For established providers managing up to 25 live property adverts, with unlimited rooms, 25 staff accounts, public location maps and priority support.",
+description: "For larger portfolios managing up to 25 live property adverts, with unlimited rooms, 25 staff accounts, public location maps, priority placement and support. Includes two free 7-day sponsored placements running at a time.",
 },
 {
 tier: "REFERRER_FREE",
@@ -105,4 +105,3 @@ console.error(error);
 process.exit(1);
 })
 .finally(() => db.$disconnect());
-
