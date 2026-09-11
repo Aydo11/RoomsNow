@@ -34,4 +34,3 @@ export default function SiteError({ error, reset }: { error: Error & { digest?: 
     </div>
   );
 }
-
