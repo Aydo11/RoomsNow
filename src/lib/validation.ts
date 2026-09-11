@@ -166,8 +166,8 @@ export const listingSchema = z.object({
   referralRoutes: z.array(z.string()).default([]),
   eligibility: z.string().trim().max(3000).optional().or(z.literal("")),
   referralProcess: z.string().trim().max(3000).optional().or(z.literal("")),
-  houseRules: z.string().trim().max(3000).optional().or(z.literal("")),
-  description: z.string().trim().max(20000).optional().or(z.literal("")),
+  houseRules: z.string().trim().max(8000, "House rules must be 8,000 characters or fewer.").optional().or(z.literal("")),
+  description: z.string().trim().max(50000, "Description must be 50,000 characters or fewer.").optional().or(z.literal("")),
 });
 
 export const requestSchema = z.object({
