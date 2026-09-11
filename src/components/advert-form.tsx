@@ -51,9 +51,14 @@ export type AdvertDefaults = Partial<{
 
 const STEPS = ["Property", "Accommodation", "Support", "Description"];
 
+const DESCRIPTION_MAX = 50000;
+const HOUSE_RULES_MAX = 8000;
+
 export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
   const [state, action] = useActionState(saveListingAction, { ok: false });
   const [step, setStep] = useState(0);
+  const [descriptionLength, setDescriptionLength] = useState(defaults.description?.length ?? 0);
+  const [houseRulesLength, setHouseRulesLength] = useState(defaults.houseRules?.length ?? 0);
   const editing = Boolean(defaults.id);
 
   useEffect(() => {
@@ -236,7 +241,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
         <Field
           label="About the property"
           name="description"
-          hint="Basic formatting is kept; scripts and styling are stripped. Up to 50,000 characters."
+          hint="Basic formatting is kept; scripts and styling are stripped."
           error={state.errors?.description}
         >
           <textarea
@@ -244,12 +249,36 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
             name="description"
             rows={12}
             defaultValue={defaults.description}
+            onChange={(event) => setDescriptionLength(event.target.value.length)}
             placeholder={"e.g. A newly refurbished 6-bed supported house in a quiet residential street, five minutes' walk from the town centre and bus routes. Each room has its own lock, with a shared kitchen, lounge and garden. On-site support staff are based here during the day, with an on-call line overnight."}
             className="field"
           />
+          <p
+            className={clsx(
+              "mt-1 text-right text-[12px] tabular-nums",
+              descriptionLength > DESCRIPTION_MAX ? "text-clay" : descriptionLength > DESCRIPTION_MAX * 0.9 ? "text-amber-700" : "text-ink-faint",
+            )}
+          >
+            {descriptionLength.toLocaleString()} / {DESCRIPTION_MAX.toLocaleString()} characters
+          </p>
         </Field>
-        <Field label="House rules" name="houseRules" hint="Up to 8,000 characters." error={state.errors?.houseRules}>
-          <textarea id="houseRules" name="houseRules" rows={4} defaultValue={defaults.houseRules} className="field" />
+        <Field label="House rules" name="houseRules" error={state.errors?.houseRules}>
+          <textarea
+            id="houseRules"
+            name="houseRules"
+            rows={4}
+            defaultValue={defaults.houseRules}
+            onChange={(event) => setHouseRulesLength(event.target.value.length)}
+            className="field"
+          />
+          <p
+            className={clsx(
+              "mt-1 text-right text-[12px] tabular-nums",
+              houseRulesLength > HOUSE_RULES_MAX ? "text-clay" : houseRulesLength > HOUSE_RULES_MAX * 0.9 ? "text-amber-700" : "text-ink-faint",
+            )}
+          >
+            {houseRulesLength.toLocaleString()} / {HOUSE_RULES_MAX.toLocaleString()} characters
+          </p>
         </Field>
       </section>
 
