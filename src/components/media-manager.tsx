@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition, useActionState } from "react";
+import { useEffect, useRef, useState, useTransition, useActionState } from "react";
 import {
   deleteMediaAction,
   reorderMediaAction,
@@ -29,8 +29,16 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
   const [dragging, setDragging] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => setItems(media), [media]);
+
+  // Once an upload completes, clear the form (selected files, caption, video
+  // URL) so the file picker is ready for the next batch and doesn't look like
+  // it's still holding the files that were just added.
+  useEffect(() => {
+    if (state.ok) formRef.current?.reset();
+  }, [state]);
 
   function persistOrder(next: Item[]) {
     setItems(next);
@@ -64,7 +72,7 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
 
   return (
     <div className="space-y-6">
-      <form action={action} className="card space-y-5 p-4 sm:p-6">
+      <form ref={formRef} action={action} className="card space-y-5 p-4 sm:p-6">
         <input type="hidden" name="listingId" value={listingId} />
         <FormError message={state.errors?.form} />
         <FormSuccess message={state.ok ? state.message : undefined} />
@@ -77,13 +85,28 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
         )}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Add photos or a short video" name="files" hint="Up to 12 files. Photos: 8MB each. Video: 20MB." error={state.errors?.files}>
-            <input id="files" name="files" type="file" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/quicktime,video/webm" multiple className="field file:mr-3 file:rounded-md file:border-0 file:bg-pine-light file:px-3 file:py-1.5 file:text-pine-dark" />
+          <Field
+            label="Add photos or a short video"
+            name="files"
+            hint="Up to 12 files. Photos: 8MB each. Video: 20MB. These upload as soon as you choose them — no extra button to press."
+            error={state.errors?.files}
+          >
+            <input
+              id="files"
+              name="files"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/quicktime,video/webm"
+              multiple
+              className="field file:mr-3 file:rounded-md file:border-0 file:bg-pine-light file:px-3 file:py-1.5 file:text-pine-dark"
+              onChange={(event) => {
+                if (event.target.files && event.target.files.length > 0) formRef.current?.requestSubmit();
+              }}
+            />
           </Field>
-          <Field label="YouTube or Vimeo walkthrough" name="videoUrl" hint="Best for longer videos." error={state.errors?.videoUrl}>
+          <Field label="YouTube or Vimeo walkthrough" name="videoUrl" hint="Best for longer videos. Press “Add video link” once you've pasted this." error={state.errors?.videoUrl}>
             <input id="videoUrl" name="videoUrl" type="url" inputMode="url" placeholder="https://" className="field" />
           </Field>
-          <Field label="Caption" name="caption" hint="Describe what is shown (160 characters max).">
+          <Field label="Caption" name="caption" hint="Describe what is shown (160 characters max). Applies to files chosen above; you can also caption each item individually below.">
             <input id="caption" name="caption" maxLength={160} placeholder="Bright first-floor bedroom" className="field" />
           </Field>
           <Field label="Room or area" name="roomId" hint="Optional — connect media to a particular room.">
@@ -93,7 +116,7 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
             </select>
           </Field>
         </div>
-        <SubmitButton pendingLabel="Uploading…">Add media</SubmitButton>
+        <SubmitButton pendingLabel="Uploading…">Add video link</SubmitButton>
       </form>
 
       {items.length > 0 ? (
@@ -161,7 +184,7 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
       {(status === "DRAFT" || status === "REJECTED") && (
         <div className="card flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
           <p className="text-[15px] text-ink-soft">Happy with it? Send it to our team — most adverts are reviewed within a working day.</p>
-          <button type="button" className="btn-primary w-full sm:w-auto" disabled={pending} onClick={() => startTransition(() => submitListingAction(listingId).catch(() => {}))}>Submit for review</button>
+          <button type="button" className="btn-primary w-full sm:w-auto" disabled={pending} onClick={() => startTransition(() => submitListingAction(listingId).catch(() => {}))}>Submit your advertisement</button>
         </div>
       )}
     </div>
