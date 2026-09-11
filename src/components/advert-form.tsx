@@ -90,7 +90,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
       <FormError message={state.errors?.form} />
       {state.errors && Object.keys(state.errors).some((key) => key !== "form") && (
         <p className="rounded-[10px] border border-clay/30 bg-clay-light px-4 py-3 text-[14px] text-clay-dark">
-          Some details need attention. We&apos;ve opened the first section to fix.
+          Some details need attention. We&apos;ve opened the relevant section to fix.
         </p>
       )}
 
@@ -233,7 +233,12 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
 
       <section className={clsx("card space-y-4 p-6", step !== 3 && "hidden")}>
         <h2 className="text-[20px]">Full description</h2>
-        <Field label="About the property" name="description" hint="Basic formatting is kept; scripts and styling are stripped.">
+        <Field
+          label="About the property"
+          name="description"
+          hint="Basic formatting is kept; scripts and styling are stripped. Up to 50,000 characters."
+          error={state.errors?.description}
+        >
           <textarea
             id="description"
             name="description"
@@ -243,7 +248,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
             className="field"
           />
         </Field>
-        <Field label="House rules" name="houseRules">
+        <Field label="House rules" name="houseRules" hint="Up to 8,000 characters." error={state.errors?.houseRules}>
           <textarea id="houseRules" name="houseRules" rows={4} defaultValue={defaults.houseRules} className="field" />
         </Field>
       </section>
