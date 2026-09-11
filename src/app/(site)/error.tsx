@@ -3,18 +3,20 @@
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
-import { AuthorisationError } from "@/lib/rbac";
 
 export default function SiteError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);
 
-  // AuthorisationError carries a message that's always safe and useful to
-  // show (e.g. "You do not have access to this.", "Listing not found.").
-  // Anything else might be an internal error, so keep the copy generic.
+  // AuthorisationError (thrown by assertCompanyAccess and friends in
+  // src/lib/rbac.ts) always carries a safe, user-facing message (e.g. "You
+  // do not have access to this.", "Listing not found."). We only check the
+  // error's name here rather than importing the class itself — rbac.ts pulls
+  // in server-only code (next/headers, the db client) that a client
+  // component like this one can't depend on.
   const message =
-    error instanceof AuthorisationError || error.name === "AuthorisationError"
+    error.name === "AuthorisationError"
       ? error.message
       : "Something went wrong loading this page. Please try again.";
 
