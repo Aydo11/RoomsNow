@@ -7,6 +7,7 @@ import { ListingCard } from "@/components/listing-card";
 import { searchListings } from "@/server/search";
 import { JsonLd, locationSlug, pageMetadata } from "@/lib/seo";
 import { guides } from "@/lib/guides";
+import { getCurrentUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
@@ -41,7 +42,7 @@ const FEATURED_CITIES = [
 ] as const;
 
 export default async function HomePage() {
-  const [roomsAvailable, cities, featured] = await Promise.all([
+  const [roomsAvailable, cities, featured, user] = await Promise.all([
     db.room.count({ where: { status: "AVAILABLE", listing: { status: "ACTIVE" } } }),
     db.property.findMany({
       where: { listings: { some: { status: "ACTIVE" } } },
@@ -49,12 +50,22 @@ export default async function HomePage() {
       distinct: ["city"],
     }),
     searchListings({ sort: "featured" }),
+    getCurrentUser(),
   ]);
   const homepageListings = [
     ...featured.boosted.map((listing) => ({ listing, placement: "boosted" as const })),
     ...featured.sponsored.map((listing) => ({ listing, placement: "sponsored" as const })),
     ...featured.items.map((listing) => ({ listing, placement: listing.memberListing ? "member" as const : "free" as const })),
   ].slice(0, 3);
+  const homepageListingIds = homepageListings.map(({ listing }) => listing.id);
+  const savedListingIds = new Set(
+    user && homepageListingIds.length
+      ? (await db.savedListing.findMany({
+          where: { userId: user.id, listingId: { in: homepageListingIds } },
+          select: { listingId: true },
+        })).map((save) => save.listingId)
+      : [],
+  );
 
   return (
     <>
@@ -140,6 +151,9 @@ export default async function HomePage() {
                 boosted={placement === "boosted"}
                 sponsored={placement === "sponsored"}
                 memberListing={placement === "member"}
+                showActions
+                saved={savedListingIds.has(listing.id)}
+                canSave={Boolean(user)}
               />
             ))}
           </div>

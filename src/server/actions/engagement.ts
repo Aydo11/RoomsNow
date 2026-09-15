@@ -33,6 +33,8 @@ export async function toggleSaveAction(listingId: string) {
 
   revalidatePath(`/listings/${listingId}`);
   revalidatePath("/dashboard/saved");
+  revalidatePath("/search");
+  revalidatePath("/");
   return { saved: !existing };
 }
 

@@ -11,6 +11,7 @@ import { searchFacets, searchListings, searchMapPins, type SearchParams } from "
 import { getCurrentUser } from "@/lib/session";
 import { matchScore } from "@/lib/matching";
 import { pageMetadata } from "@/lib/seo";
+import { db } from "@/lib/db";
 
 export const metadata = pageMetadata({
   title: "Search HMO Rooms & Accommodation Across the UK",
@@ -96,6 +97,20 @@ export default async function SearchPage({
       : " across the UK";
   const memberListings = results.items.filter((listing) => listing.memberListing);
   const freeListings = results.items.filter((listing) => !listing.memberListing);
+  const visibleListingIds = [...new Set([
+    ...results.boosted.map((listing) => listing.id),
+    ...results.sponsored.map((listing) => listing.id),
+    ...results.items.map((listing) => listing.id),
+    ...(map?.pins ?? []).map((listing) => listing.id),
+  ])];
+  const savedListingIds = new Set(
+    user && visibleListingIds.length
+      ? (await db.savedListing.findMany({
+          where: { userId: user.id, listingId: { in: visibleListingIds } },
+          select: { listingId: true },
+        })).map((save) => save.listingId)
+      : [],
+  );
 
   return (
     <>
@@ -141,6 +156,8 @@ export default async function SearchPage({
                 centre={map.centre}
                 capped={map.capped}
                 total={map.total}
+                savedListingIds={[...savedListingIds]}
+                canSave={Boolean(user)}
               />
             </div>
           ) : results.items.length === 0 && results.sponsored.length === 0 && results.boosted.length === 0 ? (
@@ -165,7 +182,7 @@ export default async function SearchPage({
                   </div>
                   <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {results.boosted.map((listing) => (
-                      <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} boosted />
+                      <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} boosted showActions saved={savedListingIds.has(listing.id)} canSave={Boolean(user)} />
                     ))}
                   </div>
                 </section>
@@ -187,6 +204,9 @@ export default async function SearchPage({
                         match={scoreFor(listing)}
                         distance={listing.distanceMiles}
                         sponsored
+                        showActions
+                        saved={savedListingIds.has(listing.id)}
+                        canSave={Boolean(user)}
                       />
                     ))}
                   </div>
@@ -202,7 +222,7 @@ export default async function SearchPage({
                   </div>
                   <div className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {memberListings.map((listing) => (
-                      <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} memberListing />
+                      <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} memberListing showActions saved={savedListingIds.has(listing.id)} canSave={Boolean(user)} />
                     ))}
                   </div>
                 </section>
@@ -213,7 +233,7 @@ export default async function SearchPage({
                   <h2 className="text-[15px] font-medium text-ink-soft">More accommodation</h2>
                   <div className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {freeListings.map((listing) => (
-                      <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} />
+                      <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} showActions saved={savedListingIds.has(listing.id)} canSave={Boolean(user)} />
                     ))}
                   </div>
                 </section>

@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import type L from "leaflet";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { SaveListingIcon, ShareListingButton } from "./listing-actions";
 
 // Leaflet touches `window` at module-evaluation time, so it must be loaded
 // dynamically (never a static top-level import) — a static import would run
@@ -73,11 +74,15 @@ export function MapView({
   centre,
   capped,
   total,
+  savedListingIds = [],
+  canSave = false,
 }: {
   pins: Pin[];
   centre?: { latitude: number; longitude: number } | null;
   capped?: boolean;
   total?: number;
+  savedListingIds?: string[];
+  canSave?: boolean;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -254,9 +259,13 @@ export function MapView({
             {selected.city} · {selected.available} of {selected.rooms} rooms available
           </p>
           <p className="mt-1 text-[15px]">{price(selected.rentFrom, selected.rentTo)} per week</p>
-          <a href={`/listings/${selected.id}`} className="btn-primary mt-3 w-full justify-center">
-            View advert
-          </a>
+          <div className="mt-3 flex items-center gap-2">
+            <a href={`/listings/${selected.id}`} className="btn-primary min-w-0 flex-1 justify-center">
+              View advert
+            </a>
+            <SaveListingIcon key={selected.id} listingId={selected.id} title={selected.title} saved={savedListingIds.includes(selected.id)} canSave={canSave} />
+            <ShareListingButton listingId={selected.id} title={selected.title} compact />
+          </div>
         </div>
       )}
     </div>

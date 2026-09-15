@@ -6,6 +6,7 @@ import { getListing } from "@/server/search";
 import { getCurrentUser } from "@/lib/session";
 import { Gallery } from "@/components/gallery";
 import { SaveButton } from "@/components/save-button";
+import { ShareListingButton } from "@/components/listing-actions";
 import { ReportForm } from "@/components/report-form";
 import { BenefitsBadge, MatchScore, RoomStrip, StatusPill, VerifiedBadge } from "@/components/badges";
 import { MessageProviderForm } from "@/components/message-provider-form";
@@ -342,6 +343,7 @@ export default async function ListingPage({
                   Sign in to save
                 </Link>
               )}
+              <ShareListingButton listingId={listing.id} title={listing.title} />
             </div>
 
             <p className="mt-4 text-[13px] leading-relaxed text-ink-faint">

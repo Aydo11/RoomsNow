@@ -6,6 +6,7 @@ import type { SearchResult } from "@/server/search";
 import { demoListingImage } from "@/lib/demo-listings";
 import { ResilientImage } from "./resilient-image";
 import { clsx } from "@/lib/clsx";
+import { ListingCardActions } from "./listing-actions";
 
 export function ListingCard({
   listing,
@@ -15,6 +16,9 @@ export function ListingCard({
   boosted = false,
   memberListing = false,
   distance,
+  showActions = false,
+  saved = false,
+  canSave = false,
 }: {
   listing: SearchResult;
   match?: number;
@@ -26,6 +30,9 @@ export function ListingCard({
   /** Organic advert from a provider with an active paid membership. */
   memberListing?: boolean;
   distance?: number | null;
+  showActions?: boolean;
+  saved?: boolean;
+  canSave?: boolean;
 }) {
   const image = listing.media[0]?.url;
   const fallback = demoListingImage(listing.id);
@@ -40,15 +47,19 @@ export function ListingCard({
   const available = listing.rooms.filter((r) => r.status === "AVAILABLE").length;
 
   return (
-    <Link
-      href={href}
+    <article
       className={clsx(
-        "card interactive-card group flex h-full flex-col overflow-hidden",
+        "card interactive-card group relative flex h-full flex-col overflow-hidden",
         sponsored && "border-2 border-clay/45 shadow-raise",
         boosted && "border-2 border-pine/70 bg-white shadow-raise ring-4 ring-pine-light/70",
         memberListing && !sponsored && !boosted && "border-pine/35",
       )}
     >
+      <Link
+        href={href}
+        aria-label={`View ${listing.title}`}
+        className="absolute inset-0 z-10 rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+      />
         <div className={`relative overflow-hidden bg-paper-sunk ${compact ? "h-40 sm:h-44" : "h-48"}`}>
           <ResilientImage
             src={image}
@@ -68,6 +79,7 @@ export function ListingCard({
               </span>
             )}
           </div>
+          {showActions && <ListingCardActions listingId={listing.id} title={listing.title} saved={saved} canSave={canSave} />}
         </div>
       {listing.housingBenefit && (
         <div className="flex items-center justify-between gap-3 bg-pine px-4 py-2 text-white">
@@ -139,7 +151,7 @@ export function ListingCard({
           </div>
         </div>
       </div>
-    </Link>
+    </article>
   );
 }
 
