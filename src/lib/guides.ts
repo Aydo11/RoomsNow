@@ -200,6 +200,170 @@ export const guides: Guide[] = [
     ],
     cta: { title: "Start with current vacancies", body: "Search by location, support need and referral route before preparing a referral.", label: "Search supported accommodation", href: "/search" },
   },
+  {
+    slug: "hmo-licensing-explained",
+    title: "HMO licensing explained: do you need a licence?",
+    description: "A plain-English guide to HMO licensing in the UK, covering mandatory licensing, additional and selective licensing schemes, how to check with your council and what happens if a licence is missing.",
+    eyebrow: "FOR LANDLORDS AND PROVIDERS",
+    audience: "Landlords and accommodation providers",
+    readTime: "6 minute read",
+    publishedAt: "2026-09-15",
+    updatedAt: "2026-09-15",
+    introduction: "HMO licensing rules decide whether a landlord must apply to the council before letting a shared property. The rules depend on the number of occupants, the property and the local area, so this guide explains the main categories and how to check your own position.",
+    sections: [
+      {
+        heading: "Mandatory licensing",
+        paragraphs: ["In England and Wales, a large HMO normally needs a mandatory licence when it is occupied by five or more people forming more than one household and sharing facilities such as a kitchen or bathroom. This applies regardless of the number of storeys the property has.", "Mandatory licensing is set nationally, so it applies in every council area once a property meets the threshold. It does not depend on a local scheme being in place."],
+      },
+      {
+        heading: "Additional and selective licensing",
+        paragraphs: ["Many councils also run additional licensing schemes covering smaller HMOs that fall below the mandatory threshold, and some run selective licensing schemes covering most private rented properties in a defined area, HMO or not. These schemes are set locally and vary significantly between councils and even between streets in the same town.", "This means two similar properties in different council areas — or even different parts of the same city — can face different licensing requirements. Always check with the specific local authority rather than assuming a national rule applies."],
+      },
+      {
+        heading: "How to check whether your property needs a licence",
+        bullets: ["Search the council's website for \"HMO licensing\" or \"private rented licensing\"", "Look for a public register of licensed HMOs in the area", "Contact the council's private housing or environmental health team directly", "Ask whether an additional or selective licensing scheme currently covers the property's street or ward", "Re-check after any change in occupancy, since crossing the five-person threshold can trigger mandatory licensing"],
+      },
+      {
+        heading: "What a licence covers",
+        paragraphs: ["A licence is normally granted to a specific person for a specific property and sets conditions on matters such as room sizes, fire safety, gas and electrical safety, waste disposal and management standards. Licences are usually time-limited and need renewing.", "Meeting licensing conditions does not remove other landlord obligations, such as gas safety checks, electrical safety checks, deposit protection and general repairing obligations, which apply whether or not a property needs a licence."],
+      },
+      {
+        heading: "What happens if a licensable property isn't licensed",
+        paragraphs: ["Operating an HMO that should be licensed without a valid licence is a legal offence and councils can take enforcement action, including financial penalties. It can also affect a landlord's ability to serve certain eviction notices. If you are unsure whether your property needs a licence, it is worth resolving that with the council before advertising or letting rooms, rather than after."],
+      },
+    ],
+    faqs: [
+      { question: "Does a five-bedroom house always need an HMO licence?", answer: "Not necessarily. It depends on how many people actually live there and whether they form more than one household, not simply the number of bedrooms. A five-bedroom house let to a single family would not need an HMO licence." },
+      { question: "Do the rules differ in Scotland and Northern Ireland?", answer: "Yes. Scotland and Northern Ireland run their own HMO licensing systems, separate from the England and Wales mandatory licensing threshold described here. Check the relevant national guidance for the property's location." },
+      { question: "Can RoomsNow tell me if my property needs a licence?", answer: "No. RoomsNow does not assess licensing status. Providers are responsible for confirming their own licensing position with the local council before advertising a property." },
+    ],
+    sources: [
+      { label: "GOV.UK: Landlord licensing of rented properties", href: "https://www.gov.uk/guidance/local-housing-authority-licensing-of-privately-rented-properties" },
+      { label: "GOV.UK: Houses in multiple occupation", href: "https://www.gov.uk/private-renting/houses-in-multiple-occupation" },
+    ],
+    cta: { title: "Ready to advertise your property?", body: "List your HMO rooms and vacancies once you've confirmed your licensing position with your local council.", label: "Advertise accommodation", href: "/advertise-accommodation" },
+  },
+  {
+    slug: "what-is-supported-exempt-accommodation",
+    title: "What is supported exempt accommodation?",
+    description: "An explainer on supported exempt accommodation in the UK: what makes accommodation exempt, how housing benefit works differently, and what to check as a tenant, provider or referrer.",
+    eyebrow: "SUPPORTED HOUSING EXPLAINED",
+    audience: "Tenants, providers and referrers",
+    readTime: "5 minute read",
+    publishedAt: "2026-09-15",
+    updatedAt: "2026-09-15",
+    introduction: "Supported exempt accommodation is a specific legal category of supported housing that is treated differently for housing benefit purposes. The term causes confusion because it describes a funding and regulatory status, not a single type of building or service.",
+    sections: [
+      {
+        heading: "What makes accommodation \"exempt\"",
+        paragraphs: ["Accommodation is generally described as exempt when it is provided by a non-metropolitan county council, housing association, registered charity or voluntary organisation, and the resident also receives a level of care, support or supervision from, or arranged by, that provider or landlord. This combination takes the housing benefit calculation outside the standard local housing allowance rules that apply to most private rented and social housing.", "Because the housing benefit rules are different, exempt accommodation can charge a higher, individually assessed rent than the standard local allowance would normally allow, intended to reflect the cost of providing support alongside the housing."],
+      },
+      {
+        heading: "Why the sector has faced scrutiny",
+        paragraphs: ["The rapid growth of supported exempt accommodation in some areas, and concerns about the quality of support actually being delivered relative to the rents charged, has led to increased council and government scrutiny, including new local authority licensing and oversight powers introduced through housing legislation. Standards and enforcement approaches continue to vary between local authorities."],
+      },
+      {
+        heading: "What tenants should check",
+        bullets: ["What specific support is promised, and how often it is actually provided", "Whether the rent and service charge are clearly broken down", "Who is responsible for repairs and day-to-day property management", "What happens if the support is not delivered as described", "Whether the accommodation and provider have been through any local authority accreditation or licensing scheme"],
+      },
+      {
+        heading: "What providers and referrers should know",
+        paragraphs: ["Providers offering supported exempt accommodation should be able to clearly describe the support they deliver, how it is staffed, and how it complies with any local authority accreditation, licensing or quality framework that applies in that area. Referrers should factor this into their own due diligence rather than relying on a listing description alone.", "RoomsNow does not determine a property's exempt accommodation status or verify the support delivered. That responsibility sits with the provider, the local authority and the professionals involved in a placement."],
+      },
+    ],
+    faqs: [
+      { question: "Is all supported housing \"exempt accommodation\"?", answer: "No. Exempt accommodation specifically refers to the housing benefit treatment that applies when qualifying support is provided alongside housing by an eligible landlord type. Some supported housing is funded differently." },
+      { question: "Does exempt status mean the accommodation is regulated or inspected?", answer: "Not automatically. Some local authorities run their own accreditation or licensing schemes for supported exempt accommodation, but this varies by area. Ask the local authority what applies locally." },
+      { question: "Who can I ask if I'm unsure about a specific property's status?", answer: "The provider should be able to explain the funding and support arrangement. For independent confirmation, contact the local authority's housing benefit or supported housing team." },
+    ],
+    sources: [
+      { label: "GOV.UK: Supported housing guidance", href: "https://www.gov.uk/guidance/supported-housing-in-england" },
+      { label: "Shelter England: Supported housing", href: "https://england.shelter.org.uk/housing_advice/homelessness/supported_housing" },
+    ],
+    cta: { title: "Search supported accommodation", body: "Compare vacancies and ask each provider about their support offer before you decide.", label: "Search supported accommodation", href: "/supported-accommodation" },
+  },
+  {
+    slug: "how-much-does-an-hmo-room-cost",
+    title: "How much does an HMO room cost? A rent guide",
+    description: "What affects HMO room rent across the UK, what's usually included in the price, typical extra costs like deposits and bills, and how to compare adverts fairly.",
+    eyebrow: "COSTS AND BUDGETING",
+    audience: "People looking for a room",
+    readTime: "5 minute read",
+    publishedAt: "2026-09-15",
+    updatedAt: "2026-09-15",
+    introduction: "HMO room rents vary enormously by city, neighbourhood and what's included, which makes it hard to compare adverts at a glance. This guide breaks down what actually drives the price so you can budget realistically and compare like with like.",
+    sections: [
+      {
+        heading: "What drives the rent",
+        bullets: ["Location: city and neighbourhood typically have the biggest effect on price", "Room size and whether it is ensuite or shares a bathroom", "Whether bills, WiFi and council tax are included", "Furnished versus unfurnished", "Number of people sharing the kitchen and communal areas", "Proximity to transport links, universities or employment hubs"],
+      },
+      {
+        heading: "Bills-included versus bills-excluded",
+        paragraphs: ["Many HMO rooms are advertised with bills included, which can make budgeting simpler but usually means a higher headline rent than a bills-excluded room in a similar property. When comparing two adverts, always check exactly which bills are covered — gas, electricity, water, WiFi and council tax are not always all included — and add an estimate for anything excluded before comparing the total cost."],
+      },
+      {
+        heading: "Deposits and upfront costs",
+        paragraphs: ["Most providers ask for a deposit, commonly equivalent to a set number of weeks' or months' rent, plus the first period's rent in advance. Where the rules require it, a deposit for an assured shorthold tenancy in England and Wales should be protected in a government-approved scheme, and the landlord must give you certain information about this within a set timeframe.", "Ask what the deposit covers, how disputes are handled, and get everything in writing before you pay anything."],
+      },
+      {
+        heading: "Comparing adverts fairly",
+        paragraphs: ["Work out the true total monthly cost for each room you're considering: rent, plus any bills not included, plus a share of council tax if relevant. A cheaper headline rent with several bills excluded can end up costing more than a bills-included room once everything is added up."],
+      },
+    ],
+    faqs: [
+      { question: "Is rent for an HMO room usually cheaper than a self-contained flat?", answer: "Generally yes, since you're sharing facilities and costs with other residents, but this depends heavily on location, room size and what's included. Compare the total monthly cost rather than the headline rent alone." },
+      { question: "How much deposit should I expect to pay?", answer: "This varies by provider and property. Ask what the deposit is, whether it will be protected where the rules require it, and what conditions apply to getting it back." },
+      { question: "Can I negotiate the rent on an HMO room?", answer: "Some providers may be open to discussion, particularly for a room that has been vacant for a while, but this is entirely down to the individual provider." },
+    ],
+    sources: [
+      { label: "GOV.UK: Tenancy deposit protection", href: "https://www.gov.uk/deposit-protection-schemes-and-landlords" },
+      { label: "Shelter England: Paying rent and bills", href: "https://england.shelter.org.uk/housing_advice/private_renting" },
+    ],
+    cta: { title: "Compare current room prices", body: "See live rent and bills information across HMO rooms currently advertised on RoomsNow.", label: "Search HMO rooms", href: "/hmo-rooms" },
+  },
+  {
+    slug: "hmo-tenant-rights",
+    title: "Your rights as an HMO tenant",
+    description: "A guide to the basic legal protections that apply to most HMO tenants in the UK, covering safety standards, deposits, repairs, eviction notices and where to get help.",
+    eyebrow: "TENANT RIGHTS",
+    audience: "People renting a room",
+    readTime: "6 minute read",
+    publishedAt: "2026-09-15",
+    updatedAt: "2026-09-15",
+    introduction: "Living in an HMO doesn't mean giving up the legal protections that apply to renters generally. This guide covers the areas that most commonly matter to HMO tenants, though the detail can depend on your specific tenancy type and location.",
+    sections: [
+      {
+        heading: "Safety standards",
+        paragraphs: ["Landlords and managers of HMOs have specific legal duties covering fire safety, escape routes, gas safety, electrical safety, and avoiding overcrowding. Larger and licensable HMOs are subject to additional management regulations covering matters like fire detection equipment and the condition of communal areas.", "If you have concerns about safety in your HMO, raise them with the landlord or managing agent in writing first, and contact the local council's environmental health team if the issue is not addressed."],
+      },
+      {
+        heading: "Deposits",
+        paragraphs: ["If you have an assured shorthold tenancy in England or Wales, any deposit you pay should be protected in a government-approved tenancy deposit scheme within a set number of days, and you should be given prescribed information about where it is held. Some licence agreements (rather than tenancies) work differently — check which type of agreement you have and ask if you're not sure."],
+      },
+      {
+        heading: "Repairs and your landlord's responsibilities",
+        paragraphs: ["Landlords are generally responsible for keeping the structure, exterior, and key installations such as heating, water and sanitation in good repair. Report repair issues in writing, keep a copy, and follow up if nothing happens within a reasonable time. Persistent unresolved repair problems, particularly ones affecting health and safety, can be reported to the local council."],
+      },
+      {
+        heading: "Eviction notices",
+        paragraphs: ["A landlord normally has to follow a legal process to end a tenancy, which usually means giving a valid written notice and, if you don't leave, applying to court for a possession order. The exact notice type, length and process depend on your tenancy type and the reason given. You do not have to leave simply because a landlord asks you to — get advice if you're unsure whether a notice is valid."],
+      },
+      {
+        heading: "Where to get help",
+        paragraphs: ["If you're dealing with a serious repairs issue, a disputed deposit, an eviction notice or harassment, independent advice services can explain your specific rights and options. Acting early, and keeping written records of everything, makes it much easier to resolve a problem."],
+      },
+    ],
+    faqs: [
+      { question: "Do these rights apply if I have a licence agreement rather than a tenancy?", answer: "Some protections, particularly around deposit protection and certain eviction rules, are specific to assured shorthold tenancies. A genuine licence agreement (for example, in some live-in landlord situations) can work differently. Check which type of agreement you have, and get advice if you're unsure." },
+      { question: "Can my landlord enter my room without notice?", answer: "Landlords generally need to give reasonable notice, normally at least 24 hours, before entering your room except in a genuine emergency. Check your specific agreement for any additional terms." },
+      { question: "What should I do if I think I'm being illegally evicted?", answer: "Do not leave the property, and seek advice as soon as possible from an independent housing advice service or your local council, since illegal eviction is a serious matter with specific legal protections." },
+    ],
+    sources: [
+      { label: "Shelter England: Repairs and safety", href: "https://england.shelter.org.uk/housing_advice/repairs" },
+      { label: "GOV.UK: Evicting tenants", href: "https://www.gov.uk/evicting-tenants" },
+    ],
+    cta: { title: "Looking for your next room?", body: "Compare current HMO vacancies and read the full details each provider has published.", label: "Search HMO rooms", href: "/hmo-rooms" },
+  },
 ];
 
 export function findGuide(slug: string) {
