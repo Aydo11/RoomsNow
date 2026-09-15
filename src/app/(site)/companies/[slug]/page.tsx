@@ -1,8 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/session";
+import { canActForCompany } from "@/lib/rbac";
+import { hasAdminPermission } from "@/lib/admin-permissions";
 import { ListingCard } from "@/components/listing-card";
 import { VerifiedBadge } from "@/components/badges";
+import { DirectMessageForm } from "@/components/direct-message-form";
 import { ORG_TYPES, supportLabel } from "@/lib/taxonomy";
 import { JsonLd, absoluteUrl } from "@/lib/seo";
 
@@ -40,8 +44,15 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
       },
     },
   });
+  const user = await getCurrentUser();
 
   if (!company || company.status !== "ACTIVE") notFound();
+
+  const canDirectMessage = Boolean(
+    user &&
+      (user.role === "REFERRER" || hasAdminPermission(user)) &&
+      !canActForCompany(user, company.id),
+  );
 
   const companyUrl = absoluteUrl(`/companies/${company.slug}`);
   const websiteHref = company.website
@@ -142,7 +153,25 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
                   ))}
                 </p>
               )}
-              <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">Use an advert below to contact the provider through RoomsNow.</p>
+              {canDirectMessage ? (
+                <div className="mt-4 border-t border-line pt-4">
+                  <h3 className="text-[13px] font-medium text-ink-soft">Message this provider</h3>
+                  <p className="mt-1 text-[12px] leading-relaxed text-ink-faint">
+                    Send a general enquiry, or use an advert below to ask about a specific room.
+                  </p>
+                  <div className="mt-3">
+                    <DirectMessageForm
+                      companyId={company.id}
+                      subject={`Enquiry via ${company.name}'s profile`}
+                      label="Message provider"
+                      placeholder={`Hi — I'm getting in touch about a placement with ${company.name}…`}
+                      compact
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">Use an advert below to contact the provider through RoomsNow.</p>
+              )}
             </aside>
           </div>
         </div>
