@@ -47,7 +47,7 @@ export function ShareListingButton({ listingId, title, compact = false }: { list
   return (
     <button
       type="button"
-      className={compact ? iconButtonClass : "btn-secondary w-full"}
+      className={compact ? clsx(iconButtonBase, iconButtonResting) : "btn-secondary w-full"}
       aria-label={compact ? `Share ${title}` : undefined}
       title={compact ? "Share advert" : undefined}
       disabled={sharing}
@@ -83,7 +83,12 @@ export function SaveListingIcon({ listingId, title, saved: initial, canSave }: L
   return (
     <button
       type="button"
-      className={clsx(iconButtonClass, saved && "bg-pine text-white hover:bg-pine-dark")}
+      className={clsx(
+        iconButtonBase,
+        saved
+          ? "border-brand bg-blue-50 text-brand hover:bg-blue-100 hover:text-brand"
+          : iconButtonResting,
+      )}
       aria-label={saved ? `Remove ${title} from saved adverts` : `Save ${title}`}
       aria-pressed={saved}
       title={saved ? "Remove from saved" : "Save advert"}
@@ -95,7 +100,8 @@ export function SaveListingIcon({ listingId, title, saved: initial, canSave }: L
   );
 }
 
-const iconButtonClass = "grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/80 bg-white/95 text-ink shadow-card transition hover:bg-blue-50 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60";
+const iconButtonBase = "grid h-10 w-10 shrink-0 place-items-center rounded-full border shadow-card transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60";
+const iconButtonResting = "border-white/80 bg-white/95 text-ink hover:bg-blue-50 hover:text-brand";
 
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
