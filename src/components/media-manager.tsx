@@ -115,6 +115,26 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
               {rooms.map((room) => <option key={room.id} value={room.id}>{room.name}</option>)}
             </select>
           </Field>
+
+          <details className="rounded-[12px] border border-blue-200 bg-blue-50/70 md:col-span-2">
+            <summary className="cursor-pointer px-4 py-3 text-[14px] font-semibold text-pine-dark marker:text-pine">
+              How to add a longer video — step by step
+            </summary>
+            <div className="border-t border-blue-200 px-4 py-4 text-[13px] leading-relaxed text-ink-soft sm:px-5">
+              <ol className="list-decimal space-y-2 pl-5">
+                <li>Record your property walkthrough and check that the picture and sound are clear.</li>
+                <li>Remove anything private, including residents, paperwork, medication, keys, entry codes or personal photographs. Get permission from anyone who appears in the video.</li>
+                <li>Open YouTube or Vimeo, sign in, and choose <strong className="font-semibold text-ink">Upload</strong> or <strong className="font-semibold text-ink">New video</strong>.</li>
+                <li>Choose your video file. On YouTube, select <strong className="font-semibold text-ink">Unlisted</strong> if you do not want it appearing in public searches. Do not select Private, because visitors would be unable to watch it.</li>
+                <li>Wait for the upload to finish, then choose <strong className="font-semibold text-ink">Share</strong> and copy the video link.</li>
+                <li>Return to this page, paste the link into <strong className="font-semibold text-ink">YouTube or Vimeo walkthrough</strong>, add an optional caption, then press <strong className="font-semibold text-ink">Add video link</strong>.</li>
+                <li>Open the public advert afterwards and play the video once to confirm it works.</li>
+              </ol>
+              <p className="mt-3 rounded-[9px] bg-white/80 px-3 py-2 text-[12px] text-ink-faint">
+                A two-minute video is suitable. Direct file uploads must be 20MB or smaller; use a YouTube or Vimeo link for larger videos.
+              </p>
+            </div>
+          </details>
         </div>
         <SubmitButton pendingLabel="Uploading…">Add video link</SubmitButton>
       </form>
