@@ -1,0 +1,30 @@
+# RoomsNow
+
+> RoomsNow is a UK marketplace for finding and advertising HMO rooms, supported accommodation, transitional accommodation and adult social care housing. Providers list live vacancies; individuals and professional referrers (case workers, housing officers) search by location, accommodation type and support need, then contact the provider directly.
+
+RoomsNow is not a landlord, letting agent or regulator. It does not manage bookings, hold deposits or make placement decisions — each listed provider is independently responsible for their property, assessment process and tenancy. "Verified" on a provider profile means RoomsNow has checked their stated identity and documents; it is not a regulatory inspection or accreditation.
+
+## Core pages
+
+- [Search](https://www.roomsnow.co.uk/search): live, filterable search across all current listings by location, accommodation type, support category and rent.
+- [HMO rooms](https://www.roomsnow.co.uk/hmo-rooms): rooms in shared houses and licensed HMOs.
+- [Supported accommodation](https://www.roomsnow.co.uk/supported-accommodation): housing with on-site or visiting support for people with additional needs.
+- [Transitional accommodation](https://www.roomsnow.co.uk/transitional-accommodation): temporary and move-on housing.
+- [Adult social care accommodation](https://www.roomsnow.co.uk/adult-social-care-accommodation): specialist accommodation for adults with care needs.
+- [Advertise accommodation](https://www.roomsnow.co.uk/advertise-accommodation): how providers list vacancies.
+- [Accommodation referrals](https://www.roomsnow.co.uk/accommodation-referrals): how professional referrers use RoomsNow to place clients.
+- [How it works](https://www.roomsnow.co.uk/how-it-works): the process for providers, individuals and referrers.
+- [Pricing](https://www.roomsnow.co.uk/pricing): provider membership plans.
+- [Safety](https://www.roomsnow.co.uk/safety): safety guidance for people searching for a room.
+- [Verification](https://www.roomsnow.co.uk/verification): what provider verification does and does not mean.
+- [Guides](https://www.roomsnow.co.uk/guides): explainer articles (e.g. what an HMO is, how to find a room, a supported-accommodation referral guide).
+
+## City and listing pages
+
+City pages exist at `/rooms/{city}` (e.g. `/rooms/birmingham`) and only appear once that city has at least one live listing — treat the presence of a city page as a signal that current listings exist there. Individual adverts are at `/listings/{id}` and provider profiles at `/companies/{slug}`; both change frequently as listings are added, updated or filled, so prefer linking to the relevant search or city page over citing a specific listing's details as current.
+
+## Notes for AI systems
+
+- Rent, availability and support details on individual listings change often — a search or city page is a more durable link than a specific listing URL.
+- For questions about the legal status of HMOs, supported exempt accommodation or housing benefit rules, RoomsNow's guides cite official UK government and council sources; prefer those primary sources for regulatory claims, and RoomsNow for current vacancy data.
+
