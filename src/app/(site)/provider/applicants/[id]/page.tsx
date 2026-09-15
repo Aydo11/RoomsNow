@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireCompany, assertApplicantAccess } from "@/lib/rbac";
+import { DirectMessageForm } from "@/components/direct-message-form";
 import { ACCOMMODATION_TYPES, GENDER_ARRANGEMENTS, supportLabel } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
 
@@ -105,8 +106,14 @@ export default async function ApplicantProfilePage({ params }: { params: Promise
           )}
         </dl>
 
-        <div className="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
-          <Link href="/messages" className="btn-secondary">Message</Link>
+        <div className="mt-6 border-t border-line pt-5">
+          <DirectMessageForm
+            recipientUserId={applicant.id}
+            subject={requests[0] ? requests[0].listing.title : undefined}
+            label="Message"
+            placeholder={`Hi ${applicant.firstName} — `}
+            compact
+          />
         </div>
       </div>
 
