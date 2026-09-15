@@ -141,7 +141,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Accommodation type" name="accommodationType">
             <select id="accommodationType" name="accommodationType" defaultValue={defaults.accommodationType ?? "SHARED_ACCOMMODATION"} className="field">
-              {Object.entries(ACCOMMODATION_TYPES).map(([value, label]) => (
+              {Object.entries(ACCOMMODATION_TYPES).filter(([value]) => value !== "SINGLE_ROOM").map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>

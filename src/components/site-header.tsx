@@ -4,6 +4,7 @@ import { brand } from "@/brand.config";
 import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { logoutAction } from "@/server/actions/auth";
+import { LanguageSelector } from "./language-selector";
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
@@ -23,6 +24,7 @@ export async function SiteHeader() {
 
         <nav aria-label="Main navigation" className="hidden items-center gap-5 whitespace-nowrap text-[14px] text-ink-soft xl:flex">
           <Link href="/search" className="font-medium text-pine-dark transition-colors hover:text-ink">Search accommodation</Link>
+          <Link href="/people" className="transition-colors hover:text-ink">People looking</Link>
           <Link href="/how-it-works" className="transition-colors hover:text-ink">How it works</Link>
           <Link href="/advertise-accommodation" className="transition-colors hover:text-ink">Advertise</Link>
           <Link href="/pricing" className="transition-colors hover:text-ink">Membership</Link>
@@ -57,6 +59,7 @@ export async function SiteHeader() {
               <MobileLink href="/people">People looking</MobileLink>
               <MobileLink href="/advertise-accommodation">Advertise</MobileLink>
               <MobileLink href="/pricing">Membership</MobileLink>
+              <LanguageSelector mobile />
               <div className="my-2 border-t border-line" />
               {user ? (
                 <>
@@ -98,6 +101,7 @@ export function SiteFooter() {
             <Logo className="h-11 w-auto max-w-[185px]" />
           </Link>
           <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-ink-soft">{brand.description}</p>
+          <div className="mt-4 max-w-xs"><LanguageSelector /></div>
         </div>
         <FooterColumn
           title="Looking for a home"

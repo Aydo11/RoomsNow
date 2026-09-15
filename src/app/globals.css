@@ -70,8 +70,22 @@
   }
 
   .field {
-    @apply w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink
+    @apply min-w-0 max-w-full w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink
            placeholder:text-ink-faint transition-[border-color,box-shadow,background-color] duration-200 focus:border-pine focus:outline-none focus:ring-2 focus:ring-pine/25;
+  }
+
+  /* Mobile Safari gives date controls a wide intrinsic size unless it is
+     explicitly allowed to shrink with its grid column. */
+  input[type="date"].field {
+    display: block;
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  input[type="date"].field::-webkit-date-and-time-value {
+    min-width: 0;
+    text-align: left;
   }
 
   .field-error {
