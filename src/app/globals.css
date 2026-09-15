@@ -9,6 +9,35 @@
 .menu-panel { animation: menu-enter 160ms ease-out; }
 @media (max-width: 640px) {
   input, select, textarea { font-size: 16px !important; }
+
+  /* Google adds a fixed translation bar that is wider than some phone
+     viewports. RoomsNow has its own language control, so hide that duplicate
+     bar and remove the offset it applies to the page. */
+  html.machine-translated #gt-nvframe {
+    display: none !important;
+  }
+
+  html.machine-translated body {
+    top: 0 !important;
+  }
+}
+
+html.machine-translated,
+html.machine-translated body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+html.machine-translated .shell,
+html.machine-translated main,
+html.machine-translated header,
+html.machine-translated footer {
+  min-width: 0;
+  max-width: 100%;
+}
+
+html.machine-translated :where(h1, h2, h3, h4, p, a, button, label, dt, dd, span) {
+  overflow-wrap: anywhere;
 }
 
 @layer base {
