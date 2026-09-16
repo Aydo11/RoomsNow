@@ -10,6 +10,7 @@ import { planLimits } from "@/lib/billing";
 import { storage, validateUpload, verifyFileContents } from "@/lib/storage";
 import { sanitiseHtml } from "@/lib/sanitise";
 import { notifyCompany } from "@/lib/notify";
+import { notifyInstantSavedSearches } from "@/lib/saved-search-alerts";
 import { geocode } from "@/lib/geo";
 import { fieldErrors, listingSchema, type FormState } from "@/lib/validation";
 import { bool, date, list, num, pence, reference, text } from "../form";
@@ -396,6 +397,11 @@ export async function setListingStatusAction(
   await audit({ actorId: user.id, action: `listing.${status.toLowerCase()}`, targetType: "Listing", targetId: listingId });
   revalidatePath("/provider/adverts");
   revalidatePath(`/provider/adverts/${listingId}`);
+
+  if (status === "ACTIVE") {
+    // Fire-and-forget: matching alerts shouldn't hold up the provider's click.
+    notifyInstantSavedSearches(listingId).catch((error) => console.error("[saved-search-alerts]", error));
+  }
 
   const messages: Record<string, string> = {
     ACTIVE: "Advert is live again.",
