@@ -93,22 +93,23 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
           )}
         </div>
         <div className="relative px-6 pb-7 sm:px-8">
-          <div className="-mt-12 flex flex-wrap items-end justify-between gap-4">
-            <div className="flex min-w-0 items-end gap-4">
-              {company.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={company.logoUrl} alt={`${company.name} profile`} className="h-24 w-24 shrink-0 rounded-full border-4 border-white bg-white object-cover shadow-raise sm:h-28 sm:w-28" />
-              ) : (
-                <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 border-white bg-pine-light text-[22px] font-bold uppercase text-pine-dark shadow-raise sm:h-28 sm:w-28">
-                  {company.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("")}
-                </span>
-              )}
-              <div className="min-w-0 translate-y-2 pb-1">
-                <h1 className="truncate text-[28px] leading-tight sm:text-[34px]">{company.name}</h1>
-                <p className="mt-1 text-[14px] text-ink-soft">
-                  {ORG_TYPES[company.orgType]}{company.city ? ` · ${company.city}` : ""}
-                </p>
-              </div>
+          <div className="-mt-12">
+            {company.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={company.logoUrl} alt={`${company.name} profile`} className="h-24 w-24 shrink-0 rounded-full border-4 border-white bg-white object-cover shadow-raise sm:h-28 sm:w-28" />
+            ) : (
+              <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 border-white bg-pine-light text-[22px] font-bold uppercase text-pine-dark shadow-raise sm:h-28 sm:w-28">
+                {company.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("")}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="truncate text-[28px] leading-tight sm:text-[34px]">{company.name}</h1>
+              <p className="mt-1 text-[14px] text-ink-soft">
+                {ORG_TYPES[company.orgType]}{company.city ? ` · ${company.city}` : ""}
+              </p>
             </div>
             {company.verification === "APPROVED" && <VerifiedBadge />}
           </div>
