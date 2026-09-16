@@ -11,6 +11,7 @@ import { storage, validateUpload, verifyFileContents } from "@/lib/storage";
 import { sanitiseHtml } from "@/lib/sanitise";
 import { notifyCompany } from "@/lib/notify";
 import { notifyInstantSavedSearches } from "@/lib/saved-search-alerts";
+import { syncListingAvailability } from "@/lib/listing-availability";
 import { geocode } from "@/lib/geo";
 import { fieldErrors, listingSchema, type FormState } from "@/lib/validation";
 import { bool, date, list, num, pence, reference, text } from "../form";
@@ -99,6 +100,10 @@ export async function saveListingAction(_prev: FormState, formData: FormData): P
     billsIncluded: d.billsIncluded,
     housingBenefit: d.housingBenefit,
     availableFrom: date(d.availableFrom),
+    // Saving the form — new or edited — is itself confirmation the advert is
+    // accurate, so it resets the staleness clock (see listing-availability.ts).
+    availabilityConfirmedAt: new Date(),
+    pausedReason: null,
   };
 
   // Coordinates come from the postcode, so every advert can appear on the map
@@ -393,7 +398,16 @@ export async function setListingStatusAction(
     return { ok: false, message: "Only an archived advert can be restored." };
   }
 
-  await db.listing.update({ where: { id: listingId }, data: { status } });
+  await db.listing.update({
+    where: { id: listingId },
+    data: {
+      status,
+      // A person is now setting this deliberately, so any note the system
+      // left about why it auto-paused no longer applies.
+      pausedReason: null,
+      ...(status === "ACTIVE" ? { availabilityConfirmedAt: new Date(), staleNudgeSentAt: null } : {}),
+    },
+  });
   await audit({ actorId: user.id, action: `listing.${status.toLowerCase()}`, targetType: "Listing", targetId: listingId });
   revalidatePath("/provider/adverts");
   revalidatePath(`/provider/adverts/${listingId}`);
@@ -401,6 +415,10 @@ export async function setListingStatusAction(
   if (status === "ACTIVE") {
     // Fire-and-forget: matching alerts shouldn't hold up the provider's click.
     notifyInstantSavedSearches(listingId).catch((error) => console.error("[saved-search-alerts]", error));
+    // If every room already went unavailable while this was paused, this
+    // pauses it straight back — with the honest reason — rather than
+    // leaving it "live" with nothing to actually offer.
+    syncListingAvailability(listingId).catch((error) => console.error("[listing-availability]", error));
   }
 
   const messages: Record<string, string> = {
@@ -410,6 +428,48 @@ export async function setListingStatusAction(
     DRAFT: "Restored to drafts. Submit it for review to make it live again.",
   };
   return { ok: true, message: messages[status] };
+}
+
+/**
+ * A provider vouching that an advert is still accurate — either a proactive
+ * click, or answering the "still available?" nudge (see
+ * runListingFreshnessCheck). If it had been auto-paused for going stale,
+ * confirming brings it straight back; an auto-pause for having no available
+ * rooms still needs an actual room to free up (see syncListingAvailability),
+ * since confirming "yes this is accurate" isn't the same as having somewhere
+ * to put someone.
+ */
+export async function confirmListingAvailabilityAction(listingId: string) {
+  const { user } = await requireCompany();
+  const listing = await db.listing.findUnique({
+    where: { id: listingId },
+    select: { companyId: true, status: true, pausedReason: true },
+  });
+  if (!listing) return;
+  await assertCompanyAccess(user, listing.companyId);
+
+  const reactivate = listing.status === "PAUSED" && listing.pausedReason === "STALE";
+  await db.listing.update({
+    where: { id: listingId },
+    data: {
+      availabilityConfirmedAt: new Date(),
+      staleNudgeSentAt: null,
+      ...(reactivate ? { status: "ACTIVE", pausedReason: null } : {}),
+    },
+  });
+  await audit({
+    actorId: user.id,
+    action: "listing.availability_confirmed",
+    targetType: "Listing",
+    targetId: listingId,
+    metadata: { reactivated: reactivate },
+  });
+  revalidatePath("/provider/adverts");
+  revalidatePath(`/provider/adverts/${listingId}`);
+
+  if (reactivate) {
+    notifyInstantSavedSearches(listingId).catch((error) => console.error("[saved-search-alerts]", error));
+  }
 }
 
 /**
@@ -491,7 +551,16 @@ export async function updateRoomStatusAction(roomId: string, status: RoomStatus)
     );
   }
 
+  // Keeps the advert's own live/paused state honest against what its rooms
+  // now say — see syncListingAvailability for why this isn't left to the
+  // provider to remember.
+  if (room.listing) {
+    await syncListingAvailability(room.listing.id);
+  }
+
   revalidatePath("/provider/rooms");
+  revalidatePath("/provider/adverts");
+  if (room.listing) revalidatePath(`/provider/adverts/${room.listing.id}`);
 }
 
 export async function addRoomAction(listingId: string, name: string) {
