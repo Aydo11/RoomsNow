@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
 import { audit } from "@/lib/audit";
 import { notify, notifyCompany } from "@/lib/notify";
+import { notifyInstantSavedSearches } from "@/lib/saved-search-alerts";
 import type { ReportStatus } from "@prisma/client";
 import { z } from "zod";
 import type { VerificationChecks } from "@/lib/verification";
@@ -24,6 +25,8 @@ export async function approveListingAction(listingId: string) {
   });
   await audit({ actorId: admin.id, action: "admin.listing_approved", targetType: "Listing", targetId: listingId });
   revalidatePath("/admin/listings");
+  // Fire-and-forget: matching alerts shouldn't hold up the admin's approval click.
+  notifyInstantSavedSearches(listingId).catch((error) => console.error("[saved-search-alerts]", error));
 }
 
 export async function rejectListingAction(listingId: string, note: string) {
