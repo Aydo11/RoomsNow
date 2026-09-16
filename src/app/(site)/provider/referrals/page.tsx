@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui";
 import { PipelineTrail } from "@/components/pipeline";
 import { StatusUpdater } from "@/components/status-updater";
 import { DirectMessageForm } from "@/components/direct-message-form";
+import { ViewingScheduler } from "@/components/viewing-scheduler";
 import { providerNav } from "../nav";
 import { PIPELINE, PIPELINE_LABELS, URGENCY_LABELS } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
@@ -24,6 +25,7 @@ export default async function ProviderReferralsPage() {
         listing: { select: { id: true, title: true } },
         referrer: { select: { firstName: true, lastName: true, email: true } },
         documents: { select: { id: true, name: true } },
+        viewings: { orderBy: { scheduledFor: "asc" } },
       },
     }),
   ]);
@@ -134,6 +136,21 @@ export default async function ProviderReferralsPage() {
                   label="Message referrer"
                   placeholder={`Hi ${referral.referrer.firstName} — about ${referral.applicantFirstName}'s referral (${referral.reference})…`}
                   compact
+                />
+              </div>
+
+              <div className="mt-5 border-t border-line pt-4">
+                <h3 className="mb-3 text-[14px] font-semibold">Viewings</h3>
+                <ViewingScheduler
+                  kind="referral"
+                  id={referral.id}
+                  viewings={referral.viewings.map((viewing) => ({
+                    id: viewing.id,
+                    scheduledFor: viewing.scheduledFor.toISOString(),
+                    status: viewing.status,
+                    note: viewing.note,
+                    outcomeNote: viewing.outcomeNote,
+                  }))}
                 />
               </div>
             </li>
