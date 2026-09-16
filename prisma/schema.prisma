@@ -228,6 +228,12 @@ enum NotificationType {
   SYSTEM
 }
 
+enum AlertFrequency {
+  INSTANT
+  DAILY
+  OFF
+}
+
 // ---------------------------------------------------------------- identity
 
 model User {
@@ -287,6 +293,7 @@ model User {
   membershipGrantsMade    MembershipGrant[]         @relation("MembershipGrantAdmin")
   userMembershipGrants    UserMembershipGrant[]     @relation("UserMembershipGrantRecipient")
   userMembershipGrantsMade UserMembershipGrant[]    @relation("UserMembershipGrantAdmin")
+  savedSearches           SavedSearch[]
 
   @@index([role, status])
 }
@@ -800,6 +807,45 @@ model SavedListing {
 
   @@unique([userId, listingId])
   @@index([listingId])
+}
+
+/// A stored search filter a user wants to be alerted about. Mirrors the
+/// public search filter shape (see SearchParams in src/server/search.ts) so
+/// re-running it later — or matching a freshly published advert against it —
+/// uses exactly the same criteria the person saw on screen.
+model SavedSearch {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Short label shown in "Your alerts", e.g. "Leeds · Mental health support".
+  label     String
+
+  where         String?
+  radius        Int?
+  support       String[]        @default([])
+  type          String[]        @default([])
+  gender        String?
+  minAge        Int?
+  wheelchair    Boolean         @default(false)
+  furnished     Boolean         @default(false)
+  ensuite       Boolean         @default(false)
+  selfContained Boolean         @default(false)
+  referral      ReferralRoute[] @default([])
+  verifiedOnly  Boolean         @default(false)
+  minRent       Int?
+  maxRent       Int?
+
+  frequency      AlertFrequency @default(INSTANT)
+  /// Last time this search matched at least one advert and an alert went out.
+  lastAlertedAt  DateTime?
+  /// Watermark for the daily digest job — only adverts published after this
+  /// are considered "new" next time it runs.
+  lastDigestAt   DateTime       @default(now())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([frequency])
 }
 
 model Notification {
