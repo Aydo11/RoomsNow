@@ -9,6 +9,7 @@ import {
   resolveReportAction,
   reviewVerificationAction,
   setCompanyStatusAction,
+  setUserRoleAction,
   setUserStatusAction,
   toggleFeaturedAction,
 } from "@/server/actions/admin";
@@ -153,6 +154,45 @@ export function AccountToggle({
     >
       {next === "SUSPENDED" ? "Suspend" : "Reinstate"}
     </button>
+  );
+}
+
+const ACCOUNT_TYPES = ["USER", "PROVIDER", "REFERRER"] as const;
+
+/** Fixes an account that picked the wrong type at signup — most often someone who meant to register as a job-seeker or case worker but selected "Provider". */
+export function RoleSelect({ id, role }: { id: string; role: string }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+
+  return (
+    <select
+      aria-label="Account type"
+      className="field !w-auto py-1 text-[13px] capitalize"
+      defaultValue={role}
+      disabled={pending}
+      onChange={(event) => {
+        const next = event.target.value as (typeof ACCOUNT_TYPES)[number];
+        if (next === role) return;
+        const warning =
+          role === "PROVIDER"
+            ? " They'll lose access to their provider company (the company itself is kept, so this can be undone)."
+            : "";
+        if (!window.confirm(`Change this account to ${next.toLowerCase()}?${warning}`)) {
+          event.target.value = role;
+          return;
+        }
+        startTransition(async () => {
+          await setUserRoleAction(id, next);
+          router.refresh();
+        });
+      }}
+    >
+      {ACCOUNT_TYPES.map((value) => (
+        <option key={value} value={value}>
+          {value === "USER" ? "User" : value === "PROVIDER" ? "Provider" : "Referrer"}
+        </option>
+      ))}
+    </select>
   );
 }
 
