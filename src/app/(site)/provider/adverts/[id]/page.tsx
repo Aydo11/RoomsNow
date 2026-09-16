@@ -6,6 +6,7 @@ import { billingAvailable, boostAllowance, planLimits } from "@/lib/billing";
 import { DashboardShell, StatCard } from "@/components/dashboard-shell";
 import { FeaturedBadge, RoomStrip, StatusPill } from "@/components/badges";
 import { ListingRowActions } from "@/components/listing-row-actions";
+import { AvailabilityBanner } from "@/components/availability-banner";
 import { RoomBoard } from "@/components/room-board";
 import { SponsorPanel } from "@/components/sponsor-panel";
 import { BoostPanel } from "@/components/boost-panel";
@@ -86,6 +87,13 @@ export default async function ProviderAdvertPage({
         </div>
         <div className="p-4 sm:px-5"><ListingRowActions id={listing.id} status={listing.status} /></div>
       </section>
+
+      <AvailabilityBanner
+        id={listing.id}
+        status={listing.status}
+        pausedReason={listing.pausedReason}
+        confirmedAt={listing.availabilityConfirmedAt.toISOString()}
+      />
 
       {listing.status === "REJECTED" && listing.rejectionNote && (
         <p className="card mt-4 border-clay/30 p-4 text-[15px] text-clay-dark">
