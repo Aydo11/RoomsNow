@@ -538,6 +538,7 @@ model Listing {
   referrals     Referral[]
   conversations Conversation[]
   applications  Application[]
+  viewings      Viewing[]
 
   @@index([status, featured, featuredUntil])
   @@index([status, boostedUntil, boostStartsAt])
@@ -621,6 +622,7 @@ model AccommodationRequest {
 
   application Application?
   documents   Document[]
+  viewings    Viewing[]
 
   @@unique([listingId, applicantId])
   @@index([status])
@@ -664,6 +666,7 @@ model Referral {
   application Application?
   documents   Document[]
   events      ReferralEvent[]
+  viewings    Viewing[]
 
   @@index([status])
   @@index([clientId])
@@ -750,6 +753,44 @@ model Application {
   notes      String?
   createdAt  DateTime              @default(now())
   updatedAt  DateTime              @updatedAt
+}
+
+enum ViewingStatus {
+  PROPOSED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+/// A room viewing tied to the request or referral it came from. Providers
+/// propose a time, then move it through confirmed/completed/no-show/cancelled
+/// as the actual viewing plays out — giving them one place to see everything
+/// they've got coming up, instead of tracking it by memory or a side
+/// spreadsheet. Exactly one of requestId/referralId is set; listingId is
+/// always derived server-side from whichever one it is (see
+/// scheduleViewingAction), never taken on trust from the client.
+model Viewing {
+  id           String                @id @default(cuid())
+  listingId    String
+  listing      Listing               @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  requestId    String?
+  request      AccommodationRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  referralId   String?
+  referral     Referral?             @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  scheduledFor DateTime
+  note         String?
+  status       ViewingStatus         @default(PROPOSED)
+  /// Freeform reason set alongside a CANCELLED or NO_SHOW status.
+  outcomeNote  String?
+  createdById  String
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@index([listingId])
+  @@index([requestId])
+  @@index([referralId])
+  @@index([status, scheduledFor])
 }
 
 // ---------------------------------------------------------------- messaging
