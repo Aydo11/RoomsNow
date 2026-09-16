@@ -13,6 +13,7 @@ export async function userNav(userId: string): Promise<NavItem[]> {
     { href: "/dashboard/advert", label: "My advert" },
     { href: "/search", label: "Search accommodation" },
     { href: "/dashboard/saved", label: "Saved properties" },
+    { href: "/dashboard/alerts", label: "Saved alerts" },
     { href: "/messages", label: "Messages" },
     { href: "/dashboard/requests", label: "Requests", badge: requests || undefined },
     { href: "/dashboard/notifications", label: "Notifications", badge: unread || undefined },
