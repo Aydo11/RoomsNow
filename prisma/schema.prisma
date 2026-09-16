@@ -225,6 +225,7 @@ enum NotificationType {
   SAVED_LISTING
   MEMBERSHIP
   VERIFICATION
+  REVIEW
   SYSTEM
 }
 
@@ -294,6 +295,7 @@ model User {
   userMembershipGrants    UserMembershipGrant[]     @relation("UserMembershipGrantRecipient")
   userMembershipGrantsMade UserMembershipGrant[]    @relation("UserMembershipGrantAdmin")
   savedSearches           SavedSearch[]
+  providerReviews         ProviderReview[]
 
   @@index([role, status])
 }
@@ -390,6 +392,7 @@ model Company {
   documents        Document[]
   clientShares     ClientShare[]
   membershipGrants MembershipGrant[]
+  reviews          ProviderReview[]
 
   @@index([city])
 }
@@ -623,6 +626,7 @@ model AccommodationRequest {
   application Application?
   documents   Document[]
   viewings    Viewing[]
+  review      ProviderReview?
 
   @@unique([listingId, applicantId])
   @@index([status])
@@ -674,6 +678,26 @@ model Referral {
   @@index([listingId, createdAt])
   @@index([createdAt])
   @@index([applicantEmail])
+}
+
+/// A referrer's rating of how a specific placement went, left once a referral
+/// reaches MOVED_IN. Tied 1:1 to the referral it came from (not freely
+/// postable) so a review always maps to a real, verified placement — this is
+/// what tells a future referrer whether the service was actually good,
+/// alongside (not instead of) the due-diligence checks in VerificationPanel.
+model ProviderReview {
+  id         String   @id @default(cuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  referralId String   @unique
+  referral   Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  referrerId String
+  referrer   User     @relation(fields: [referrerId], references: [id], onDelete: Cascade)
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@index([companyId, createdAt])
 }
 
 /// A person a referrer is supporting — their "caseload" or "tenants". Exists
