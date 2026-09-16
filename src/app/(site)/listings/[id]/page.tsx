@@ -10,7 +10,7 @@ import { ShareListingButton } from "@/components/listing-actions";
 import { ReportForm } from "@/components/report-form";
 import { BenefitsBadge, MatchScore, RoomStrip, StatusPill, VerifiedBadge } from "@/components/badges";
 import { MessageProviderForm } from "@/components/message-provider-form";
-import { monthYear, publicLocation, rentRange, shortDate } from "@/lib/format";
+import { monthYear, publicLocation, rentRange, shortDate, timeAgo } from "@/lib/format";
 import {
   ACCOMMODATION_TYPES,
   GENDER_ARRANGEMENTS,
@@ -319,6 +319,9 @@ export default async function ListingPage({
             <p className="text-[22px] font-medium">{rentRange(listing.weeklyRentFrom, listing.weeklyRentTo)}</p>
             <p className="mt-1 text-[14px] text-ink-soft">
               {available.length} of {listing.rooms.length} rooms available
+            </p>
+            <p className="mt-1 text-[12px] text-ink-faint">
+              Availability confirmed {timeAgo(listing.availabilityConfirmedAt)}
             </p>
 
             <div className="mt-4 space-y-2">
