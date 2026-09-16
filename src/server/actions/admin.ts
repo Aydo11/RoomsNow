@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/rbac";
 import { audit } from "@/lib/audit";
 import { notify, notifyCompany } from "@/lib/notify";
 import { notifyInstantSavedSearches } from "@/lib/saved-search-alerts";
+import { syncListingAvailability } from "@/lib/listing-availability";
 import type { ReportStatus } from "@prisma/client";
 import { z } from "zod";
 import type { VerificationChecks } from "@/lib/verification";
@@ -14,7 +15,13 @@ export async function approveListingAction(listingId: string) {
   const admin = await requireAdmin("MODERATION");
   const listing = await db.listing.update({
     where: { id: listingId },
-    data: { status: "ACTIVE", publishedAt: new Date(), rejectionNote: null },
+    data: {
+      status: "ACTIVE",
+      publishedAt: new Date(),
+      rejectionNote: null,
+      pausedReason: null,
+      availabilityConfirmedAt: new Date(),
+    },
   });
   await notifyCompany(listing.companyId, {
     type: "LISTING",
@@ -27,6 +34,9 @@ export async function approveListingAction(listingId: string) {
   revalidatePath("/admin/listings");
   // Fire-and-forget: matching alerts shouldn't hold up the admin's approval click.
   notifyInstantSavedSearches(listingId).catch((error) => console.error("[saved-search-alerts]", error));
+  // In the rare case every room already went unavailable while this was
+  // pending review, don't let it sit "live" with nothing to actually offer.
+  syncListingAvailability(listingId).catch((error) => console.error("[listing-availability]", error));
 }
 
 export async function rejectListingAction(listingId: string, note: string) {
