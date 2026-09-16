@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui";
 import { PipelineTrail } from "@/components/pipeline";
 import { StatusUpdater } from "@/components/status-updater";
 import { ArchiveRequestButton } from "@/components/archive-request-button";
+import { ViewingScheduler } from "@/components/viewing-scheduler";
 import { providerNav } from "../nav";
 import { PIPELINE, PIPELINE_LABELS } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
@@ -43,6 +44,7 @@ export default async function ProviderRequestsPage({ searchParams }: { searchPar
             profile: { select: { dateOfBirth: true, supportTypes: true } },
           },
         },
+        viewings: { orderBy: { scheduledFor: "asc" } },
       },
     }),
   ]);
@@ -151,6 +153,21 @@ export default async function ProviderRequestsPage({ searchParams }: { searchPar
                           current={request.status}
                           note={request.statusNote}
                           options={[...PIPELINE, "DECLINED"].map((value) => ({ value, label: PIPELINE_LABELS[value] }))}
+                        />
+                      </div>
+
+                      <div className="mt-5 border-t border-line pt-4">
+                        <h3 className="mb-3 text-[14px] font-semibold">Viewings</h3>
+                        <ViewingScheduler
+                          kind="request"
+                          id={request.id}
+                          viewings={request.viewings.map((viewing) => ({
+                            id: viewing.id,
+                            scheduledFor: viewing.scheduledFor.toISOString(),
+                            status: viewing.status,
+                            note: viewing.note,
+                            outcomeNote: viewing.outcomeNote,
+                          }))}
                         />
                       </div>
                     </div>
