@@ -126,6 +126,44 @@ export async function setUserStatusAction(userId: string, status: "ACTIVE" | "SU
   revalidatePath("/admin/users");
 }
 
+/**
+ * Fixes an account that signed up as the wrong type — most often someone who
+ * picked "Provider" by mistake. Changing role alone isn't enough for a
+ * provider: they're only ever recognised as one through their CompanyStaff
+ * seat (see canActForCompany/requireCompany in rbac.ts), so leaving PROVIDER
+ * also drops that seat, or they'd keep their old company's dashboard. The
+ * company itself is left alone — if this really was intentional, an admin
+ * can switch them back to PROVIDER and they'll pick up where they left off.
+ */
+export async function setUserRoleAction(userId: string, role: "USER" | "PROVIDER" | "REFERRER") {
+  const admin = await requireAdmin();
+  const target = await db.user.findUnique({ where: { id: userId }, select: { role: true } });
+  // Admin access is managed on the team page, with reauthentication and self-lockout
+  // protection — this action can neither touch an admin nor grant admin.
+  if (!target || target.role === "ADMIN") return;
+  if (target.role === role) return;
+
+  await db.$transaction([
+    db.user.update({ where: { id: userId }, data: { role } }),
+    ...(target.role === "PROVIDER" ? [db.companyStaff.deleteMany({ where: { userId } })] : []),
+  ]);
+
+  await notify({
+    userId,
+    type: "SYSTEM",
+    title: "Your account type has changed",
+    body: `Your RoomsNow account is now a ${role.toLowerCase()} account. If this wasn't expected, contact support.`,
+  });
+  await audit({
+    actorId: admin.id,
+    action: "admin.user_role_changed",
+    targetType: "User",
+    targetId: userId,
+    metadata: { from: target.role, to: role },
+  });
+  revalidatePath("/admin/users");
+}
+
 export async function setCompanyStatusAction(companyId: string, status: "ACTIVE" | "SUSPENDED") {
   const admin = await requireAdmin();
   await db.$transaction([
