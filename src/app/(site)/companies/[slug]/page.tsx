@@ -7,6 +7,7 @@ import { hasAdminPermission } from "@/lib/admin-permissions";
 import { ListingCard } from "@/components/listing-card";
 import { VerifiedBadge } from "@/components/badges";
 import { DirectMessageForm } from "@/components/direct-message-form";
+import { VerificationPanel } from "@/components/verification-panel";
 import { ORG_TYPES, supportLabel } from "@/lib/taxonomy";
 import { JsonLd, absoluteUrl } from "@/lib/seo";
 
@@ -47,6 +48,21 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
   const user = await getCurrentUser();
 
   if (!company || company.status !== "ACTIVE") notFound();
+
+  const verificationDetail = company.verification === "APPROVED"
+    ? await db.verificationRequest.findFirst({
+        where: { companyId: company.id, type: "COMPANY", status: "APPROVED" },
+        orderBy: { reviewedAt: "desc" },
+        select: {
+          insuranceExpiresAt: true,
+          registrationChecked: true,
+          insuranceChecked: true,
+          governanceChecked: true,
+          safeguardingChecked: true,
+          identityChecked: true,
+        },
+      })
+    : null;
 
   const canDirectMessage = Boolean(
     user &&
@@ -113,6 +129,10 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
             </div>
             {company.verification === "APPROVED" && <VerifiedBadge />}
           </div>
+
+          {company.verification === "APPROVED" && (
+            <VerificationPanel verifiedAt={company.verifiedAt} detail={verificationDetail} />
+          )}
 
           <div className="mt-7 grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px]">
             <div>
