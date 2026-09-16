@@ -493,6 +493,23 @@ model Listing {
   housingBenefit Boolean   @default(true)
   availableFrom  DateTime?
 
+  /// Set by the system when it pauses an advert on the provider's behalf —
+  /// "NO_AVAILABILITY" (every room stopped being lettable) or "STALE" (a
+  /// "still available?" nudge went unanswered). Null when live, or when a
+  /// person paused it themselves. Read by syncListingAvailability and
+  /// runListingFreshnessCheck (src/lib/listing-availability.ts) to
+  /// auto-reactivate once the reason clears, and shown to the provider so an
+  /// auto-pause never looks like a mystery.
+  pausedReason            String?
+  /// Bumped whenever a provider confirms the advert is accurate — creating
+  /// or editing it, changing a room's status, or answering a staleness
+  /// nudge. Drives runListingFreshnessCheck.
+  availabilityConfirmedAt DateTime  @default(now())
+  /// Set when the "still available?" nudge email goes out, so it's sent at
+  /// most once per staleness window rather than every time the hourly check
+  /// runs.
+  staleNudgeSentAt        DateTime?
+
   /// Sponsored placement. Sponsored adverts are pinned to the first page of a
   /// matching search, ordered by bid, and are always labelled as sponsored.
   featured             Boolean   @default(false)
@@ -528,6 +545,7 @@ model Listing {
   @@index([status, weeklyRentFrom])
   @@index([status, availableFrom, publishedAt])
   @@index([status, accommodationType, publishedAt])
+  @@index([status, availabilityConfirmedAt])
   @@index([companyId, status, updatedAt])
   @@index([companyId])
 }
