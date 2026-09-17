@@ -112,6 +112,7 @@ export function RegisterForm() {
   const params = useSearchParams();
   const initial = (params.get("type") as "USER" | "PROVIDER" | "REFERRER" | null) ?? "USER";
   const [type, setType] = useState<"USER" | "PROVIDER" | "REFERRER">(initial);
+  const referralCodeFromLink = params.get("ref") ?? "";
   const [state, action] = useActionState(registerAction, { ok: false });
 
   return (
@@ -202,6 +203,20 @@ export function RegisterForm() {
             You&apos;ll add registration numbers, addresses and verification documents from your
             dashboard. Verification is reviewed manually by our team.
           </p>
+          <Field
+            label="Invite code"
+            name="referralCode"
+            hint="Optional — from another provider's invite link"
+            error={state.errors?.referralCode}
+          >
+            <input
+              id="referralCode"
+              name="referralCode"
+              defaultValue={referralCodeFromLink}
+              className="field uppercase"
+              autoCapitalize="characters"
+            />
+          </Field>
         </div>
       )}
 
