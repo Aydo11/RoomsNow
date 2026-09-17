@@ -8,6 +8,7 @@ import { ListingCard } from "@/components/listing-card";
 import { VerifiedBadge } from "@/components/badges";
 import { DirectMessageForm } from "@/components/direct-message-form";
 import { VerificationPanel } from "@/components/verification-panel";
+import { ProviderReviews } from "@/components/provider-reviews";
 import { ORG_TYPES, supportLabel } from "@/lib/taxonomy";
 import { JsonLd, absoluteUrl } from "@/lib/seo";
 
@@ -63,6 +64,17 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
         },
       })
     : null;
+
+  const [reviewAgg, reviewRows] = await Promise.all([
+    db.providerReview.aggregate({ where: { companyId: company.id }, _avg: { rating: true }, _count: true }),
+    db.providerReview.findMany({
+      where: { companyId: company.id },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: { id: true, rating: true, comment: true, createdAt: true, referral: { select: { organisation: true } } },
+    }),
+  ]);
+  const reviews = reviewRows.map((review) => ({ ...review, organisation: review.referral.organisation }));
 
   const canDirectMessage = Boolean(
     user &&
@@ -132,6 +144,10 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
 
           {company.verification === "APPROVED" && (
             <VerificationPanel verifiedAt={company.verifiedAt} detail={verificationDetail} />
+          )}
+
+          {reviewAgg._count > 0 && (
+            <ProviderReviews average={reviewAgg._avg.rating ?? 0} count={reviewAgg._count} reviews={reviews} />
           )}
 
           <div className="mt-7 grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px]">
