@@ -47,13 +47,13 @@ export default async function ProviderInvitePage() {
       </div>
 
       <section className="card mt-6 p-5">
-        <h2 className="text-[18px]">Your invite link</h2>
+        <h2 className="text-[18px]">Invite other providers</h2>
         <p className="mt-1 max-w-[60ch] text-[14px] text-ink-soft">
-          Share this with providers you know. When they register with it and post their first
-          advert, it counts toward your next reward.
+          Share your code or link with providers you know. When they register with it and post
+          their first advert, it counts toward your next reward.
         </p>
         <div className="mt-4">
-          <ReferralShare url={inviteUrl} />
+          <ReferralShare url={inviteUrl} code={code} />
         </div>
         <div className="mt-5 max-w-sm">
           <MetricBar
