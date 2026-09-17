@@ -67,6 +67,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     referralCode: text(formData, "referralCode"),
     organisation: text(formData, "organisation"),
     jobTitle: text(formData, "jobTitle"),
+    acquisitionSource: text(formData, "acquisitionSource") || undefined,
     terms: bool(formData, "terms") ? "on" : "",
   });
 
@@ -95,6 +96,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
       locationLabel: data.locationLabel || null,
       contactMethod: data.contactMethod,
       emailVerificationRequired: true,
+      acquisitionSource: data.acquisitionSource || null,
       ...(data.accountType === "REFERRER"
         ? { organisation: data.organisation || null, jobTitle: data.jobTitle || null }
         : {}),
