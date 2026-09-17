@@ -59,7 +59,7 @@ export async function sendPreLaunchInvite(_previous: FormState, form: FormData):
   if (valid.length === 0) return { ok: false, message: "None of those look like valid email addresses." };
 
   const appUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
-  const ctaUrl = `${appUrl}/register?type=PROVIDER`;
+  const ctaUrl = `${appUrl}/register?type=PROVIDER&src=EMAIL`;
   // A first-name greeting only makes sense addressed to one person — skip it for a real batch.
   const recipientName = valid.length === 1 ? firstName || undefined : undefined;
   const text = renderPreLaunchInviteText({ recipientName, senderName, ctaUrl });
