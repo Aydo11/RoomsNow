@@ -178,6 +178,16 @@ minutes to avoid a write on every refresh.
   is development-only and cannot deliver a link to a real user.
 - Forgotten-password links are hashed in the database, expire after one hour and can only be used
   once. Set `EMAIL_DRIVER=resend`, `RESEND_API_KEY` and a verified `EMAIL_FROM` address for delivery.
+- Marketing mailshots use Resend Broadcasts rather than sending hundreds of transactional API
+  emails in a loop. Verify `roomsnow.co.uk` in Resend, copy its exact SPF and DKIM records into
+  Squarespace DNS, publish a DMARC record, then set
+  `MARKETING_EMAIL_FROM="RoomsNow <info@roomsnow.co.uk>"`. Resend Broadcasts do not currently
+  expose a separate Reply-To field, so using the monitored Google Workspace address as the sender
+  ensures replies arrive in the correct inbox. The admin campaign flow is deliberately two-step:
+  it imports contacts and prepares a draft first, then sends only after Resend confirms the import.
+  Broadcast templates include Resend's managed unsubscribe URL; re-importing contacts does not
+  re-subscribe anyone who previously opted out. Use only relevant, lawfully sourced business
+  contacts and monitor bounces, complaints and unsubscribe rates after every campaign.
 - Set `BILLING_DRIVER=stripe`, the Stripe secret/webhook secrets, membership Price IDs and optional
   boost-pack Price IDs. Point the Stripe webhook at `https://YOUR-DOMAIN/api/billing/webhook` and subscribe it to
   `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`,

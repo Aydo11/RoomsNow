@@ -44,7 +44,7 @@ export default async function ProviderMailshotPage({
   return (
     <DashboardShell
       title="Provider mailshot"
-      subtitle="Send promotional codes, news or platform updates to your existing registered providers."
+      subtitle="Prepare compliant Resend Broadcasts for existing providers, then confirm delivery after the contact import completes."
       nav={nav}
       active="/admin/provider-mailshot"
     >
@@ -85,7 +85,7 @@ export default async function ProviderMailshotPage({
               accounts only. This is separate from the pre-launch mailshot, which reaches people
               who haven&apos;t registered yet, not existing accounts.
             </p>
-            <p>Apply the filters, then the form on the right always sends to whatever it counts.</p>
+            <p>Apply the filters first. Preparing creates a reviewable draft; a separate confirmation sends it.</p>
           </div>
         </div>
         <ProviderMailshotForm filters={{ status, verification, source }} recipientCount={recipientCount} />

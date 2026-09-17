@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { sendProviderMailshot } from "@/server/actions/provider-mailshot";
-import { Field, FormError, FormSuccess, SubmitButton } from "./ui";
+import { Field, FormError, SubmitButton } from "./ui";
 import type { FormState } from "@/lib/validation";
 
 const initialState: FormState = { ok: false };
@@ -38,14 +38,15 @@ export function ProviderMailshotForm({
   return (
     <form action={action} className="card space-y-4 p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-xl">Send a provider mailshot</h2>
+        <h2 className="text-xl">Prepare a provider campaign</h2>
         <span className="rounded-pill bg-paper-sunk px-2.5 py-1 text-[12px] font-medium text-ink-soft">
           {recipientCount} recipient{recipientCount === 1 ? "" : "s"} match the filter
         </span>
       </div>
       <p className="text-sm text-ink-soft">
-        Reaches providers who already have a RoomsNow account — pick a tab, write the message once,
-        and it sends to everyone matching the filter on the left, each as its own email.
+        Reaches providers who already have a RoomsNow account. RoomsNow prepares a Resend Broadcast
+        first; nothing is sent until you confirm it. Resend then queues delivery, honours existing
+        opt-outs and tracks bounces, complaints and unsubscribes.
       </p>
 
       <div className="flex gap-1 rounded-[10px] border border-line bg-paper-sunk p-1" role="tablist">
@@ -70,7 +71,11 @@ export function ProviderMailshotForm({
       <input type="hidden" name="source" value={filters.source ?? ""} />
 
       <FormError message={state.errors?.form} />
-      <FormSuccess message={state.ok ? state.message : undefined} />
+      {state.message && (
+        <p role="status" className={`rounded-[10px] border p-3 text-sm ${state.ok ? "border-pine/30 bg-pine/5 text-pine-dark" : "border-line bg-paper-sunk text-ink-soft"}`}>
+          {state.message}
+        </p>
+      )}
 
       <label className="block text-sm">
         Your name <span className="text-ink-faint">(shown as the sender)</span>
@@ -105,9 +110,25 @@ export function ProviderMailshotForm({
         </Field>
       </div>
 
-      <SubmitButton pendingLabel="Sending…" disabled={recipientCount === 0}>
-        Send to {recipientCount} provider{recipientCount === 1 ? "" : "s"}
+      <SubmitButton name="operation" value="prepare" pendingLabel="Preparing in Resend…" disabled={recipientCount === 0 || Boolean(state.broadcastId)}>
+        Prepare for {recipientCount} provider{recipientCount === 1 ? "" : "s"}
       </SubmitButton>
+
+      {state.broadcastId && state.importId && (
+        <div className="rounded-[12px] border border-pine/30 bg-pine/5 p-4">
+          <p className="text-sm font-semibold text-ink">Final confirmation</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
+            Only press send after checking the subject, links and recipient filter. Resend will skip
+            globally unsubscribed or suppressed contacts automatically. The draft contains the
+            version shown when you pressed Prepare; reload this page to discard it and make changes.
+          </p>
+          <input type="hidden" name="broadcastId" value={state.broadcastId} />
+          <input type="hidden" name="importId" value={state.importId} />
+          <SubmitButton name="operation" value="send-prepared" pendingLabel="Checking import…" className="btn-primary mt-3">
+            Send prepared campaign
+          </SubmitButton>
+        </div>
+      )}
     </form>
   );
 }
