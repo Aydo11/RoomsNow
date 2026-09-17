@@ -56,6 +56,7 @@ export function listingMatchesSavedSearch(listing: MatchableListing, search: Sav
   if (search.furnished && !listing.furnished) return false;
   if (search.ensuite && !listing.ensuite) return false;
   if (search.selfContained && !listing.selfContained) return false;
+  if (search.petsAllowed && !listing.petsAllowed) return false;
   if (search.referral.length && !search.referral.some((r) => listing.referralRoutes.includes(r))) return false;
   if (search.verifiedOnly && listing.company.verification !== "APPROVED") return false;
   if (search.maxRent !== null && listing.weeklyRentFrom !== null && listing.weeklyRentFrom > search.maxRent * 100) return false;
