@@ -603,7 +603,7 @@ model ListingMedia {
 
 model LookingForAd {
   id                 String              @id @default(cuid())
-  userId             String              @unique
+  userId             String
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   title              String
   city               String
