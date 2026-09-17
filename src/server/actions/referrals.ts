@@ -148,7 +148,9 @@ export async function updateReferralStatusAction(referralId: string, status: Ref
     userId: referral.referrerId,
     type: "REFERRAL",
     title: `Referral ${referral.reference} updated`,
-    body: `Status: ${status.replace(/_/g, " ").toLowerCase()}.`,
+    body: status === "MOVED_IN"
+      ? `${referral.applicantFirstName} has moved in. You can now leave a review of the placement.`
+      : `Status: ${status.replace(/_/g, " ").toLowerCase()}.`,
     href: `/referrals/${referralId}`,
     email: true,
   });
@@ -213,4 +215,74 @@ export async function addReferralDocumentAction(_prev: FormState, formData: Form
 
   revalidatePath(`/referrals/${referral.id}`);
   return { ok: true, message: files.length === 1 ? "Document added." : `${files.length} documents added.` };
+}
+
+/**
+ * A referrer rates how a placement went, once it's reached MOVED_IN. Tied
+ * 1:1 to the referral (unique on referralId) so this can only ever run once
+ * per placement and always maps to a real, completed referral — never a
+ * freely-postable review.
+ */
+export async function submitProviderReviewAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireReferrer();
+
+  const referralId = text(formData, "referralId");
+  if (!referralId) return { ok: false, errors: { form: "Referral not found." } };
+
+  const rating = Number(text(formData, "rating"));
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return { ok: false, errors: { rating: "Choose a rating from 1 to 5 stars." } };
+  }
+  const comment = text(formData, "comment");
+  if (comment && comment.length > 800) {
+    return { ok: false, errors: { form: "Keep the comment under 800 characters." } };
+  }
+
+  const referral = await db.referral.findUnique({
+    where: { id: referralId },
+    select: {
+      id: true,
+      referrerId: true,
+      status: true,
+      applicantFirstName: true,
+      listing: { select: { companyId: true, company: { select: { slug: true } } } },
+    },
+  });
+  if (!referral || referral.referrerId !== user.id) return { ok: false, errors: { form: "Referral not found." } };
+  if (!referral.listing) return { ok: false, errors: { form: "This referral isn't linked to a provider advert." } };
+  if (referral.status !== "MOVED_IN") {
+    return { ok: false, errors: { form: "You can review a placement once it has moved in." } };
+  }
+
+  const existing = await db.providerReview.findUnique({ where: { referralId } });
+  if (existing) return { ok: false, errors: { form: "You've already reviewed this placement." } };
+
+  await db.providerReview.create({
+    data: {
+      companyId: referral.listing.companyId,
+      referralId,
+      referrerId: user.id,
+      rating,
+      comment: comment || null,
+    },
+  });
+
+  await notifyCompany(referral.listing.companyId, {
+    type: "REVIEW",
+    title: "New review received",
+    body: `A referrer rated a placement ${rating}/5${comment ? "." : " — no comment left."}`,
+    href: `/companies/${referral.listing.company.slug}`,
+    email: true,
+  });
+
+  await audit({
+    actorId: user.id,
+    action: "referral.review_submitted",
+    targetType: "Referral",
+    targetId: referralId,
+    metadata: { rating },
+  });
+
+  revalidatePath(`/referrals/${referralId}`);
+  return { ok: true, message: "Thanks — your review has been posted." };
 }
