@@ -60,7 +60,7 @@ export default async function PreLaunchInvitePage({
   return (
     <DashboardShell
       title="Pre-launch mailshot"
-      subtitle="A hand-picked outreach mailshot to real Birmingham providers before public launch, offering 3 months of Professional free."
+      subtitle="A hand-picked outreach mailshot to real Birmingham providers before public launch, offering 1 month of Professional free."
       nav={nav}
       active="/admin/pre-launch-invite"
     >
