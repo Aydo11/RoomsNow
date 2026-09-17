@@ -133,9 +133,31 @@ export async function saveListingAction(_prev: FormState, formData: FormData): P
     const existing = await db.listing.findUnique({ where: { id }, select: { companyId: true, propertyId: true } });
     if (!existing) return { ok: false, errors: { form: "Advert not found." } };
     await assertCompanyAccess(user, existing.companyId);
+    // A listing normally always has at least one room from the moment it's
+    // created. The one exception is a recovery draft that
+    // autosaveDraftListingAction checkpointed while the provider was still
+    // filling in the form (see AdvertForm) — that path never creates rooms.
+    // This is where those get created, now that a real room count exists.
+    const existingRoomCount = await db.room.count({ where: { listingId: id } });
     await db.$transaction([
       db.property.update({ where: { id: existing.propertyId }, data: propertyFields }),
       db.listing.update({ where: { id }, data: listingFields }),
+      ...(existingRoomCount === 0
+        ? [
+            db.room.createMany({
+              data: Array.from({ length: d.roomCount }, (_, i) => ({
+                propertyId: existing.propertyId,
+                listingId: id,
+                name: `Room ${i + 1}`,
+                status: "AVAILABLE" as RoomStatus,
+                ensuite: d.ensuite,
+                furnished: d.furnished,
+                weeklyRent: pence(d.weeklyRentFrom) ?? null,
+                availableFrom: date(d.availableFrom),
+              })),
+            }),
+          ]
+        : []),
     ]);
   } else {
     const listing = await db.$transaction(async (transaction) => {
@@ -176,6 +198,67 @@ export async function saveListingAction(_prev: FormState, formData: FormData): P
 
   revalidatePath("/provider/adverts");
   redirect(`/provider/adverts/${listingId}/media`);
+}
+
+/**
+ * Lightweight checkpoint called by AdvertForm as a provider moves between
+ * steps, so a browser crash, refresh or session timeout partway through
+ * posting an advert never loses their work — it's already sitting under "My
+ * adverts" as a Draft. Deliberately skips listingSchema: this only needs the
+ * handful of fields required to create a Property/Listing row at all, not a
+ * publishable advert. The real submit (saveListingAction) always overwrites
+ * everything here once it runs, including creating the actual rooms.
+ * Silently declines (returns null) if there isn't enough to save yet, or the
+ * provider is already at their plan's listing limit — the real submit still
+ * surfaces that properly.
+ */
+export async function autosaveDraftListingAction(input: {
+  draftId?: string;
+  propertyName: string;
+  city: string;
+  postcode: string;
+  title?: string;
+}): Promise<{ draftId: string } | null> {
+  const { companyId } = await requireCompany();
+
+  const propertyName = input.propertyName.trim();
+  const city = input.city.trim();
+  const postcode = input.postcode.trim();
+  if (!propertyName || !city || !postcode) return null;
+
+  const title = input.title?.trim() || `${propertyName} — draft`;
+
+  if (input.draftId) {
+    const existing = await db.listing.findUnique({
+      where: { id: input.draftId },
+      select: { companyId: true, propertyId: true, status: true },
+    });
+    if (existing && existing.companyId === companyId && existing.status === "DRAFT") {
+      await db.$transaction([
+        db.property.update({
+          where: { id: existing.propertyId },
+          data: { name: propertyName, city, postcode: postcode.toUpperCase() },
+        }),
+        db.listing.update({ where: { id: input.draftId }, data: { title } }),
+      ]);
+      return { draftId: input.draftId };
+    }
+    // The id we were handed no longer points at one of this company's drafts
+    // (deleted, submitted elsewhere, tampered with) — fall through and start fresh.
+  }
+
+  const limits = await planLimits(companyId);
+  if (!limits.canAddListing) return null;
+
+  const listing = await db.$transaction(async (transaction) => {
+    const property = await transaction.property.create({
+      data: { name: propertyName, city, postcode: postcode.toUpperCase(), companyId },
+    });
+    return transaction.listing.create({
+      data: { title, companyId, propertyId: property.id, reference: reference("SR"), status: "DRAFT" },
+    });
+  });
+  return { draftId: listing.id };
 }
 
 export async function uploadListingMediaAction(_prev: FormState, formData: FormData): Promise<FormState> {
