@@ -1,8 +1,14 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/session";
+import { canActForCompany } from "@/lib/rbac";
+import { hasAdminPermission } from "@/lib/admin-permissions";
 import { ListingCard } from "@/components/listing-card";
 import { VerifiedBadge } from "@/components/badges";
+import { DirectMessageForm } from "@/components/direct-message-form";
+import { VerificationPanel } from "@/components/verification-panel";
+import { ProviderReviews } from "@/components/provider-reviews";
 import { ORG_TYPES, supportLabel } from "@/lib/taxonomy";
 import { JsonLd, absoluteUrl } from "@/lib/seo";
 
@@ -40,8 +46,41 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
       },
     },
   });
+  const user = await getCurrentUser();
 
   if (!company || company.status !== "ACTIVE") notFound();
+
+  const verificationDetail = company.verification === "APPROVED"
+    ? await db.verificationRequest.findFirst({
+        where: { companyId: company.id, type: "COMPANY", status: "APPROVED" },
+        orderBy: { reviewedAt: "desc" },
+        select: {
+          insuranceExpiresAt: true,
+          registrationChecked: true,
+          insuranceChecked: true,
+          governanceChecked: true,
+          safeguardingChecked: true,
+          identityChecked: true,
+        },
+      })
+    : null;
+
+  const [reviewAgg, reviewRows] = await Promise.all([
+    db.providerReview.aggregate({ where: { companyId: company.id }, _avg: { rating: true }, _count: true }),
+    db.providerReview.findMany({
+      where: { companyId: company.id },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: { id: true, rating: true, comment: true, createdAt: true, referral: { select: { organisation: true } } },
+    }),
+  ]);
+  const reviews = reviewRows.map((review) => ({ ...review, organisation: review.referral.organisation }));
+
+  const canDirectMessage = Boolean(
+    user &&
+      (user.role === "REFERRER" || hasAdminPermission(user)) &&
+      !canActForCompany(user, company.id),
+  );
 
   const companyUrl = absoluteUrl(`/companies/${company.slug}`);
   const websiteHref = company.website
@@ -82,25 +121,34 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
           )}
         </div>
         <div className="relative px-6 pb-7 sm:px-8">
-          <div className="-mt-12 flex flex-wrap items-end justify-between gap-4">
-            <div className="flex min-w-0 items-end gap-4">
-              {company.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={company.logoUrl} alt={`${company.name} profile`} className="h-24 w-24 shrink-0 rounded-full border-4 border-white bg-white object-cover shadow-raise sm:h-28 sm:w-28" />
-              ) : (
-                <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 border-white bg-pine-light text-[22px] font-bold uppercase text-pine-dark shadow-raise sm:h-28 sm:w-28">
-                  {company.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("")}
-                </span>
-              )}
-              <div className="min-w-0 translate-y-2 pb-1">
-                <h1 className="truncate text-[28px] leading-tight sm:text-[34px]">{company.name}</h1>
-                <p className="mt-1 text-[14px] text-ink-soft">
-                  {ORG_TYPES[company.orgType]}{company.city ? ` · ${company.city}` : ""}
-                </p>
-              </div>
+          <div className="-mt-12">
+            {company.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={company.logoUrl} alt={`${company.name} profile`} className="h-24 w-24 shrink-0 rounded-full border-4 border-white bg-white object-cover shadow-raise sm:h-28 sm:w-28" />
+            ) : (
+              <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 border-white bg-pine-light text-[22px] font-bold uppercase text-pine-dark shadow-raise sm:h-28 sm:w-28">
+                {company.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("")}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="truncate text-[28px] leading-tight sm:text-[34px]">{company.name}</h1>
+              <p className="mt-1 text-[14px] text-ink-soft">
+                {ORG_TYPES[company.orgType]}{company.city ? ` · ${company.city}` : ""}
+              </p>
             </div>
             {company.verification === "APPROVED" && <VerifiedBadge />}
           </div>
+
+          {company.verification === "APPROVED" && (
+            <VerificationPanel verifiedAt={company.verifiedAt} detail={verificationDetail} />
+          )}
+
+          {reviewAgg._count > 0 && (
+            <ProviderReviews average={reviewAgg._avg.rating ?? 0} count={reviewAgg._count} reviews={reviews} />
+          )}
 
           <div className="mt-7 grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px]">
             <div>
@@ -142,7 +190,25 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
                   ))}
                 </p>
               )}
-              <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">Use an advert below to contact the provider through RoomsNow.</p>
+              {canDirectMessage ? (
+                <div className="mt-4 border-t border-line pt-4">
+                  <h3 className="text-[13px] font-medium text-ink-soft">Message this provider</h3>
+                  <p className="mt-1 text-[12px] leading-relaxed text-ink-faint">
+                    Send a general enquiry, or use an advert below to ask about a specific room.
+                  </p>
+                  <div className="mt-3">
+                    <DirectMessageForm
+                      companyId={company.id}
+                      subject={`Enquiry via ${company.name}'s profile`}
+                      label="Message provider"
+                      placeholder={`Hi — I'm getting in touch about a placement with ${company.name}…`}
+                      compact
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">Use an advert below to contact the provider through RoomsNow.</p>
+              )}
             </aside>
           </div>
         </div>

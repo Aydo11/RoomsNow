@@ -24,6 +24,17 @@ export function monthYear(date: Date | string | null | undefined) {
   return new Date(date).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 }
 
+export function dateTime(date: Date | string | null | undefined) {
+  if (!date) return "—";
+  return new Date(date).toLocaleString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function timeAgo(date: Date | string) {
   const then = new Date(date).getTime();
   const mins = Math.round((Date.now() - then) / 60000);

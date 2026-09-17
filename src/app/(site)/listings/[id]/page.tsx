@@ -10,7 +10,7 @@ import { ShareListingButton } from "@/components/listing-actions";
 import { ReportForm } from "@/components/report-form";
 import { BenefitsBadge, MatchScore, RoomStrip, StatusPill, VerifiedBadge } from "@/components/badges";
 import { MessageProviderForm } from "@/components/message-provider-form";
-import { monthYear, publicLocation, rentRange, shortDate } from "@/lib/format";
+import { monthYear, publicLocation, rentRange, shortDate, timeAgo } from "@/lib/format";
 import {
   ACCOMMODATION_TYPES,
   GENDER_ARRANGEMENTS,
@@ -219,6 +219,7 @@ export default async function ListingPage({
             <Fact label="Housing benefit" value={listing.housingBenefit ? "Accepted" : "Not accepted"} />
             <Fact label="Facilities" value={listing.selfContained ? "Self-contained" : listing.ensuite ? "Ensuite room" : "Shared facilities"} />
             <Fact label="Access" value={listing.wheelchairAccess ? "Step-free" : "Not step-free"} />
+            <Fact label="Pets" value={listing.petsAllowed ? "Allowed" : "Not allowed"} />
           </section>
 
           <section className="mt-8">
@@ -319,6 +320,9 @@ export default async function ListingPage({
             <p className="text-[22px] font-medium">{rentRange(listing.weeklyRentFrom, listing.weeklyRentTo)}</p>
             <p className="mt-1 text-[14px] text-ink-soft">
               {available.length} of {listing.rooms.length} rooms available
+            </p>
+            <p className="mt-1 text-[12px] text-ink-faint">
+              Availability confirmed {timeAgo(listing.availabilityConfirmedAt)}
             </p>
 
             <div className="mt-4 space-y-2">

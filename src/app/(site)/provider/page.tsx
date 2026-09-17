@@ -7,6 +7,7 @@ import { RoomStrip, StatusPill } from "@/components/badges";
 import { providerNav } from "./nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { timeAgo } from "@/lib/format";
+import { computeReferralOutcomes } from "@/lib/referral-outcomes";
 
 export const metadata = { title: "Provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ export default async function ProviderDashboard() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60_000);
   const now = new Date();
 
-  const [company, limits, boosts, activeBoosts, activeSponsored, listings, rooms, requests, referrals, views, requests30d, referrals30d, requestStatuses, referralStatuses, unreadThreads, topListings] = await Promise.all([
+  const [company, limits, boosts, activeBoosts, activeSponsored, listings, rooms, requests, referrals, views, requests30d, referrals30d, requestStatuses, referralStatuses, unreadThreads, topListings, resolvedReferrals] = await Promise.all([
     db.company.findUniqueOrThrow({ where: { id: companyId } }),
     planLimits(companyId),
     boostAllowance(companyId),
@@ -48,7 +49,13 @@ export default async function ProviderDashboard() {
     db.referral.groupBy({ by: ["status"], where: { listing: { companyId } }, _count: true }),
     db.conversationParticipant.count({ where: { userId: user.id, archived: false, conversation: { messages: { some: { senderId: { not: user.id }, readAt: null } } } } }),
     db.listing.findMany({ where: { companyId }, orderBy: { views: "desc" }, take: 5, select: { id: true, title: true, reference: true, views: true, enquiries: true } }),
+    db.referral.findMany({
+      where: { listing: { companyId }, status: { in: ["MOVED_IN", "DECLINED", "WITHDRAWN"] } },
+      select: { status: true, createdAt: true, events: { select: { status: true, createdAt: true } } },
+    }),
   ]);
+
+  const outcomes = computeReferralOutcomes(resolvedReferrals);
 
   const available = rooms.find((r) => r.status === "AVAILABLE")?._count ?? 0;
   const totalRooms = rooms.reduce((sum, r) => sum + r._count, 0);
@@ -185,6 +192,37 @@ export default async function ProviderDashboard() {
               </div>
             </div>
           </div>
+          <div className="card mt-4 overflow-hidden">
+            <div className="border-b border-line px-5 py-4">
+              <h3 className="text-[17px]">Referral outcomes</h3>
+              <p className="mt-1 text-[13px] text-ink-soft">How referrals you receive resolve, and how quickly — a snapshot of every closed referral, not just what&apos;s open right now.</p>
+            </div>
+            {outcomes.totalResolved === 0 ? (
+              <p className="px-5 py-4 text-[14px] text-ink-soft">No referrals have been declined, withdrawn or moved in yet — outcomes will show up here once some have.</p>
+            ) : (
+              <div className="grid gap-4 p-5 sm:grid-cols-3">
+                <StatCard
+                  compact
+                  label="Conversion to move-in"
+                  value={`${Math.round((outcomes.conversionRate ?? 0) * 100)}%`}
+                  hint={`${outcomes.movedIn} of ${outcomes.totalResolved} closed referrals`}
+                />
+                <StatCard
+                  compact
+                  label="Avg. time to first response"
+                  value={outcomes.avgDaysToFirstResponse !== null ? `${outcomes.avgDaysToFirstResponse.toFixed(1)}d` : "—"}
+                  hint="From submission to the first status update"
+                />
+                <StatCard
+                  compact
+                  label="Avg. time to move-in"
+                  value={outcomes.avgDaysToMoveIn !== null ? `${outcomes.avgDaysToMoveIn.toFixed(1)}d` : "—"}
+                  hint={outcomes.movedIn > 0 ? `Across ${outcomes.movedIn} move-in${outcomes.movedIn === 1 ? "" : "s"}` : "No move-ins yet"}
+                />
+              </div>
+            )}
+          </div>
+
           <div className="card mt-4 overflow-hidden">
             <div className="border-b border-line px-5 py-4"><h3 className="text-[17px]">Best-performing adverts</h3><p className="mt-1 text-[13px] text-ink-soft">Use enquiry rate alongside views to see which adverts turn attention into contact.</p></div>
             <ul className="divide-y divide-line">

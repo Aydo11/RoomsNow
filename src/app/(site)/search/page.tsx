@@ -6,6 +6,7 @@ import { ListingCard } from "@/components/listing-card";
 import { MapView } from "@/components/map-view";
 import { Pagination } from "@/components/pagination";
 import { RefineBar } from "@/components/refine-bar";
+import { SaveSearchForm } from "@/components/save-search-form";
 import { EmptyState } from "@/components/ui";
 import { searchFacets, searchListings, searchMapPins, type SearchParams } from "@/server/search";
 import { getCurrentUser } from "@/lib/session";
@@ -144,6 +145,12 @@ export default async function SearchPage({
               </Suspense>
             </div>
           </div>
+
+          {user && (
+            <div className="mt-4">
+              <SaveSearchForm params={params} resultCount={results.total} />
+            </div>
+          )}
 
           <Suspense fallback={null}>
             <RefineBar facets={facets} total={results.total} />

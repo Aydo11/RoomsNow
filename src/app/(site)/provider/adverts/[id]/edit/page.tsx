@@ -48,6 +48,7 @@ export default async function EditAdvertPage({ params }: { params: Promise<{ id:
           sharedFacilities: listing.sharedFacilities,
           wheelchairAccess: listing.wheelchairAccess,
           accessibilityNotes: listing.accessibilityNotes ?? "",
+          petsAllowed: listing.petsAllowed,
           weeklyRentFrom: pounds(listing.weeklyRentFrom),
           weeklyRentTo: pounds(listing.weeklyRentTo),
           billsIncluded: listing.billsIncluded,

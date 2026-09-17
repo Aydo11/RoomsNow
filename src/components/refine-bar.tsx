@@ -8,6 +8,7 @@ type Facets = {
   cities: { city: string; count: number }[];
   verified: number;
   wheelchair: number;
+  petsAllowed: number;
 };
 
 /**
@@ -34,6 +35,7 @@ export function RefineBar({ facets, total }: { facets: Facets; total: number }) 
   if (params.get("bbox")) add("bbox", "This map area");
   if (params.get("verified")) add("verified", "Verified providers");
   if (params.get("wheelchair")) add("wheelchair", "Wheelchair accessible");
+  if (params.get("petsAllowed")) add("petsAllowed", "Pets allowed");
   if (params.get("ensuite")) add("ensuite", "En-suite");
   if (params.get("selfContained")) add("selfContained", "Self-contained");
   if (params.get("maxRent")) add("maxRent", `Up to £${params.get("maxRent")}/wk`);
@@ -92,6 +94,11 @@ export function RefineBar({ facets, total }: { facets: Facets; total: number }) 
           {facets.wheelchair > 0 && !params.get("wheelchair") && (
             <button onClick={() => set("wheelchair", "1")} className="chip">
               Wheelchair accessible <span className="ml-1 text-ink-faint">{facets.wheelchair}</span>
+            </button>
+          )}
+          {facets.petsAllowed > 0 && !params.get("petsAllowed") && (
+            <button onClick={() => set("petsAllowed", "1")} className="chip">
+              Pets allowed <span className="ml-1 text-ink-faint">{facets.petsAllowed}</span>
             </button>
           )}
         </div>

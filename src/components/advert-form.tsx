@@ -30,6 +30,7 @@ export type AdvertDefaults = Partial<{
   sharedFacilities: boolean;
   wheelchairAccess: boolean;
   accessibilityNotes: string;
+  petsAllowed: boolean;
   weeklyRentFrom: string;
   weeklyRentTo: string;
   billsIncluded: boolean;
@@ -71,7 +72,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
   }, [state.errors]);
 
   return (
-    <form action={action} className="space-y-6">
+    <form action={action} noValidate className="space-y-6">
       {defaults.id && <input type="hidden" name="id" value={defaults.id} />}
 
       <ol className="flex flex-wrap gap-2">
@@ -98,6 +99,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
           Some details need attention. We&apos;ve opened the relevant section to fix.
         </p>
       )}
+      <p className="text-[13px] text-ink-faint">Fields marked <span className="text-clay">*</span> are required.</p>
 
       {/* All steps stay mounted so a single submit carries every field. */}
       <section className={clsx("card space-y-4 p-6", step !== 0 && "hidden")}>
@@ -105,17 +107,17 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
         <p className="text-[14px] text-ink-soft">
           Only the town and outward postcode are shown publicly, unless you choose otherwise.
         </p>
-        <Field label="Property name" name="propertyName" hint="Internal and public reference, e.g. Bramble House." error={state.errors?.propertyName}>
+        <Field label="Property name" name="propertyName" hint="Internal and public reference, e.g. Bramble House." error={state.errors?.propertyName} required>
           <input id="propertyName" name="propertyName" defaultValue={defaults.propertyName} className="field" />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Town or city" name="city" error={state.errors?.city}>
+          <Field label="Town or city" name="city" error={state.errors?.city} required>
             <input id="city" name="city" defaultValue={defaults.city} className="field" />
           </Field>
           <Field label="Area or neighbourhood" name="area">
             <input id="area" name="area" defaultValue={defaults.area} className="field" />
           </Field>
-          <Field label="Postcode" name="postcode" error={state.errors?.postcode}>
+          <Field label="Postcode" name="postcode" error={state.errors?.postcode} required>
             <input id="postcode" name="postcode" defaultValue={defaults.postcode} className="field" />
           </Field>
           <Field label="Address line 1" name="addressLine1" hint="Never shown unless you switch on the option below.">
@@ -132,7 +134,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
 
       <section className={clsx("card space-y-4 p-6", step !== 1 && "hidden")}>
         <h2 className="text-[20px]">The accommodation</h2>
-        <Field label="Advert title" name="title" error={state.errors?.title}>
+        <Field label="Advert title" name="title" error={state.errors?.title} required>
           <input id="title" name="title" defaultValue={defaults.title} className="field" />
         </Field>
         <Field label="One-line summary" name="summary">
@@ -186,6 +188,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
           <Toggle name="selfContained" label="Self-contained" defaultChecked={defaults.selfContained} />
           <Toggle name="sharedFacilities" label="Shared facilities" defaultChecked={defaults.sharedFacilities ?? true} />
           <Toggle name="wheelchairAccess" label="Wheelchair accessible" defaultChecked={defaults.wheelchairAccess} />
+          <Toggle name="petsAllowed" label="Pets allowed" defaultChecked={defaults.petsAllowed} />
           <Toggle name="billsIncluded" label="Bills included" defaultChecked={defaults.billsIncluded ?? true} />
           <Toggle name="housingBenefit" label="Benefits accepted (incl. Universal Credit)" defaultChecked={defaults.housingBenefit ?? true} />
         </div>
@@ -197,7 +200,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
 
       <section className={clsx("card space-y-4 p-6", step !== 2 && "hidden")}>
         <h2 className="text-[20px]">Support and referrals</h2>
-        <Field label="Support categories" name="supportTypes" error={state.errors?.supportTypes}>
+        <Field label="Support categories" name="supportTypes" error={state.errors?.supportTypes} required>
           <CheckGroup
             name="supportTypes"
             selected={defaults.supportTypes ?? []}

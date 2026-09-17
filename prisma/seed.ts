@@ -569,6 +569,7 @@ async function main() {
     ensuite?: boolean;
     selfContained?: boolean;
     wheelchairAccess?: boolean;
+    petsAllowed?: boolean;
   };
 
   const adverts: Advert[] = [
@@ -797,6 +798,7 @@ async function main() {
       ],
       selfContained: true,
       wheelchairAccess: true,
+      petsAllowed: true,
       status: "PENDING_REVIEW",
     },
   ];
@@ -845,6 +847,7 @@ async function main() {
         selfContained: advert.selfContained ?? false,
         sharedFacilities: !advert.selfContained,
         wheelchairAccess: advert.wheelchairAccess ?? false,
+        petsAllowed: advert.petsAllowed ?? false,
         supportTypes: advert.supportTypes,
         supportDescription: advert.supportDescription,
         supportAvailability: advert.supportAvailability,
