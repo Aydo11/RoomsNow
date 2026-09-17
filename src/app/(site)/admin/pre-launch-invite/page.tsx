@@ -73,7 +73,7 @@ export default async function PreLaunchInvitePage({
             with hands-on experience in the sector) covering: the cost of a void and how RoomsNow
             shortens it, sourced Birmingham and UK
             demand statistics, the pre-launch &ldquo;founding provider&rdquo; framing, and a free
-            3-month Professional offer (worth &pound;147) so they can trial it before paying
+            1-month Professional offer (worth &pound;49) so they can trial it before paying
             anything. One submission sends to every address you paste in, each as its own email
             (never a group BCC) &mdash; up to 150 at a time.
           </p>
@@ -81,7 +81,7 @@ export default async function PreLaunchInvitePage({
             <p className="font-medium text-ink">Fulfilling the offer</p>
             <p className="mt-1">
               This only sends the email &mdash; it doesn&apos;t touch billing. Once someone
-              registers as a provider, find them below and grant Professional with a 3-month
+              registers as a provider, find them below and grant Professional with a 1-month
               expiry, or open{" "}
               <Link href="/admin/memberships" className="text-pine-dark underline">
                 Memberships
