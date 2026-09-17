@@ -41,7 +41,7 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
             fallbackSrc={fallback.url}
             fallbackLabel={current.illustrative ? undefined : "Photo unavailable — illustrative image shown"}
             alt={current.caption ?? title}
-            className="aspect-video max-h-[42vh] w-full object-cover sm:max-h-none"
+            className="aspect-video max-h-[42vh] w-full object-contain sm:max-h-none"
           />
         )}
 
@@ -77,7 +77,7 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
                 onClick={() => setActive(index)}
                 aria-current={index === active}
                 aria-label={`Show ${item.caption || item.room?.name || `${item.type === "IMAGE" ? "photo" : "video"} ${index + 1}`}`}
-                className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-[8px] border-2 transition ${
+                className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-[8px] border-2 bg-paper-sunk transition ${
                   index === active ? "border-pine" : "border-transparent"
                 }`}
               >
@@ -88,7 +88,7 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
                     src={item.url}
                     fallbackSrc={demoListingImage(listingId, index).url}
                     alt=""
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                     loading="lazy"
                   />
                 )}
