@@ -135,7 +135,7 @@ export default async function ProviderAdvertPage({
               <li key={item.id} className="aspect-[4/3] overflow-hidden rounded-[10px] bg-paper-sunk">
                 {item.type === "IMAGE" ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.url} alt={item.caption ?? ""} className="h-full w-full object-cover" />
+                  <img src={item.url} alt={item.caption ?? ""} className="h-full w-full object-contain" />
                 ) : (
                   <span className="grid h-full place-items-center text-[12px] text-ink-faint">Video</span>
                 )}
