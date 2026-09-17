@@ -30,6 +30,13 @@ const COLORS = {
  */
 const APP_URL = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
 const LOGO_URL = `${APP_URL}/brand/roomsnow-logo-email.png`;
+const RESEND_UNSUBSCRIBE_URL = "{{{RESEND_UNSUBSCRIBE_URL}}}";
+
+function marketingUnsubscribeHtml(reason: string) {
+  return `<p style="margin:12px 0 0; font-size:11px; line-height:1.6; color:${COLORS.inkFaint};">
+                    ${reason} You can <a href="${RESEND_UNSUBSCRIBE_URL}" style="color:${COLORS.inkFaint}; text-decoration:underline;">unsubscribe from RoomsNow marketing emails</a> at any time.
+                  </p>`;
+}
 
 /** Email-header logo — same markup wherever a template shows the wordmark. */
 function logoImgHtml() {
@@ -310,6 +317,7 @@ export function renderPreLaunchInviteEmail(params: {
                     ${brand.name} &middot; ${brand.tagline}<br />
                     Questions? Email <a href="mailto:${brand.supportEmail}" style="color:${COLORS.inkFaint};">${brand.supportEmail}</a>
                   </p>
+                  ${marketingUnsubscribeHtml("You are receiving this provider invitation because your organisation may offer accommodation relevant to RoomsNow users.")}
                 </div>
               </td>
             </tr>
@@ -352,7 +360,10 @@ P.S. This is genuinely new, not a rebrand of something established — so what y
 
 ---
 ${brand.name} · ${brand.tagline}
-Questions? Email ${brand.supportEmail}`;
+Questions? Email ${brand.supportEmail}
+
+You are receiving this provider invitation because your organisation may offer accommodation relevant to RoomsNow users.
+Unsubscribe from RoomsNow marketing emails: ${RESEND_UNSUBSCRIBE_URL}`;
 }
 
 /**
@@ -444,6 +455,7 @@ export function renderProviderMailshotEmail(params: {
                     ${brand.name} &middot; ${brand.tagline}<br />
                     Questions? Email <a href="mailto:${brand.supportEmail}" style="color:${COLORS.inkFaint};">${brand.supportEmail}</a>
                   </p>
+                  ${marketingUnsubscribeHtml("You are receiving this because your organisation has a RoomsNow provider account.")}
                 </div>
               </td>
             </tr>
@@ -471,6 +483,18 @@ export function renderProviderMailshotText(params: {
   if (promoCode) {
     lines.push("", promoBlurb || "Your code:", `CODE: ${promoCode}`);
   }
-  lines.push("", `${ctaLabel}: ${ctaUrl}`, "", senderName, "", "---", `${brand.name} · ${brand.tagline}`, `Questions? Email ${brand.supportEmail}`);
+  lines.push(
+    "",
+    `${ctaLabel}: ${ctaUrl}`,
+    "",
+    senderName,
+    "",
+    "---",
+    `${brand.name} · ${brand.tagline}`,
+    `Questions? Email ${brand.supportEmail}`,
+    "",
+    "You are receiving this because your organisation has a RoomsNow provider account.",
+    `Unsubscribe from RoomsNow marketing emails: ${RESEND_UNSUBSCRIBE_URL}`,
+  );
   return lines.join("\n");
 }

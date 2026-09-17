@@ -284,4 +284,12 @@ export function fieldErrors(error: z.ZodError) {
   return out;
 }
 
-export type FormState = { ok: boolean; errors?: Record<string, string>; message?: string; redirect?: string };
+export type FormState = {
+  ok: boolean;
+  errors?: Record<string, string>;
+  message?: string;
+  redirect?: string;
+  broadcastId?: string;
+  importId?: string;
+  recipientCount?: number;
+};

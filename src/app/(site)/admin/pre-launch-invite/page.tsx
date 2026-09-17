@@ -60,7 +60,7 @@ export default async function PreLaunchInvitePage({
   return (
     <DashboardShell
       title="Pre-launch mailshot"
-      subtitle="A hand-picked outreach mailshot to real Birmingham providers before public launch, offering 1 month of Professional free."
+      subtitle="Prepare a consent-aware Resend outreach campaign for relevant provider organisations, with managed opt-outs."
       nav={nav}
       active="/admin/pre-launch-invite"
     >
@@ -74,8 +74,9 @@ export default async function PreLaunchInvitePage({
             shortens it, sourced Birmingham and UK
             demand statistics, the pre-launch &ldquo;founding provider&rdquo; framing, and a free
             1-month Professional offer (worth &pound;49) so they can trial it before paying
-            anything. One submission sends to every address you paste in, each as its own email
-            (never a group BCC) &mdash; up to 150 at a time.
+            anything. One submission imports the addresses into a dedicated Resend segment and
+            prepares one throttled Broadcast &mdash; up to 500 contacts at a time. A separate
+            confirmation is required before anything is sent.
           </p>
           <div className="rounded-[10px] border border-line bg-paper-sunk/60 p-4 text-[13px] leading-relaxed text-ink-soft">
             <p className="font-medium text-ink">Fulfilling the offer</p>
