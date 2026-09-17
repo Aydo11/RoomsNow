@@ -64,6 +64,11 @@ export const registerSchema = z.object({
   // referrer only
   organisation: z.string().trim().max(160).optional().or(z.literal("")),
   jobTitle: z.string().trim().max(120).optional().or(z.literal("")),
+  // how they heard about RoomsNow — optional, self-selected or pre-filled from a campaign link
+  acquisitionSource: z
+    .enum(["SOCIAL_MEDIA", "EMAIL", "SEARCH_ENGINE", "REFERRAL", "WORD_OF_MOUTH", "PRESS", "OTHER"])
+    .optional()
+    .or(z.literal("")),
   terms: z.literal("on", { errorMap: () => ({ message: "Please accept the terms to continue." }) }),
 });
 
@@ -152,6 +157,7 @@ export const listingSchema = z.object({
   sharedFacilities: z.boolean().default(true),
   wheelchairAccess: z.boolean().default(false),
   accessibilityNotes: optionalText(1000),
+  petsAllowed: z.boolean().default(false),
   weeklyRentFrom: z.coerce.number().min(0).max(5000).optional(),
   weeklyRentTo: z.coerce.number().min(0).max(5000).optional(),
   billsIncluded: z.boolean().default(true),
