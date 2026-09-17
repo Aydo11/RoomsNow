@@ -168,8 +168,8 @@ export function renderPreLaunchInviteEmail(params: {
   const sender = escapeHtml(senderName);
   const stat = (value: string, label: string, source: string) => `
                     <td width="33.33%" valign="top" style="padding:16px 10px; text-align:center;">
-                      <div style="font-size:26px; font-weight:700; color:${COLORS.pineDark}; letter-spacing:-0.01em;">${value}</div>
-                      <div style="margin-top:4px; font-size:12.5px; line-height:1.45; color:${COLORS.inkSoft};">${label}</div>
+                      <div style="font-size:32px; font-weight:800; color:${COLORS.pineDark}; letter-spacing:-0.01em;">${value}</div>
+                      <div style="margin-top:4px; font-size:12.5px; line-height:1.45; color:${COLORS.inkSoft}; font-weight:600;">${label}</div>
                       <div style="margin-top:4px; font-size:11px; color:${COLORS.inkFaint};">${source}</div>
                     </td>`;
   return `<!doctype html>
@@ -180,7 +180,7 @@ export function renderPreLaunchInviteEmail(params: {
     <title>${brand.name}</title>
   </head>
   <body style="margin:0; padding:0; background-color:${COLORS.paper}; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <span style="display:none; font-size:1px; color:${COLORS.paper}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">We're opening RoomsNow to a small group of Birmingham providers before public launch — 3 months of Professional, free.</span>
+    <span style="display:none; font-size:1px; color:${COLORS.paper}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">We're opening RoomsNow to a small group of Birmingham providers before public launch — 1 month of Professional, free.</span>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.paper};">
       <tr>
         <td align="center" style="padding:32px 16px;">
@@ -255,11 +255,11 @@ export function renderPreLaunchInviteEmail(params: {
                   <tr>
                     <td style="padding:22px 26px;">
                       <p style="margin:0 0 6px; font-size:12px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark};">Founding-provider offer</p>
-                      <p style="margin:0 0 10px; font-size:18px; line-height:1.4; color:${COLORS.ink}; font-weight:600;">3 months of Professional, free &mdash; worth &pound;147</p>
+                      <p style="margin:0 0 10px; font-size:20px; line-height:1.4; color:${COLORS.ink}; font-weight:800;">1 month of Professional, free &mdash; worth &pound;49</p>
                       <p style="margin:0; font-size:14.5px; line-height:1.6; color:${COLORS.inkSoft};">
                         Up to 15 live adverts with unlimited rooms per property, full advert
                         analytics, priority placement and one free promoted slot a month. No card
-                        needed to try it, and no obligation to stay on once the 3 months are up.
+                        needed to try it, and no obligation to stay on once the month is up.
                       </p>
                     </td>
                   </tr>
@@ -272,7 +272,7 @@ export function renderPreLaunchInviteEmail(params: {
                 <table role="presentation" cellpadding="0" cellspacing="0">
                   <tr>
                     <td style="border-radius:8px; background-color:${COLORS.pine};">
-                      <a href="${ctaUrl}" style="display:inline-block; padding:13px 30px; font-size:15px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">Claim your free 3 months</a>
+                      <a href="${ctaUrl}" style="display:inline-block; padding:13px 30px; font-size:15px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">Claim your free month</a>
                     </td>
                   </tr>
                 </table>
@@ -340,9 +340,9 @@ We haven't opened to the public yet. Before we do, I want a small group of real 
 
 None of that matters without providers who actually do the job — housing someone who needs support, not just square footage. Every advert you put on ${brand.name} is a faster route from your void to somebody's placement.
 
-FOUNDING-PROVIDER OFFER: 3 months of Professional, free — worth £147. Up to 15 live adverts with unlimited rooms per property, full advert analytics, priority placement and one free promoted slot a month. No card needed, no obligation to stay on afterwards.
+FOUNDING-PROVIDER OFFER: 1 month of Professional, free — worth £49. Up to 15 live adverts with unlimited rooms per property, full advert analytics, priority placement and one free promoted slot a month. No card needed, no obligation to stay on afterwards.
 
-Claim your free 3 months: ${ctaUrl}
+Claim your free month: ${ctaUrl}
 
 Sign up as a provider and reply to this email — I'm upgrading pre-launch accounts to Professional by hand, so there's nothing to pay and nothing to cancel later.
 
