@@ -9,6 +9,8 @@ import { WithdrawReferral } from "@/components/withdraw-referral";
 import { DirectMessageForm } from "@/components/direct-message-form";
 import { AddReferralDocumentForm } from "@/components/add-referral-document-form";
 import { ReferralTimeline } from "@/components/referral-timeline";
+import { ReviewForm } from "@/components/review-form";
+import { Stars } from "@/components/star-rating";
 import { referrerNav } from "../nav";
 import { URGENCY_LABELS } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
@@ -26,6 +28,7 @@ export default async function ReferralPage({ params }: { params: Promise<{ id: s
       documents: { select: { id: true, name: true, createdAt: true } },
       events: { orderBy: { createdAt: "desc" } },
       viewings: true,
+      review: { select: { rating: true, comment: true, createdAt: true } },
     },
   });
   if (!referral) notFound();
@@ -148,6 +151,32 @@ export default async function ReferralPage({ params }: { params: Promise<{ id: s
                     compact
                   />
                 </div>
+              )}
+            </div>
+          )}
+
+          {referral.listing && (referral.status === "MOVED_IN" || referral.review) && (
+            <div className="card p-5">
+              <h2 className="text-[16px]">Placement review</h2>
+              {referral.review ? (
+                <div className="mt-3">
+                  <Stars rating={referral.review.rating} />
+                  {referral.review.comment && (
+                    <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{referral.review.comment}</p>
+                  )}
+                  <p className="mt-2 text-[12px] text-ink-faint">Reviewed {shortDate(referral.review.createdAt)}</p>
+                </div>
+              ) : isReferrer ? (
+                <>
+                  <p className="mt-1 text-[13px] text-ink-faint">
+                    Rate how this placement went — it&apos;ll show on {referral.listing.company.name}&apos;s public profile.
+                  </p>
+                  <div className="mt-3">
+                    <ReviewForm referralId={referral.id} />
+                  </div>
+                </>
+              ) : (
+                <p className="mt-2 text-[13px] text-ink-faint">Waiting for the referrer to leave a review.</p>
               )}
             </div>
           )}
