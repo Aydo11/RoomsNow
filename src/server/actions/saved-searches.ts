@@ -35,6 +35,7 @@ export async function createSavedSearchAction(_prev: FormState, formData: FormDa
   const furnished = text(formData, "furnished") === "1";
   const ensuite = text(formData, "ensuite") === "1";
   const selfContained = text(formData, "selfContained") === "1";
+  const petsAllowed = text(formData, "petsAllowed") === "1";
   const referral = list(formData, "referral") as ReferralRoute[];
   const verifiedOnly = text(formData, "verified") === "1";
   const minRent = num(formData, "minRent");
@@ -58,6 +59,7 @@ export async function createSavedSearchAction(_prev: FormState, formData: FormDa
       furnished,
       ensuite,
       selfContained,
+      petsAllowed,
       referral,
       verifiedOnly,
       minRent: minRent ?? null,
