@@ -16,6 +16,8 @@ export async function register() {
     scheduleSavedSearchDigest();
     const { scheduleListingFreshnessCheck } = await import("./lib/listing-availability");
     scheduleListingFreshnessCheck();
+    const { scheduleInsuranceExpiryCheck } = await import("./lib/verification-expiry");
+    scheduleInsuranceExpiryCheck();
   }
 }
 
