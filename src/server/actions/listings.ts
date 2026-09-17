@@ -13,6 +13,7 @@ import { notifyCompany } from "@/lib/notify";
 import { notifyInstantSavedSearches } from "@/lib/saved-search-alerts";
 import { syncListingAvailability } from "@/lib/listing-availability";
 import { geocode } from "@/lib/geo";
+import { qualifyProviderReferral } from "@/lib/referral-program";
 import { fieldErrors, listingSchema, type FormState } from "@/lib/validation";
 import { bool, date, list, num, pence, reference, text } from "../form";
 import type { Prisma, ReferralRoute, RoomStatus } from "@prisma/client";
@@ -367,6 +368,9 @@ export async function submitListingAction(listingId: string) {
 
   await db.listing.update({ where: { id: listingId }, data: { status: "PENDING_REVIEW" } });
   await audit({ actorId: user.id, action: "listing.submitted", targetType: "Listing", targetId: listingId });
+  // Posting an advert is the "qualifying" action for the referral programme —
+  // a no-op unless this company signed up using another provider's invite code.
+  await qualifyProviderReferral(listing.companyId);
   await notifyCompany(listing.companyId, {
     type: "LISTING",
     title: "Advert submitted for review",
