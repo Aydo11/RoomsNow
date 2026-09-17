@@ -626,7 +626,6 @@ model AccommodationRequest {
   application Application?
   documents   Document[]
   viewings    Viewing[]
-  review      ProviderReview?
 
   @@unique([listingId, applicantId])
   @@index([status])
@@ -671,6 +670,7 @@ model Referral {
   documents   Document[]
   events      ReferralEvent[]
   viewings    Viewing[]
+  review      ProviderReview?
 
   @@index([status])
   @@index([clientId])
