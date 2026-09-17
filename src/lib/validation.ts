@@ -59,6 +59,8 @@ export const registerSchema = z.object({
     ])
     .optional(),
   companyCity: z.string().trim().max(120).optional().or(z.literal("")),
+  // optional invite code from another provider's referral programme
+  referralCode: z.string().trim().max(20).optional().or(z.literal("")),
   // referrer only
   organisation: z.string().trim().max(160).optional().or(z.literal("")),
   jobTitle: z.string().trim().max(120).optional().or(z.literal("")),
