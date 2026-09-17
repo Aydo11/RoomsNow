@@ -11,9 +11,9 @@ export function PreLaunchInviteForm() {
       <h2 className="text-xl">Send a pre-launch mailshot</h2>
       <p className="text-sm text-ink-soft">
         Sends the founding-provider invitation email (Birmingham/UK stats, the void-filling
-        pitch, and the 3-months-free Professional offer) to every address below in one batch —
-        up to 150 at a time, each sent individually. After someone registers, grant their 3 free
-        months from the provider access table below.
+        pitch, and the 1-month-free Professional offer) to every address below in one batch —
+        up to 150 at a time, each sent individually. After someone registers, grant their free
+        month from the provider access table below.
       </p>
       <label className="block text-sm">
         Your name <span className="text-ink-faint">(shown as the sender)</span>
