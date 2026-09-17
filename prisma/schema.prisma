@@ -380,6 +380,13 @@ model Company {
   /// Purchased 24-hour boost credits. Membership allowances are calculated
   /// separately per billing period so paid packs never expire.
   boostCredits       Int                @default(0)
+  /// Stable invite code for the provider-to-provider referral programme.
+  /// Generated lazily the first time it's needed — see ensureReferralCode —
+  /// so existing companies never need a backfill migration.
+  referralCode           String?            @unique
+  /// How many 5-qualified-referral reward cycles this company has already
+  /// been paid out for. Prevents re-granting the same milestone twice.
+  referralRewardsClaimed Int                @default(0)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
@@ -393,6 +400,8 @@ model Company {
   clientShares     ClientShare[]
   membershipGrants MembershipGrant[]
   reviews          ProviderReview[]
+  referralsMade    ProviderReferral[] @relation("ReferralsMade")
+  referredVia      ProviderReferral?  @relation("ReferralsReceived")
 
   @@index([city])
 }
@@ -698,6 +707,28 @@ model ProviderReview {
   createdAt  DateTime @default(now())
 
   @@index([companyId, createdAt])
+}
+
+enum ProviderReferralStatus {
+  SIGNED_UP // registered a new provider account using this invite code
+  QUALIFIED // went on to submit their first advert for review
+}
+
+/// One row per new provider account that registered using another provider's
+/// invite code. Stays SIGNED_UP until the new company submits its first
+/// advert, at which point qualifyProviderReferral() flips it to QUALIFIED
+/// and checks whether the referrer has just earned another reward.
+model ProviderReferral {
+  id                String                 @id @default(cuid())
+  referrerCompanyId String
+  referrerCompany   Company                @relation("ReferralsMade", fields: [referrerCompanyId], references: [id], onDelete: Cascade)
+  referredCompanyId String                 @unique
+  referredCompany   Company                @relation("ReferralsReceived", fields: [referredCompanyId], references: [id], onDelete: Cascade)
+  status            ProviderReferralStatus @default(SIGNED_UP)
+  qualifiedAt       DateTime?
+  createdAt         DateTime               @default(now())
+
+  @@index([referrerCompanyId, status])
 }
 
 /// A person a referrer is supporting — their "caseload" or "tenants". Exists
