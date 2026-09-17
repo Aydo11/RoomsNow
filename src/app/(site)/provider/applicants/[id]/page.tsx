@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireCompany, assertApplicantAccess } from "@/lib/rbac";
+import { DirectMessageForm } from "@/components/direct-message-form";
 import { ACCOMMODATION_TYPES, GENDER_ARRANGEMENTS, supportLabel } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
 
@@ -106,7 +107,13 @@ export default async function ApplicantProfilePage({ params }: { params: Promise
         </dl>
 
         <div className="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
-          <Link href="/messages" className="btn-secondary">Message</Link>
+          <DirectMessageForm
+            recipientUserId={applicant.id}
+            subject={`Accommodation request from ${applicant.firstName} ${applicant.lastName}`}
+            label={`Message ${applicant.firstName}`}
+            placeholder={`Write a message to ${applicant.firstName} about their accommodation request…`}
+            compact
+          />
         </div>
       </div>
 

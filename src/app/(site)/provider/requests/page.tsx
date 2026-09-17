@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui";
 import { PipelineTrail } from "@/components/pipeline";
 import { StatusUpdater } from "@/components/status-updater";
 import { ArchiveRequestButton } from "@/components/archive-request-button";
+import { DirectMessageForm } from "@/components/direct-message-form";
 import { providerNav } from "../nav";
 import { PIPELINE, PIPELINE_LABELS } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
@@ -130,7 +131,13 @@ export default async function ProviderRequestsPage({ searchParams }: { searchPar
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Link href={`/provider/applicants/${request.applicant.id}`} className="btn-secondary">View profile</Link>
-                          <Link href="/messages" className="btn-secondary">Message</Link>
+                          <DirectMessageForm
+                            recipientUserId={request.applicant.id}
+                            subject={`Accommodation request: ${request.listing.title}`}
+                            label="Message"
+                            placeholder={`Write a message to ${request.applicant.firstName} about this request…`}
+                            compact
+                          />
                           <ArchiveRequestButton requestId={request.id} archived={Boolean(request.archivedAt)} />
                         </div>
                       </div>
