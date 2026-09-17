@@ -33,7 +33,7 @@ function splitRecipients(raw: string): string[] {
  * per line or comma-separated. Each address still gets its own send (not a single
  * BCC blast) and is rate-limited and audit-logged individually, so a partial
  * failure or a mid-batch rate-limit hit only affects the addresses after it. The
- * "3 months free" offer it promises is fulfilled the same way admin already
+ * "1 month free" offer it promises is fulfilled the same way admin already
  * grants complimentary access elsewhere: manually, via the existing provider
  * membership grant form on /admin/memberships, once each recipient registers.
  */
@@ -74,7 +74,7 @@ export async function sendPreLaunchInvite(_previous: FormState, form: FormData):
     const limit = await rateLimit(`admin-pre-launch-invite:${actor.id}`, { limit: 150, windowMs: 60 * 60_000 });
     if (!limit.ok) { rateLimited = true; break; }
     try {
-      await sendEmail({ to, subject: "An invitation from one Birmingham provider to another (3 months free)", text, html });
+      await sendEmail({ to, subject: "An invitation from one Birmingham provider to another (1 month free)", text, html });
       sent += 1;
       sentTo.push(to);
     } catch (error) {
@@ -101,6 +101,6 @@ export async function sendPreLaunchInvite(_previous: FormState, form: FormData):
   if (invalidCount > 0) parts.push(`Skipped ${invalidCount} invalid address${invalidCount === 1 ? "" : "es"}.`);
   if (failed > 0) parts.push(`${failed} failed to send.`);
   if (rateLimited) parts.push("Hit the hourly send limit partway through — paste the rest again shortly.");
-  parts.push("Once they register, grant 3 months of Professional from Memberships.");
+  parts.push("Once they register, grant 1 month of Professional from Memberships.");
   return { ok: true, message: parts.join(" ") };
 }
