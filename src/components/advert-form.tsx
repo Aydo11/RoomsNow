@@ -30,6 +30,7 @@ export type AdvertDefaults = Partial<{
   sharedFacilities: boolean;
   wheelchairAccess: boolean;
   accessibilityNotes: string;
+  petsAllowed: boolean;
   weeklyRentFrom: string;
   weeklyRentTo: string;
   billsIncluded: boolean;
@@ -186,6 +187,7 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
           <Toggle name="selfContained" label="Self-contained" defaultChecked={defaults.selfContained} />
           <Toggle name="sharedFacilities" label="Shared facilities" defaultChecked={defaults.sharedFacilities ?? true} />
           <Toggle name="wheelchairAccess" label="Wheelchair accessible" defaultChecked={defaults.wheelchairAccess} />
+          <Toggle name="petsAllowed" label="Pets allowed" defaultChecked={defaults.petsAllowed} />
           <Toggle name="billsIncluded" label="Bills included" defaultChecked={defaults.billsIncluded ?? true} />
           <Toggle name="housingBenefit" label="Benefits accepted (incl. Universal Credit)" defaultChecked={defaults.housingBenefit ?? true} />
         </div>
