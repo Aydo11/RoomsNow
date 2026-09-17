@@ -1157,6 +1157,11 @@ model VerificationRequest {
   note                  String?
   reviewNote            String?
   insuranceExpiresAt    DateTime?
+  /// Set once a "your insurance is expiring" reminder has gone out for this
+  /// approved verification, so the hourly check (see
+  /// runInsuranceExpiryCheck) never re-sends it. Cleared implicitly by a
+  /// fresh submission, since that creates a brand-new row.
+  insuranceReminderSentAt DateTime?
   declarationAcceptedAt DateTime?
   checklistVersion      String             @default("2026-09")
   registrationChecked   Boolean            @default(false)
