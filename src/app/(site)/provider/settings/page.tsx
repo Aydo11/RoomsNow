@@ -22,6 +22,16 @@ export default async function ProviderSettingsPage() {
     }),
   ]);
 
+  const REMINDER_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+  const insuranceExpiresAt = verification?.insuranceExpiresAt;
+  const insuranceStatus: "ok" | "soon" | "expired" = !insuranceExpiresAt
+    ? "ok"
+    : insuranceExpiresAt.getTime() <= Date.now()
+      ? "expired"
+      : insuranceExpiresAt.getTime() <= Date.now() + REMINDER_WINDOW_MS
+        ? "soon"
+        : "ok";
+
   return (
     <DashboardShell
       title="Company profile"
@@ -61,7 +71,16 @@ export default async function ProviderSettingsPage() {
           and evidence check, not a regulator&apos;s inspection, licence or endorsement.
         </p>
 
-        {company.verification === "APPROVED" ? (
+        {company.verification === "APPROVED" && insuranceStatus !== "ok" ? (
+          <div className="mt-4">
+            <p className="mb-4 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay-dark">
+              {insuranceStatus === "expired"
+                ? `The insurance evidence behind your verified badge expired on ${shortDate(verification!.insuranceExpiresAt!)}. Submit current evidence to keep the badge accurate.`
+                : `The insurance evidence behind your verified badge expires on ${shortDate(verification!.insuranceExpiresAt!)}. Submit renewed evidence before then to keep it current.`}
+            </p>
+            <VerificationForm />
+          </div>
+        ) : company.verification === "APPROVED" ? (
           <p className="mt-3 text-[15px] text-pine-dark">
             Verified{company.verifiedAt ? ` on ${shortDate(company.verifiedAt)}` : ""}.
           </p>
