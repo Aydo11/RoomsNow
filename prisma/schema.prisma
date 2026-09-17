@@ -235,6 +235,19 @@ enum AlertFrequency {
   OFF
 }
 
+/// How a user first heard about RoomsNow, captured at registration (from a
+/// `?src=` link on outbound campaigns, or self-selected in the sign-up form).
+/// Nullable/unset for anyone who registered before this was added.
+enum AcquisitionSource {
+  SOCIAL_MEDIA
+  EMAIL
+  SEARCH_ENGINE
+  REFERRAL
+  WORD_OF_MOUTH
+  PRESS
+  OTHER
+}
+
 // ---------------------------------------------------------------- identity
 
 model User {
@@ -267,6 +280,8 @@ model User {
   passwordChangedAt         DateTime?
   deletedAt                 DateTime?
   retainUntil               DateTime?
+  /// Marketing channel attribution, captured once at sign-up — see AcquisitionSource.
+  acquisitionSource         AcquisitionSource?
   createdAt                 DateTime      @default(now())
   updatedAt                 DateTime      @updatedAt
 
@@ -489,6 +504,7 @@ model Listing {
   sharedFacilities   Boolean           @default(true)
   wheelchairAccess   Boolean           @default(false)
   accessibilityNotes String?
+  petsAllowed        Boolean           @default(false)
 
   supportTypes        String[]        @default([])
   supportDescription  String?
@@ -587,7 +603,7 @@ model ListingMedia {
 
 model LookingForAd {
   id                 String              @id @default(cuid())
-  userId             String
+  userId             String              @unique
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   title              String
   city               String
@@ -944,6 +960,7 @@ model SavedSearch {
   furnished     Boolean         @default(false)
   ensuite       Boolean         @default(false)
   selfContained Boolean         @default(false)
+  petsAllowed   Boolean         @default(false)
   referral      ReferralRoute[] @default([])
   verifiedOnly  Boolean         @default(false)
   minRent       Int?
