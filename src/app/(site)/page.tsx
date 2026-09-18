@@ -88,7 +88,15 @@ export default async function HomePage() {
           </p>
 
           <div className="mx-auto mt-7 max-w-4xl text-left">
-            <Suspense fallback={<div className="h-[120px] rounded-card border border-line bg-white" />}>
+            {/*
+              The search form stacks to 4 rows on mobile (no sm: grid columns
+              yet) and is a single row from the sm breakpoint up. A fallback
+              that doesn't roughly match each shape causes a large layout
+              shift — measured via PageSpeed Insights — when the client
+              component swaps in and the decorative blob anchored to the
+              bottom of this section jumps down with it.
+            */}
+            <Suspense fallback={<div className="h-[300px] rounded-card border border-line bg-white sm:h-[120px]" />}>
               <SearchPanel />
             </Suspense>
           </div>
