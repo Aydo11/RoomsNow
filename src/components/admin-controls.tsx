@@ -11,10 +11,12 @@ import {
   setCompanyStatusAction,
   setUserRoleAction,
   setUserStatusAction,
+  takedownListingAction,
   toggleFeaturedAction,
 } from "@/server/actions/admin";
 import type { ReportStatus } from "@prisma/client";
 import type { VerificationChecks } from "@/lib/verification";
+import { TAKEDOWN_REASONS } from "@/lib/taxonomy";
 
 export function ListingModeration({
   id,
@@ -28,8 +30,27 @@ export function ListingModeration({
   const router = useRouter();
   const [rejecting, setRejecting] = useState(false);
   const [note, setNote] = useState("");
+  const [takingDown, setTakingDown] = useState(false);
+  const [takedownReason, setTakedownReason] = useState("");
+  const [takedownDetail, setTakedownDetail] = useState("");
   const [pending, startTransition] = useTransition();
   const run = (fn: () => Promise<void>) => startTransition(async () => { await fn(); router.refresh(); });
+
+  const takedownMessage = takedownDetail.trim()
+    ? `${takedownReason}: ${takedownDetail.trim()}`
+    : takedownReason;
+
+  function submitTakedown() {
+    startTransition(async () => {
+      const result = await takedownListingAction(id, takedownMessage);
+      if (result?.ok) {
+        setTakingDown(false);
+        setTakedownReason("");
+        setTakedownDetail("");
+      }
+      router.refresh();
+    });
+  }
 
   return (
     <div className="w-full shrink-0 sm:w-[260px]">
@@ -68,14 +89,59 @@ export function ListingModeration({
         </div>
       )}
 
-      {status === "ACTIVE" && (
-        <button
-          className="btn-secondary"
-          disabled={pending}
-          onClick={() => run(() => toggleFeaturedAction(id, !featured))}
-        >
-          {featured ? "Remove promotion" : "Promote for 30 days"}
-        </button>
+      {(status === "ACTIVE" || status === "PAUSED") && !takingDown && (
+        <div className="flex flex-wrap gap-2">
+          {status === "ACTIVE" && (
+            <button
+              className="btn-secondary"
+              disabled={pending}
+              onClick={() => run(() => toggleFeaturedAction(id, !featured))}
+            >
+              {featured ? "Remove promotion" : "Promote for 30 days"}
+            </button>
+          )}
+          <button className="btn-ghost text-clay-dark" disabled={pending} onClick={() => setTakingDown(true)}>
+            Take down
+          </button>
+        </div>
+      )}
+
+      {takingDown && (
+        <div className="space-y-2 rounded-[10px] border border-clay/30 bg-clay-light/40 p-3">
+          <label className="block text-[12px] font-medium text-ink-soft" htmlFor={`takedown-reason-${id}`}>
+            Reason for removal
+          </label>
+          <select
+            id={`takedown-reason-${id}`}
+            className="field"
+            value={takedownReason}
+            onChange={(event) => setTakedownReason(event.target.value)}
+          >
+            <option value="">Select a reason…</option>
+            {TAKEDOWN_REASONS.map((reason) => (
+              <option key={reason} value={reason}>{reason}</option>
+            ))}
+          </select>
+          <label className="sr-only" htmlFor={`takedown-detail-${id}`}>Extra detail (optional)</label>
+          <textarea
+            id={`takedown-detail-${id}`}
+            rows={2}
+            className="field"
+            placeholder="Optional extra detail sent to the provider"
+            value={takedownDetail}
+            onChange={(event) => setTakedownDetail(event.target.value)}
+          />
+          <div className="flex gap-2">
+            <button
+              className="btn-danger"
+              disabled={pending || !takedownReason}
+              onClick={submitTakedown}
+            >
+              Remove advert
+            </button>
+            <button className="btn-ghost" disabled={pending} onClick={() => setTakingDown(false)}>Cancel</button>
+          </div>
+        </div>
       )}
     </div>
   );
