@@ -11,6 +11,8 @@ export type LandingPageContent = {
   faqs: Array<{ question: string; answer: string }>;
   primaryCta: { label: string; href: string };
   secondaryCta: { label: string; href: string };
+  relatedLinks?: Array<{ label: string; href: string }>;
+  resources?: Array<{ label: string; href: string }>;
 };
 
 export function SeoLandingPage({ content }: { content: LandingPageContent }) {
@@ -79,6 +81,34 @@ export function SeoLandingPage({ content }: { content: LandingPageContent }) {
               ))}
             </div>
           </section>
+
+          {content.relatedLinks?.length ? (
+            <nav aria-label="Related accommodation searches">
+              <h2 className="text-[28px]">Related accommodation searches</h2>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {content.relatedLinks.map((link) => (
+                  <Link key={link.href} href={link.href} className="chip hover:border-pine hover:text-pine-dark">
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </nav>
+          ) : null}
+
+          {content.resources?.length ? (
+            <aside className="rounded-card border border-line bg-pine-light/25 p-5" aria-label="Official guidance">
+              <h2 className="text-[20px]">Official guidance</h2>
+              <ul className="mt-3 space-y-2 text-[14px]">
+                {content.resources.map((resource) => (
+                  <li key={resource.href}>
+                    <a href={resource.href} target="_blank" rel="noreferrer" className="font-semibold text-pine-dark hover:underline">
+                      {resource.label} <span aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </aside>
+          ) : null}
         </div>
       </div>
     </>

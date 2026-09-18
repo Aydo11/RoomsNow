@@ -12,6 +12,13 @@ const staticPages: Array<[string, MetadataRoute.Sitemap[number]["changeFrequency
   ["/supported-accommodation", "weekly", 0.9],
   ["/transitional-accommodation", "weekly", 0.8],
   ["/adult-social-care-accommodation", "weekly", 0.8],
+  ["/hmo-rooms-birmingham", "daily", 0.8],
+  ["/supported-accommodation-birmingham", "daily", 0.8],
+  ["/supported-accommodation-manchester", "daily", 0.8],
+  ["/transitional-accommodation-london", "daily", 0.8],
+  ["/accommodation-for-care-leavers", "weekly", 0.8],
+  ["/mental-health-supported-accommodation", "weekly", 0.8],
+  ["/accommodation-for-prison-leavers", "weekly", 0.8],
   ["/advertise-accommodation", "monthly", 0.8],
   ["/accommodation-referrals", "monthly", 0.8],
   ["/how-it-works", "monthly", 0.6],
@@ -22,10 +29,10 @@ const staticPages: Array<[string, MetadataRoute.Sitemap[number]["changeFrequency
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
+  const staticContentUpdatedAt = new Date("2026-09-18T00:00:00.000Z");
   const base = staticPages.map(([path, changeFrequency, priority]) => ({
     url: absoluteUrl(path),
-    lastModified: now,
+    lastModified: staticContentUpdatedAt,
     changeFrequency,
     priority,
   }));

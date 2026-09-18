@@ -39,6 +39,7 @@ export const supportedAccommodationContent: LandingPageContent = {
   sections: [
     { heading: "Supported accommodation in one searchable place", paragraphs: ["Supported accommodation combines housing with support intended to help a person live safely and build independence. The exact service, staffing, eligibility and funding arrangements differ between providers.", "RoomsNow lets people looking for accommodation and professionals compare published vacancies without relying on disconnected vacancy lists. Each advert can explain the support offered, the people it is intended for, the rent, facilities and referral process."] },
     { heading: "How to enquire or make a referral", paragraphs: ["Individuals can create an account, search vacancies and send an accommodation request. Professional referrers can keep client information private, choose a suitable advert and submit the information requested by the provider.", "The accommodation provider makes all assessment, eligibility and placement decisions. RoomsNow does not assess needs, inspect properties or provide regulatory approval."] },
+    { heading: "CQC registration and supported housing", paragraphs: ["CQC registration applies to regulated health and adult social care activities in England; it does not automatically apply to every supported housing service. For example, a supported living provider delivering the regulated activity of personal care may need to register, while accommodation alone is not automatically CQC regulated.", "Providers and referrers should check the exact service model, the regulated activities being delivered and the current CQC scope-of-registration guidance. A RoomsNow verification badge is not a CQC rating or regulatory endorsement."] },
   ],
   faqs: [
     { question: "Who can apply for supported accommodation?", answer: "Eligibility depends on the provider, service and funding route. Check the advert and ask the provider about its assessment criteria." },
@@ -50,6 +51,16 @@ export const supportedAccommodationContent: LandingPageContent = {
   ],
   primaryCta: { label: "Search supported accommodation", href: "/search" },
   secondaryCta: { label: "Make a professional referral", href: "/accommodation-referrals" },
+  relatedLinks: [
+    { label: "Supported accommodation in Birmingham", href: "/supported-accommodation-birmingham" },
+    { label: "Supported accommodation in Manchester", href: "/supported-accommodation-manchester" },
+    { label: "Mental-health supported accommodation", href: "/mental-health-supported-accommodation" },
+    { label: "Accommodation for care leavers", href: "/accommodation-for-care-leavers" },
+  ],
+  resources: [
+    { label: "CQC: scope of registration", href: "https://www.cqc.org.uk/guidance-regulation/providers/registration/scope-registration" },
+    { label: "GOV.UK: Housing Benefit guidance for supported housing", href: "https://www.gov.uk/government/publications/housing-benefit-guidance-for-supported-housing-claims/housing-benefit-guidance-for-supported-housing-claims" },
+  ],
 };
 
 export const transitionalAccommodationContent: LandingPageContent = {
@@ -90,7 +101,7 @@ export const adultSocialCareContent: LandingPageContent = {
   ],
   sections: [
     { heading: "Housing for different adult needs", paragraphs: ["Adult social care accommodation can cover a wide range of settings and services. A person may need accessible housing, help with daily living or accommodation connected to a specialist support service.", "RoomsNow does not determine whether a service is suitable or regulated. It provides a consistent place for providers to describe their accommodation and for people or professionals to begin a direct conversation."] },
-    { heading: "Information for professional referrers", paragraphs: ["Social workers, local authority teams and other authorised professionals can search participating providers and prepare client information in a private account. A referral is sent only to the provider selected by the referrer.", "Always complete your organisation's own safeguarding, commissioning, regulatory and suitability checks before arranging a placement."] },
+    { heading: "Information for professional referrers", paragraphs: ["Social workers, local authority teams and other authorised professionals can search participating providers and prepare client information in a private account. A referral is sent only to the provider selected by the referrer.", "Always complete your organisation's own safeguarding, commissioning, CQC or other regulatory, and suitability checks before arranging a placement. In England, CQC registration depends on the regulated activities delivered; the accommodation itself is not automatically CQC regulated."] },
   ],
   faqs: [
     { question: "Does RoomsNow assess care needs?", answer: "No. The provider and relevant professionals remain responsible for care assessments, eligibility and placement decisions." },
@@ -102,6 +113,13 @@ export const adultSocialCareContent: LandingPageContent = {
   ],
   primaryCta: { label: "Search specialist accommodation", href: "/search" },
   secondaryCta: { label: "Create a referrer account", href: "/register?type=REFERRER" },
+  relatedLinks: [
+    { label: "Mental-health supported accommodation", href: "/mental-health-supported-accommodation" },
+    { label: "Supported accommodation", href: "/supported-accommodation" },
+  ],
+  resources: [
+    { label: "CQC: scope of registration", href: "https://www.cqc.org.uk/guidance-regulation/providers/registration/scope-registration" },
+  ],
 };
 
 export const advertiseAccommodationContent: LandingPageContent = {
@@ -116,7 +134,7 @@ export const advertiseAccommodationContent: LandingPageContent = {
   ],
   sections: [
     { heading: "Reach people looking for the housing you provide", paragraphs: ["RoomsNow is designed for providers across the wider HMO and specialist accommodation market. A listing can cover ordinary shared accommodation, supported housing, transitional homes, adult social care accommodation, flats and self-contained properties.", "Detailed adverts help your vacancies appear for relevant searches. Use a specific title, accurate location, original description, current availability, clear rent and facilities, and explain who the accommodation is suitable for."] },
-    { heading: "Keep your accommodation information accurate", paragraphs: ["Providers control their own organisation profile, property information and adverts. Keeping room availability current helps individuals and referrers avoid chasing vacancies that have already been filled.", "RoomsNow verification confirms stated identity and submitted documents. Providers remain responsible for every legal, licensing, regulatory, safeguarding and service requirement applying to their accommodation."] },
+    { heading: "Keep your accommodation information accurate", paragraphs: ["Providers control their own organisation profile, property information and adverts. Keeping room availability current helps individuals and referrers avoid chasing vacancies that have already been filled.", "RoomsNow verification confirms stated identity and submitted documents. Providers remain responsible for every legal, licensing, regulatory, safeguarding and service requirement applying to their accommodation, including HMO licensing and CQC registration where a regulated activity is delivered."] },
   ],
   faqs: [
     { question: "What accommodation can I advertise?", answer: "RoomsNow supports HMO rooms, shared homes, supported and transitional accommodation, adult social care housing, flats, houses and self-contained properties." },
@@ -128,13 +146,21 @@ export const advertiseAccommodationContent: LandingPageContent = {
   ],
   primaryCta: { label: "Advertise accommodation", href: "/register?type=PROVIDER" },
   secondaryCta: { label: "View membership", href: "/pricing" },
+  relatedLinks: [
+    { label: "Advertise supported accommodation vacancies", href: "/advertise-accommodation" },
+    { label: "Professional accommodation referrals", href: "/accommodation-referrals" },
+    { label: "HMO rooms in Birmingham", href: "/hmo-rooms-birmingham" },
+  ],
+  resources: [
+    { label: "CQC: check whether a regulated activity requires registration", href: "https://www.cqc.org.uk/guidance-regulation/providers/registration/scope-registration" },
+  ],
 };
 
 export const accommodationReferralsContent: LandingPageContent = {
   path: "/accommodation-referrals",
   eyebrow: "FOR PROFESSIONAL REFERRERS",
-  title: "Make an accommodation referral",
-  introduction: "Search suitable vacancies and send a structured housing referral to a participating provider through a private RoomsNow referrer account.",
+  title: "Professional accommodation referral platform",
+  introduction: "Search suitable vacancies and send a structured housing referral to a participating provider through a private RoomsNow professional accommodation referral platform.",
   highlights: [
     { heading: "Search before referring", body: "Filter vacancies by location, support need, accommodation type and accepted referral route." },
     { heading: "Keep client details private", body: "Referral information is visible only to you, the selected provider and authorised RoomsNow administrators." },
@@ -154,4 +180,208 @@ export const accommodationReferralsContent: LandingPageContent = {
   ],
   primaryCta: { label: "Create a referrer account", href: "/register?type=REFERRER" },
   secondaryCta: { label: "Search accommodation", href: "/search" },
+  relatedLinks: [
+    { label: "Accommodation for care leavers", href: "/accommodation-for-care-leavers" },
+    { label: "Accommodation for prison leavers", href: "/accommodation-for-prison-leavers" },
+    { label: "Mental-health supported accommodation", href: "/mental-health-supported-accommodation" },
+  ],
+};
+
+const CQC_RESOURCE = {
+  label: "CQC: scope of registration for health and adult social care activities",
+  href: "https://www.cqc.org.uk/guidance-regulation/providers/registration/scope-registration",
+};
+
+export const hmoRoomsBirminghamContent: LandingPageContent = {
+  path: "/hmo-rooms-birmingham",
+  eyebrow: "HMO ROOMS IN BIRMINGHAM",
+  title: "Find HMO rooms in Birmingham",
+  introduction: "Search current HMO rooms and shared accommodation in Birmingham. Compare weekly rent, bills, room availability, household arrangements and provider information before making an enquiry.",
+  highlights: [
+    { heading: "Live Birmingham vacancies", body: "Open a filtered RoomsNow search for accommodation advertised in Birmingham." },
+    { heading: "Compare room details", body: "Review rent, bills, furnishing, ensuite facilities and expected move-in dates." },
+    { heading: "Check the provider", body: "Read the provider profile, verification status and the information supplied with each advert." },
+  ],
+  sections: [
+    { heading: "Searching for an HMO room in Birmingham", paragraphs: ["Birmingham has a broad mix of shared homes, HMOs and specialist accommodation. Start with the location you need, then compare travel, household arrangements and the total weekly cost rather than relying on rent alone.", "RoomsNow brings current room availability and property information together. Each provider remains responsible for its advert, tenancy terms, property standards and any licence the property requires."] },
+    { heading: "What to check before choosing a room", paragraphs: ["Ask whether bills are included, how the deposit is protected, which facilities are shared, who manages repairs and whether there are house rules. If the property is an HMO, ask the provider whether Birmingham City Council requires it to be licensed and, where relevant, request the licence details.", "Never pay solely because an advert appears online. View the property where possible, confirm who you are dealing with and read the proposed agreement before sending money."] },
+  ],
+  faqs: [
+    { question: "How do I search HMO rooms in Birmingham?", answer: "Use the Birmingham search button and refine the results by accommodation type, weekly rent, facilities, household arrangement and move-in date." },
+    { question: "Are all Birmingham HMOs licensed?", answer: "Licensing depends on the property and the local scheme in force. Ask the provider and check current requirements with Birmingham City Council." },
+    { question: "Does RoomsNow manage Birmingham properties?", answer: "No. RoomsNow is a marketplace. Independent providers manage their properties, applications and tenancy arrangements." },
+  ],
+  primaryCta: { label: "Search HMO rooms in Birmingham", href: "/search?where=Birmingham&type=SHARED_ACCOMMODATION" },
+  secondaryCta: { label: "Advertise a Birmingham vacancy", href: "/advertise-accommodation" },
+  relatedLinks: [
+    { label: "Supported accommodation in Birmingham", href: "/supported-accommodation-birmingham" },
+    { label: "HMO rooms across the UK", href: "/hmo-rooms" },
+  ],
+};
+
+export const supportedAccommodationBirminghamContent: LandingPageContent = {
+  path: "/supported-accommodation-birmingham",
+  eyebrow: "BIRMINGHAM SUPPORTED HOUSING",
+  title: "Supported accommodation in Birmingham",
+  introduction: "Search supported accommodation vacancies in Birmingham by support need, room availability, accommodation type and accepted referral route.",
+  highlights: [
+    { heading: "Search by support need", body: "Narrow Birmingham vacancies by the support categories published by each provider." },
+    { heading: "Professional referrals", body: "Check whether a service accepts professional, local authority or self-referral routes." },
+    { heading: "Clear provider information", body: "Review accommodation, availability, verification information and provider profiles together." },
+  ],
+  sections: [
+    { heading: "Finding supported housing in Birmingham", paragraphs: ["Suitability depends on the person, the accommodation, the support model and the funding or referral route. Compare the service description and practical property details, then speak directly with the provider before making a placement decision.", "RoomsNow helps individuals and professionals discover vacancies; it does not commission services or replace Birmingham City Council, safeguarding, risk-assessment or due-diligence processes."] },
+    { heading: "CQC and supported accommodation", paragraphs: ["CQC regulates specified health and adult social care activities in England. Supported accommodation is not automatically CQC regulated simply because support is available. A provider delivering a regulated activity such as personal care may need CQC registration.", "Check the service model and the CQC register where registration should apply. RoomsNow verification does not replace a CQC check or confirm that an individual placement is suitable."] },
+  ],
+  faqs: [
+    { question: "Can a Birmingham support worker submit a referral?", answer: "Where the provider accepts professional referrals, an authorised referrer can send the requested client information through RoomsNow." },
+    { question: "Is all supported accommodation CQC registered?", answer: "No. CQC registration depends on whether the provider carries on a regulated activity. Accommodation and general support alone are not automatically regulated by CQC." },
+    { question: "Who decides whether a Birmingham placement is suitable?", answer: "The provider and relevant professionals remain responsible for assessment, funding, safeguarding and the final placement decision." },
+  ],
+  primaryCta: { label: "Search Birmingham vacancies", href: "/search?where=Birmingham" },
+  secondaryCta: { label: "Make a professional referral", href: "/accommodation-referrals" },
+  relatedLinks: [
+    { label: "HMO rooms in Birmingham", href: "/hmo-rooms-birmingham" },
+    { label: "Mental-health supported accommodation", href: "/mental-health-supported-accommodation" },
+    { label: "Accommodation for care leavers", href: "/accommodation-for-care-leavers" },
+  ],
+  resources: [CQC_RESOURCE],
+};
+
+export const supportedAccommodationManchesterContent: LandingPageContent = {
+  path: "/supported-accommodation-manchester",
+  eyebrow: "MANCHESTER SUPPORTED HOUSING",
+  title: "Supported accommodation in Manchester",
+  introduction: "Search supported accommodation in Manchester and compare vacancies, eligibility information, support categories and professional referral routes.",
+  highlights: [
+    { heading: "Manchester vacancies", body: "View accommodation advertised by providers serving Manchester and refine the results." },
+    { heading: "Structured referrals", body: "Send a referral to a selected provider and track its progress through your account." },
+    { heading: "Practical information", body: "Compare rent, facilities, accessibility, availability and the provider's stated support offer." },
+  ],
+  sections: [
+    { heading: "Compare Manchester supported accommodation", paragraphs: ["The phrase supported accommodation covers different property and service models. Read what each provider actually offers, who the service is intended for and which referral or funding routes it accepts.", "Professionals should complete their organisation's commissioning, safeguarding, regulatory and suitability checks before arranging a placement."] },
+    { heading: "Understanding CQC status", paragraphs: ["CQC registration relates to regulated health and adult social care activities in England. A housing service is not automatically CQC registered, while a provider delivering personal care or another regulated activity may need to be registered.", "Ask who delivers any care, check the relevant CQC registration and read current CQC guidance. A RoomsNow provider badge is separate from CQC registration and ratings."] },
+  ],
+  faqs: [
+    { question: "Can I search by support need in Manchester?", answer: "Yes. Search filters include categories such as mental health, homelessness, care leavers, prison leavers and learning disability." },
+    { question: "Can an individual apply directly?", answer: "Some providers accept self-referrals while others require a professional or local authority referral. Check the route shown on the advert." },
+    { question: "Does RoomsNow inspect Manchester services?", answer: "No. RoomsNow provides marketplace and workflow tools; it does not inspect accommodation or act as a regulator." },
+  ],
+  primaryCta: { label: "Search Manchester vacancies", href: "/search?where=Manchester" },
+  secondaryCta: { label: "Create a referrer account", href: "/register?type=REFERRER" },
+  relatedLinks: [
+    { label: "Supported accommodation across the UK", href: "/supported-accommodation" },
+    { label: "Transitional accommodation in London", href: "/transitional-accommodation-london" },
+  ],
+  resources: [CQC_RESOURCE],
+};
+
+export const transitionalAccommodationLondonContent: LandingPageContent = {
+  path: "/transitional-accommodation-london",
+  eyebrow: "LONDON MOVE-ON HOUSING",
+  title: "Transitional accommodation in London",
+  introduction: "Search transitional, temporary and move-on accommodation advertised in London, including shared and self-contained options with different referral routes.",
+  highlights: [
+    { heading: "Search London", body: "Open live London results and refine them by accommodation type and practical requirements." },
+    { heading: "Understand the placement", body: "Check eligibility, expected length of stay, rent, support and move-on arrangements." },
+    { heading: "Refer securely", body: "Professional referrers can select a provider and submit structured information through RoomsNow." },
+  ],
+  sections: [
+    { heading: "Finding move-on accommodation in London", paragraphs: ["Transitional accommodation can support a move from emergency, hostel, refuge or supported settings towards a more settled home. Providers use different eligibility, funding and length-of-stay rules, so the full advert and a direct conversation are important.", "Use location and referral filters to identify plausible vacancies, but confirm live availability and suitability with the provider before promising a placement."] },
+    { heading: "Information to confirm", paragraphs: ["Ask about the occupancy agreement, weekly costs, benefits eligibility, support hours, exclusions, assessment process and what move-on planning is provided. A professional referral should include only information necessary for assessment and should follow your organisation's data-protection procedures."] },
+  ],
+  faqs: [
+    { question: "Is transitional accommodation emergency housing?", answer: "Not necessarily. Transitional accommodation is normally a time-limited step towards longer-term housing; emergency accommodation is intended for an immediate housing crisis." },
+    { question: "Can I self-refer in London?", answer: "It depends on the provider. RoomsNow adverts show whether self, professional or local authority referrals are accepted." },
+    { question: "How long does a transitional placement last?", answer: "The provider sets the placement terms. Confirm any time limit and move-on plan before accepting an offer." },
+  ],
+  primaryCta: { label: "Search London accommodation", href: "/search?where=London" },
+  secondaryCta: { label: "List a London vacancy", href: "/advertise-accommodation" },
+  relatedLinks: [
+    { label: "Transitional accommodation across the UK", href: "/transitional-accommodation" },
+    { label: "Accommodation for prison leavers", href: "/accommodation-for-prison-leavers" },
+  ],
+};
+
+export const careLeaversAccommodationContent: LandingPageContent = {
+  path: "/accommodation-for-care-leavers",
+  eyebrow: "HOUSING FOR CARE LEAVERS",
+  title: "Accommodation for care leavers",
+  introduction: "Search accommodation advertised for care leavers and young people, or use a professional referrer account to contact a selected provider about a suitable vacancy.",
+  highlights: [
+    { heading: "Relevant vacancies", body: "Filter for care-leaver and young-person support categories rather than reviewing every advert." },
+    { heading: "Practical comparisons", body: "Check location, availability, household arrangement, facilities and the support described." },
+    { heading: "Professional workflow", body: "Personal advisers and authorised professionals can manage clients and track referrals." },
+  ],
+  sections: [
+    { heading: "Finding the right accommodation", paragraphs: ["A care leaver may need ordinary shared housing, transitional accommodation or a supported placement. The right option depends on age, independence, support needs, local authority duties and the person's own preferences.", "RoomsNow helps people and authorised professionals find advertised vacancies. The responsible local authority and provider retain their assessment, safeguarding, funding and placement responsibilities."] },
+    { heading: "What to ask the provider", paragraphs: ["Confirm staffing or support hours, out-of-hours arrangements, house rules, compatibility with other residents, rent and service charges, benefits arrangements and the expected move-on plan. Where personal care or another regulated activity is delivered, check which organisation provides it and whether CQC registration applies."] },
+  ],
+  faqs: [
+    { question: "Can a personal adviser refer a care leaver?", answer: "Yes, where the selected provider accepts professional referrals. The referrer should follow their organisation's assessment and information-sharing procedures." },
+    { question: "Is care-leaver accommodation always supported?", answer: "No. Options can include ordinary tenancies, shared housing, supported accommodation and transitional placements, depending on the person's circumstances." },
+    { question: "Does RoomsNow decide whether a placement is appropriate?", answer: "No. Suitability and placement decisions remain with the provider, relevant professionals and the person seeking accommodation." },
+  ],
+  primaryCta: { label: "Search care-leaver accommodation", href: "/search?support=care-leavers" },
+  secondaryCta: { label: "Make a professional referral", href: "/accommodation-referrals" },
+  relatedLinks: [
+    { label: "Transitional accommodation", href: "/transitional-accommodation" },
+    { label: "Supported accommodation in Birmingham", href: "/supported-accommodation-birmingham" },
+  ],
+  resources: [CQC_RESOURCE],
+};
+
+export const mentalHealthAccommodationContent: LandingPageContent = {
+  path: "/mental-health-supported-accommodation",
+  eyebrow: "MENTAL HEALTH HOUSING",
+  title: "Mental-health supported accommodation",
+  introduction: "Search supported accommodation advertised for people with mental-health support needs and compare vacancies, facilities and referral routes.",
+  highlights: [
+    { heading: "Focused search", body: "Open results filtered for the mental-health support category and refine by location." },
+    { heading: "Compare the support offer", body: "Read the provider's description of staffing, support and eligibility before referring." },
+    { heading: "Check regulation", body: "Establish who delivers any regulated care and verify CQC registration where applicable." },
+  ],
+  sections: [
+    { heading: "Housing with mental-health support", paragraphs: ["Services differ widely: some focus on tenancy sustainment and independence, while others work alongside clinical or social-care teams. An advert category alone cannot establish suitability, so discuss the person's needs and risks directly with the provider.", "RoomsNow is a discovery and referral platform. It does not provide mental-health treatment, crisis support, care assessment or clinical advice."] },
+    { heading: "CQC and mental-health accommodation", paragraphs: ["CQC registration is determined by the regulated activities delivered, not simply by using the words supported accommodation. Check whether personal care, treatment or another regulated activity is being provided, which organisation delivers it and whether its registration covers the relevant service.", "If someone needs urgent mental-health help, use the appropriate NHS or emergency service rather than relying on an accommodation marketplace."] },
+  ],
+  faqs: [
+    { question: "Can I filter RoomsNow for mental-health support?", answer: "Yes. The search link opens listings tagged by providers for mental-health support; you can then refine the location and other requirements." },
+    { question: "Are all mental-health supported housing services CQC registered?", answer: "No. Registration depends on the activities delivered. Confirm the service model and check the CQC register where regulated activity should be provided." },
+    { question: "Does RoomsNow provide crisis support?", answer: "No. RoomsNow is an accommodation marketplace and referral workflow, not a crisis or clinical service." },
+  ],
+  primaryCta: { label: "Search mental-health accommodation", href: "/search?support=mental-health" },
+  secondaryCta: { label: "Create a professional account", href: "/register?type=REFERRER" },
+  relatedLinks: [
+    { label: "Supported accommodation", href: "/supported-accommodation" },
+    { label: "Adult social care accommodation", href: "/adult-social-care-accommodation" },
+  ],
+  resources: [CQC_RESOURCE],
+};
+
+export const prisonLeaversAccommodationContent: LandingPageContent = {
+  path: "/accommodation-for-prison-leavers",
+  eyebrow: "HOUSING FOR PRISON LEAVERS",
+  title: "Accommodation for prison leavers",
+  introduction: "Search accommodation advertised for prison leavers and people with offending histories, including supported, transitional and shared options.",
+  highlights: [
+    { heading: "Search suitable adverts", body: "Filter for prison-leaver support and compare the provider's eligibility information." },
+    { heading: "Plan the referral", body: "Professional teams can select a vacancy and submit structured information for assessment." },
+    { heading: "Track progress", body: "Follow referral stages from submission through assessment, offer and move-in." },
+  ],
+  sections: [
+    { heading: "Finding accommodation after release", paragraphs: ["Accommodation can be an important part of resettlement, but eligibility, risk management, licence conditions and funding vary. Search early where possible and give the provider enough accurate information to assess whether its property and support model are suitable.", "RoomsNow does not override statutory housing duties, probation processes, MAPPA arrangements, safeguarding procedures or professional risk assessment."] },
+    { heading: "Information for professional referrers", paragraphs: ["Confirm the provider's exclusions, staffing, location suitability, curfew or house rules, support offer and referral documents. Share sensitive information only where it is necessary, lawful and proportionate for assessment.", "The provider remains responsible for its acceptance decision and ongoing service; the referrer remains responsible for their professional and organisational duties."] },
+  ],
+  faqs: [
+    { question: "Can probation or resettlement teams refer through RoomsNow?", answer: "Authorised professionals can use a referrer account where a participating provider accepts that referral route." },
+    { question: "Does every provider accept prison leavers?", answer: "No. Use the prison-leaver support filter and read each provider's eligibility and exclusion information." },
+    { question: "Is RoomsNow an emergency housing service?", answer: "No. RoomsNow displays provider vacancies and supports enquiries and referrals; it does not allocate emergency housing." },
+  ],
+  primaryCta: { label: "Search prison-leaver accommodation", href: "/search?support=ex-offenders" },
+  secondaryCta: { label: "Make a professional referral", href: "/accommodation-referrals" },
+  relatedLinks: [
+    { label: "Transitional accommodation in London", href: "/transitional-accommodation-london" },
+    { label: "Supported accommodation", href: "/supported-accommodation" },
+  ],
 };

@@ -3,8 +3,8 @@ import { accommodationReferralsContent } from "@/lib/seo-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Accommodation Referrals for Housing Professionals",
-  description: "Search housing vacancies and submit supported accommodation referrals securely to participating providers through RoomsNow.",
+  title: "Professional Accommodation Referral Platform",
+  description: "Search housing vacancies and use a professional accommodation referral platform to submit and track referrals with participating providers.",
   path: accommodationReferralsContent.path,
 });
 
