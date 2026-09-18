@@ -7,6 +7,124 @@
   to { opacity: 1; transform: translateY(0); }
 }
 .menu-panel { animation: menu-enter 160ms ease-out; }
+
+@keyframes celebration-card-in {
+  0% { opacity: 0; transform: translateY(18px) scale(.84); }
+  58% { opacity: 1; transform: translateY(-4px) scale(1.025); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes celebration-layer-out {
+  0%, 78% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes celebration-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.1) rotate(0); }
+  34% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1) rotate(var(--r)); }
+}
+
+@keyframes celebration-rocket {
+  0% { transform: translate(-8px, 9px) rotate(-8deg) scale(.8); }
+  55% { transform: translate(3px, -4px) rotate(4deg) scale(1.08); }
+  100% { transform: translate(0) rotate(0) scale(1); }
+}
+
+@keyframes celebration-bolt {
+  0% { opacity: 0; transform: translateY(-18px) scaleY(1.35); filter: brightness(2); }
+  35% { opacity: 1; transform: translateY(3px) scaleY(.9); }
+  62% { transform: translateY(-2px) scale(1.12); }
+  100% { transform: translateY(0) scale(1); filter: brightness(1); }
+}
+
+.celebration-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: hidden;
+  background: rgb(14 22 36 / 14%);
+  backdrop-filter: blur(2px);
+  animation: celebration-layer-out 3.4s ease-in both;
+}
+
+.celebration-halo {
+  position: absolute;
+  width: min(82vw, 580px);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgb(84 157 229 / 32%) 0%, rgb(22 102 170 / 12%) 38%, transparent 68%);
+}
+
+.celebration-card {
+  position: relative;
+  width: min(calc(100vw - 40px), 410px);
+  padding: 28px 26px 26px;
+  border: 1px solid rgb(22 102 170 / 25%);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 24px 70px rgb(14 22 36 / 25%);
+  text-align: center;
+  animation: celebration-card-in .62s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.celebration-icon {
+  display: grid;
+  width: 82px;
+  height: 82px;
+  margin: -64px auto 18px;
+  place-items: center;
+  border: 6px solid white;
+  border-radius: 999px;
+  color: white;
+  background: linear-gradient(145deg, #549de5, #1666aa 66%, #0f4f87);
+  box-shadow: 0 13px 30px rgb(22 102 170 / 30%);
+}
+
+.celebration-icon-boost svg { animation: celebration-bolt .7s cubic-bezier(.16, 1, .3, 1) both; }
+.celebration-icon-boost-purchase svg { animation: celebration-rocket .8s cubic-bezier(.16, 1, .3, 1) both; }
+.celebration-icon-membership { background: linear-gradient(145deg, #71b6f0, #1666aa 55%, #123a62); }
+.celebration-icon-membership svg { animation: celebration-card-in .75s .08s cubic-bezier(.16, 1, .3, 1) both; }
+
+.celebration-particles {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1px;
+  height: 1px;
+}
+
+.celebration-particle {
+  --x: 0px;
+  --y: 0px;
+  --r: 0deg;
+  --delay: 0ms;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 9px;
+  height: 16px;
+  border-radius: 3px;
+  background: #549de5;
+  animation: celebration-pop .9s var(--delay) cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.celebration-particle:nth-child(2n) { background: #f5a623; }
+.celebration-particle:nth-child(3n) { background: #1666aa; }
+.celebration-particle-star { width: 13px; height: 13px; border-radius: 999px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .celebration-layer,
+  .celebration-card,
+  .celebration-icon svg,
+  .celebration-particle {
+    animation: none !important;
+  }
+  .celebration-particles { display: none; }
+}
 @media (max-width: 640px) {
   input, select, textarea { font-size: 16px !important; }
 

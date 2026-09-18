@@ -1,19 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { BoostCountdown } from "./boost-countdown";
+import { SuccessCelebration } from "./success-celebration";
+import { boostListingAction } from "@/server/actions/billing";
 
 export function ProviderAdvertBoost({
   listingId,
   boostedUntil,
   initiallyActive,
+  canBoost,
 }: {
   listingId: string;
   boostedUntil: string | null;
   initiallyActive: boolean;
+  canBoost: boolean;
 }) {
+  const router = useRouter();
   const [active, setActive] = useState(initiallyActive);
+  const [message, setMessage] = useState<string | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     const update = () => setActive(!!boostedUntil && new Date(boostedUntil).getTime() > Date.now());
@@ -24,6 +33,16 @@ export function ProviderAdvertBoost({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
+      {celebrating && (
+        <SuccessCelebration
+          kind="boost"
+          onDone={() => {
+            setCelebrating(false);
+            setMessage(null);
+            router.refresh();
+          }}
+        />
+      )}
       {active && boostedUntil && (
         <div className="inline-flex flex-wrap items-center gap-2 rounded-[10px] bg-pine-light px-3 py-2 text-pine-dark">
           <span className="inline-flex items-center gap-1.5 text-[13px] font-bold">
@@ -32,13 +51,29 @@ export function ProviderAdvertBoost({
           <BoostCountdown until={boostedUntil} compact />
         </div>
       )}
-      <Link
-        href={`/provider/adverts/${listingId}#boost`}
-        className={`${active ? "btn-secondary" : "btn-primary"} inline-flex items-center gap-2`}
-      >
-        {!active && <LightningIcon />}
-        {active ? "Manage boost" : "Boost for 24 hours"}
-      </Link>
+      {active ? (
+        <Link href={`/provider/adverts/${listingId}#boost`} className="btn-secondary inline-flex items-center gap-2">
+          Manage boost
+        </Link>
+      ) : canBoost ? (
+        <button
+          type="button"
+          className="btn-primary inline-flex items-center gap-2"
+          disabled={pending}
+          onClick={() => startTransition(async () => {
+            const response = await boostListingAction(listingId);
+            setMessage(response?.message ?? null);
+            if (response?.ok) setCelebrating(true);
+          })}
+        >
+          <LightningIcon /> {pending ? "Starting boost…" : "Boost for 24 hours"}
+        </button>
+      ) : (
+        <Link href={`/provider/adverts/${listingId}#boost`} className="btn-primary inline-flex items-center gap-2">
+          <LightningIcon /> Get boosts
+        </Link>
+      )}
+      {message && !celebrating && <span className="text-[13px] text-ink-soft">{message}</span>}
     </div>
   );
 }

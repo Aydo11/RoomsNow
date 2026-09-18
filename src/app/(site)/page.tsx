@@ -41,6 +41,18 @@ const FEATURED_CITIES = [
   },
 ] as const;
 
+const POPULAR_SEARCHES = [
+  ["HMO rooms in Birmingham", "/hmo-rooms-birmingham"],
+  ["Supported accommodation in Birmingham", "/supported-accommodation-birmingham"],
+  ["Supported accommodation in Manchester", "/supported-accommodation-manchester"],
+  ["Transitional accommodation in London", "/transitional-accommodation-london"],
+  ["Accommodation for care leavers", "/accommodation-for-care-leavers"],
+  ["Mental-health supported accommodation", "/mental-health-supported-accommodation"],
+  ["Accommodation for prison leavers", "/accommodation-for-prison-leavers"],
+  ["Advertise supported accommodation vacancies", "/advertise-accommodation"],
+  ["Professional accommodation referral platform", "/accommodation-referrals"],
+] as const;
+
 export default async function HomePage() {
   const [roomsAvailable, cities, featured, user] = await Promise.all([
     db.room.count({ where: { status: "AVAILABLE", listing: { status: "ACTIVE" } } }),
@@ -268,6 +280,18 @@ export default async function HomePage() {
             </Link>
           ))}
         </div>
+
+        <nav className="mt-12 border-t border-line pt-8" aria-label="Popular accommodation searches">
+          <h2 className="text-[24px]">Popular accommodation searches</h2>
+          <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-ink-soft">
+            Explore focused location and support pages, then open the live vacancy search when you are ready to compare providers.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {POPULAR_SEARCHES.map(([label, href]) => (
+              <Link key={href} href={href} className="chip hover:border-pine hover:text-pine-dark">{label}</Link>
+            ))}
+          </div>
+        </nav>
       </section>
 
       <section className="border-t border-line bg-white">

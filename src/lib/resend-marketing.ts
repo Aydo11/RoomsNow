@@ -16,11 +16,26 @@ export type PreparedMarketingBroadcast = {
   segmentId: string;
 };
 
+function cleanEnvValue(value: string | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) return "";
+  const first = trimmed.at(0);
+  const last = trimmed.at(-1);
+  return (first === '"' && last === '"') || (first === "'" && last === "'")
+    ? trimmed.slice(1, -1).trim()
+    : trimmed;
+}
+
 function marketingConfig() {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.MARKETING_EMAIL_FROM;
+  // Render values are entered without quotes, but accepting matching wrapping
+  // quotes prevents a common copy/paste mistake from becoming an opaque 401.
+  const apiKey = cleanEnvValue(process.env.RESEND_API_KEY);
+  const from = cleanEnvValue(process.env.MARKETING_EMAIL_FROM);
   if (!apiKey || !from) {
     throw new Error("RESEND_API_KEY and MARKETING_EMAIL_FROM are required for marketing broadcasts.");
+  }
+  if (!apiKey.startsWith("re_")) {
+    throw new Error("RESEND_API_KEY does not look like a Resend API key. Copy the full re_ key from Resend into Render, then redeploy.");
   }
   return {
     apiKey,
@@ -43,7 +58,22 @@ async function resendRequest<T>(path: string, init: RequestInit = {}): Promise<T
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     console.error(`Resend marketing API failed (${response.status})`, detail.slice(0, 1000));
-    throw new Error(`Resend rejected the marketing request with status ${response.status}.`);
+    if (response.status === 401) {
+      throw new Error(
+        "Resend could not authenticate this campaign. Create a new Full access API key in Resend (a Sending access key cannot create segments or broadcasts), replace RESEND_API_KEY in Render without quote marks, and redeploy.",
+      );
+    }
+    if (response.status === 403) {
+      throw new Error(
+        "Resend authenticated the key but it cannot manage marketing campaigns. Replace it with a Full access Resend API key and redeploy.",
+      );
+    }
+    if (response.status === 422) {
+      throw new Error(
+        "Resend rejected the campaign details. Confirm roomsnow.co.uk is verified and MARKETING_EMAIL_FROM is exactly RoomsNow <info@roomsnow.co.uk>.",
+      );
+    }
+    throw new Error(`Resend could not prepare the campaign (status ${response.status}). Check the Render logs and Resend status, then try again.`);
   }
   return (await response.json()) as T;
 }
