@@ -36,13 +36,17 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
             />
           </div>
         ) : (
-          <ResilientImage
-            src={current.url}
-            fallbackSrc={fallback.url}
-            fallbackLabel={current.illustrative ? undefined : "Photo unavailable — illustrative image shown"}
-            alt={current.caption ?? title}
-            className="aspect-video max-h-[42vh] w-full object-contain sm:max-h-none"
-          />
+          <div className="relative aspect-video max-h-[42vh] w-full sm:max-h-none">
+            <ResilientImage
+              src={current.url}
+              fallbackSrc={fallback.url}
+              fallbackLabel={current.illustrative ? undefined : "Photo unavailable — illustrative image shown"}
+              alt={current.caption ?? title}
+              className="object-contain"
+              sizes="(min-width: 1024px) 700px, 100vw"
+              priority
+            />
+          </div>
         )}
 
         {current.illustrative && (
@@ -88,8 +92,8 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
                     src={item.url}
                     fallbackSrc={demoListingImage(listingId, index).url}
                     alt={item.caption ?? `${title} — photo ${index + 1}`}
-                    className="h-full w-full object-contain"
-                    loading="lazy"
+                    className="object-contain"
+                    sizes="96px"
                   />
                 )}
               </button>
