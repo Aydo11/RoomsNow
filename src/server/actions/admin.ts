@@ -62,6 +62,50 @@ export async function rejectListingAction(listingId: string, note: string) {
   revalidatePath("/admin/listings");
 }
 
+/**
+ * Admin-initiated removal of a live or paused advert — distinct from
+ * `rejectListingAction`, which is only for sending a *pending* advert back
+ * for changes before it's ever gone live. A takedown always requires a
+ * reason (a preset from `TAKEDOWN_REASONS`, optionally with extra detail),
+ * which is stored on the same `rejectionNote` field so it surfaces through
+ * the existing "why was my advert not approved" UI on the provider side —
+ * the provider can then fix the issue and resubmit, or delete the advert.
+ */
+export async function takedownListingAction(listingId: string, reason: string) {
+  const admin = await requireAdmin("MODERATION");
+  const trimmed = reason.trim();
+  if (trimmed.length < 4) return { ok: false, message: "Please give a reason for taking this advert down." };
+
+  const listing = await db.listing.findUnique({ where: { id: listingId }, select: { status: true, companyId: true, title: true } });
+  if (!listing) return { ok: false, message: "Advert not found." };
+  if (!["ACTIVE", "PAUSED"].includes(listing.status)) {
+    return { ok: false, message: "Only a live or paused advert can be taken down this way." };
+  }
+
+  await db.listing.update({
+    where: { id: listingId },
+    data: { status: "REJECTED", rejectionNote: trimmed, pausedReason: null, featured: false },
+  });
+  await notifyCompany(listing.companyId, {
+    type: "LISTING",
+    title: "Advert removed",
+    body: `We've removed “${listing.title}” from RoomsNow. Reason: ${trimmed}. You can fix the issue and resubmit it, or delete it, from My adverts.`,
+    href: `/provider/adverts/${listingId}`,
+    email: true,
+  });
+  await audit({
+    actorId: admin.id,
+    action: "admin.listing_removed",
+    targetType: "Listing",
+    targetId: listingId,
+    metadata: { reason: trimmed, previousStatus: listing.status },
+  });
+  revalidatePath("/admin/listings");
+  revalidatePath("/provider/adverts");
+  revalidatePath(`/listings/${listingId}`);
+  return { ok: true, message: "Advert removed." };
+}
+
 export async function reviewVerificationAction(requestId: string, approve: boolean, note?: string, checks?: VerificationChecks) {
   const admin = await requireAdmin();
   const completeChecks = checks && Object.values(checks).every(Boolean);
