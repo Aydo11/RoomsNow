@@ -84,7 +84,7 @@ export default async function ProviderAdvertsPage({
       ) : (
         <ul className="space-y-4">
           {listings.map((listing) => (
-            <li key={listing.id} className="card flex flex-wrap gap-5 p-4">
+            <li key={listing.id} data-advert-card className="card relative flex flex-wrap gap-5 overflow-hidden p-4">
               <div className="h-24 w-32 shrink-0 overflow-hidden rounded-[10px] bg-paper-sunk">
                 {listing.media[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element
