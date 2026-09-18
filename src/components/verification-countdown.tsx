@@ -45,6 +45,7 @@ export function VerificationCountdown({ deadlineAt }: { deadlineAt: string }) {
           ? "Time since your 90-day verification window closed"
           : "Time left in your 90-day verification window"
       }
+      aria-live="polite"
     >
       <ClockIcon />
       {overdue ? `${formatDuration(Math.abs(diff))} overdue` : `${formatDuration(diff)} left to verify`}
