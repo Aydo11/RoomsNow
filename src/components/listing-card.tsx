@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { FeaturedBadge, MatchScore, RoomStrip, VerifiedBadge } from "./badges";
 import { monthYear, publicLocation, rentRange } from "@/lib/format";
 import { supportLabel, ACCOMMODATION_TYPES } from "@/lib/taxonomy";
@@ -136,9 +137,8 @@ export function ListingCard({
           <div className="mt-3 flex min-h-9 items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-2">
               {listing.company.logoUrl ? (
-                <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[9px] border border-line bg-white p-1">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={listing.company.logoUrl} alt="" className="h-full w-full rounded-full object-cover" loading="lazy" />
+                <span className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[9px] border border-line bg-white p-1">
+                  <Image src={listing.company.logoUrl} alt="" fill sizes="36px" className="rounded-full object-cover" />
                 </span>
               ) : (
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[9px] bg-pine-light text-[12px] font-semibold text-pine-dark" aria-hidden="true">
