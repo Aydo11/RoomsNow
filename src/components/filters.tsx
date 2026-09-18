@@ -26,7 +26,7 @@ export function Filters() {
     update(key, next.join(","));
   }
 
-  const activeCount = ["support", "type", "gender", "wheelchair", "furnished", "ensuite", "selfContained", "referral", "verified", "maxRent", "minRent", "radius", "bbox"]
+  const activeCount = ["support", "type", "gender", "wheelchair", "furnished", "ensuite", "selfContained", "petsAllowed", "referral", "verified", "maxRent", "minRent", "radius", "bbox"]
     .filter((key) => params.get(key)).length;
 
   return (
@@ -166,6 +166,7 @@ export function Filters() {
               ["selfContained", "Self-contained"],
               ["furnished", "Furnished"],
               ["wheelchair", "Step-free access"],
+              ["petsAllowed", "Pets allowed"],
               ["verified", "Verified providers only"],
             ].map(([key, label]) => (
               <label key={key} className="flex items-center gap-2.5 text-[15px]">

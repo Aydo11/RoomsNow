@@ -108,10 +108,51 @@ const ACCOUNT_TYPES = [
   },
 ] as const;
 
+const ACQUISITION_SOURCES = [
+  { value: "", label: "Prefer not to say" },
+  { value: "SOCIAL_MEDIA", label: "Social media" },
+  { value: "EMAIL", label: "Email" },
+  { value: "SEARCH_ENGINE", label: "Search engine" },
+  { value: "REFERRAL", label: "A referral or invite code" },
+  { value: "WORD_OF_MOUTH", label: "Word of mouth" },
+  { value: "PRESS", label: "Press or news" },
+  { value: "OTHER", label: "Other" },
+] as const;
+const VALID_ACQUISITION_SOURCES = new Set<string>(ACQUISITION_SOURCES.map((s) => s.value).filter(Boolean));
+/** Lets a campaign link use a friendly `?src=facebook` etc. instead of the raw enum value. */
+const ACQUISITION_SOURCE_ALIASES: Record<string, string> = {
+  facebook: "SOCIAL_MEDIA",
+  instagram: "SOCIAL_MEDIA",
+  linkedin: "SOCIAL_MEDIA",
+  tiktok: "SOCIAL_MEDIA",
+  twitter: "SOCIAL_MEDIA",
+  x: "SOCIAL_MEDIA",
+  google: "SEARCH_ENGINE",
+  bing: "SEARCH_ENGINE",
+  mailshot: "EMAIL",
+  newsletter: "EMAIL",
+  referral: "REFERRAL",
+  friend: "WORD_OF_MOUTH",
+  "word-of-mouth": "WORD_OF_MOUTH",
+  press: "PRESS",
+  news: "PRESS",
+};
+/** `?src=` from a campaign link, resolved to a valid enum value — falls back to
+ * REFERRAL when an invite code is present but no source was tagged, otherwise blank. */
+function resolveAcquisitionSource(raw: string | null, hasReferralCode: boolean): string {
+  const key = (raw ?? "").trim().toLowerCase();
+  if (!key) return hasReferralCode ? "REFERRAL" : "";
+  const upper = key.toUpperCase();
+  if (VALID_ACQUISITION_SOURCES.has(upper)) return upper;
+  return ACQUISITION_SOURCE_ALIASES[key] ?? "";
+}
+
 export function RegisterForm() {
   const params = useSearchParams();
   const initial = (params.get("type") as "USER" | "PROVIDER" | "REFERRER" | null) ?? "USER";
   const [type, setType] = useState<"USER" | "PROVIDER" | "REFERRER">(initial);
+  const referralCodeFromLink = params.get("ref") ?? "";
+  const acquisitionSourceFromLink = resolveAcquisitionSource(params.get("src"), Boolean(referralCodeFromLink));
   const [state, action] = useActionState(registerAction, { ok: false });
 
   return (
@@ -170,6 +211,13 @@ export function RegisterForm() {
         <Field label={type === "PROVIDER" ? "Your location" : "Where are you looking?"} name="locationLabel" error={state.errors?.locationLabel}>
           <input id="locationLabel" name="locationLabel" placeholder="Birmingham" className="field" />
         </Field>
+        <Field label="How did you hear about us?" name="acquisitionSource" hint="Optional" error={state.errors?.acquisitionSource}>
+          <select id="acquisitionSource" name="acquisitionSource" defaultValue={acquisitionSourceFromLink} className="field">
+            {ACQUISITION_SOURCES.map((source) => (
+              <option key={source.value} value={source.value}>{source.label}</option>
+            ))}
+          </select>
+        </Field>
       </div>
 
       {type === "USER" && (
@@ -202,6 +250,20 @@ export function RegisterForm() {
             You&apos;ll add registration numbers, addresses and verification documents from your
             dashboard. Verification is reviewed manually by our team.
           </p>
+          <Field
+            label="Invite code"
+            name="referralCode"
+            hint="Optional — from another provider's invite link"
+            error={state.errors?.referralCode}
+          >
+            <input
+              id="referralCode"
+              name="referralCode"
+              defaultValue={referralCodeFromLink}
+              className="field uppercase"
+              autoCapitalize="characters"
+            />
+          </Field>
         </div>
       )}
 

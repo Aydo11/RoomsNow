@@ -225,7 +225,27 @@ enum NotificationType {
   SAVED_LISTING
   MEMBERSHIP
   VERIFICATION
+  REVIEW
   SYSTEM
+}
+
+enum AlertFrequency {
+  INSTANT
+  DAILY
+  OFF
+}
+
+/// How a user first heard about RoomsNow, captured at registration (from a
+/// `?src=` link on outbound campaigns, or self-selected in the sign-up form).
+/// Nullable/unset for anyone who registered before this was added.
+enum AcquisitionSource {
+  SOCIAL_MEDIA
+  EMAIL
+  SEARCH_ENGINE
+  REFERRAL
+  WORD_OF_MOUTH
+  PRESS
+  OTHER
 }
 
 // ---------------------------------------------------------------- identity
@@ -260,6 +280,8 @@ model User {
   passwordChangedAt         DateTime?
   deletedAt                 DateTime?
   retainUntil               DateTime?
+  /// Marketing channel attribution, captured once at sign-up — see AcquisitionSource.
+  acquisitionSource         AcquisitionSource?
   createdAt                 DateTime      @default(now())
   updatedAt                 DateTime      @updatedAt
 
@@ -287,6 +309,8 @@ model User {
   membershipGrantsMade    MembershipGrant[]         @relation("MembershipGrantAdmin")
   userMembershipGrants    UserMembershipGrant[]     @relation("UserMembershipGrantRecipient")
   userMembershipGrantsMade UserMembershipGrant[]    @relation("UserMembershipGrantAdmin")
+  savedSearches           SavedSearch[]
+  providerReviews         ProviderReview[]
 
   @@index([role, status])
 }
@@ -371,6 +395,13 @@ model Company {
   /// Purchased 24-hour boost credits. Membership allowances are calculated
   /// separately per billing period so paid packs never expire.
   boostCredits       Int                @default(0)
+  /// Stable invite code for the provider-to-provider referral programme.
+  /// Generated lazily the first time it's needed — see ensureReferralCode —
+  /// so existing companies never need a backfill migration.
+  referralCode           String?            @unique
+  /// How many 5-qualified-referral reward cycles this company has already
+  /// been paid out for. Prevents re-granting the same milestone twice.
+  referralRewardsClaimed Int                @default(0)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
@@ -383,6 +414,9 @@ model Company {
   documents        Document[]
   clientShares     ClientShare[]
   membershipGrants MembershipGrant[]
+  reviews          ProviderReview[]
+  referralsMade    ProviderReferral[] @relation("ReferralsMade")
+  referredVia      ProviderReferral?  @relation("ReferralsReceived")
 
   @@index([city])
 }
@@ -470,6 +504,7 @@ model Listing {
   sharedFacilities   Boolean           @default(true)
   wheelchairAccess   Boolean           @default(false)
   accessibilityNotes String?
+  petsAllowed        Boolean           @default(false)
 
   supportTypes        String[]        @default([])
   supportDescription  String?
@@ -485,6 +520,23 @@ model Listing {
   billsIncluded  Boolean   @default(true)
   housingBenefit Boolean   @default(true)
   availableFrom  DateTime?
+
+  /// Set by the system when it pauses an advert on the provider's behalf —
+  /// "NO_AVAILABILITY" (every room stopped being lettable) or "STALE" (a
+  /// "still available?" nudge went unanswered). Null when live, or when a
+  /// person paused it themselves. Read by syncListingAvailability and
+  /// runListingFreshnessCheck (src/lib/listing-availability.ts) to
+  /// auto-reactivate once the reason clears, and shown to the provider so an
+  /// auto-pause never looks like a mystery.
+  pausedReason            String?
+  /// Bumped whenever a provider confirms the advert is accurate — creating
+  /// or editing it, changing a room's status, or answering a staleness
+  /// nudge. Drives runListingFreshnessCheck.
+  availabilityConfirmedAt DateTime  @default(now())
+  /// Set when the "still available?" nudge email goes out, so it's sent at
+  /// most once per staleness window rather than every time the hourly check
+  /// runs.
+  staleNudgeSentAt        DateTime?
 
   /// Sponsored placement. Sponsored adverts are pinned to the first page of a
   /// matching search, ordered by bid, and are always labelled as sponsored.
@@ -514,6 +566,7 @@ model Listing {
   referrals     Referral[]
   conversations Conversation[]
   applications  Application[]
+  viewings      Viewing[]
 
   @@index([status, featured, featuredUntil])
   @@index([status, boostedUntil, boostStartsAt])
@@ -521,6 +574,7 @@ model Listing {
   @@index([status, weeklyRentFrom])
   @@index([status, availableFrom, publishedAt])
   @@index([status, accommodationType, publishedAt])
+  @@index([status, availabilityConfirmedAt])
   @@index([companyId, status, updatedAt])
   @@index([companyId])
 }
@@ -596,6 +650,7 @@ model AccommodationRequest {
 
   application Application?
   documents   Document[]
+  viewings    Viewing[]
 
   @@unique([listingId, applicantId])
   @@index([status])
@@ -639,6 +694,8 @@ model Referral {
   application Application?
   documents   Document[]
   events      ReferralEvent[]
+  viewings    Viewing[]
+  review      ProviderReview?
 
   @@index([status])
   @@index([clientId])
@@ -646,6 +703,48 @@ model Referral {
   @@index([listingId, createdAt])
   @@index([createdAt])
   @@index([applicantEmail])
+}
+
+/// A referrer's rating of how a specific placement went, left once a referral
+/// reaches MOVED_IN. Tied 1:1 to the referral it came from (not freely
+/// postable) so a review always maps to a real, verified placement — this is
+/// what tells a future referrer whether the service was actually good,
+/// alongside (not instead of) the due-diligence checks in VerificationPanel.
+model ProviderReview {
+  id         String   @id @default(cuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  referralId String   @unique
+  referral   Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  referrerId String
+  referrer   User     @relation(fields: [referrerId], references: [id], onDelete: Cascade)
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@index([companyId, createdAt])
+}
+
+enum ProviderReferralStatus {
+  SIGNED_UP // registered a new provider account using this invite code
+  QUALIFIED // went on to submit their first advert for review
+}
+
+/// One row per new provider account that registered using another provider's
+/// invite code. Stays SIGNED_UP until the new company submits its first
+/// advert, at which point qualifyProviderReferral() flips it to QUALIFIED
+/// and checks whether the referrer has just earned another reward.
+model ProviderReferral {
+  id                String                 @id @default(cuid())
+  referrerCompanyId String
+  referrerCompany   Company                @relation("ReferralsMade", fields: [referrerCompanyId], references: [id], onDelete: Cascade)
+  referredCompanyId String                 @unique
+  referredCompany   Company                @relation("ReferralsReceived", fields: [referredCompanyId], references: [id], onDelete: Cascade)
+  status            ProviderReferralStatus @default(SIGNED_UP)
+  qualifiedAt       DateTime?
+  createdAt         DateTime               @default(now())
+
+  @@index([referrerCompanyId, status])
 }
 
 /// A person a referrer is supporting — their "caseload" or "tenants". Exists
@@ -727,6 +826,44 @@ model Application {
   updatedAt  DateTime              @updatedAt
 }
 
+enum ViewingStatus {
+  PROPOSED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+/// A room viewing tied to the request or referral it came from. Providers
+/// propose a time, then move it through confirmed/completed/no-show/cancelled
+/// as the actual viewing plays out — giving them one place to see everything
+/// they've got coming up, instead of tracking it by memory or a side
+/// spreadsheet. Exactly one of requestId/referralId is set; listingId is
+/// always derived server-side from whichever one it is (see
+/// scheduleViewingAction), never taken on trust from the client.
+model Viewing {
+  id           String                @id @default(cuid())
+  listingId    String
+  listing      Listing               @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  requestId    String?
+  request      AccommodationRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  referralId   String?
+  referral     Referral?             @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  scheduledFor DateTime
+  note         String?
+  status       ViewingStatus         @default(PROPOSED)
+  /// Freeform reason set alongside a CANCELLED or NO_SHOW status.
+  outcomeNote  String?
+  createdById  String
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@index([listingId])
+  @@index([requestId])
+  @@index([referralId])
+  @@index([status, scheduledFor])
+}
+
 // ---------------------------------------------------------------- messaging
 
 model Conversation {
@@ -800,6 +937,46 @@ model SavedListing {
 
   @@unique([userId, listingId])
   @@index([listingId])
+}
+
+/// A stored search filter a user wants to be alerted about. Mirrors the
+/// public search filter shape (see SearchParams in src/server/search.ts) so
+/// re-running it later — or matching a freshly published advert against it —
+/// uses exactly the same criteria the person saw on screen.
+model SavedSearch {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Short label shown in "Your alerts", e.g. "Leeds · Mental health support".
+  label     String
+
+  where         String?
+  radius        Int?
+  support       String[]        @default([])
+  type          String[]        @default([])
+  gender        String?
+  minAge        Int?
+  wheelchair    Boolean         @default(false)
+  furnished     Boolean         @default(false)
+  ensuite       Boolean         @default(false)
+  selfContained Boolean         @default(false)
+  petsAllowed   Boolean         @default(false)
+  referral      ReferralRoute[] @default([])
+  verifiedOnly  Boolean         @default(false)
+  minRent       Int?
+  maxRent       Int?
+
+  frequency      AlertFrequency @default(INSTANT)
+  /// Last time this search matched at least one advert and an alert went out.
+  lastAlertedAt  DateTime?
+  /// Watermark for the daily digest job — only adverts published after this
+  /// are considered "new" next time it runs.
+  lastDigestAt   DateTime       @default(now())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([frequency])
 }
 
 model Notification {
@@ -997,6 +1174,11 @@ model VerificationRequest {
   note                  String?
   reviewNote            String?
   insuranceExpiresAt    DateTime?
+  /// Set once a "your insurance is expiring" reminder has gone out for this
+  /// approved verification, so the hourly check (see
+  /// runInsuranceExpiryCheck) never re-sends it. Cleared implicitly by a
+  /// fresh submission, since that creates a brand-new row.
+  insuranceReminderSentAt DateTime?
   declarationAcceptedAt DateTime?
   checklistVersion      String             @default("2026-09")
   registrationChecked   Boolean            @default(false)

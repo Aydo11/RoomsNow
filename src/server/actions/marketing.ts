@@ -32,7 +32,7 @@ function splitRecipients(raw: string): string[] {
  * a Resend Broadcast. One submission can cover a whole outreach batch, pasted one
  * address per line or comma-separated. Resend handles queueing, suppression and
  * managed unsubscribe state; the app requires a second confirmation before send. The
- * "3 months free" offer it promises is fulfilled the same way admin already
+ * "1 month free" offer it promises is fulfilled the same way admin already
  * grants complimentary access elsewhere: manually, via the existing provider
  * membership grant form on /admin/memberships, once each recipient registers.
  */
@@ -99,7 +99,7 @@ export async function sendPreLaunchInvite(_previous: FormState, form: FormData):
   if (valid.length === 0) return { ok: false, message: "None of those look like valid email addresses." };
 
   const appUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
-  const ctaUrl = `${appUrl}/register?type=PROVIDER`;
+  const ctaUrl = `${appUrl}/register?type=PROVIDER&src=EMAIL`;
   // A first-name greeting only makes sense addressed to one person — skip it for a real batch.
   const recipientName = valid.length === 1 ? firstName || undefined : undefined;
   const text = renderPreLaunchInviteText({ recipientName, senderName, ctaUrl });
@@ -109,7 +109,7 @@ export async function sendPreLaunchInvite(_previous: FormState, form: FormData):
   if (!limit.ok) return { ok: false, message: "Please wait before preparing another outreach campaign." };
 
   try {
-    const subject = "An invitation from one Birmingham provider to another (3 months free)";
+    const subject = "An invitation from one Birmingham provider to another (1 month free)";
     const prepared = await prepareMarketingBroadcast({
       campaignName: "Founding provider outreach",
       recipients: valid.map((email) => ({ email, firstName: valid.length === 1 ? firstName || undefined : undefined })),

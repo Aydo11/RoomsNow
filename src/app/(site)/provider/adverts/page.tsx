@@ -118,6 +118,15 @@ export default async function ProviderAdvertsPage({
                     Not approved: {listing.rejectionNote}
                   </p>
                 )}
+                {listing.status === "PAUSED" && listing.pausedReason && (
+                  <p className="mt-3 rounded-[10px] bg-clay-light px-3 py-2 text-[13px] text-clay-dark">
+                    Paused automatically —{" "}
+                    {listing.pausedReason === "STALE"
+                      ? "nobody confirmed it was still available."
+                      : "every room was marked unavailable."}{" "}
+                    <Link href={`/provider/adverts/${listing.id}`} className="underline">Review it</Link>
+                  </p>
+                )}
                 {listing.status === "ACTIVE" && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {sponsorChoice && (

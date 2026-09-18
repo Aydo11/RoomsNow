@@ -3,7 +3,7 @@ import { AccountStatus, Prisma, Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
 import { DashboardShell, DataTable } from "@/components/dashboard-shell";
-import { AccountToggle } from "@/components/admin-controls";
+import { AccountToggle, RoleSelect } from "@/components/admin-controls";
 import { AdminFilters, AdminFilterField } from "@/components/admin-filters";
 import { adminNav } from "../nav";
 import { shortDate } from "@/lib/format";
@@ -86,7 +86,13 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                 {user.firstName} {user.lastName}
               </td>
               <td className="px-4 py-3 text-ink-soft">{user.email}</td>
-              <td className="px-4 py-3 capitalize">{user.role.toLowerCase()}</td>
+              <td className="px-4 py-3 capitalize">
+                {!user.deletedAt && user.role !== "ADMIN" ? (
+                  <RoleSelect id={user.id} role={user.role} />
+                ) : (
+                  user.role.toLowerCase()
+                )}
+              </td>
               <td className="px-4 py-3 capitalize text-ink-soft">
                 {user.deletedAt ? "deleted" : user.status.toLowerCase()}
               </td>

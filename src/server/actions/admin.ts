@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
 import { audit } from "@/lib/audit";
 import { notify, notifyCompany } from "@/lib/notify";
+import { notifyInstantSavedSearches } from "@/lib/saved-search-alerts";
+import { syncListingAvailability } from "@/lib/listing-availability";
 import type { ReportStatus } from "@prisma/client";
 import { z } from "zod";
 import type { VerificationChecks } from "@/lib/verification";
@@ -13,7 +15,13 @@ export async function approveListingAction(listingId: string) {
   const admin = await requireAdmin("MODERATION");
   const listing = await db.listing.update({
     where: { id: listingId },
-    data: { status: "ACTIVE", publishedAt: new Date(), rejectionNote: null },
+    data: {
+      status: "ACTIVE",
+      publishedAt: new Date(),
+      rejectionNote: null,
+      pausedReason: null,
+      availabilityConfirmedAt: new Date(),
+    },
   });
   await notifyCompany(listing.companyId, {
     type: "LISTING",
@@ -24,6 +32,11 @@ export async function approveListingAction(listingId: string) {
   });
   await audit({ actorId: admin.id, action: "admin.listing_approved", targetType: "Listing", targetId: listingId });
   revalidatePath("/admin/listings");
+  // Fire-and-forget: matching alerts shouldn't hold up the admin's approval click.
+  notifyInstantSavedSearches(listingId).catch((error) => console.error("[saved-search-alerts]", error));
+  // In the rare case every room already went unavailable while this was
+  // pending review, don't let it sit "live" with nothing to actually offer.
+  syncListingAvailability(listingId).catch((error) => console.error("[listing-availability]", error));
 }
 
 export async function rejectListingAction(listingId: string, note: string) {
@@ -119,6 +132,44 @@ export async function setUserStatusAction(userId: string, status: "ACTIVE" | "SU
     action: status === "SUSPENDED" ? "admin.user_suspended" : "admin.user_reinstated",
     targetType: "User",
     targetId: userId,
+  });
+  revalidatePath("/admin/users");
+}
+
+/**
+ * Fixes an account that signed up as the wrong type — most often someone who
+ * picked "Provider" by mistake. Changing role alone isn't enough for a
+ * provider: they're only ever recognised as one through their CompanyStaff
+ * seat (see canActForCompany/requireCompany in rbac.ts), so leaving PROVIDER
+ * also drops that seat, or they'd keep their old company's dashboard. The
+ * company itself is left alone — if this really was intentional, an admin
+ * can switch them back to PROVIDER and they'll pick up where they left off.
+ */
+export async function setUserRoleAction(userId: string, role: "USER" | "PROVIDER" | "REFERRER") {
+  const admin = await requireAdmin();
+  const target = await db.user.findUnique({ where: { id: userId }, select: { role: true } });
+  // Admin access is managed on the team page, with reauthentication and self-lockout
+  // protection — this action can neither touch an admin nor grant admin.
+  if (!target || target.role === "ADMIN") return;
+  if (target.role === role) return;
+
+  await db.$transaction([
+    db.user.update({ where: { id: userId }, data: { role } }),
+    ...(target.role === "PROVIDER" ? [db.companyStaff.deleteMany({ where: { userId } })] : []),
+  ]);
+
+  await notify({
+    userId,
+    type: "SYSTEM",
+    title: "Your account type has changed",
+    body: `Your RoomsNow account is now a ${role.toLowerCase()} account. If this wasn't expected, contact support.`,
+  });
+  await audit({
+    actorId: admin.id,
+    action: "admin.user_role_changed",
+    targetType: "User",
+    targetId: userId,
+    metadata: { from: target.role, to: role },
   });
   revalidatePath("/admin/users");
 }

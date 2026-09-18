@@ -21,6 +21,7 @@ export type SearchParams = {
   furnished?: string;
   ensuite?: string;
   selfContained?: string;
+  petsAllowed?: string;
   referral?: string[];
   verified?: string;
   maxRent?: string;
@@ -145,6 +146,7 @@ async function buildWhere(params: SearchParams) {
     ...(params.furnished === "1" ? { furnished: true } : {}),
     ...(params.ensuite === "1" ? { ensuite: true } : {}),
     ...(params.selfContained === "1" ? { selfContained: true } : {}),
+    ...(params.petsAllowed === "1" ? { petsAllowed: true } : {}),
     ...(referral.length ? { referralRoutes: { hasSome: referral as never } } : {}),
     ...(params.maxRent || params.minRent
       ? {
@@ -346,11 +348,12 @@ export type SearchResult = Omit<RankedSearchResult, "memberListing"> & { memberL
 export async function searchFacets(params: SearchParams) {
   const { where } = await buildWhere(params);
 
-  const [byType, byCity, verified, wheelchair] = await Promise.all([
+  const [byType, byCity, verified, wheelchair, petsAllowed] = await Promise.all([
     db.listing.groupBy({ by: ["accommodationType"], where, _count: true }),
     db.listing.findMany({ where, select: { property: { select: { city: true } } }, take: 2000 }),
     db.listing.count({ where: { ...where, company: { status: "ACTIVE", verification: "APPROVED" } } }),
     db.listing.count({ where: { ...where, wheelchairAccess: true } }),
+    db.listing.count({ where: { ...where, petsAllowed: true } }),
   ]);
 
   const cities = new Map<string, number>();
@@ -366,6 +369,7 @@ export async function searchFacets(params: SearchParams) {
       .slice(0, 8),
     verified,
     wheelchair,
+    petsAllowed,
   };
 }
 
