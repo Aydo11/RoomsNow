@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui";
 import { FeaturedBadge, RoomStrip, StatusPill } from "@/components/badges";
 import { ListingRowActions } from "@/components/listing-row-actions";
 import { ProviderAdvertBoost } from "@/components/provider-advert-boost";
+import { SuccessCelebration } from "@/components/success-celebration";
 import { providerNav } from "../nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, timeAgo } from "@/lib/format";
@@ -61,6 +62,7 @@ export default async function ProviderAdvertsPage({
         )
       }
     >
+      {boostPurchase === "complete" && <SuccessCelebration kind="boost-purchase" clearQueryParam="boost_pack" />}
       {boostPurchase === "complete" && (
         <p className="mb-4 rounded-[10px] border border-pine/30 bg-pine-light px-4 py-3 text-[14px] text-pine-dark">
           Boost credits added. Choose a live advert below to use one. You now have {boosts.totalRemaining} available.

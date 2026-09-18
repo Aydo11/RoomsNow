@@ -7,6 +7,7 @@ import { boostListingAction, purchaseBoostPackAction } from "@/server/actions/bi
 import { money } from "@/lib/format";
 import { clsx } from "@/lib/clsx";
 import { BoostCountdown } from "./boost-countdown";
+import { SuccessCelebration } from "./success-celebration";
 
 const PACKS = Object.entries(BOOST_PACKAGES) as [BoostPack, (typeof BOOST_PACKAGES)[BoostPack]][];
 
@@ -36,6 +37,7 @@ export function BoostPanel({
   const router = useRouter();
   const [choice, setChoice] = useState<BoostPack>("THREE");
   const [result, setResult] = useState<string | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
   const [pending, startTransition] = useTransition();
   const active = !!boostedUntil && new Date(boostedUntil) > new Date();
   const priorityActive = !!priorityUntil && new Date(priorityUntil) > new Date();
@@ -43,6 +45,7 @@ export function BoostPanel({
 
   return (
     <div className="overflow-hidden rounded-card border border-pine/30 bg-white shadow-[0_1px_2px_rgba(21,42,58,.04)]">
+      {celebrating && <SuccessCelebration kind="boost" />}
       <div className="bg-pine px-5 py-4 text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -90,6 +93,7 @@ export function BoostPanel({
               onClick={() => startTransition(async () => {
                 const response = await boostListingAction(listingId);
                 setResult(response?.message ?? null);
+                if (response?.ok) setCelebrating(true);
                 router.refresh();
               })}
             >

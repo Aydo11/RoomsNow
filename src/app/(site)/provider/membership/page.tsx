@@ -4,6 +4,7 @@ import { billingAvailable, billingIsLive, planLimits } from "@/lib/billing";
 import { FormSuccess } from "@/components/ui";
 import { DashboardShell, DataTable, StatCard } from "@/components/dashboard-shell";
 import { PlanPicker } from "@/components/plan-picker";
+import { SuccessCelebration } from "@/components/success-celebration";
 import { providerNav } from "../nav";
 import { money, shortDate } from "@/lib/format";
 
@@ -34,6 +35,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       nav={nav}
       active="/provider/membership"
     >
+      {query.billing === "complete" && <SuccessCelebration kind="membership" clearQueryParam="billing" />}
       {query.billing === "complete" && <div className="mb-5"><FormSuccess message="Payment completed. Your membership will update as soon as Stripe confirms it." /></div>}
       {limits.grant && (
         <div className="mb-5">

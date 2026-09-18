@@ -4,6 +4,7 @@ import { billingAvailable, billingIsLive, referrerPlanLimits } from "@/lib/billi
 import { FormSuccess } from "@/components/ui";
 import { DashboardShell, DataTable, StatCard } from "@/components/dashboard-shell";
 import { ReferrerPlanPicker } from "@/components/referrer-plan-picker";
+import { SuccessCelebration } from "@/components/success-celebration";
 import { referrerNav } from "../nav";
 import { money, shortDate } from "@/lib/format";
 
@@ -42,6 +43,7 @@ export default async function ReferrerMembershipPage({
       nav={nav}
       active="/referrals/membership"
     >
+      {query.billing === "complete" && <SuccessCelebration kind="membership" clearQueryParam="billing" />}
       {query.billing === "complete" && (
         <div className="mb-5 animate-fade-in-up">
           <FormSuccess message="Payment completed. Your plan will update as soon as Stripe confirms it." />
