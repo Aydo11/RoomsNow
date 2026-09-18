@@ -17,6 +17,23 @@ import { ResilientImage } from "./resilient-image";
 type Item = { id: string; url: string; type: string; caption: string | null; roomId: string | null; isPrimary: boolean };
 type Room = { id: string; name: string };
 
+/**
+ * Keep a selected batch comfortably under the server's Server Action body
+ * limit (45mb in next.config.mjs). Selecting several full-size phone photos
+ * at once (each up to the 8MB per-image cap) can otherwise add up to a
+ * request body Next aborts mid-upload — that failure happens inside Next's
+ * own body parser, before uploadListingMediaAction's per-file validation
+ * ever runs, so it used to surface as a raw page crash instead of a normal
+ * "please choose fewer files" message. Checking the total client-side means
+ * providers get an immediate, friendly explanation instead of a failed
+ * round trip. If the body limit above changes, change this to match.
+ */
+const MAX_BATCH_BYTES = 35 * 1024 * 1024;
+
+function formatMB(bytes: number) {
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
 export function MediaManager({ listingId, status, media, rooms, permanentStorage }: {
   listingId: string;
   status: string;
@@ -29,6 +46,7 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
   const [dragging, setDragging] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [batchError, setBatchError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => setItems(media), [media]);
@@ -37,7 +55,10 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
   // URL) so the file picker is ready for the next batch and doesn't look like
   // it's still holding the files that were just added.
   useEffect(() => {
-    if (state.ok) formRef.current?.reset();
+    if (state.ok) {
+      formRef.current?.reset();
+      setBatchError(null);
+    }
   }, [state]);
 
   function persistOrder(next: Item[]) {
@@ -88,8 +109,8 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
           <Field
             label="Add photos or a short video"
             name="files"
-            hint="Up to 12 files. Photos: 8MB each. Video: 20MB. These upload as soon as you choose them — no extra button to press."
-            error={state.errors?.files}
+            hint="Up to 12 files. Photos: 8MB each. Video: 20MB. These upload as soon as you choose them — no extra button to press. Selecting a lot at once? Add them in a couple of smaller batches."
+            error={batchError ?? state.errors?.files}
           >
             <input
               id="files"
@@ -99,7 +120,21 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
               multiple
               className="field file:mr-3 file:rounded-md file:border-0 file:bg-pine-light file:px-3 file:py-1.5 file:text-pine-dark"
               onChange={(event) => {
-                if (event.target.files && event.target.files.length > 0) formRef.current?.requestSubmit();
+                const files = event.target.files;
+                if (!files || files.length === 0) return;
+
+                const totalBytes = Array.from(files).reduce((sum, file) => sum + file.size, 0);
+                if (totalBytes > MAX_BATCH_BYTES) {
+                  event.target.value = "";
+                  setBatchError(
+                    `That's ${formatMB(totalBytes)} in one go, which is too much for a single upload. ` +
+                      `Please select fewer files at a time (try splitting them into a couple of smaller batches).`,
+                  );
+                  return;
+                }
+
+                setBatchError(null);
+                formRef.current?.requestSubmit();
               }}
             />
           </Field>
