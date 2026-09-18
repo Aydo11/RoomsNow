@@ -45,7 +45,15 @@ export function BoostPanel({
 
   return (
     <div className="overflow-hidden rounded-card border border-pine/30 bg-white shadow-[0_1px_2px_rgba(21,42,58,.04)]">
-      {celebrating && <SuccessCelebration kind="boost" />}
+      {celebrating && (
+        <SuccessCelebration
+          kind="boost"
+          onDone={() => {
+            setCelebrating(false);
+            router.refresh();
+          }}
+        />
+      )}
       <div className="bg-pine px-5 py-4 text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -94,7 +102,6 @@ export function BoostPanel({
                 const response = await boostListingAction(listingId);
                 setResult(response?.message ?? null);
                 if (response?.ok) setCelebrating(true);
-                router.refresh();
               })}
             >
               <span className="inline-flex items-center gap-2"><LightningIcon />{pending ? "Starting boost…" : !live ? "Advert must be live" : totalRemaining ? "Use one boost now" : "Choose a pack below"}</span>

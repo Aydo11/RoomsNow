@@ -143,6 +143,7 @@ export default async function ProviderAdvertsPage({
                       listingId={listing.id}
                       boostedUntil={listing.boostedUntil?.toISOString() ?? null}
                       initiallyActive={!!listing.boostedUntil && listing.boostedUntil.getTime() > Date.now()}
+                      canBoost={boosts.totalRemaining > 0}
                     />
                   </div>
                 )}
