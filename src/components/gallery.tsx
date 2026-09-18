@@ -87,7 +87,7 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
                   <ResilientImage
                     src={item.url}
                     fallbackSrc={demoListingImage(listingId, index).url}
-                    alt=""
+                    alt={item.caption ?? `${title} — photo ${index + 1}`}
                     className="h-full w-full object-contain"
                     loading="lazy"
                   />
