@@ -38,13 +38,14 @@ export function BoostPanel({
   const [choice, setChoice] = useState<BoostPack>("THREE");
   const [result, setResult] = useState<string | null>(null);
   const [celebrating, setCelebrating] = useState(false);
+  const [shocking, setShocking] = useState(false);
   const [pending, startTransition] = useTransition();
   const active = !!boostedUntil && new Date(boostedUntil) > new Date();
   const priorityActive = !!priorityUntil && new Date(priorityUntil) > new Date();
   const totalRemaining = includedRemaining + purchasedRemaining;
 
   return (
-    <div className="overflow-hidden rounded-card border border-pine/30 bg-white shadow-[0_1px_2px_rgba(21,42,58,.04)]">
+    <div className={`${shocking ? "advert-boost-shock" : ""} relative overflow-hidden rounded-card border border-pine/30 bg-white shadow-[0_1px_2px_rgba(21,42,58,.04)]`}>
       {celebrating && (
         <SuccessCelebration
           kind="boost"
@@ -101,7 +102,11 @@ export function BoostPanel({
               onClick={() => startTransition(async () => {
                 const response = await boostListingAction(listingId);
                 setResult(response?.message ?? null);
-                if (response?.ok) setCelebrating(true);
+                if (response?.ok) {
+                  setShocking(true);
+                  setCelebrating(true);
+                  window.setTimeout(() => setShocking(false), 1900);
+                }
               })}
             >
               <span className="inline-flex items-center gap-2"><LightningIcon />{pending ? "Starting boost…" : !live ? "Advert must be live" : totalRemaining ? "Use one boost now" : "Choose a pack below"}</span>

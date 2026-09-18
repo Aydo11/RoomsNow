@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { BoostCountdown } from "./boost-countdown";
 import { SuccessCelebration } from "./success-celebration";
@@ -19,6 +19,7 @@ export function ProviderAdvertBoost({
   canBoost: boolean;
 }) {
   const router = useRouter();
+  const rootRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(initiallyActive);
   const [message, setMessage] = useState<string | null>(null);
   const [celebrating, setCelebrating] = useState(false);
@@ -31,8 +32,18 @@ export function ProviderAdvertBoost({
     return () => window.clearInterval(timer);
   }, [boostedUntil]);
 
+  function shockAdvertCard() {
+    const card = rootRef.current?.closest<HTMLElement>("[data-advert-card]");
+    if (!card) return;
+    card.classList.remove("advert-boost-shock");
+    // Restart the effect even if this card was animated very recently.
+    void card.offsetWidth;
+    card.classList.add("advert-boost-shock");
+    window.setTimeout(() => card.classList.remove("advert-boost-shock"), 1900);
+  }
+
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div ref={rootRef} className="flex flex-wrap items-center gap-3">
       {celebrating && (
         <SuccessCelebration
           kind="boost"
@@ -63,7 +74,10 @@ export function ProviderAdvertBoost({
           onClick={() => startTransition(async () => {
             const response = await boostListingAction(listingId);
             setMessage(response?.message ?? null);
-            if (response?.ok) setCelebrating(true);
+            if (response?.ok) {
+              shockAdvertCard();
+              setCelebrating(true);
+            }
           })}
         >
           <LightningIcon /> {pending ? "Starting boost…" : "Boost for 24 hours"}
