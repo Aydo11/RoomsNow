@@ -61,6 +61,7 @@ export default async function ProviderDashboard() {
   const available = rooms.find((r) => r.status === "AVAILABLE")?._count ?? 0;
   const totalRooms = rooms.reduce((sum, r) => sum + r._count, 0);
   const daysSinceSignup = Math.floor((now.getTime() - company.createdAt.getTime()) / (24 * 60 * 60 * 1000));
+  const verificationDeadline = new Date(company.createdAt.getTime() + 90 * 24 * 60 * 60_000);
   const latestVerification = company.verification === "REJECTED"
     ? await db.verificationRequest.findFirst({
         where: { companyId, type: "COMPANY" },
@@ -87,6 +88,7 @@ export default async function ProviderDashboard() {
         <VerificationBanner
           status={company.verification}
           daysSinceSignup={daysSinceSignup}
+          deadlineAt={verificationDeadline.toISOString()}
           reviewNote={latestVerification?.reviewNote}
         />
       )}
