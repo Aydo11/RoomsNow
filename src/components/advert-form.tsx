@@ -76,6 +76,57 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
     else if (Object.keys(errors).length) setStep(3);
   }, [state.errors]);
 
+  // The instant this form's action is submitted, React resets every
+  // uncontrolled field back to its original defaultValue — before the action
+  // even runs, and whether it succeeds or not (a native <form>.reset() call,
+  // fired from inside React's own form-submission handling). The data it
+  // sent to the server is unaffected (that's already captured), but the
+  // fields on screen go blank, and any later validation error then reports
+  // them as "required" even though the person filled them in correctly.
+  // saveListingAction hands the rejected submission's values back as
+  // `state.values` for exactly this reason; put them back onto the actual
+  // DOM nodes once they arrive, since updating `defaultValue` alone never
+  // touches an already-mounted uncontrolled input's current value.
+  useEffect(() => {
+    const values = state.values;
+    const form = formRef.current;
+    if (!values || !form) return;
+
+    for (const [key, value] of Object.entries(values)) {
+      const field = form.elements.namedItem(key);
+      if (!field) continue;
+
+      if (field instanceof RadioNodeList) {
+        // A checkbox group sharing one name (supportTypes, referralRoutes).
+        const selected = Array.isArray(value) ? value.map(String) : [];
+        Array.from(field).forEach((node) => {
+          if (node instanceof HTMLInputElement && node.type === "checkbox") {
+            node.checked = selected.includes(node.value);
+          }
+        });
+        continue;
+      }
+
+      if (field instanceof HTMLInputElement && field.type === "checkbox") {
+        field.checked = Boolean(value);
+        continue;
+      }
+
+      if (
+        field instanceof HTMLInputElement ||
+        field instanceof HTMLTextAreaElement ||
+        field instanceof HTMLSelectElement
+      ) {
+        field.value = value == null ? "" : String(value);
+      }
+    }
+
+    // These two textareas track their own length in state for the character
+    // counters, which a direct DOM write above doesn't trigger via onChange.
+    if (typeof values.description === "string") setDescriptionLength(values.description.length);
+    if (typeof values.houseRules === "string") setHouseRulesLength(values.houseRules.length);
+  }, [state.values]);
+
   // Checkpoints the advert as a Draft under "My adverts" whenever the
   // provider moves between steps, so a crashed tab, refresh or dropped
   // session never loses their work. Never runs while editing an existing
