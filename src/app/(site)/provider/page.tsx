@@ -4,6 +4,7 @@ import { requireCompany } from "@/lib/rbac";
 import { boostAllowance, planLimits } from "@/lib/billing";
 import { DashboardShell, MetricBar, StatCard } from "@/components/dashboard-shell";
 import { RoomStrip, StatusPill } from "@/components/badges";
+import { VerificationBanner } from "@/components/verification-banner";
 import { providerNav } from "./nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { timeAgo } from "@/lib/format";
@@ -59,6 +60,14 @@ export default async function ProviderDashboard() {
 
   const available = rooms.find((r) => r.status === "AVAILABLE")?._count ?? 0;
   const totalRooms = rooms.reduce((sum, r) => sum + r._count, 0);
+  const daysSinceSignup = Math.floor((now.getTime() - company.createdAt.getTime()) / (24 * 60 * 60 * 1000));
+  const latestVerification = company.verification === "REJECTED"
+    ? await db.verificationRequest.findFirst({
+        where: { companyId, type: "COMPANY" },
+        orderBy: { createdAt: "desc" },
+        select: { reviewNote: true },
+      })
+    : null;
 
   return (
     <DashboardShell
@@ -75,16 +84,11 @@ export default async function ProviderDashboard() {
       }
     >
       {company.verification !== "APPROVED" && (
-        <div className="card mb-6 flex flex-wrap items-center justify-between gap-4 p-5">
-          <div>
-            <h2 className="text-[18px]">Get verified</h2>
-            <p className="mt-1 max-w-[60ch] text-[14px] text-ink-soft">
-              Verified providers get a badge and appear in the &ldquo;verified only&rdquo; filter.
-              Our team checks your documents manually.
-            </p>
-          </div>
-          <Link href="/provider/settings" className="btn-secondary">Start verification</Link>
-        </div>
+        <VerificationBanner
+          status={company.verification}
+          daysSinceSignup={daysSinceSignup}
+          reviewNote={latestVerification?.reviewNote}
+        />
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
