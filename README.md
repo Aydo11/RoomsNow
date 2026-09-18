@@ -179,7 +179,9 @@ minutes to avoid a write on every refresh.
 - Forgotten-password links are hashed in the database, expire after one hour and can only be used
   once. Set `EMAIL_DRIVER=resend`, `RESEND_API_KEY` and a verified `EMAIL_FROM` address for delivery.
 - Marketing mailshots use Resend Broadcasts rather than sending hundreds of transactional API
-  emails in a loop. Verify `roomsnow.co.uk` in Resend, copy its exact SPF and DKIM records into
+  emails in a loop. Create a Resend API key with **Full access** (a Sending access key cannot
+  create segments, contact imports or broadcasts), paste its complete `re_...` value into
+  Render as `RESEND_API_KEY` without quote marks, and redeploy. Verify `roomsnow.co.uk` in Resend, copy its exact SPF and DKIM records into
   Squarespace DNS, publish a DMARC record, then set
   `MARKETING_EMAIL_FROM="RoomsNow <info@roomsnow.co.uk>"`. Resend Broadcasts do not currently
   expose a separate Reply-To field, so using the monitored Google Workspace address as the sender
