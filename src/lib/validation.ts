@@ -292,4 +292,13 @@ export type FormState = {
   broadcastId?: string;
   importId?: string;
   recipientCount?: number;
+  /**
+   * The raw field values a rejected submission was sent with, echoed back so
+   * the form can redisplay them. Needed because React resets every
+   * uncontrolled field in a <form> back to its original defaultValue the
+   * moment its action is submitted — before the action even runs, and
+   * regardless of whether it succeeds — so without this, any validation
+   * error wipes out everything the person just typed. See AdvertForm.
+   */
+  values?: Record<string, unknown>;
 };
