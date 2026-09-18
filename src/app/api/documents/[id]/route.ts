@@ -26,6 +26,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       referral: { select: { referrerId: true, listing: { select: { companyId: true } } } },
       request: { select: { applicantId: true, listing: { select: { companyId: true } } } },
       verificationRequest: { select: { companyId: true } },
+      accreditation: { select: { companyId: true } },
     },
   });
   if (!document) return new NextResponse("Not found", { status: 404 });
@@ -39,7 +40,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     (document.referral?.listing && companyIds.has(document.referral.listing.companyId)) ||
     document.request?.applicantId === user.id ||
     (document.request?.listing && companyIds.has(document.request.listing.companyId)) ||
-    (document.verificationRequest && companyIds.has(document.verificationRequest.companyId));
+    (document.verificationRequest && companyIds.has(document.verificationRequest.companyId)) ||
+    (document.accreditation && companyIds.has(document.accreditation.companyId));
 
   if (!allowed) return new NextResponse("Not found", { status: 404 });
 

@@ -193,6 +193,13 @@ enum VerificationStatus {
   REJECTED
 }
 
+enum AccreditationStatus {
+  UNDER_ASSESSMENT
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
 enum ReportReason {
   SCAM
   INCORRECT_INFORMATION
@@ -415,10 +422,34 @@ model Company {
   clientShares     ClientShare[]
   membershipGrants MembershipGrant[]
   reviews          ProviderReview[]
+  accreditations   ProviderAccreditation[]
   referralsMade    ProviderReferral[] @relation("ReferralsMade")
   referredVia      ProviderReferral?  @relation("ReferralsReceived")
 
   @@index([city])
+}
+
+model ProviderAccreditation {
+  id              String              @id @default(cuid())
+  companyId       String
+  company         Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  scheme          String
+  name            String
+  rating          String?
+  referenceNumber String?
+  publicUrl       String?
+  status          AccreditationStatus @default(UNDER_ASSESSMENT)
+  submittedBy     String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNote      String?
+  expiresAt       DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  documents       Document[]
+
+  @@index([companyId, status])
+  @@index([status, createdAt])
 }
 
 model CompanyStaff {
@@ -1238,6 +1269,8 @@ model Document {
   request               AccommodationRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)
   verificationRequestId String?
   verificationRequest   VerificationRequest?  @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+  accreditationId       String?
+  accreditation         ProviderAccreditation? @relation(fields: [accreditationId], references: [id], onDelete: Cascade)
   name                  String
   category              String?
   url                   String

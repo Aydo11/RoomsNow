@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/session";
 import { canActForCompany } from "@/lib/rbac";
 import { hasAdminPermission } from "@/lib/admin-permissions";
 import { ListingCard } from "@/components/listing-card";
-import { VerifiedBadge } from "@/components/badges";
+import { AccreditationBadge, VerifiedBadge } from "@/components/badges";
 import { DirectMessageForm } from "@/components/direct-message-form";
 import { VerificationPanel } from "@/components/verification-panel";
 import { ProviderReviews } from "@/components/provider-reviews";
@@ -36,6 +36,15 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
   const company = await db.company.findUnique({
     where: { slug },
     include: {
+      accreditations: {
+        where: {
+          OR: [
+            { status: "UNDER_ASSESSMENT" },
+            { status: "APPROVED", OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }] },
+          ],
+        },
+        orderBy: [{ status: "asc" }, { reviewedAt: "desc" }],
+      },
       listings: {
         where: { status: "ACTIVE" },
         include: {
@@ -172,6 +181,26 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
 
           {company.verification === "APPROVED" && (
             <VerificationPanel verifiedAt={company.verifiedAt} detail={verificationDetail} />
+          )}
+
+          {company.accreditations.length > 0 && (
+            <section className="mt-5 rounded-[12px] border border-line bg-paper/70 p-4" aria-labelledby="provider-accreditations">
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <h2 id="provider-accreditations" className="text-[16px] font-semibold">Accreditations and ratings</h2>
+                  <p className="mt-0.5 text-[12px] text-ink-faint">Approved badges have been checked against evidence. “Under assessment” is not an approval.</p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {company.accreditations.map((item) => (
+                  item.publicUrl && item.status === "APPROVED" ? (
+                    <a key={item.id} href={item.publicUrl} target="_blank" rel="noopener noreferrer" className="rounded-[10px] focus:outline-none focus:ring-2 focus:ring-brand/40">
+                      <AccreditationBadge scheme={item.scheme} name={item.name} rating={item.rating} status={item.status} />
+                    </a>
+                  ) : <AccreditationBadge key={item.id} scheme={item.scheme} name={item.name} rating={item.rating} status={item.status} />
+                ))}
+              </div>
+            </section>
           )}
 
           {reviewAgg._count > 0 && (

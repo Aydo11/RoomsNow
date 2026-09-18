@@ -1,5 +1,6 @@
 import { clsx } from "@/lib/clsx";
 import { brand } from "@/brand.config";
+import { accreditationTone } from "@/lib/accreditations";
 
 /** Verification is a checked-identity marker, never a regulatory claim. */
 export function VerifiedBadge({
@@ -19,6 +20,39 @@ export function VerifiedBadge({
         <path d="M8 0 9.9 1.4l2.3-.2.7 2.2 1.9 1.3-.9 2.2.9 2.2-1.9 1.3-.7 2.2-2.3-.2L8 14l-1.9-1.4-2.3.2-.7-2.2L1.2 9.3l.9-2.2-.9-2.2 1.9-1.3.7-2.2 2.3.2L8 0Zm3.2 5.3-.9-.9-3.4 3.4-1.5-1.5-.9.9 2.4 2.4 4.3-4.3Z" />
       </svg>
       {compact ? "Verified" : `Verified ${what}`}
+    </span>
+  );
+}
+
+export function AccreditationBadge({
+  scheme,
+  name,
+  rating,
+  status = "APPROVED",
+  compact = false,
+}: {
+  scheme: string;
+  name: string;
+  rating?: string | null;
+  status?: string;
+  compact?: boolean;
+}) {
+  const assessing = status === "UNDER_ASSESSMENT";
+  return (
+    <span
+      className={clsx(
+        "inline-flex items-center gap-2 rounded-[10px] border px-3 py-2 text-[12px] font-semibold",
+        assessing ? "border-dashed border-blue-300 bg-blue-50 text-blue-900" : accreditationTone(rating),
+      )}
+      title={assessing ? `${name} is being assessed by RoomsNow and is not yet verified.` : `${name} verified by RoomsNow against submitted evidence.`}
+    >
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 text-[10px] font-extrabold shadow-sm" aria-hidden="true">
+        {scheme === "CQC" ? "CQC" : scheme === "ROOMSNOW" ? "RN" : scheme.slice(0, 4).toUpperCase()}
+      </span>
+      <span className="leading-tight">
+        {!compact && <span className="block text-[10px] font-medium opacity-75">{name}</span>}
+        <span>{assessing ? "Under assessment" : rating}</span>
+      </span>
     </span>
   );
 }
