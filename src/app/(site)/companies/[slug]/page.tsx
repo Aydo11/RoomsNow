@@ -102,6 +102,17 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
           logo: company.logoUrl ? absoluteUrl(company.logoUrl) : undefined,
           address: company.city ? { "@type": "PostalAddress", addressLocality: company.city, addressCountry: "GB" } : undefined,
           areaServed: company.operatingAreas,
+          ...(reviewAgg._count > 0
+            ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: Number((reviewAgg._avg.rating ?? 0).toFixed(1)),
+                  reviewCount: reviewAgg._count,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+              }
+            : {}),
         },
         {
           "@context": "https://schema.org",
