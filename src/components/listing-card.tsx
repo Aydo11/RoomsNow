@@ -46,6 +46,7 @@ export function ListingCard({
       ? `/listings/${listing.id}?ref=sponsored`
       : `/listings/${listing.id}`;
   const available = listing.rooms.filter((r) => r.status === "AVAILABLE").length;
+  const verified = listing.company.verification === "APPROVED";
 
   return (
     <article
@@ -54,6 +55,10 @@ export function ListingCard({
         sponsored && "border-2 border-clay/45 shadow-raise",
         boosted && "border-2 border-pine/70 bg-white shadow-raise ring-4 ring-pine-light/70",
         memberListing && !sponsored && !boosted && "border-pine/35",
+        // A verified provider's identity has been checked — give the card a
+        // little more visual confidence, but don't let it compete with a
+        // paid placement's own (stronger) treatment.
+        verified && !sponsored && !boosted && !memberListing && "ring-1 ring-inset ring-pine-light",
       )}
     >
       <Link
@@ -74,6 +79,7 @@ export function ListingCard({
             {boosted ? (
               <span className="inline-flex items-center gap-1 rounded-pill bg-pine/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-white"><LightningIcon /> Boosted now</span>
             ) : activelySponsored ? <FeaturedBadge /> : null}
+            {verified && <VerifiedBadge compact />}
             {available > 0 && (
               <span className="rounded-pill bg-white/95 px-2.5 py-1 text-[12px] font-medium text-pine-dark">
                 {available} room{available === 1 ? "" : "s"} available
@@ -147,7 +153,6 @@ export function ListingCard({
               )}
               <span className="truncate text-[13px] text-ink-soft">{listing.company.name}</span>
             </span>
-            {listing.company.verification === "APPROVED" && <VerifiedBadge compact />}
           </div>
         </div>
       </div>
