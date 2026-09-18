@@ -57,9 +57,37 @@ const SIGNATURES: { mime: string; bytes: number[]; offset?: number }[] = [
   { mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", bytes: [0x50, 0x4b, 0x03, 0x04] },
 ];
 
+/**
+ * iPhones (and some Android phones) save camera-roll photos as HEIC/HEIF by
+ * default, which most browsers still can't decode or display. Some upload
+ * paths transcode this to JPEG automatically before the browser ever sees
+ * it, but plenty don't — picking a photo via a "Files" browser rather than
+ * the native Photos picker, or opening the site inside an app's in-app
+ * browser (WhatsApp, Instagram, Facebook), commonly hand over the raw HEIC
+ * file untouched. That's a very mobile-specific failure mode: it rarely
+ * comes up on desktop, where photos have usually already passed through an
+ * export/edit step that leaves them as JPEG or PNG. Since neither the mime
+ * allowlist nor the server can render HEIC anyway, this only exists to turn
+ * "that file type isn't supported" (which just reads as broken) into a
+ * message that actually tells a provider what happened and the one-time fix.
+ */
+const HEIC_TYPES = new Set(["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"]);
+
+function looksLikeHeic(file: File) {
+  return HEIC_TYPES.has(file.type.toLowerCase()) || /\.hei[cf]$/i.test(file.name);
+}
+
 export function validateUpload(file: File, kind: keyof typeof LIMITS) {
   const rule = LIMITS[kind];
   if (!rule.mime.includes(file.type)) {
+    if (kind === "image" && looksLikeHeic(file)) {
+      return (
+        "That photo is in Apple's HEIC format, which most browsers (including this site) can't display. " +
+        "On an iPhone: Settings → Camera → Formats → \"Most Compatible\" makes new photos save as JPEG " +
+        "automatically. For a photo you've already taken, open it in Photos, tap Share, then \"Save as JPEG\" " +
+        "or send it to yourself (e.g. by email or Messages) — that also converts it — before uploading here."
+      );
+    }
     return `That file type isn't supported. Allowed: ${rule.mime.join(", ")}.`;
   }
   if (file.size > rule.maxBytes) {
