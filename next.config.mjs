@@ -54,7 +54,11 @@ const nextConfig = {
   poweredByHeader: false,
   images: {
     // Deliberately narrow. Widen it to the hosts you actually serve images from.
-    remotePatterns: [{ protocol: "https", hostname: "**.amazonaws.com" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "**.amazonaws.com" },
+      // Cloudflare R2 public bucket URLs (pub-<hash>.r2.dev) serve listing/company photos.
+      { protocol: "https", hostname: "**.r2.dev" },
+    ],
   },
   experimental: {
   serverActions: {
