@@ -88,7 +88,7 @@ export default async function ProviderAdvertsPage({
               <div className="h-24 w-32 shrink-0 overflow-hidden rounded-[10px] bg-paper-sunk">
                 {listing.media[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={listing.media[0].url} alt="" className="h-full w-full object-cover" />
+                  <img src={listing.media[0].url} alt="" className="h-full w-full object-contain" />
                 ) : (
                   <span className="grid h-full place-items-center text-[12px] text-ink-faint">No photo</span>
                 )}

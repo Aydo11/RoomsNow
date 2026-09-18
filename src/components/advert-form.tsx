@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useActionState } from "react";
-import { saveListingAction } from "@/server/actions/listings";
+import { useEffect, useRef, useState, useActionState } from "react";
+import Link from "next/link";
+import { saveListingAction, autosaveDraftListingAction } from "@/server/actions/listings";
 import { CheckGroup, Field, FormError, SubmitButton, Toggle } from "./ui";
 import { clsx } from "@/lib/clsx";
 import {
@@ -61,6 +62,10 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
   const [descriptionLength, setDescriptionLength] = useState(defaults.description?.length ?? 0);
   const [houseRulesLength, setHouseRulesLength] = useState(defaults.houseRules?.length ?? 0);
   const editing = Boolean(defaults.id);
+  const formRef = useRef<HTMLFormElement>(null);
+  // Recovery draft id from autosaveDraftListingAction — never set while
+  // editing a real, already-published advert, only while posting a new one.
+  const [draftId, setDraftId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const errors = state.errors;
@@ -71,16 +76,42 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
     else if (Object.keys(errors).length) setStep(3);
   }, [state.errors]);
 
+  // Checkpoints the advert as a Draft under "My adverts" whenever the
+  // provider moves between steps, so a crashed tab, refresh or dropped
+  // session never loses their work. Never runs while editing an existing
+  // advert — that already has a real, saved id. Best-effort: a failure here
+  // never blocks navigating between steps, only the final submit matters.
+  async function checkpointDraft() {
+    if (editing || !formRef.current) return;
+    const data = new FormData(formRef.current);
+    const propertyName = String(data.get("propertyName") ?? "").trim();
+    const city = String(data.get("city") ?? "").trim();
+    const postcode = String(data.get("postcode") ?? "").trim();
+    if (!propertyName || !city || !postcode) return;
+    const title = String(data.get("title") ?? "").trim();
+    try {
+      const result = await autosaveDraftListingAction({ draftId, propertyName, city, postcode, title });
+      if (result) setDraftId(result.draftId);
+    } catch {
+      // Ignored — the real submit below still saves everything properly.
+    }
+  }
+
+  function goToStep(next: number) {
+    void checkpointDraft();
+    setStep(next);
+  }
+
   return (
-    <form action={action} noValidate className="space-y-6">
-      {defaults.id && <input type="hidden" name="id" value={defaults.id} />}
+    <form ref={formRef} action={action} noValidate className="space-y-6">
+      {(defaults.id ?? draftId) && <input type="hidden" name="id" value={defaults.id ?? draftId} />}
 
       <ol className="flex flex-wrap gap-2">
         {STEPS.map((label, i) => (
           <li key={label}>
             <button
               type="button"
-              onClick={() => setStep(i)}
+              onClick={() => goToStep(i)}
               aria-current={i === step ? "step" : undefined}
               className={clsx(
                 "rounded-pill px-3 py-1.5 text-[13px]",
@@ -100,6 +131,12 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
         </p>
       )}
       <p className="text-[13px] text-ink-faint">Fields marked <span className="text-clay">*</span> are required.</p>
+      {!editing && draftId && (
+        <p className="rounded-[10px] border border-line bg-paper-sunk/60 px-4 py-2 text-[13px] text-ink-soft">
+          Saved as a draft as you go — if you don&apos;t finish now, pick it back up from{" "}
+          <Link href="/provider/adverts" className="text-pine-dark underline">My adverts</Link>.
+        </p>
+      )}
 
       {/* All steps stay mounted so a single submit carries every field. */}
       <section className={clsx("card space-y-4 p-6", step !== 0 && "hidden")}>
@@ -287,10 +324,10 @@ export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
 
       <div className="flex flex-wrap items-center gap-3">
         {step > 0 && (
-          <button type="button" className="btn-ghost" onClick={() => setStep((s) => s - 1)}>Back</button>
+          <button type="button" className="btn-ghost" onClick={() => goToStep(step - 1)}>Back</button>
         )}
         {step < STEPS.length - 1 && (
-          <button type="button" className="btn-secondary" onClick={() => setStep((s) => s + 1)}>Next</button>
+          <button type="button" className="btn-secondary" onClick={() => goToStep(step + 1)}>Next</button>
         )}
         {step === STEPS.length - 1 && (
           <SubmitButton pendingLabel="Saving…">

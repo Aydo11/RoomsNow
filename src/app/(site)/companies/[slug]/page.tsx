@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
@@ -102,6 +103,20 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
           logo: company.logoUrl ? absoluteUrl(company.logoUrl) : undefined,
           address: company.city ? { "@type": "PostalAddress", addressLocality: company.city, addressCountry: "GB" } : undefined,
           areaServed: company.operatingAreas,
+          ...((websiteHref || socialLinks.length > 0)
+            ? { sameAs: [websiteHref, ...socialLinks.map((link) => link.url)].filter((url): url is string => Boolean(url)) }
+            : {}),
+          ...(reviewAgg._count > 0
+            ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: Number((reviewAgg._avg.rating ?? 0).toFixed(1)),
+                  reviewCount: reviewAgg._count,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+              }
+            : {}),
         },
         {
           "@context": "https://schema.org",
@@ -114,17 +129,30 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
         },
       ]} />
       <header className="card overflow-hidden">
-        <div className="h-44 bg-gradient-to-br from-pine-dark via-pine to-pine-light sm:h-56">
+        <div className="relative h-44 bg-gradient-to-br from-pine-dark via-pine to-pine-light sm:h-56">
           {company.bannerUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={company.bannerUrl} alt="" className="h-full w-full object-cover" />
+            <Image
+              src={company.bannerUrl}
+              alt=""
+              fill
+              sizes="100vw"
+              priority
+              className="object-cover"
+            />
           )}
         </div>
         <div className="relative px-6 pb-7 sm:px-8">
           <div className="-mt-12">
             {company.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={company.logoUrl} alt={`${company.name} profile`} className="h-24 w-24 shrink-0 rounded-full border-4 border-white bg-white object-cover shadow-raise sm:h-28 sm:w-28" />
+              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border-4 border-white bg-white shadow-raise sm:h-28 sm:w-28">
+                <Image
+                  src={company.logoUrl}
+                  alt={`${company.name} profile`}
+                  fill
+                  sizes="112px"
+                  className="object-cover"
+                />
+              </div>
             ) : (
               <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 border-white bg-pine-light text-[22px] font-bold uppercase text-pine-dark shadow-raise sm:h-28 sm:w-28">
                 {company.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("")}

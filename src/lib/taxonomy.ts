@@ -53,6 +53,22 @@ export const LISTING_STATUSES = {
   ARCHIVED: "Archived",
 } as const;
 
+/**
+ * Preset reasons an admin can pick when taking down a live advert
+ * (`takedownListingAction`). Kept short and provider-facing — the picked
+ * label is sent to the provider as-is, optionally with their own extra
+ * detail appended, so avoid internal jargon here.
+ */
+export const TAKEDOWN_REASONS = [
+  "Inaccurate or misleading information",
+  "Duplicate advert",
+  "Not a valid or licensed provider",
+  "Breaches our advertising policies",
+  "Confirmed by a user report",
+  "Requested by the provider",
+  "Other",
+] as const;
+
 export const REFERRAL_ROUTES = {
   SELF_REFERRAL: "Self-referral",
   PROFESSIONAL_REFERRAL: "Professional referral",

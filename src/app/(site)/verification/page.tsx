@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { ProsePage, Section } from "@/components/prose-page";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Provider verification" };
+export const metadata = pageMetadata({
+  title: "Provider Verification | How We Check Accommodation Providers",
+  description: "How RoomsNow verifies HMO, supported accommodation and adult social care providers: the evidence required, the checks made and what a verified badge does and doesn't mean.",
+  path: "/verification",
+});
 
 export default function VerificationPage() {
   return (

@@ -150,7 +150,8 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
                     fallbackSrc={demoListingImage(listingId, index).url}
                     fallbackLabel="Photo unavailable"
                     alt={item.caption ?? "Property photo"}
-                    className="h-full w-full object-cover"
+                    className="object-contain"
+                    sizes="(min-width: 1280px) 340px, (min-width: 640px) 45vw, 100vw"
                   />
                 ) : item.type === "VIDEO" ? (
                   <video src={item.url} controls playsInline preload="metadata" className="h-full w-full bg-black object-contain" />

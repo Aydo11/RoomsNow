@@ -1,7 +1,12 @@
 import { ProsePage, Section } from "@/components/prose-page";
 import { brand } from "@/brand.config";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Staying safe" };
+export const metadata = pageMetadata({
+  title: "Staying Safe When Renting a Room or HMO Placement",
+  description: "Practical safety advice for anyone finding a room, HMO or supported accommodation placement: keeping messages on the platform, avoiding upfront fees and what a verified badge means.",
+  path: "/safety",
+});
 
 export default function SafetyPage() {
   return (

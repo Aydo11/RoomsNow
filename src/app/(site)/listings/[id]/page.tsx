@@ -143,6 +143,7 @@ export default async function ListingPage({
           url: listingUrl,
           name: listing.title,
           description: listingDescription,
+          image: listing.media.filter((m) => m.type === "IMAGE").map((m) => absoluteUrl(m.url)),
           availability: available.length > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
           priceCurrency: "GBP",
           ...(listing.weeklyRentFrom ? { price: listing.weeklyRentFrom, priceSpecification: { "@type": "UnitPriceSpecification", price: listing.weeklyRentFrom, priceCurrency: "GBP", unitText: "WEEK" } } : {}),

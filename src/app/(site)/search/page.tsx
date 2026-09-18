@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui";
 import { searchFacets, searchListings, searchMapPins, type SearchParams } from "@/server/search";
 import { getCurrentUser } from "@/lib/session";
 import { matchScore } from "@/lib/matching";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
 import { db } from "@/lib/db";
 
 export const metadata = pageMetadata({
@@ -115,6 +115,14 @@ export default async function SearchPage({
 
   return (
     <>
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Search accommodation", item: absoluteUrl("/search") },
+        ],
+      }} />
       <div className="border-b border-line bg-white">
         <div className="shell py-6">
           <Suspense fallback={<div className="h-[76px]" />}>

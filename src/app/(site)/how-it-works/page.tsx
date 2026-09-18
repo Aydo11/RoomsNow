@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { brand } from "@/brand.config";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "How it works" };
+export const metadata = pageMetadata({
+  title: "How It Works | Finding & Advertising HMO Rooms and Supported Accommodation",
+  description: "How RoomsNow works for people looking for a room, HMO or supported accommodation, for providers advertising vacancies, and for professionals making referrals.",
+  path: "/how-it-works",
+});
 
 const AUDIENCES = [
   {

@@ -32,7 +32,17 @@ export function ListingRowActions({ id, status }: { id: string; status: string }
       const result = await deleteListingAction(id);
       setConfirmingDelete(false);
       if (result?.message) (result.ok ? toast.success : toast.error)(result.message);
-      if (result?.ok) router.refresh();
+      // This component renders both on the adverts list and on a single
+      // advert's own page. A successful delete removes the row this button
+      // was in, so router.refresh() alone would re-run the *current* route —
+      // on the single-advert page that route looks the deleted listing back
+      // up, finds nothing, and calls notFound(), landing the provider on an
+      // error page instead of confirming the delete. Always send them
+      // somewhere that still exists, then refresh so it shows fresh data.
+      if (result?.ok) {
+        router.push("/provider/adverts");
+        router.refresh();
+      }
     });
   }
 
