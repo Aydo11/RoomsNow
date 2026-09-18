@@ -106,12 +106,12 @@ export default async function ApplicantProfilePage({ params }: { params: Promise
           )}
         </dl>
 
-        <div className="mt-6 border-t border-line pt-5">
+        <div className="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
           <DirectMessageForm
             recipientUserId={applicant.id}
-            subject={requests[0] ? requests[0].listing.title : undefined}
-            label="Message"
-            placeholder={`Hi ${applicant.firstName} — `}
+            subject={`Accommodation request from ${applicant.firstName} ${applicant.lastName}`}
+            label={`Message ${applicant.firstName}`}
+            placeholder={`Write a message to ${applicant.firstName} about their accommodation request…`}
             compact
           />
         </div>
