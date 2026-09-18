@@ -109,6 +109,7 @@ export function SiteFooter() {
             ["HMO rooms to rent", "/hmo-rooms"],
             ["Supported accommodation", "/supported-accommodation"],
             ["Transitional accommodation", "/transitional-accommodation"],
+            ["Adult social care accommodation", "/adult-social-care-accommodation"],
             ["Search all accommodation", "/search"],
             ["Post what you're looking for", "/dashboard/advert"],
             ["How it works", "/how-it-works"],
