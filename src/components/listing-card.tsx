@@ -66,8 +66,8 @@ export function ListingCard({
             fallbackSrc={fallback.url}
             fallbackLabel="Illustrative image"
             alt={image ? `${listing.title} property photo` : fallback.caption}
-            className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.035]"
-            loading="lazy"
+            className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+            sizes="(min-width: 1280px) 380px, (min-width: 640px) 45vw, 100vw"
           />
           <div className="absolute left-3 top-3 flex flex-wrap gap-2">
             {boosted ? (
