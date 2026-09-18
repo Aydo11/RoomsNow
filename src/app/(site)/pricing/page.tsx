@@ -7,8 +7,13 @@ import { getCurrentUser } from "@/lib/session";
 import { PricingTabs } from "@/components/pricing-tabs";
 import { SponsorDurationPicker } from "@/components/sponsor-duration-picker";
 import { BOOST_PACKAGES } from "@/lib/boost-packages";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Membership and pricing" };
+export const metadata = pageMetadata({
+  title: "Membership & Pricing for Accommodation Providers | RoomsNow",
+  description: "Membership plans for advertising HMO rooms, supported and transitional accommodation, plus boosts and sponsored placements. Free for people looking for a room.",
+  path: "/pricing",
+});
 export const dynamic = "force-dynamic";
 
 export default async function PricingPage() {
