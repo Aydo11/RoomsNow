@@ -16,6 +16,8 @@ export type RateLimitOptions = { limit: number; windowMs: number };
 interface RateLimitDriver {
   hit(key: string, options: RateLimitOptions): Promise<RateLimitResult>;
   reset(key: string): Promise<void>;
+  /** Hands a consumed slot back — see refundRateLimit. */
+  refund(key: string): Promise<void>;
 }
 
 const buckets = new Map<string, { count: number; expiresAt: number }>();
@@ -47,12 +49,31 @@ const memoryDriver: RateLimitDriver = {
   async reset(key) {
     buckets.delete(key);
   },
+
+  async refund(key) {
+    const bucket = buckets.get(key);
+    // Only inside the live window: once it has expired the count is moot, and
+    // resurrecting it would hand out a slot the next window hasn't spent.
+    if (bucket && bucket.expiresAt >= Date.now() && bucket.count > 0) bucket.count -= 1;
+  },
 };
 
 const RATE_LIMIT_SCRIPT = `
 local current = redis.call("INCR", KEYS[1])
 if current == 1 then redis.call("PEXPIRE", KEYS[1], ARGV[1]) end
 return {current, redis.call("PTTL", KEYS[1])}
+`;
+
+/**
+ * Deliberately never creates the key or touches its TTL: a plain DECR on a
+ * missing key would leave a counter at -1 with no expiry, which quietly
+ * disables the limit for that key forever.
+ */
+const RATE_LIMIT_REFUND_SCRIPT = `
+if redis.call("EXISTS", KEYS[1]) == 1 and tonumber(redis.call("GET", KEYS[1])) > 0 then
+  return redis.call("DECR", KEYS[1])
+end
+return 0
 `;
 
 async function upstash(command: Array<string | number>) {
@@ -87,6 +108,9 @@ const upstashDriver: RateLimitDriver = {
   async reset(key) {
     await upstash(["DEL", `supportrooms:rate:${key}`]);
   },
+  async refund(key) {
+    await upstash(["EVAL", RATE_LIMIT_REFUND_SCRIPT, 1, `supportrooms:rate:${key}`]);
+  },
 };
 
 const driver: RateLimitDriver = process.env.RATE_LIMIT_DRIVER === "upstash" ? upstashDriver : memoryDriver;
@@ -97,6 +121,22 @@ export async function rateLimit(key: string, options: RateLimitOptions): Promise
   } catch (error) {
     console.error("Rate limiter unavailable, allowing request:", error);
     return { ok: true, remaining: options.limit, retryAfterSeconds: 0 };
+  }
+}
+
+/**
+ * Hands back a slot consumed by an attempt that never actually happened — the
+ * work failed before it could have any effect, or the call turned out to be a
+ * no-op. Without this, an action that fails for an unrelated reason (a third
+ * party returning an error, say) spends the caller's allowance anyway and
+ * locks them out of retrying the thing they never got to do once. Best effort
+ * by design: a missed refund costs one slot, never correctness.
+ */
+export async function refundRateLimit(key: string) {
+  try {
+    await driver.refund(key);
+  } catch {
+    // The limit itself still stands; the caller simply keeps the spent slot.
   }
 }
 
