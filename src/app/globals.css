@@ -303,6 +303,13 @@ html.machine-translated :where(h1, h2, h3, h4, p, a, button, label, dt, dd, span
     box-sizing: border-box;
     min-width: 0;
     max-width: 100%;
+    /* Some WebKit builds still paint the native date control at its
+       intrinsic width even once the box itself has shrunk to fit the
+       grid column, which is what let the control's right edge draw past
+       the card on narrow screens. Clipping here doesn't change layout --
+       the box is already 100% width -- it just stops that overpaint from
+       being visible. */
+    overflow: hidden;
   }
 
   input[type="date"].field::-webkit-date-and-time-value {
