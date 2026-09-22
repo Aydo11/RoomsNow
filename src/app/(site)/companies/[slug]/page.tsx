@@ -12,6 +12,7 @@ import { VerificationPanel } from "@/components/verification-panel";
 import { ProviderReviews } from "@/components/provider-reviews";
 import { ORG_TYPES, supportLabel } from "@/lib/taxonomy";
 import { JsonLd, absoluteUrl } from "@/lib/seo";
+import { COVER_MEDIA } from "@/lib/cover-image";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
         include: {
           company: { select: { id: true, name: true, slug: true, logoUrl: true, verification: true } },
           property: { select: { city: true, area: true, postcode: true, showExactAddress: true, addressLine1: true, latitude: true, longitude: true, verification: true } },
-          media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { position: "asc" }], take: 1 },
+          media: COVER_MEDIA,
           rooms: { select: { status: true } },
         },
       },
