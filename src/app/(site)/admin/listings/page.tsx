@@ -9,7 +9,7 @@ import { adminNav } from "../nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, timeAgo } from "@/lib/format";
 import type { ListingStatus } from "@prisma/client";
-import { COVER_MEDIA, coverImage } from "@/lib/cover-image";
+import { COVER_MEDIA, coverImage, videoPosterSrc } from "@/lib/cover-image";
 
 export const metadata = { title: "Adverts" };
 export const dynamic = "force-dynamic";
@@ -64,7 +64,9 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
           {listings.map((listing) => (
             <li key={listing.id} className="card flex flex-wrap gap-5 p-4">
               <div className="h-24 w-32 shrink-0 overflow-hidden rounded-[10px] bg-paper-sunk">
-                {coverImage(listing.media) ? (
+                {coverImage(listing.media)?.isVideoFile ? (
+                  <video src={videoPosterSrc(coverImage(listing.media)!.url)} preload="metadata" muted playsInline className="h-full w-full bg-black object-contain" />
+                ) : coverImage(listing.media) ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={coverImage(listing.media)!.url} alt="" className="h-full w-full object-contain" />
                 ) : (
