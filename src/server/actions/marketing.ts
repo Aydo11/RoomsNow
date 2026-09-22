@@ -173,7 +173,7 @@ export async function sendPreLaunchInvite(_previous: FormState, form: FormData):
   if (!limit.ok) return { ok: false, message: waitMessage("preparing", limit.retryAfterSeconds) };
 
   try {
-    const subject = "FILL YOUR VOIDS NOW — an invitation from one Birmingham provider to another (1 month free)";
+    const subject = "Fill your voids faster — list free on RoomsNow for one month";
     const prepared = await prepareMarketingBroadcast({
       campaignName: "Founding provider outreach",
       recipients: valid.map((email) => ({ email, firstName: valid.length === 1 ? firstName || undefined : undefined })),

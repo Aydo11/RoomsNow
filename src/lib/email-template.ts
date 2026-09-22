@@ -173,12 +173,6 @@ export function renderPreLaunchInviteEmail(params: {
   const { recipientName, senderName, ctaUrl } = params;
   const greeting = recipientName ? `Hi ${escapeHtml(recipientName)},` : "Hi,";
   const sender = escapeHtml(senderName);
-  const stat = (value: string, label: string, source: string) => `
-                    <td width="33.33%" valign="top" style="padding:16px 10px; text-align:center;">
-                      <div style="font-size:32px; font-weight:800; color:${COLORS.pineDark}; letter-spacing:-0.01em;">${value}</div>
-                      <div style="margin-top:4px; font-size:12.5px; line-height:1.45; color:${COLORS.inkSoft}; font-weight:600;">${label}</div>
-                      <div style="margin-top:4px; font-size:11px; color:${COLORS.inkFaint};">${source}</div>
-                    </td>`;
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -187,7 +181,7 @@ export function renderPreLaunchInviteEmail(params: {
     <title>${brand.name}</title>
   </head>
   <body style="margin:0; padding:0; background-color:${COLORS.paper}; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <span style="display:none; font-size:1px; color:${COLORS.paper}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">Fill your voids now — we're opening RoomsNow to a small group of Birmingham providers before public launch, 1 month of Professional free.</span>
+    <span style="display:none; font-size:1px; color:${COLORS.paper}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">Put your available rooms in front of people and professional referrers searching by need, location and live availability.</span>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.paper};">
       <tr>
         <td align="center" style="padding:32px 16px;">
@@ -195,69 +189,60 @@ export function renderPreLaunchInviteEmail(params: {
             <tr>
               <td style="padding:28px 40px 20px; border-bottom:1px solid ${COLORS.line};">
                 ${logoImgHtml()}
-                <span style="margin-left:10px; display:inline-block; padding:3px 10px; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark}; background-color:#EAF2FA; border-radius:999px;">Pre-launch invite</span>
+                <span style="margin-left:10px; display:inline-block; padding:3px 10px; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark}; background-color:#EAF2FA; border-radius:999px;">Provider invitation</span>
               </td>
             </tr>
 
             <tr>
               <td style="padding:28px 40px 0;">
-                <p style="margin:0; font-size:14px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:#C1440E;">Fill your voids now</p>
+                <p style="margin:0; font-size:14px; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; color:#C1440E;">Fill your voids faster</p>
               </td>
             </tr>
 
             <tr>
               <td style="padding:8px 40px 4px;">
-                <h1 style="margin:0 0 14px; font-size:24px; line-height:1.3; color:${COLORS.ink};">One Birmingham housing voice to another: come and fill your rooms before we go live</h1>
+                <h1 style="margin:0 0 14px; font-size:26px; line-height:1.25; color:${COLORS.ink};">Make your available rooms easier to find</h1>
                 <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">${greeting}</p>
                 <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  I'm ${sender} — I've got years of hands-on experience in supported housing here
-                  in Birmingham, so this isn't a platform cold-emailing you about something
-                  abstract. I've seen the same voids you have, and I built ${brand.name} because I
-                  was tired of watching good rooms sit empty over phone calls and whoever happened
-                  to be free that week.
+                  I&apos;m ${sender}. I built ${brand.name} after seeing suitable rooms sit empty while
+                  referrers and people looking for accommodation struggled to find accurate,
+                  up-to-date vacancies.
                 </p>
-                <p style="margin:0 0 4px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  Here's the size of the problem we're both dealing with:
+                <p style="margin:0; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
+                  ${brand.name} gives providers one place to publish live availability and receive
+                  relevant enquiries. People and professional referrers can search by location,
+                  accommodation type and support need instead of relying on outdated lists and
+                  repeated phone calls.
                 </p>
               </td>
             </tr>
 
             <tr>
-              <td style="padding:6px 30px 6px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.paper}; border-radius:12px;">
+              <td style="padding:18px 30px 8px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.paper}; border:1px solid ${COLORS.line}; border-radius:12px;">
                   <tr>
-                    ${stat("21,800+", "Housing Benefit claims tied to exempt/supported accommodation in Birmingham &mdash; the largest concentration of any UK city", "Birmingham City Council")}
-                    ${stat("135,580", "households in temporary accommodation across England on 31 March 2026", "GOV.UK, Statutory Homelessness statistics")}
-                    ${stat("83,850", "households newly assessed as needing homelessness help in Jan&ndash;Mar 2026 alone", "GOV.UK, Statutory Homelessness statistics")}
+                    <td style="padding:20px 24px;">
+                      <p style="margin:0 0 10px; font-size:13px; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark};">What providers can do</p>
+                      <p style="margin:0 0 8px; font-size:14.5px; line-height:1.55; color:${COLORS.inkSoft};">&#10003;&nbsp; Advertise HMOs, supported, transitional and adult social care accommodation</p>
+                      <p style="margin:0 0 8px; font-size:14.5px; line-height:1.55; color:${COLORS.inkSoft};">&#10003;&nbsp; Show room-level availability, photos, video and eligibility information</p>
+                      <p style="margin:0 0 8px; font-size:14.5px; line-height:1.55; color:${COLORS.inkSoft};">&#10003;&nbsp; Receive direct enquiries and professional referrals in one dashboard</p>
+                      <p style="margin:0; font-size:14.5px; line-height:1.55; color:${COLORS.inkSoft};">&#10003;&nbsp; Build trust with due-diligence verification and approved accreditations</p>
+                    </td>
                   </tr>
                 </table>
               </td>
             </tr>
 
             <tr>
-              <td style="padding:20px 40px 4px;">
+              <td style="padding:16px 40px 4px;">
                 <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  That's not a shortage of rooms. It's a shortage of the right room finding the
-                  right person quickly enough &mdash; and every day yours sits empty is a day of
-                  lost income for you and a longer wait for someone who needs it. ${brand.name}
-                  puts your available rooms in front of the referrers, case workers and housing
-                  officers who are already searching by need, location and availability, instead
-                  of relying on the same dozen phone numbers everyone else already has.
+                  It takes only a few minutes to create your provider profile and first advert.
+                  There is no promise of a placement &mdash; but keeping accurate vacancies visible
+                  gives the right referrers and applicants a clearer route to contact you.
                 </p>
-                <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  We haven't opened to the public yet. Before we do, I want a small group of real
-                  Birmingham providers on the site first &mdash; not early sign-ups, actual rooms.
-                  We're already building toward the traffic that lands at public launch (SEO,
-                  council-facing work, local press), and providers listed before that traffic
-                  arrives are the ones best placed to benefit from it when it does. Join now and
-                  you're one of the first live adverts on ${brand.name}, not the four-hundredth.
-                </p>
-                <p style="margin:0 0 4px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  None of that matters without providers who actually do the job &mdash; housing
-                  someone who needs support, not just square footage. Every advert you put on
-                  ${brand.name} is a faster route from your void to somebody's placement. That's
-                  the whole point of building this, and it's why I'd rather have ten honest
-                  providers on it early than a hundred generic sign-ups once we're live.
+                <p style="margin:0; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
+                  We are inviting a limited group of providers to list before wider outreach begins,
+                  so we can improve the service around real vacancies and genuine referral workflows.
                 </p>
               </td>
             </tr>
@@ -270,9 +255,9 @@ export function renderPreLaunchInviteEmail(params: {
                       <p style="margin:0 0 6px; font-size:12px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark};">Founding-provider offer</p>
                       <p style="margin:0 0 10px; font-size:20px; line-height:1.4; color:${COLORS.ink}; font-weight:800;">1 month of Professional, free &mdash; worth &pound;49</p>
                       <p style="margin:0; font-size:14.5px; line-height:1.6; color:${COLORS.inkSoft};">
-                        Up to 15 live adverts with unlimited rooms per property, full advert
-                        analytics, priority placement and one free promoted slot a month. No card
-                        needed to try it, and no obligation to stay on once the month is up.
+                        Publish up to 15 live adverts, manage room availability, receive enquiries
+                        and referrals, view advert analytics and use one promoted slot. No card is
+                        needed for the trial and there is no obligation to continue afterwards.
                       </p>
                     </td>
                   </tr>
@@ -285,7 +270,7 @@ export function renderPreLaunchInviteEmail(params: {
                 <table role="presentation" cellpadding="0" cellspacing="0">
                   <tr>
                     <td style="border-radius:8px; background-color:${COLORS.pine};">
-                      <a href="${ctaUrl}" style="display:inline-block; padding:13px 30px; font-size:15px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">Claim your free month</a>
+                      <a href="${ctaUrl}" style="display:inline-block; padding:13px 30px; font-size:15px; font-weight:700; color:#FFFFFF; text-decoration:none; border-radius:8px;">List your available rooms</a>
                     </td>
                   </tr>
                 </table>
@@ -295,9 +280,9 @@ export function renderPreLaunchInviteEmail(params: {
             <tr>
               <td style="padding:10px 40px 4px;">
                 <p style="margin:0; font-size:13px; line-height:1.6; color:${COLORS.inkFaint};">
-                  Sign up as a provider and reply to this email &mdash; I'm upgrading pre-launch
-                  accounts to Professional by hand, so there's nothing to pay and nothing to
-                  cancel later. If the button doesn't work, copy this link instead:<br />
+                  Create a provider account and reply to this email after registering. We&apos;ll apply
+                  the one-month Professional trial without asking for payment details. If the button
+                  doesn&apos;t work, copy this link instead:<br />
                   <a href="${ctaUrl}" style="color:${COLORS.pine}; word-break:break-all;">${ctaUrl}</a>
                 </p>
               </td>
@@ -309,9 +294,9 @@ export function renderPreLaunchInviteEmail(params: {
                   ${sender}
                 </p>
                 <p style="margin:14px 0 0; font-size:13px; line-height:1.6; color:${COLORS.inkFaint}; font-style:italic;">
-                  P.S. This is genuinely new, not a rebrand of something established &mdash; so
-                  what you tell us in the first few weeks will shape what providers see for years
-                  after. That's worth more to us than a bigger list right now.
+                  P.S. If RoomsNow is not relevant to your organisation, you can unsubscribe below.
+                  If it is, I&apos;d genuinely value your feedback on what would make vacancy and referral
+                  management more useful for your team.
                 </p>
               </td>
             </tr>
@@ -339,32 +324,34 @@ export function renderPreLaunchInviteEmail(params: {
 export function renderPreLaunchInviteText(params: { recipientName?: string; senderName: string; ctaUrl: string }) {
   const { recipientName, senderName, ctaUrl } = params;
   const greeting = recipientName ? `Hi ${recipientName},` : "Hi,";
-  return `FILL YOUR VOIDS NOW
+  return `FILL YOUR VOIDS FASTER
 
 ${greeting}
 
-I'm ${senderName} — I've got years of hands-on experience in supported housing here in Birmingham, so this isn't a platform cold-emailing you about something abstract. I've seen the same voids you have, and I built ${brand.name} because I was tired of watching good rooms sit empty over phone calls and whoever happened to be free that week.
+I'm ${senderName}. I built ${brand.name} after seeing suitable rooms sit empty while referrers and people looking for accommodation struggled to find accurate, up-to-date vacancies.
 
-The size of the problem we're both dealing with:
-- 21,800+ Housing Benefit claims tied to exempt/supported accommodation in Birmingham — the largest concentration of any UK city (Birmingham City Council)
-- 135,580 households in temporary accommodation across England on 31 March 2026 (GOV.UK)
-- 83,850 households newly assessed as needing homelessness help in Jan-Mar 2026 alone (GOV.UK)
+${brand.name} gives providers one place to publish live availability and receive relevant enquiries. People and professional referrers can search by location, accommodation type and support need instead of relying on outdated lists and repeated phone calls.
 
-That's not a shortage of rooms. It's a shortage of the right room finding the right person quickly enough — and every day yours sits empty is lost income for you and a longer wait for someone who needs it. ${brand.name} puts your available rooms in front of the referrers, case workers and housing officers already searching by need, location and availability.
+WHAT PROVIDERS CAN DO
+- Advertise HMOs, supported, transitional and adult social care accommodation
+- Show room-level availability, photos, video and eligibility information
+- Receive direct enquiries and professional referrals in one dashboard
+- Build trust with due-diligence verification and approved accreditations
 
-We haven't opened to the public yet. Before we do, I want a small group of real Birmingham providers on the site first. We're already building toward the traffic that lands at public launch, and providers listed before that traffic arrives are the ones best placed to benefit from it. Join now and you're one of the first live adverts on ${brand.name}, not the four-hundredth.
+It takes only a few minutes to create your provider profile and first advert. There is no promise of a placement — but keeping accurate vacancies visible gives the right referrers and applicants a clearer route to contact you.
 
-None of that matters without providers who actually do the job — housing someone who needs support, not just square footage. Every advert you put on ${brand.name} is a faster route from your void to somebody's placement.
+We are inviting a limited group of providers to list before wider outreach begins, so we can improve the service around real vacancies and genuine referral workflows.
 
-FOUNDING-PROVIDER OFFER: 1 month of Professional, free — worth £49. Up to 15 live adverts with unlimited rooms per property, full advert analytics, priority placement and one free promoted slot a month. No card needed, no obligation to stay on afterwards.
+FOUNDING-PROVIDER OFFER
+1 month of Professional, free — worth £49. Publish up to 15 live adverts, manage room availability, receive enquiries and referrals, view advert analytics and use one promoted slot. No card is needed for the trial and there is no obligation to continue afterwards.
 
-Claim your free month: ${ctaUrl}
+List your available rooms: ${ctaUrl}
 
-Sign up as a provider and reply to this email — I'm upgrading pre-launch accounts to Professional by hand, so there's nothing to pay and nothing to cancel later.
+Create a provider account and reply to this email after registering. We'll apply the one-month Professional trial without asking for payment details.
 
 ${senderName}
 
-P.S. This is genuinely new, not a rebrand of something established — so what you tell us in the first few weeks will shape what providers see for years after. That's worth more to us than a bigger list right now.
+P.S. If RoomsNow is not relevant to your organisation, you can unsubscribe below. If it is, I'd genuinely value your feedback on what would make vacancy and referral management more useful for your team.
 
 ---
 ${brand.name} · ${brand.tagline}
@@ -397,7 +384,7 @@ export function renderProviderMailshotEmail(params: {
   const { kind, recipientName, senderName, heading, bodyText, promoCode, promoBlurb, ctaLabel, ctaUrl } = params;
   const greeting = recipientName ? `Hi ${escapeHtml(recipientName)},` : "Hi,";
   const sender = escapeHtml(senderName);
-  const badgeLabel = kind === "PROMO" ? "Promotional offer" : "News & updates";
+  const badgeLabel = kind === "PROMO" ? "Provider offer" : "Fill vacant rooms";
   const promoBlock =
     kind === "PROMO" && promoCode
       ? `<tr>
