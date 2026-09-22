@@ -4,6 +4,7 @@ import { requireReferrer } from "@/lib/rbac";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { ClientForm } from "@/components/client-form";
 import { referrerNav } from "../../../nav";
+import { clientPhotoSrc } from "@/lib/client-card";
 
 export const metadata = { title: "Edit client" };
 export const dynamic = "force-dynamic";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function EditClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireReferrer();
-  const client = await db.client.findFirst({ where: { id, referrerId: user.id } });
+  const client = await db.client.findFirst({ where: { id, referrerId: user.id, deletedAt: null } });
   if (!client) notFound();
 
   const nav = await referrerNav(user.id);
@@ -32,6 +33,7 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
           supportTypes: client.supportTypes,
           riskNotes: client.riskNotes ?? "",
           status: client.status,
+          photo: clientPhotoSrc(client),
         }}
       />
     </DashboardShell>
