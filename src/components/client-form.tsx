@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { saveClientAction } from "@/server/actions/clients";
 import { CheckGroup, Field, FormError, FormSuccess, SubmitButton } from "./ui";
+import { AvatarDropzone } from "./avatar-dropzone";
 import { SUPPORT_TYPES } from "@/lib/taxonomy";
 
 export type ClientDefaults = Partial<{
@@ -18,6 +19,8 @@ export type ClientDefaults = Partial<{
   supportTypes: string[];
   riskNotes: string;
   status: string;
+  /** Access-checked URL of the current photo, if there is one. */
+  photo: string | null;
 }>;
 
 export function ClientForm({ defaults = {} }: { defaults?: ClientDefaults }) {
@@ -32,6 +35,23 @@ export function ClientForm({ defaults = {} }: { defaults?: ClientDefaults }) {
 
       <section className="card space-y-4 p-6">
         <h2 className="text-[20px]">Who they are</h2>
+        <div className="space-y-2">
+          <AvatarDropzone
+            id="photo"
+            name="photo"
+            initialPreview={defaults.photo ?? null}
+            fallback={`${defaults.firstName?.[0] ?? ""}${defaults.lastName?.[0] ?? ""}`.toUpperCase() || "+"}
+            error={state.errors?.photo}
+          />
+          <p className="text-[13px] leading-relaxed text-ink-faint">
+            Optional. Kept private — only you, and providers you share this profile with, can see it.
+          </p>
+          {defaults.photo && (
+            <label className="inline-flex items-center gap-2 text-[13px] text-ink-soft">
+              <input type="checkbox" name="removePhoto" className="h-4 w-4 accent-pine" /> Remove current photo
+            </label>
+          )}
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="First name" name="firstName" required error={state.errors?.firstName}>
             <input id="firstName" name="firstName" defaultValue={defaults.firstName} className="field" required />

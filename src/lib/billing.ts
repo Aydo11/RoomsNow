@@ -715,7 +715,7 @@ export async function referrerPlanLimits(userId: string) {
     freeMembership,
   );
   if (!membership) throw new Error("Referrer membership catalogue is empty. Run npm run db:seed.");
-  const clients = await db.client.count({ where: { referrerId: userId, status: { not: "ARCHIVED" } } });
+  const clients = await db.client.count({ where: { referrerId: userId, status: { not: "ARCHIVED" }, deletedAt: null } });
   const canAddClient = membership.maxClients === -1 || clients < membership.maxClients;
   return {
     membership,

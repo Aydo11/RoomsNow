@@ -318,6 +318,7 @@ model User {
   userMembershipGrantsMade UserMembershipGrant[]    @relation("UserMembershipGrantAdmin")
   savedSearches           SavedSearch[]
   providerReviews         ProviderReview[]
+  referrerProfile         ReferrerProfile?
 
   @@index([role, status])
 }
@@ -796,13 +797,23 @@ model Client {
   supportTypes       String[]     @default([])
   riskNotes          String?
   status             ClientStatus @default(ACTIVE)
+  /// Profile picture. Stored privately (a `private:` key) and only ever served
+  /// through /api/clients/[id]/photo, which applies the same access rule as
+  /// the record itself — these are often vulnerable people.
+  photoUrl           String?
+  /// Soft delete. A deleted client sits in the referrer's "Deleted" bin (and
+  /// stops counting towards their plan) until restored or removed for good;
+  /// every active share is revoked the moment it's deleted.
+  deletedAt          DateTime?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
   referrals Referral[]
   shares    ClientShare[]
+  messages  Message[]
 
   @@index([referrerId, status])
+  @@index([referrerId, deletedAt])
 }
 
 /// A client profile shared with a specific provider — the "send profile"
@@ -825,6 +836,26 @@ model ClientShare {
 
   @@unique([clientId, companyId])
   @@index([companyId, revokedAt])
+}
+
+/// A referrer's public-facing agency profile — banner, logo, what they do and
+/// where. The agency name lives on User.organisation (captured at sign-up) so
+/// there is one source of truth for it across referrals and shares.
+model ReferrerProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agencyType   String?
+  bannerUrl    String?
+  logoUrl      String?
+  about        String?
+  website      String?
+  publicEmail  String?
+  publicPhone  String?
+  areasCovered String[] @default([])
+  specialisms  String[] @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model ReferralEvent {
@@ -937,6 +968,13 @@ model Message {
   body           String
   attachmentUrl  String?
   attachmentName String?
+  /// A client profile a referrer dropped into the conversation. clientCard is
+  /// a snapshot of the shareable fields (never riskNotes) taken at send time,
+  /// so the card still reads correctly if the record is later edited or
+  /// deleted; clientId links through to the live profile while it exists.
+  clientId       String?
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientCard     Json?
   readAt         DateTime?
   createdAt      DateTime     @default(now())
 

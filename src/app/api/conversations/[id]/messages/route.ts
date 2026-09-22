@@ -17,7 +17,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     where: { conversationId: id },
     orderBy: { createdAt: "asc" },
     take: 200,
-    select: { id: true, senderId: true, body: true, createdAt: true, readAt: true },
+    select: { id: true, senderId: true, body: true, createdAt: true, readAt: true, clientId: true, clientCard: true },
   });
 
   await db.message.updateMany({

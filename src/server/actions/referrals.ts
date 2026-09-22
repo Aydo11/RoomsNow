@@ -46,7 +46,7 @@ export async function createReferralAction(_prev: FormState, formData: FormData)
   // referrer — never trust a clientId blindly from the form.
   let clientId: string | null = null;
   if (d.clientId) {
-    const client = await db.client.findFirst({ where: { id: d.clientId, referrerId: user.id }, select: { id: true } });
+    const client = await db.client.findFirst({ where: { id: d.clientId, referrerId: user.id, deletedAt: null }, select: { id: true } });
     if (!client) return { ok: false, errors: { form: "That client record could not be found." } };
     clientId = client.id;
   }
