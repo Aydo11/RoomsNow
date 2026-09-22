@@ -9,6 +9,7 @@ import { adminNav } from "../nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, timeAgo } from "@/lib/format";
 import type { ListingStatus } from "@prisma/client";
+import { COVER_MEDIA, coverImage } from "@/lib/cover-image";
 
 export const metadata = { title: "Adverts" };
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
       include: {
         company: { select: { name: true, slug: true, verification: true } },
         property: { select: { city: true, postcode: true } },
-        media: { where: { type: "IMAGE" }, take: 1, orderBy: [{ isPrimary: "desc" }, { position: "asc" }] },
+        media: COVER_MEDIA,
         _count: { select: { rooms: true } },
       },
     }),
@@ -63,9 +64,9 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
           {listings.map((listing) => (
             <li key={listing.id} className="card flex flex-wrap gap-5 p-4">
               <div className="h-24 w-32 shrink-0 overflow-hidden rounded-[10px] bg-paper-sunk">
-                {listing.media[0] ? (
+                {coverImage(listing.media) ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={listing.media[0].url} alt="" className="h-full w-full object-contain" />
+                  <img src={coverImage(listing.media)!.url} alt="" className="h-full w-full object-contain" />
                 ) : (
                   <span className="grid h-full place-items-center text-[12px] text-ink-faint">No photo</span>
                 )}
