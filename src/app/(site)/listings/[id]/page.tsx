@@ -25,6 +25,7 @@ import { callerIp, LIMITS, rateLimit } from "@/lib/rate-limit";
 import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
 import { PropertyMap } from "@/components/property-map";
 import { hasProviderMapAccess } from "@/lib/entitlements";
+import { coverImage } from "@/lib/cover-image";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       status: true,
       accommodationType: true,
       weeklyRentFrom: true,
-      media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { position: "asc" }], take: 4, select: { url: true } },
+      media: { where: { type: { in: ["IMAGE", "VIDEO_URL"] } }, orderBy: [{ type: "asc" }, { isPrimary: "desc" }, { position: "asc" }], take: 4, select: { type: true, url: true } },
       property: { select: { city: true, area: true } },
     },
   });
@@ -48,6 +49,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = `${listing.title} — ${listing.property.city}`;
   const description = listing.summary ?? `View this ${listing.accommodationType.toLowerCase().replaceAll("_", " ")} in ${location}, including availability, rent, facilities and referral information.`;
   const url = absoluteUrl(`/listings/${id}`);
+  const photos = listing.media.filter((m) => m.type === "IMAGE").map((m) => absoluteUrl(m.url));
+  const cover = coverImage(listing.media);
+  const shareImages = photos.length ? photos : cover ? [cover.url] : [];
   return {
     title,
     description,
@@ -60,9 +64,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       url,
       title,
       description,
-      images: listing.media.map((image) => absoluteUrl(image.url)),
+      images: shareImages,
     },
-    twitter: { card: listing.media.length ? "summary_large_image" : "summary", title, description },
+    twitter: { card: shareImages.length ? "summary_large_image" : "summary", title, description },
   };
 }
 
