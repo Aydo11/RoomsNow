@@ -12,7 +12,7 @@ import { providerNav } from "../nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, timeAgo } from "@/lib/format";
 import { SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
-import { COVER_MEDIA, coverImage } from "@/lib/cover-image";
+import { COVER_MEDIA, coverImage, videoPosterSrc } from "@/lib/cover-image";
 
 export const metadata = { title: "My adverts" };
 export const dynamic = "force-dynamic";
@@ -87,7 +87,9 @@ export default async function ProviderAdvertsPage({
           {listings.map((listing) => (
             <li key={listing.id} data-advert-card className="card relative flex flex-wrap gap-5 overflow-hidden p-4">
               <div className="h-24 w-32 shrink-0 overflow-hidden rounded-[10px] bg-paper-sunk">
-                {coverImage(listing.media) ? (
+                {coverImage(listing.media)?.isVideoFile ? (
+                  <video src={videoPosterSrc(coverImage(listing.media)!.url)} preload="metadata" muted playsInline className="h-full w-full bg-black object-contain" />
+                ) : coverImage(listing.media) ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={coverImage(listing.media)!.url} alt="" className="h-full w-full object-contain" />
                 ) : (
