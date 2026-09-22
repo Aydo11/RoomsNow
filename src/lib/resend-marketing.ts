@@ -101,10 +101,25 @@ export async function prepareMarketingBroadcast(params: {
   subject: string;
   html: string;
   text: string;
+  /** Segments from broadcasts that have already been sent and can be reclaimed. */
+  spentSegmentIds?: string[];
 }): Promise<PreparedMarketingBroadcast> {
   const { from } = marketingConfig();
   const suffix = new Date().toISOString().replace(/[:.]/g, "-");
   const campaignReference = `${params.campaignName.slice(0, 70)} — ${suffix}`;
+
+  // Resend plans cap the number of segments. Once a broadcast has been sent,
+  // its one-campaign segment is no longer needed. Reclaim those before making
+  // the new one; an already-deleted segment is harmless and must not prevent a
+  // new campaign being prepared.
+  if (params.spentSegmentIds?.length) {
+    await Promise.allSettled(
+      params.spentSegmentIds.map((id) =>
+        resendRequest<ResendIdResponse>(`/segments/${encodeURIComponent(id)}`, { method: "DELETE" }),
+      ),
+    );
+  }
+
   const segment = await resendRequest<ResendIdResponse>("/segments", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
