@@ -12,6 +12,7 @@ import { providerNav } from "../nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, timeAgo } from "@/lib/format";
 import { SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
+import { COVER_MEDIA, coverImage } from "@/lib/cover-image";
 
 export const metadata = { title: "My adverts" };
 export const dynamic = "force-dynamic";
@@ -37,7 +38,7 @@ export default async function ProviderAdvertsPage({
       include: {
         rooms: { select: { status: true } },
         property: { select: { city: true, postcode: true } },
-        media: { where: { type: "IMAGE" }, take: 1, orderBy: [{ isPrimary: "desc" }, { position: "asc" }] },
+        media: COVER_MEDIA,
         _count: { select: { requests: true, referrals: true } },
       },
     }),
@@ -86,9 +87,9 @@ export default async function ProviderAdvertsPage({
           {listings.map((listing) => (
             <li key={listing.id} data-advert-card className="card relative flex flex-wrap gap-5 overflow-hidden p-4">
               <div className="h-24 w-32 shrink-0 overflow-hidden rounded-[10px] bg-paper-sunk">
-                {listing.media[0] ? (
+                {coverImage(listing.media) ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={listing.media[0].url} alt="" className="h-full w-full object-contain" />
+                  <img src={coverImage(listing.media)!.url} alt="" className="h-full w-full object-contain" />
                 ) : (
                   <span className="grid h-full place-items-center text-[12px] text-ink-faint">No photo</span>
                 )}
