@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { demoListingGallery, demoListingImage } from "@/lib/demo-listings";
 import { ResilientImage } from "./resilient-image";
 
@@ -15,55 +15,139 @@ type Media = {
 
 export function Gallery({ media, title, listingId }: { media: Media[]; title: string; listingId: string }) {
   const [active, setActive] = useState(0);
-  const displayMedia: Media[] = media.length ? media : demoListingGallery(listingId);
+  const [lightboxActive, setLightboxActive] = useState<number | null>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const lightboxTrackRef = useRef<HTMLDivElement>(null);
+  const lightboxInitialIndexRef = useRef(0);
+  const displayMedia: Media[] = useMemo(
+    () => media.length ? media : demoListingGallery(listingId),
+    [media, listingId],
+  );
+  const photos = useMemo(() => displayMedia.filter((item) => item.type === "IMAGE"), [displayMedia]);
   const currentIndex = Math.min(active, displayMedia.length - 1);
   const current = displayMedia[currentIndex];
-  const fallback = demoListingImage(listingId, currentIndex);
+
+  const scrollTo = useCallback((index: number, smooth = true) => {
+    const next = (index + displayMedia.length) % displayMedia.length;
+    setActive(next);
+    trackRef.current?.scrollTo({ left: trackRef.current.clientWidth * next, behavior: smooth ? "smooth" : "auto" });
+  }, [displayMedia.length]);
+
+  const scrollLightboxTo = useCallback((index: number, smooth = true) => {
+    if (!photos.length) return;
+    const next = (index + photos.length) % photos.length;
+    setLightboxActive(next);
+    lightboxTrackRef.current?.scrollTo({ left: lightboxTrackRef.current.clientWidth * next, behavior: smooth ? "smooth" : "auto" });
+  }, [photos.length]);
+
+  const updateIndexFromScroll = (event: UIEvent<HTMLDivElement>, count: number, update: (index: number) => void) => {
+    const width = event.currentTarget.clientWidth;
+    if (!width) return;
+    update(Math.min(count - 1, Math.max(0, Math.round(event.currentTarget.scrollLeft / width))));
+  };
+
+  const lightboxOpen = lightboxActive !== null;
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const scrollToIndex = (index: number, behavior: ScrollBehavior) => {
+      const track = lightboxTrackRef.current;
+      track?.scrollTo({ left: track.clientWidth * index, behavior });
+    };
+    const frame = requestAnimationFrame(() => scrollToIndex(lightboxInitialIndexRef.current, "auto"));
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setLightboxActive(null);
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        setLightboxActive((current) => {
+          if (current === null) return current;
+          const direction = event.key === "ArrowLeft" ? -1 : 1;
+          const next = (current + direction + photos.length) % photos.length;
+          requestAnimationFrame(() => scrollToIndex(next, "smooth"));
+          return next;
+        });
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [lightboxOpen, photos.length]);
+
+  const openPhoto = (item: Media) => {
+    const photoIndex = photos.findIndex((photo) => photo.id === item.id);
+    if (photoIndex >= 0) {
+      lightboxInitialIndexRef.current = photoIndex;
+      setLightboxActive(photoIndex);
+    }
+  };
 
   return (
     <div aria-label="Property media gallery">
       <div className="group relative overflow-hidden rounded-card border border-line bg-black shadow-[0_8px_30px_rgba(21,42,58,.10)]">
-        {current.type === "VIDEO" ? (
-          <video src={current.url} controls playsInline preload="metadata" className="aspect-video max-h-[42vh] w-full bg-black sm:max-h-none" />
-        ) : current.type === "VIDEO_URL" ? (
-          <div className="aspect-video max-h-[42vh] w-full sm:max-h-none">
-            <iframe
-              src={toEmbed(current.url)}
-              title={`${title} video`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
-              allowFullScreen
-              className="h-full w-full"
-            />
-          </div>
-        ) : (
-          <div className="relative aspect-video max-h-[42vh] w-full sm:max-h-none">
-            <ResilientImage
-              src={current.url}
-              fallbackSrc={fallback.url}
-              fallbackLabel={current.illustrative ? undefined : "Photo unavailable — illustrative image shown"}
-              alt={current.caption ?? title}
-              className="object-contain"
-              sizes="(min-width: 1024px) 700px, 100vw"
-              priority
-            />
-          </div>
-        )}
+        <div
+          ref={trackRef}
+          onScroll={(event) => updateIndexFromScroll(event, displayMedia.length, setActive)}
+          className="flex aspect-video max-h-[42vh] w-full snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:max-h-none"
+        >
+          {displayMedia.map((item, index) => (
+            <div key={item.id} className="relative h-full min-w-full snap-center snap-always bg-black">
+              {item.type === "VIDEO" ? (
+                <video src={item.url} controls playsInline preload="metadata" className="h-full w-full bg-black object-contain" />
+              ) : item.type === "VIDEO_URL" ? (
+                <iframe
+                  src={toEmbed(item.url)}
+                  title={`${title} video`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                  className="h-full w-full"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openPhoto(item)}
+                  aria-label={`Enlarge ${item.caption ?? `${title} photo ${index + 1}`}`}
+                  className="relative block h-full w-full cursor-zoom-in"
+                >
+                  <ResilientImage
+                    src={item.url}
+                    fallbackSrc={demoListingImage(listingId, index).url}
+                    fallbackLabel={item.illustrative ? undefined : "Photo unavailable — illustrative image shown"}
+                    alt={item.caption ?? title}
+                    className="object-contain"
+                    sizes="(min-width: 1024px) 700px, 100vw"
+                    priority={index === 0}
+                  />
+                </button>
+              )}
 
-        {current.illustrative && (
-          <span className="absolute bottom-2 left-2 rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">
-            Illustrative image
-          </span>
-        )}
+              {item.illustrative && (
+                <span className="pointer-events-none absolute bottom-2 left-2 rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">
+                  Illustrative image
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
 
         {displayMedia.length > 1 && (
           <>
-            <button type="button" onClick={() => setActive((active - 1 + displayMedia.length) % displayMedia.length)} aria-label="Previous photo or video" className="absolute left-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-xl text-white backdrop-blur hover:bg-black/80 sm:left-4">←</button>
-            <button type="button" onClick={() => setActive((active + 1) % displayMedia.length)} aria-label="Next photo or video" className="absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-xl text-white backdrop-blur hover:bg-black/80 sm:right-4">→</button>
+            <button type="button" onClick={() => scrollTo(currentIndex - 1)} aria-label="Previous photo or video" className="absolute left-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-xl text-white backdrop-blur transition hover:bg-black/80 sm:left-4">←</button>
+            <button type="button" onClick={() => scrollTo(currentIndex + 1)} aria-label="Next photo or video" className="absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-xl text-white backdrop-blur transition hover:bg-black/80 sm:right-4">→</button>
           </>
         )}
-        <span className="absolute right-3 top-3 rounded-pill bg-black/70 px-2.5 py-1 text-[12px] font-medium text-white">
+        <span className="pointer-events-none absolute right-3 top-3 rounded-pill bg-black/70 px-2.5 py-1 text-[12px] font-medium text-white">
           {currentIndex + 1} / {displayMedia.length}
         </span>
+        {current.type === "IMAGE" && (
+          <span className="pointer-events-none absolute bottom-3 right-3 hidden rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur sm:block">
+            Click to enlarge
+          </span>
+        )}
       </div>
 
       {(current.caption || current.room) && (
@@ -74,15 +158,15 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
       )}
 
       {displayMedia.length > 1 && (
-        <ul className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <ul className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1">
           {displayMedia.map((item, index) => (
-            <li key={item.id}>
+            <li key={item.id} className="snap-start">
               <button
-                onClick={() => setActive(index)}
-                aria-current={index === active}
+                onClick={() => scrollTo(index)}
+                aria-current={index === currentIndex}
                 aria-label={`Show ${item.caption || item.room?.name || `${item.type === "IMAGE" ? "photo" : "video"} ${index + 1}`}`}
                 className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-[8px] border-2 bg-paper-sunk transition ${
-                  index === active ? "border-pine" : "border-transparent"
+                  index === currentIndex ? "border-pine" : "border-transparent"
                 }`}
               >
                 {item.type.startsWith("VIDEO") ? (
@@ -92,7 +176,7 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
                     src={item.url}
                     fallbackSrc={demoListingImage(listingId, index).url}
                     alt={item.caption ?? `${title} — photo ${index + 1}`}
-                    className="object-contain"
+                    className="object-cover"
                     sizes="96px"
                   />
                 )}
@@ -100,6 +184,48 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
             </li>
           ))}
         </ul>
+      )}
+
+      {lightboxActive !== null && photos[lightboxActive] && (
+        <div role="dialog" aria-modal="true" aria-label={`${title} enlarged photos`} className="fixed inset-0 z-[100] flex flex-col bg-black/95 text-white backdrop-blur-sm">
+          <div className="flex min-h-14 items-center justify-between gap-4 px-4 py-2 sm:px-6">
+            <p className="truncate text-sm font-medium">{photos[lightboxActive].caption ?? title}</p>
+            <div className="flex shrink-0 items-center gap-3">
+              <span className="text-sm text-white/75">{lightboxActive + 1} / {photos.length}</span>
+              <button type="button" onClick={() => setLightboxActive(null)} aria-label="Close enlarged photos" className="grid h-11 w-11 place-items-center rounded-full bg-white/10 text-2xl transition hover:bg-white/20">×</button>
+            </div>
+          </div>
+
+          <div
+            ref={lightboxTrackRef}
+            onScroll={(event) => updateIndexFromScroll(event, photos.length, setLightboxActive)}
+            className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto scroll-smooth overscroll-contain [scrollbar-width:none] [touch-action:pan-x] [&::-webkit-scrollbar]:hidden"
+          >
+            {photos.map((item, index) => (
+              <div key={item.id} className="relative h-full min-w-full snap-center snap-always px-2 pb-3 sm:px-16 sm:pb-6">
+                <ResilientImage
+                  src={item.url}
+                  fallbackSrc={demoListingImage(listingId, displayMedia.findIndex((entry) => entry.id === item.id)).url}
+                  alt={item.caption ?? `${title} — enlarged photo ${index + 1}`}
+                  className="object-contain"
+                  sizes="100vw"
+                  priority={index === lightboxActive}
+                />
+              </div>
+            ))}
+          </div>
+
+          {photos.length > 1 && (
+            <>
+              <button type="button" onClick={() => scrollLightboxTo(lightboxActive - 1)} aria-label="Previous enlarged photo" className="absolute left-2 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-2xl text-white backdrop-blur transition hover:bg-black/80 sm:left-5">←</button>
+              <button type="button" onClick={() => scrollLightboxTo(lightboxActive + 1)} aria-label="Next enlarged photo" className="absolute right-2 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-2xl text-white backdrop-blur transition hover:bg-black/80 sm:right-5">→</button>
+            </>
+          )}
+
+          <p className="px-4 pb-[max(12px,env(safe-area-inset-bottom))] text-center text-xs text-white/65 sm:text-sm">
+            Swipe or scroll to see more photos
+          </p>
+        </div>
       )}
     </div>
   );

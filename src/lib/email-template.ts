@@ -195,7 +195,7 @@ export function renderPreLaunchInviteEmail(params: {
 
             <tr>
               <td style="padding:28px 40px 0;">
-                <p style="margin:0; font-size:14px; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; color:#C1440E;">Fill your voids faster</p>
+                <p style="margin:0; font-size:16px; font-weight:900; letter-spacing:0.045em; text-transform:uppercase; color:#C1440E;">FILL YOUR VOIDS NOW</p>
               </td>
             </tr>
 
@@ -324,7 +324,7 @@ export function renderPreLaunchInviteEmail(params: {
 export function renderPreLaunchInviteText(params: { recipientName?: string; senderName: string; ctaUrl: string }) {
   const { recipientName, senderName, ctaUrl } = params;
   const greeting = recipientName ? `Hi ${recipientName},` : "Hi,";
-  return `FILL YOUR VOIDS FASTER
+  return `FILL YOUR VOIDS NOW
 
 ${greeting}
 
@@ -371,7 +371,7 @@ Unsubscribe from RoomsNow marketing emails: ${RESEND_UNSUBSCRIBE_URL}`;
  * everything user-supplied is escaped before it reaches the HTML.
  */
 export function renderProviderMailshotEmail(params: {
-  kind: "PROMO" | "NEWS";
+  kind: "PROMO" | "NEWS" | "CUSTOM";
   recipientName?: string;
   senderName: string;
   heading: string;
@@ -384,7 +384,7 @@ export function renderProviderMailshotEmail(params: {
   const { kind, recipientName, senderName, heading, bodyText, promoCode, promoBlurb, ctaLabel, ctaUrl } = params;
   const greeting = recipientName ? `Hi ${escapeHtml(recipientName)},` : "Hi,";
   const sender = escapeHtml(senderName);
-  const badgeLabel = kind === "PROMO" ? "Provider offer" : "Fill vacant rooms";
+  const badgeLabel = kind === "PROMO" ? "Provider offer" : kind === "CUSTOM" ? "Provider update" : "Fill vacant rooms";
   const promoBlock =
     kind === "PROMO" && promoCode
       ? `<tr>

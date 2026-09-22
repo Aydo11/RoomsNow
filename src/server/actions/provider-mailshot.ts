@@ -4,7 +4,7 @@ import { z } from "zod";
 import { AccountStatus, Prisma, VerificationStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, refundRateLimit } from "@/lib/rate-limit";
 import { mailshotRecipientEmails } from "@/lib/audit";
 import { renderProviderMailshotEmail, renderProviderMailshotText } from "@/lib/email-template";
 import { prepareMarketingBroadcast, sendPreparedMarketingBroadcast } from "@/lib/resend-marketing";
@@ -14,7 +14,7 @@ import type { FormState } from "@/lib/validation";
 const MAX_RECIPIENTS = 500;
 
 const input = z.object({
-  kind: z.enum(["PROMO", "NEWS"]),
+  kind: z.enum(["PROMO", "NEWS", "CUSTOM"]),
   senderName: z.string().trim().min(1, "Enter your name.").max(80),
   subject: z.string().trim().min(1, "Enter a subject line.").max(150),
   body: z.string().trim().min(1, "Enter a message.").max(5000),
@@ -26,6 +26,31 @@ const input = z.object({
   verification: z.string().optional().or(z.literal("")),
   source: z.string().optional().or(z.literal("")),
 });
+
+const CAMPAIGN_LIMITS = {
+  prepare: { limit: 20, windowMs: 60 * 60_000 },
+  send: { limit: 20, windowMs: 60 * 60_000 },
+} as const;
+
+async function spentProviderSegmentIds(): Promise<string[]> {
+  const prepared = await db.auditLog.findMany({
+    where: { action: "admin.provider_broadcast_prepared", targetType: "Broadcast" },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    select: { targetId: true, metadata: true },
+  });
+  const broadcastIds = prepared.map((row) => row.targetId).filter((id): id is string => Boolean(id));
+  if (!broadcastIds.length) return [];
+  const sent = await db.auditLog.findMany({
+    where: { action: "admin.provider_broadcast_sent", targetType: "Broadcast", targetId: { in: broadcastIds } },
+    select: { targetId: true },
+  });
+  const sentIds = new Set(sent.map((row) => row.targetId));
+  return prepared.flatMap((row) => {
+    const segmentId = (row.metadata as { segmentId?: unknown } | null)?.segmentId;
+    return row.targetId && sentIds.has(row.targetId) && typeof segmentId === "string" ? [segmentId] : [];
+  });
+}
 
 /**
  * The provider Broadcast flow — reaches providers who already have an
@@ -54,11 +79,13 @@ export async function sendProviderMailshot(_previous: FormState, form: FormData)
     if (preparedMetadata?.importId !== ids.data.importId) {
       return { ok: false, errors: { form: "RoomsNow could not verify that prepared campaign. Prepare it again." } };
     }
-    const limit = await rateLimit(`admin-provider-broadcast-send:${actor.id}`, { limit: 5, windowMs: 60 * 60_000 });
+    const sendKey = `admin-provider-broadcast-send:${actor.id}`;
+    const limit = await rateLimit(sendKey, CAMPAIGN_LIMITS.send);
     if (!limit.ok) return { ok: false, errors: { form: "Please wait before sending another provider campaign." }, ...ids.data };
     try {
       const result = await sendPreparedMarketingBroadcast(ids.data);
       if (!result.sent) {
+        await refundRateLimit(sendKey);
         return {
           ok: false,
           message: `Resend is still ${result.status === "pending" ? "queuing" : "processing"} the contact list. Wait a moment, then press Send campaign again.`,
@@ -77,6 +104,7 @@ export async function sendProviderMailshot(_previous: FormState, form: FormData)
       return { ok: true, message: "Campaign handed to Resend. It will be queued and throttled automatically; monitor delivery, bounces and complaints in Resend Broadcasts." };
     } catch (error) {
       console.error("Provider broadcast send failed", error);
+      await refundRateLimit(sendKey);
       return { ok: false, errors: { form: error instanceof Error ? error.message : "Could not send the prepared campaign." }, ...ids.data };
     }
   }
@@ -119,7 +147,8 @@ export async function sendProviderMailshot(_previous: FormState, form: FormData)
   const finalCtaUrl = ctaUrl ? (/^https?:\/\//.test(ctaUrl) ? ctaUrl : `${appUrl}${ctaUrl.startsWith("/") ? "" : "/"}${ctaUrl}`) : `${appUrl}/dashboard`;
   const finalCtaLabel = ctaLabel || "View in RoomsNow";
 
-  const limit = await rateLimit(`admin-provider-broadcast-prepare:${actor.id}`, { limit: 3, windowMs: 60 * 60_000 });
+  const prepareKey = `admin-provider-broadcast-prepare:${actor.id}`;
+  const limit = await rateLimit(prepareKey, CAMPAIGN_LIMITS.prepare);
   if (!limit.ok) return { ok: false, errors: { form: "Please wait before preparing another provider campaign." } };
 
   const text = renderProviderMailshotText({
@@ -148,6 +177,7 @@ export async function sendProviderMailshot(_previous: FormState, form: FormData)
       subject,
       html,
       text,
+      spentSegmentIds: await spentProviderSegmentIds(),
     });
     await db.auditLog.create({
       data: {
@@ -174,6 +204,7 @@ export async function sendProviderMailshot(_previous: FormState, form: FormData)
     };
   } catch (error) {
     console.error("Provider broadcast preparation failed", error);
+    await refundRateLimit(prepareKey);
     return { ok: false, errors: { form: error instanceof Error ? error.message : "Could not prepare the provider campaign." } };
   }
 }

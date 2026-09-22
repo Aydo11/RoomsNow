@@ -11,7 +11,7 @@ const TABS = [
   {
     value: "NEWS",
     label: "Fill vacant rooms",
-    subject: "Fill your voids now — publish your live rooms on RoomsNow",
+    subject: "FILL YOUR VOIDS NOW — publish your live rooms on RoomsNow",
     body: "Every day a suitable room sits empty is lost income and a missed placement. RoomsNow puts your current vacancies in front of people and professional referrers searching by location, support need and availability.\n\nPublish or update your available rooms today so enquiries are based on accurate information. You can manage adverts, referrals and messages from one provider dashboard.",
     ctaLabel: "List available rooms",
     ctaUrl: "/provider/adverts/new",
@@ -19,14 +19,27 @@ const TABS = [
   {
     value: "PROMO",
     label: "Promotional code",
-    subject: "Fill your voids faster with your RoomsNow provider offer",
+    subject: "FILL YOUR VOIDS NOW — use your RoomsNow provider offer",
     body: "Make your available accommodation easier for referrers and people looking for housing to find. Use the offer below to publish more vacancies, manage enquiries and see how your adverts perform.",
     ctaLabel: "View provider membership",
     ctaUrl: "/provider/membership",
   },
+  {
+    value: "CUSTOM",
+    label: "Custom message",
+    subject: "",
+    body: "",
+    ctaLabel: "Open RoomsNow",
+    ctaUrl: "/dashboard",
+  },
 ] as const;
 
 type Kind = (typeof TABS)[number]["value"];
+type Draft = { subject: string; body: string; ctaLabel: string; ctaUrl: string; promoCode: string; promoBlurb: string };
+
+const INITIAL_DRAFTS = Object.fromEntries(
+  TABS.map((tab) => [tab.value, { subject: tab.subject, body: tab.body, ctaLabel: tab.ctaLabel, ctaUrl: tab.ctaUrl, promoCode: "", promoBlurb: "" }]),
+) as Record<Kind, Draft>;
 
 export function ProviderMailshotForm({
   filters,
@@ -37,7 +50,12 @@ export function ProviderMailshotForm({
 }) {
   const [state, action] = useActionState(sendProviderMailshot, initialState);
   const [kind, setKind] = useState<Kind>("NEWS");
-  const active = TABS.find((tab) => tab.value === kind) ?? TABS[0];
+  const [senderName, setSenderName] = useState("Ayden");
+  const [drafts, setDrafts] = useState<Record<Kind, Draft>>(INITIAL_DRAFTS);
+  const active = drafts[kind];
+  const updateDraft = (field: keyof Draft, value: string) => {
+    setDrafts((current) => ({ ...current, [kind]: { ...current[kind], [field]: value } }));
+  };
 
   return (
     <form action={action} className="card space-y-4 p-5">
@@ -53,7 +71,7 @@ export function ProviderMailshotForm({
         opt-outs and tracks bounces, complaints and unsubscribes.
       </p>
 
-      <div className="flex gap-1 rounded-[10px] border border-line bg-paper-sunk p-1" role="tablist">
+      <div className="grid grid-cols-1 gap-1 rounded-[10px] border border-line bg-paper-sunk p-1 sm:grid-cols-3" role="tablist">
         {TABS.map((tab) => (
           <button
             key={tab.value}
@@ -83,36 +101,40 @@ export function ProviderMailshotForm({
 
       <label className="block text-sm">
         Your name <span className="text-ink-faint">(shown as the sender)</span>
-        <input name="senderName" required maxLength={80} defaultValue="Ayden" className="field mt-1" />
+        <input name="senderName" required maxLength={80} value={senderName} onChange={(event) => setSenderName(event.target.value)} className="field mt-1" />
       </label>
 
       <Field label="Subject" name="subject" required>
-        <input key={`${kind}-subject`} name="subject" required maxLength={150} defaultValue={active.subject} className="field" />
+        <input name="subject" required maxLength={150} value={active.subject} onChange={(event) => updateDraft("subject", event.target.value)} placeholder={kind === "CUSTOM" ? "Write the subject recipients will see" : undefined} className="field" />
       </Field>
 
       <Field label="Message" name="body" required>
-        <textarea key={`${kind}-body`} name="body" required rows={7} defaultValue={active.body} className="field" />
+        <textarea name="body" required rows={9} value={active.body} onChange={(event) => updateDraft("body", event.target.value)} placeholder={kind === "CUSTOM" ? "Write your complete provider message here. Separate paragraphs with a blank line." : undefined} className="field" />
       </Field>
 
       {kind === "PROMO" && (
         <>
           <Field label="Promo code" name="promoCode" error={state.errors?.promoCode} required>
-            <input name="promoCode" required maxLength={40} placeholder="e.g. SPRING20" className="field font-mono uppercase" />
+            <input name="promoCode" required maxLength={40} value={active.promoCode} onChange={(event) => updateDraft("promoCode", event.target.value.toUpperCase())} placeholder="e.g. SPRING20" className="field font-mono uppercase" />
           </Field>
           <Field label="Offer description" name="promoBlurb" hint="Shown above the code in the email.">
-            <input name="promoBlurb" maxLength={200} placeholder="e.g. 20% off your first month" className="field" />
+            <input name="promoBlurb" maxLength={200} value={active.promoBlurb} onChange={(event) => updateDraft("promoBlurb", event.target.value)} placeholder="e.g. 20% off your first month" className="field" />
           </Field>
         </>
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Button label" name="ctaLabel" hint="Optional — defaults to “View in RoomsNow”.">
-          <input key={`${kind}-cta-label`} name="ctaLabel" maxLength={40} defaultValue={active.ctaLabel} className="field" />
+          <input name="ctaLabel" maxLength={40} value={active.ctaLabel} onChange={(event) => updateDraft("ctaLabel", event.target.value)} className="field" />
         </Field>
         <Field label="Button link" name="ctaUrl" hint="Optional — defaults to the dashboard.">
-          <input key={`${kind}-cta-url`} name="ctaUrl" maxLength={300} defaultValue={active.ctaUrl} className="field" />
+          <input name="ctaUrl" maxLength={300} value={active.ctaUrl} onChange={(event) => updateDraft("ctaUrl", event.target.value)} placeholder="/dashboard or https://…" className="field" />
         </Field>
       </div>
+
+      <p className="rounded-[10px] border border-line bg-paper-sunk/60 p-3 text-[12px] leading-relaxed text-ink-soft">
+        Your edits are kept if validation or Resend returns an error, and when you switch between templates. Preparing only creates a draft; it does not send anything.
+      </p>
 
       <SubmitButton name="operation" value="prepare" pendingLabel="Preparing in Resend…" disabled={recipientCount === 0 || Boolean(state.broadcastId)}>
         Prepare for {recipientCount} provider{recipientCount === 1 ? "" : "s"}

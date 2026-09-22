@@ -173,7 +173,10 @@ export async function sendPreLaunchInvite(_previous: FormState, form: FormData):
   if (!limit.ok) return { ok: false, message: waitMessage("preparing", limit.retryAfterSeconds) };
 
   try {
-    const subject = "Fill your voids faster — list free on RoomsNow for one month";
+    // Email subjects are plain text (so they cannot be bold). Keep the primary
+    // benefit in capitals so it is immediately visible in a crowded inbox,
+    // while leaving the supporting detail in normal case for deliverability.
+    const subject = "FILL YOUR VOIDS NOW — list free on RoomsNow for one month";
     const prepared = await prepareMarketingBroadcast({
       campaignName: "Founding provider outreach",
       recipients: valid.map((email) => ({ email, firstName: valid.length === 1 ? firstName || undefined : undefined })),

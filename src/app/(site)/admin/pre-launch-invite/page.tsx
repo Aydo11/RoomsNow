@@ -91,7 +91,7 @@ export default async function PreLaunchInvitePage({
           </div>
           <div className="rounded-[10px] border border-line bg-paper-sunk/60 p-4 text-[13px] leading-relaxed text-ink-soft">
             <p className="font-medium text-ink">Conversion approach</p>
-            <p className="mt-1">The subject avoids all-caps and the email avoids unverified promises. It leads with the cost of vacancies, explains the product in four bullets and uses one action: list available rooms.</p>
+            <p className="mt-1">The subject leads with &ldquo;FILL YOUR VOIDS NOW&rdquo; for immediate inbox visibility while the supporting detail stays in normal case. The email avoids unverified promises, explains the product in four bullets and uses one action: list available rooms.</p>
           </div>
         </div>
       </div>
