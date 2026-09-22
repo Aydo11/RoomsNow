@@ -6,6 +6,8 @@ import { EmptyState } from "@/components/ui";
 import { providerNav } from "../nav";
 import { supportLabel } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
+import { ClientAvatar } from "@/components/client-avatar";
+import { clientPhotoSrc } from "@/lib/client-card";
 
 export const metadata = { title: "Shared profiles" };
 export const dynamic = "force-dynamic";
@@ -15,10 +17,10 @@ export default async function ProviderClientsPage() {
   const [nav, shares] = await Promise.all([
     providerNav(companyId),
     db.clientShare.findMany({
-      where: { companyId, revokedAt: null },
+      where: { companyId, revokedAt: null, client: { deletedAt: null } },
       orderBy: { createdAt: "desc" },
       include: {
-        client: { select: { id: true, firstName: true, lastName: true, dateOfBirth: true, preferredLocation: true, supportTypes: true, status: true } },
+        client: { select: { id: true, firstName: true, lastName: true, dateOfBirth: true, preferredLocation: true, supportTypes: true, status: true, photoUrl: true, updatedAt: true } },
         sharedBy: { select: { firstName: true, lastName: true } },
       },
     }),
@@ -38,9 +40,12 @@ export default async function ProviderClientsPage() {
           {shares.map((share) => (
             <li key={share.id}>
               <Link href={`/provider/clients/${share.client.id}`} className="interactive-card card block h-full p-5">
-                <h2 className="text-[17px]">
-                  {share.client.firstName} {share.client.lastName}
-                </h2>
+                <div className="flex items-center gap-3">
+                  <ClientAvatar name={`${share.client.firstName} ${share.client.lastName}`} src={clientPhotoSrc(share.client)} />
+                  <h2 className="text-[17px]">
+                    {share.client.firstName} {share.client.lastName}
+                  </h2>
+                </div>
                 <p className="mt-1 text-[13px] text-ink-faint">
                   {share.client.dateOfBirth ? `${ageFrom(share.client.dateOfBirth)} · ` : ""}
                   {share.client.preferredLocation || "No preferred area set"}
