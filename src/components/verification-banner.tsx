@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { VerificationStatus } from "@prisma/client";
 import { clsx } from "@/lib/clsx";
+import { VerificationCountdown } from "./verification-countdown";
 
 /**
  * The provider dashboard's nudge to get verified. Tone escalates the longer
@@ -16,10 +17,13 @@ import { clsx } from "@/lib/clsx";
 export function VerificationBanner({
   status,
   daysSinceSignup,
+  deadlineAt,
   reviewNote,
 }: {
   status: VerificationStatus;
   daysSinceSignup: number;
+  /** ISO timestamp of signup + 90 days, for the live countdown badge. */
+  deadlineAt: string;
   reviewNote?: string | null;
 }) {
   if (status === "APPROVED") return null;
@@ -63,9 +67,12 @@ export function VerificationBanner({
       )}
     >
       <div>
-        <h2 className="text-[18px]">
-          {overdue ? "Still not verified after 90+ days — get seen" : "Get verified to win more leads"}
-        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-[18px]">
+            {overdue ? "Still not verified after 90+ days — get seen" : "Get verified to win more leads"}
+          </h2>
+          <VerificationCountdown deadlineAt={deadlineAt} />
+        </div>
         <p className="mt-1 max-w-[60ch] text-[14px] text-ink-soft">
           {overdue
             ? "You've been advertising on RoomsNow for a while now. Verified providers get a badge that stands out in search, appear in the “verified only” filter, and build more trust with the people and referrers browsing your adverts — verifying now means you stop missing out on that extra visibility."

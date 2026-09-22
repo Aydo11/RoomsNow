@@ -187,7 +187,7 @@ export function renderPreLaunchInviteEmail(params: {
     <title>${brand.name}</title>
   </head>
   <body style="margin:0; padding:0; background-color:${COLORS.paper}; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <span style="display:none; font-size:1px; color:${COLORS.paper}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">We're opening RoomsNow to a small group of Birmingham providers before public launch — 1 month of Professional, free.</span>
+    <span style="display:none; font-size:1px; color:${COLORS.paper}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">Fill your voids now — we're opening RoomsNow to a small group of Birmingham providers before public launch, 1 month of Professional free.</span>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.paper};">
       <tr>
         <td align="center" style="padding:32px 16px;">
@@ -200,7 +200,13 @@ export function renderPreLaunchInviteEmail(params: {
             </tr>
 
             <tr>
-              <td style="padding:32px 40px 4px;">
+              <td style="padding:28px 40px 0;">
+                <p style="margin:0; font-size:14px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:#C1440E;">Fill your voids now</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:8px 40px 4px;">
                 <h1 style="margin:0 0 14px; font-size:24px; line-height:1.3; color:${COLORS.ink};">One Birmingham housing voice to another: come and fill your rooms before we go live</h1>
                 <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">${greeting}</p>
                 <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
@@ -333,7 +339,9 @@ export function renderPreLaunchInviteEmail(params: {
 export function renderPreLaunchInviteText(params: { recipientName?: string; senderName: string; ctaUrl: string }) {
   const { recipientName, senderName, ctaUrl } = params;
   const greeting = recipientName ? `Hi ${recipientName},` : "Hi,";
-  return `${greeting}
+  return `FILL YOUR VOIDS NOW
+
+${greeting}
 
 I'm ${senderName} — I've got years of hands-on experience in supported housing here in Birmingham, so this isn't a platform cold-emailing you about something abstract. I've seen the same voids you have, and I built ${brand.name} because I was tired of watching good rooms sit empty over phone calls and whoever happened to be free that week.
 

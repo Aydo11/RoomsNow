@@ -62,7 +62,18 @@ const nextConfig = {
   },
   experimental: {
   serverActions: {
-    bodySizeLimit: "25mb",
+    // The advert-photo uploader accepts up to 12 files per batch (images up
+    // to 8MB, video up to 20MB each — see src/lib/storage.ts LIMITS), so a
+    // realistic batch of a handful of full-size phone photos can comfortably
+    // clear the old 25mb ceiling. When a request body exceeds this limit,
+    // Next aborts the multipart body mid-stream ("Unexpected end of form")
+    // *before* our own per-file validation ever runs, which surfaced to
+    // providers as a raw page-level crash instead of a friendly "too large"
+    // message. Raised to give real-world batches room; the client-side
+    // pre-submit size check in media-manager.tsx is the actual backstop that
+    // keeps requests comfortably under this ceiling, so this limit and that
+    // client-side cap should be changed together.
+    bodySizeLimit: "45mb",
     // Server Actions are rejected unless the Origin matches. In production set
     // APP_URL so this is the real host rather than whatever the proxy claims.
     allowedOrigins: process.env.APP_URL ? [new URL(process.env.APP_URL).host] : undefined,

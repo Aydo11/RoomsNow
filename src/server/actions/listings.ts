@@ -22,7 +22,12 @@ export async function saveListingAction(_prev: FormState, formData: FormData): P
   const { user, companyId } = await requireCompany();
   const id = text(formData, "id");
 
-  const parsed = listingSchema.safeParse({
+  // Captured once, up front, so it doubles as the payload for validation AND
+  // as `values` on any rejected FormState below — React resets every
+  // uncontrolled field in AdvertForm back to blank the instant this action is
+  // submitted (see the comment on FormState.values), so every early-return
+  // here must hand the submitted data back or the person's typing is lost.
+  const raw = {
     propertyName: text(formData, "propertyName"),
     city: text(formData, "city"),
     area: text(formData, "area"),
@@ -58,9 +63,11 @@ export async function saveListingAction(_prev: FormState, formData: FormData): P
     referralProcess: text(formData, "referralProcess"),
     houseRules: text(formData, "houseRules"),
     description: text(formData, "description"),
-  });
+  };
 
-  if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
+  const parsed = listingSchema.safeParse(raw);
+
+  if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error), values: raw };
   const d = parsed.data;
 
   if (!id) {
@@ -68,6 +75,7 @@ export async function saveListingAction(_prev: FormState, formData: FormData): P
     if (!limits.canAddListing) {
       return {
         ok: false,
+        values: raw,
         errors: {
           form: `Your ${limits.membership.name} plan covers ${limits.membership.maxListings} live adverts. Upgrade to post more.`,
         },
@@ -131,7 +139,7 @@ export async function saveListingAction(_prev: FormState, formData: FormData): P
 
   if (id) {
     const existing = await db.listing.findUnique({ where: { id }, select: { companyId: true, propertyId: true } });
-    if (!existing) return { ok: false, errors: { form: "Advert not found." } };
+    if (!existing) return { ok: false, errors: { form: "Advert not found." }, values: raw };
     await assertCompanyAccess(user, existing.companyId);
     // A listing normally always has at least one room from the moment it's
     // created. The one exception is a recovery draft that
