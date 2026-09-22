@@ -5,7 +5,7 @@ import { monthYear, publicLocation, rentRange } from "@/lib/format";
 import { supportLabel, ACCOMMODATION_TYPES } from "@/lib/taxonomy";
 import type { SearchResult } from "@/server/search";
 import { demoListingImage } from "@/lib/demo-listings";
-import { coverImage } from "@/lib/cover-image";
+import { coverImage, videoPosterSrc } from "@/lib/cover-image";
 import { ResilientImage } from "./resilient-image";
 import { clsx } from "@/lib/clsx";
 import { ListingCardActions } from "./listing-actions";
@@ -37,7 +37,7 @@ export function ListingCard({
   canSave?: boolean;
 }) {
   const cover = coverImage(listing.media);
-  const image = cover?.url;
+  const image = cover && !cover.isVideoFile ? cover.url : undefined;
   const fallback = demoListingImage(listing.id);
   const activelySponsored = sponsored || (
     listing.featured && (!listing.featuredUntil || listing.featuredUntil > new Date())
@@ -69,6 +69,16 @@ export function ListingCard({
         className="absolute inset-0 z-10 rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       />
         <div className={`relative overflow-hidden bg-paper-sunk ${compact ? "h-40 sm:h-44" : "h-48"}`}>
+          {cover?.isVideoFile ? (
+            <video
+              src={videoPosterSrc(cover.url)}
+              preload="metadata"
+              muted
+              playsInline
+              aria-label={`${listing.title} video`}
+              className="absolute inset-0 h-full w-full bg-black object-contain transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+            />
+          ) : (
           <ResilientImage
             src={image}
             fallbackSrc={fallback.url}
@@ -77,6 +87,7 @@ export function ListingCard({
             className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.035]"
             sizes="(min-width: 1280px) 380px, (min-width: 640px) 45vw, 100vw"
           />
+          )}
           {cover?.fromVideo && (
             <span aria-hidden="true" className="pointer-events-none absolute inset-0 grid place-items-center">
               <span className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur">
