@@ -10,9 +10,10 @@ export async function adminNav(): Promise<NavItem[]> {
     { href: "/admin/listings", label: "Adverts" },
     { href: "/admin/reports", label: "Reports" },
   ];
-  const [pendingListings, pendingVerification, openReports, newFeedback] = await Promise.all([
+  const [pendingListings, pendingVerification, pendingAccreditations, openReports, newFeedback] = await Promise.all([
     db.listing.count({ where: { status: "PENDING_REVIEW" } }),
     db.verificationRequest.count({ where: { status: "PENDING" } }),
+    db.providerAccreditation.count({ where: { status: "UNDER_ASSESSMENT" } }),
     db.report.count({ where: { status: { in: ["OPEN", "REVIEWING"] }, NOT: { detail: { startsWith: FEEDBACK_MARKER } } } }),
     db.report.count({ where: { status: { in: ["OPEN", "REVIEWING"] }, detail: { startsWith: FEEDBACK_MARKER } } }),
   ]);
@@ -21,6 +22,7 @@ export async function adminNav(): Promise<NavItem[]> {
     { href: "/admin", label: "Overview" },
     { href: "/admin/listings", label: "Adverts", badge: pendingListings || undefined },
     { href: "/admin/verification", label: "Verification", badge: pendingVerification || undefined },
+    { href: "/admin/accreditations", label: "Accreditations", badge: pendingAccreditations || undefined },
     { href: "/admin/reports", label: "Reports", badge: openReports || undefined },
     { href: "/admin/feedback", label: "Site feedback", badge: newFeedback || undefined },
     { href: "/admin/users", label: "Users" },

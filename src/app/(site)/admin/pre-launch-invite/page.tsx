@@ -70,11 +70,10 @@ export default async function PreLaunchInvitePage({
           <h2 className="text-lg">What this sends</h2>
           <p className="text-sm text-ink-soft">
             A founder-voice invitation (signed with whatever name you enter, framed as someone
-            with hands-on experience in the sector) covering: the cost of a void and how RoomsNow
-            shortens it, sourced Birmingham and UK
-            demand statistics, the pre-launch &ldquo;founding provider&rdquo; framing, and a free
-            1-month Professional offer (worth &pound;49) so they can trial it before paying
-            anything. One submission imports the addresses into a dedicated Resend segment and
+            with hands-on experience in the sector) focused on one clear outcome: making live
+            vacancies easier to find. It explains the provider workflow in a short, scannable
+            format and offers one month of Professional free (worth &pound;49), without requesting
+            payment details. One submission imports the addresses into a dedicated Resend segment and
             prepares one throttled Broadcast &mdash; up to 500 contacts at a time. A separate
             confirmation is required before anything is sent.
           </p>
@@ -91,13 +90,8 @@ export default async function PreLaunchInvitePage({
             </p>
           </div>
           <div className="rounded-[10px] border border-line bg-paper-sunk/60 p-4 text-[13px] leading-relaxed text-ink-soft">
-            <p className="font-medium text-ink">Sources cited in the email</p>
-            <p className="mt-1">
-              Birmingham exempt/supported accommodation claim numbers &mdash; Birmingham City
-              Council. Temporary accommodation and prevention/relief duty figures &mdash; GOV.UK
-              statutory homelessness statistics. Worth checking these aren&apos;t stale before a
-              large send, since they update quarterly.
-            </p>
+            <p className="font-medium text-ink">Conversion approach</p>
+            <p className="mt-1">The subject avoids all-caps and the email avoids unverified promises. It leads with the cost of vacancies, explains the product in four bullets and uses one action: list available rooms.</p>
           </div>
         </div>
       </div>

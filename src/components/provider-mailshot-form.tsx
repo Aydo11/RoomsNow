@@ -10,15 +10,19 @@ const initialState: FormState = { ok: false };
 const TABS = [
   {
     value: "NEWS",
-    label: "News & updates",
-    subjectPlaceholder: "New on RoomsNow this month",
-    bodyPlaceholder: "Tell providers what's changed — new features, site updates, or general news.",
+    label: "Fill vacant rooms",
+    subject: "Fill your voids now — publish your live rooms on RoomsNow",
+    body: "Every day a suitable room sits empty is lost income and a missed placement. RoomsNow puts your current vacancies in front of people and professional referrers searching by location, support need and availability.\n\nPublish or update your available rooms today so enquiries are based on accurate information. You can manage adverts, referrals and messages from one provider dashboard.",
+    ctaLabel: "List available rooms",
+    ctaUrl: "/provider/adverts/new",
   },
   {
     value: "PROMO",
     label: "Promotional code",
-    subjectPlaceholder: "A promo code just for you",
-    bodyPlaceholder: "Explain the offer and who it's for.",
+    subject: "Fill your voids faster with your RoomsNow provider offer",
+    body: "Make your available accommodation easier for referrers and people looking for housing to find. Use the offer below to publish more vacancies, manage enquiries and see how your adverts perform.",
+    ctaLabel: "View provider membership",
+    ctaUrl: "/provider/membership",
   },
 ] as const;
 
@@ -83,11 +87,11 @@ export function ProviderMailshotForm({
       </label>
 
       <Field label="Subject" name="subject" required>
-        <input name="subject" required maxLength={150} placeholder={active.subjectPlaceholder} className="field" />
+        <input key={`${kind}-subject`} name="subject" required maxLength={150} defaultValue={active.subject} className="field" />
       </Field>
 
       <Field label="Message" name="body" required>
-        <textarea name="body" required rows={6} placeholder={active.bodyPlaceholder} className="field" />
+        <textarea key={`${kind}-body`} name="body" required rows={7} defaultValue={active.body} className="field" />
       </Field>
 
       {kind === "PROMO" && (
@@ -103,10 +107,10 @@ export function ProviderMailshotForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Button label" name="ctaLabel" hint="Optional — defaults to “View in RoomsNow”.">
-          <input name="ctaLabel" maxLength={40} placeholder="View in RoomsNow" className="field" />
+          <input key={`${kind}-cta-label`} name="ctaLabel" maxLength={40} defaultValue={active.ctaLabel} className="field" />
         </Field>
         <Field label="Button link" name="ctaUrl" hint="Optional — defaults to the dashboard.">
-          <input name="ctaUrl" maxLength={300} placeholder="/pricing" className="field" />
+          <input key={`${kind}-cta-url`} name="ctaUrl" maxLength={300} defaultValue={active.ctaUrl} className="field" />
         </Field>
       </div>
 
