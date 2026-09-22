@@ -24,6 +24,11 @@ export const hmoRoomsContent: LandingPageContent = {
   ],
   primaryCta: { label: "Search HMO rooms", href: "/search" },
   secondaryCta: { label: "Advertise an HMO vacancy", href: "/advertise-accommodation" },
+  relatedLinks: [
+    { label: "HMO rooms in Birmingham", href: "/hmo-rooms-birmingham" },
+    { label: "What is an HMO?", href: "/guides/what-is-an-hmo" },
+    { label: "HMO licensing explained", href: "/guides/hmo-licensing-explained" },
+  ],
 };
 
 export const supportedAccommodationContent: LandingPageContent = {
@@ -216,6 +221,7 @@ export const hmoRoomsBirminghamContent: LandingPageContent = {
   relatedLinks: [
     { label: "Supported accommodation in Birmingham", href: "/supported-accommodation-birmingham" },
     { label: "HMO rooms across the UK", href: "/hmo-rooms" },
+    { label: "What is an HMO?", href: "/guides/what-is-an-hmo" },
   ],
 };
 
