@@ -84,6 +84,17 @@ export default async function ReferralPage({ params }: { params: Promise<{ id: s
               <dt className="text-[13px] text-ink-faint">Urgency</dt>
               <dd>{URGENCY_LABELS[referral.urgency]}</dd>
             </div>
+            {!isReferrer && (
+              <div>
+                <dt className="text-[13px] text-ink-faint">Referred by</dt>
+                <dd>
+                  {referral.organisation || "A professional referrer"}{" "}
+                  <Link href={`/agencies/${referral.referrerId}`} className="text-[14px] text-pine-dark hover:underline">
+                    View agency profile
+                  </Link>
+                </dd>
+              </div>
+            )}
             {referral.accommodationNeeds && (
               <div>
                 <dt className="text-[13px] text-ink-faint">Accommodation needs</dt>
