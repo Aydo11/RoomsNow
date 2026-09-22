@@ -58,6 +58,8 @@ const nextConfig = {
       { protocol: "https", hostname: "**.amazonaws.com" },
       // Cloudflare R2 public bucket URLs (pub-<hash>.r2.dev) serve listing/company photos.
       { protocol: "https", hostname: "**.r2.dev" },
+      // YouTube thumbnails stand in as the cover for adverts with only a video link.
+      { protocol: "https", hostname: "i.ytimg.com", pathname: "/vi/**" },
     ],
   },
   experimental: {
