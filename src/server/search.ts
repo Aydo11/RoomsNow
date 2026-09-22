@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { boundingBox, distanceMiles, resolveArea, type Point } from "@/lib/geo";
 import { BOOST_SLOTS, rankBoosted, rotateHourly } from "@/lib/boost-packages";
 import type { Prisma } from "@prisma/client";
+import { COVER_MEDIA } from "@/lib/cover-image";
 
 // Search results, facets and map pins all resolve the same location during one
 // render. React's request cache prevents duplicate geocoding/network calls.
@@ -50,7 +51,7 @@ const LISTING_CARD_SELECT = {
       addressLine1: true, latitude: true, longitude: true, verification: true,
     },
   },
-  media: { where: { type: "IMAGE" as const }, orderBy: [{ isPrimary: "desc" as const }, { position: "asc" as const }], take: 1 },
+  media: COVER_MEDIA,
   rooms: { select: { status: true } },
 } satisfies Prisma.ListingInclude;
 
