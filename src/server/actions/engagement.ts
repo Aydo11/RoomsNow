@@ -16,6 +16,7 @@ import { notify, notifyCompany } from "@/lib/notify";
 import { fieldErrors, messageSchema, reportSchema, requestSchema, type FormState } from "@/lib/validation";
 import { date, text } from "../form";
 import type { RequestStatus } from "@prisma/client";
+import { clientAttachment, conversationCompanyId } from "@/lib/client-sharing";
 
 // ------------------------------------------------------------------ saving
 
@@ -243,10 +244,24 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
   const user = await requireUser();
   const throttle = await rateLimit(`message:${user.id}`, LIMITS.message);
   if (!throttle.ok) return { ok: false, errors: { body: "You're sending messages very quickly. Give it a minute." } };
-  const parsed = messageSchema.safeParse({
-    conversationId: text(formData, "conversationId"),
-    body: text(formData, "body"),
-  });
+  const clientId = text(formData, "clientId") || null;
+  let body = text(formData, "body");
+  const conversationIdInput = text(formData, "conversationId");
+
+  // A referrer can drop one of their clients' profiles into the thread. With a
+  // provider on the other side, that also shares the profile with them.
+  let attachment: { clientId: string; clientCard: object; name: string } | null = null;
+  if (clientId) {
+    if (user.role !== "REFERRER") return { ok: false, errors: { form: "Only referrers can attach a client profile." } };
+    await assertConversationAccess(user.id, conversationIdInput);
+    const companyId = await conversationCompanyId(conversationIdInput, user.id);
+    const attached = await clientAttachment({ user, clientId, companyId });
+    if (!attached.ok) return { ok: false, errors: { form: attached.error, body: attached.error } };
+    attachment = attached.value;
+    if (!body.trim()) body = `Sharing ${attachment.name}'s profile with you.`;
+  }
+
+  const parsed = messageSchema.safeParse({ conversationId: conversationIdInput, body });
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
 
   await assertConversationAccess(user.id, parsed.data.conversationId);
@@ -268,7 +283,12 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
   if (blocked) return { ok: false, errors: { form: "You can't message this account." } };
 
   await db.message.create({
-    data: { conversationId: parsed.data.conversationId, senderId: user.id, body: parsed.data.body },
+    data: {
+      conversationId: parsed.data.conversationId,
+      senderId: user.id,
+      body: parsed.data.body,
+      ...(attachment ? { clientId: attachment.clientId, clientCard: attachment.clientCard } : {}),
+    },
   });
   await db.conversation.update({
     where: { id: parsed.data.conversationId },
@@ -288,6 +308,7 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
   );
 
   revalidatePath(`/messages/${parsed.data.conversationId}`);
+  if (attachment) revalidatePath(`/referrals/clients/${attachment.clientId}`);
   return { ok: true };
 }
 

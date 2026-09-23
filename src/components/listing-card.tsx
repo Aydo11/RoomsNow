@@ -5,6 +5,7 @@ import { monthYear, publicLocation, rentRange } from "@/lib/format";
 import { supportLabel, ACCOMMODATION_TYPES } from "@/lib/taxonomy";
 import type { SearchResult } from "@/server/search";
 import { demoListingImage } from "@/lib/demo-listings";
+import { coverImage, videoPosterSrc } from "@/lib/cover-image";
 import { ResilientImage } from "./resilient-image";
 import { clsx } from "@/lib/clsx";
 import { ListingCardActions } from "./listing-actions";
@@ -35,7 +36,8 @@ export function ListingCard({
   saved?: boolean;
   canSave?: boolean;
 }) {
-  const image = listing.media[0]?.url;
+  const cover = coverImage(listing.media);
+  const image = cover && !cover.isVideoFile ? cover.url : undefined;
   const fallback = demoListingImage(listing.id);
   const activelySponsored = sponsored || (
     listing.featured && (!listing.featuredUntil || listing.featuredUntil > new Date())
@@ -67,14 +69,32 @@ export function ListingCard({
         className="absolute inset-0 z-10 rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       />
         <div className={`relative overflow-hidden bg-paper-sunk ${compact ? "h-40 sm:h-44" : "h-48"}`}>
+          {cover?.isVideoFile ? (
+            <video
+              src={videoPosterSrc(cover.url)}
+              preload="metadata"
+              muted
+              playsInline
+              aria-label={`${listing.title} video`}
+              className="absolute inset-0 h-full w-full bg-black object-contain transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+            />
+          ) : (
           <ResilientImage
             src={image}
             fallbackSrc={fallback.url}
             fallbackLabel="Illustrative image"
-            alt={image ? `${listing.title} property photo` : fallback.caption}
+            alt={image ? `${listing.title} ${cover?.fromVideo ? "video" : "property photo"}` : fallback.caption}
             className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.035]"
             sizes="(min-width: 1280px) 380px, (min-width: 640px) 45vw, 100vw"
           />
+          )}
+          {cover?.fromVideo && (
+            <span aria-hidden="true" className="pointer-events-none absolute inset-0 grid place-items-center">
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg>
+              </span>
+            </span>
+          )}
           <div className="absolute left-3 top-3 flex flex-wrap gap-2">
             {boosted ? (
               <span className="inline-flex items-center gap-1 rounded-pill bg-pine/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-white"><LightningIcon /> Boosted now</span>

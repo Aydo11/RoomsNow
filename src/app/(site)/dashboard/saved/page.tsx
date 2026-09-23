@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { ListingCard } from "@/components/listing-card";
 import { EmptyState } from "@/components/ui";
 import { userNav } from "../nav";
+import { COVER_MEDIA } from "@/lib/cover-image";
 
 export const metadata = { title: "Saved properties" };
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export default async function SavedPage() {
         include: {
           company: { select: { id: true, name: true, slug: true, logoUrl: true, verification: true } },
           property: { select: { city: true, area: true, postcode: true, showExactAddress: true, addressLine1: true, latitude: true, longitude: true, verification: true } },
-          media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { position: "asc" }], take: 1 },
+          media: COVER_MEDIA,
           rooms: { select: { status: true } },
         },
       },

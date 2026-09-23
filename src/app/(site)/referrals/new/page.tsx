@@ -17,7 +17,7 @@ export default async function NewReferralPage({
   const nav = await referrerNav(user.id);
 
   const client = query.clientId
-    ? await db.client.findFirst({ where: { id: query.clientId, referrerId: user.id } })
+    ? await db.client.findFirst({ where: { id: query.clientId, referrerId: user.id, deletedAt: null } })
     : null;
 
   const listing = query.listingId

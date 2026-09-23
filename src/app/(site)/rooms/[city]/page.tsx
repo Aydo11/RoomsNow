@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ListingCard } from "@/components/listing-card";
 import { db } from "@/lib/db";
 import { JsonLd, absoluteUrl, locationSlug, pageMetadata } from "@/lib/seo";
+import { COVER_MEDIA } from "@/lib/cover-image";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function CityRoomsPage({ params }: Props) {
     include: {
       company: { select: { id: true, name: true, slug: true, logoUrl: true, verification: true } },
       property: { select: { city: true, area: true, postcode: true, showExactAddress: true, addressLine1: true, latitude: true, longitude: true, verification: true } },
-      media: { where: { type: "IMAGE" }, orderBy: [{ isPrimary: "desc" }, { position: "asc" }], take: 1 },
+      media: COVER_MEDIA,
       rooms: { select: { status: true } },
     },
   });

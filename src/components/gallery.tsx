@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from 
 import { createPortal } from "react-dom";
 import { demoListingGallery, demoListingImage } from "@/lib/demo-listings";
 import { ResilientImage } from "./resilient-image";
+import { videoThumbnail } from "@/lib/cover-image";
 
 type Media = {
   id: string;
@@ -170,7 +171,13 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
                   index === currentIndex ? "border-pine" : "border-transparent"
                 }`}
               >
-                {item.type.startsWith("VIDEO") ? (
+                {item.type === "VIDEO_URL" && videoThumbnail(item.url) ? (
+                  <span className="relative block h-full w-full">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={videoThumbnail(item.url)!} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    <span className="absolute inset-0 grid place-items-center bg-black/25 text-[12px] font-medium text-white">▶ Video</span>
+                  </span>
+                ) : item.type.startsWith("VIDEO") ? (
                   <span className="grid h-full w-full place-items-center bg-ink text-[12px] text-white">Video</span>
                 ) : (
                   <ResilientImage

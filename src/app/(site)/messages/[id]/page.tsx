@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/rbac";
 import { Thread } from "@/components/thread";
 import { ConversationMenu } from "@/components/conversation-menu";
 import { ConversationActions } from "@/components/conversation-actions";
+import { clientPhotoSrc, parseClientCard } from "@/lib/client-card";
 
 export const metadata = { title: "Conversation" };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     include: {
       listing: { select: { id: true, title: true } },
       lookingForAd: { select: { id: true, title: true } },
-      participants: { include: { user: { select: { id: true, firstName: true, lastName: true } } } },
+      participants: { include: { user: { select: { id: true, firstName: true, lastName: true, role: true } } } },
       messages: { orderBy: { createdAt: "asc" }, take: 200 },
     },
   });
@@ -39,6 +40,27 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   });
 
   const others = conversation.participants.filter((p) => p.userId !== user.id);
+  const providerCompanyId = conversation.companyId ?? others.find((p) => p.companyId)?.companyId ?? null;
+  const viewerCompanyIds = new Set(user.staffOf.map((s) => s.companyId));
+  const viewerIsProvider = Boolean(providerCompanyId && viewerCompanyIds.has(providerCompanyId));
+  const otherReferrer = others.find((p) => p.user.role === "REFERRER");
+
+  const attachableClients =
+    user.role === "REFERRER"
+      ? (
+          await db.client.findMany({
+            where: { referrerId: user.id, deletedAt: null, status: { not: "ARCHIVED" } },
+            orderBy: { updatedAt: "desc" },
+            take: 200,
+            select: { id: true, firstName: true, lastName: true, preferredLocation: true, photoUrl: true, updatedAt: true, status: true },
+          })
+        ).map((client) => ({
+          id: client.id,
+          name: `${client.firstName} ${client.lastName}`,
+          photo: clientPhotoSrc(client),
+          detail: [client.status === "PLACED" ? "Placed" : "Active", client.preferredLocation].filter(Boolean).join(" · "),
+        }))
+      : undefined;
   const alreadyBlocked = others[0]
     ? Boolean(
         await db.block.findUnique({
@@ -59,6 +81,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           {conversation.listing && (
             <Link href={`/listings/${conversation.listing.id}`} className="text-[14px] text-pine-dark hover:underline">
               {conversation.listing.title}
+            </Link>
+          )}
+          {viewerIsProvider && otherReferrer && (
+            <Link href={`/agencies/${otherReferrer.userId}`} className="block text-[14px] text-pine-dark hover:underline">
+              View their agency profile
             </Link>
           )}
           {conversation.lookingForAd && (
@@ -82,12 +109,17 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
       <Thread
         conversationId={conversation.id}
         currentUserId={user.id}
+        attachableClients={attachableClients}
+        viewerIsProvider={viewerIsProvider}
+        withProvider={Boolean(providerCompanyId) && !viewerIsProvider}
         initialMessages={conversation.messages.map((m) => ({
           id: m.id,
           senderId: m.senderId,
           body: m.body,
           createdAt: m.createdAt.toISOString(),
           readAt: m.readAt?.toISOString() ?? null,
+          clientId: m.clientId,
+          clientCard: parseClientCard(m.clientCard),
         }))}
       />
     </div>
