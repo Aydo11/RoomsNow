@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { ClientForm } from "@/components/client-form";
 import { referrerNav } from "../../../nav";
 import { clientPhotoSrc } from "@/lib/client-card";
+import { teamMemberIds } from "@/lib/referral-team";
 
 export const metadata = { title: "Edit client" };
 export const dynamic = "force-dynamic";
@@ -12,7 +13,8 @@ export const dynamic = "force-dynamic";
 export default async function EditClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireReferrer();
-  const client = await db.client.findFirst({ where: { id, referrerId: user.id, deletedAt: null } });
+  const teamIds = await teamMemberIds(user.id);
+  const client = await db.client.findFirst({ where: { id, referrerId: { in: teamIds }, deletedAt: null } });
   if (!client) notFound();
 
   const nav = await referrerNav(user.id);
