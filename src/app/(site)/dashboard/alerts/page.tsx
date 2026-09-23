@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AlertsPage() {
   const user = await requireUser("/dashboard/alerts");
-  const nav = user.role === "REFERRER" ? await referrerNav(user.id) : await userNav(user.id);
+  const nav = user.role === "REFERRER" || user.role === "ADMIN" ? await referrerNav(user.id) : await userNav(user.id);
 
   const searches = await db.savedSearch.findMany({
     where: { userId: user.id },

@@ -2,13 +2,14 @@ import { requireUser } from "@/lib/rbac";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { AccountSettings } from "@/components/account-settings";
 import { userNav } from "../nav";
+import { referrerNav } from "../../referrals/nav";
 
 export const metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const user = await requireUser("/dashboard/settings");
-  const nav = await userNav(user.id);
+  const nav = user.role === "REFERRER" || user.role === "ADMIN" ? await referrerNav(user.id) : await userNav(user.id);
 
   return (
     <DashboardShell title="Settings" nav={nav} active="/dashboard/settings">
