@@ -823,6 +823,11 @@ model Client {
   /// stops counting towards their plan) until restored or removed for good;
   /// every active share is revoked the moment it's deleted.
   deletedAt          DateTime?
+  /// Optional structured needs and risk assessment (see src/lib/assessment.ts).
+  /// Private to the referrer — used to rank adverts for this client, never
+  /// shared with providers automatically.
+  assessment         Json?
+  assessedAt         DateTime?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
