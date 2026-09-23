@@ -6,11 +6,17 @@ import { MessageProviderForm } from "@/components/message-provider-form";
 import { ReportForm } from "@/components/report-form";
 import { ACCOMMODATION_TYPES, GENDER_ARRANGEMENTS, supportLabel } from "@/lib/taxonomy";
 import { initials, money, monthYear } from "@/lib/format";
+import { exampleMoveInDate, findExamplePerson, isExamplePersonId, type ExamplePerson } from "@/lib/example-people";
 
 export const dynamic = "force-dynamic";
 
 export default async function LookingForAdPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (isExamplePersonId(id)) {
+    const example = findExamplePerson(id);
+    if (!example) notFound();
+    return <ExampleProfile person={example} />;
+  }
   const [ad, user] = await Promise.all([
     db.lookingForAd.findUnique({
       where: { id },
@@ -125,6 +131,81 @@ export default async function LookingForAdPage({ params }: { params: Promise<{ i
               looking for accommodation yourself, search adverts instead.
             </div>
           )}
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+/** A clearly-labelled sample profile: same layout as a real one, never messageable. */
+function ExampleProfile({ person }: { person: ExamplePerson }) {
+  return (
+    <div className="shell max-w-4xl py-10">
+      <div role="note" className="mb-6 rounded-card border border-dashed border-pine/40 bg-pine-light/40 px-4 py-3 text-[14px] leading-relaxed text-ink-soft">
+        <strong className="font-semibold text-ink">This is an example profile, not a real person.</strong>{" "}
+        It shows the kind of information people share when they&apos;re looking for accommodation on RoomsNow.
+      </div>
+      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+        <div>
+          <div className="flex items-center gap-4">
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-paper-sunk text-[18px] text-ink-soft">
+              {person.firstName.charAt(0)}
+              {person.lastInitial}
+            </span>
+            <div>
+              <p className="flex items-center gap-2 text-[15px]">
+                {person.firstName} {person.lastInitial}.
+                <span className="rounded-pill bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-white">Example</span>
+              </p>
+              <p className="text-[13px] text-ink-faint">
+                {person.city} · {person.age} years old
+              </p>
+            </div>
+          </div>
+
+          <h1 className="mt-6 text-[30px] leading-tight">{person.title}</h1>
+
+          <p className="mt-4 flex flex-wrap gap-1.5">
+            {person.supportTypes.map((slug) => (
+              <span key={slug} className="chip chip-active">{supportLabel(slug)}</span>
+            ))}
+          </p>
+
+          <dl className="mt-6 grid gap-x-8 gap-y-4 border-y border-line py-6 sm:grid-cols-3">
+            <Detail label="Looking in" value={`${person.city} + ${person.radiusMiles} miles`} />
+            <Detail label="Needs somewhere by" value={monthYear(exampleMoveInDate(person))} />
+            <Detail label="Budget" value={person.budgetWeekly ? `${money(person.budgetWeekly)} per week` : "Flexible"} />
+            <Detail
+              label="Accommodation"
+              value={person.accommodationTypes.map((t) => ACCOMMODATION_TYPES[t]).join(", ") || "Open to options"}
+            />
+            <Detail label="Household" value={GENDER_ARRANGEMENTS[person.genderArrangement]} />
+            {person.accessibilityNeeds && <Detail label="Access needs" value={person.accessibilityNeeds} />}
+          </dl>
+
+          <section className="mt-7">
+            <h2 className="text-[20px]">About me</h2>
+            <p className="prose-advert mt-2 whitespace-pre-line">{person.about}</p>
+          </section>
+
+          <section className="mt-7">
+            <h2 className="text-[20px]">What I&apos;m looking for</h2>
+            <p className="prose-advert mt-2 whitespace-pre-line">{person.lookingFor}</p>
+          </section>
+        </div>
+
+        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <div className="card p-5 text-[14px] leading-relaxed text-ink-soft">
+            <h2 className="text-[17px] text-ink">How contact works</h2>
+            <p className="mt-1.5">
+              On a real profile, providers and professionals see a message box here and contact the person through
+              RoomsNow — their phone number and email are never shown.
+            </p>
+            <div className="mt-4 grid gap-2">
+              <a href="/dashboard/advert" className="btn-primary w-full justify-center">Create your own profile</a>
+              <a href="/people" className="btn-secondary w-full justify-center">Back to people</a>
+            </div>
+          </div>
         </aside>
       </div>
     </div>
