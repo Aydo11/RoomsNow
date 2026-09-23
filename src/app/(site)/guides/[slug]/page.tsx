@@ -3,6 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { findGuide, guides } from "@/lib/guides";
 import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
+import { GuideVisual } from "@/components/guide-visual";
+import { PrintButton } from "@/components/print-button";
+
+function sectionId(heading: string) {
+  return heading.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
 
 export function generateStaticParams() {
   return guides.map((guide) => ({ slug: guide.slug }));
@@ -68,9 +74,10 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   return (
     <>
       <JsonLd data={schemas} />
-      <article>
+      <article className="guide-document">
         <header className="surface-home border-b border-line">
-          <div className="shell py-12 sm:py-16">
+          <div className="shell grid gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.72fr)] lg:items-center lg:py-16">
+            <div>
             <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-[13px] text-ink-faint">
               <Link href="/" className="hover:text-pine-dark">Home</Link>
               <span aria-hidden="true">/</span>
@@ -85,14 +92,40 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                 <span>{guide.readTime}</span>
                 <span>Updated {updatedAtLabel}</span>
               </div>
+              <div className="guide-print-hidden mt-6 flex flex-wrap items-center gap-3">
+                <PrintButton label="Save / download as PDF" />
+                <span className="text-[13px] text-ink-faint">Choose “Save as PDF” in your print options.</span>
+              </div>
+            </div>
+            </div>
+            <div className="overflow-hidden rounded-card border border-line bg-white p-2 shadow-raise">
+              <GuideVisual kind={guide.visual} />
+              <p className="px-3 pb-2 pt-1 text-[12px] text-ink-faint">A RoomsNow guide illustration</p>
             </div>
           </div>
         </header>
 
         <div className="shell grid gap-10 py-12 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start lg:py-16">
           <div className="max-w-3xl space-y-11">
+            <details className="guide-print-hidden card p-5 lg:hidden">
+              <summary className="cursor-pointer list-none text-[16px] font-semibold text-ink">On this page <span className="float-right text-pine-dark">⌄</span></summary>
+              <nav aria-label="On this page" className="mt-4">
+                <ol className="space-y-2 border-l-2 border-pine/20 pl-4 text-[14px]">
+                  {guide.sections.map((section) => <li key={section.heading}><a className="text-ink-soft hover:text-pine-dark hover:underline" href={`#${sectionId(section.heading)}`}>{section.heading}</a></li>)}
+                  <li><a className="text-ink-soft hover:text-pine-dark hover:underline" href="#guide-faqs">Frequently asked questions</a></li>
+                </ol>
+              </nav>
+            </details>
+
+            <section className="rounded-card border border-brand/15 bg-brand/5 p-5 sm:p-6" aria-labelledby="guide-key-points">
+              <h2 id="guide-key-points" className="text-[20px] font-semibold">Key points at a glance</h2>
+              <ul className="mt-3 space-y-2 text-[15px] leading-relaxed text-ink-soft">
+                {guide.keyPoints.map((point) => <li key={point} className="flex gap-3"><span aria-hidden="true" className="mt-2 h-2 w-2 shrink-0 rounded-full bg-brand" /><span>{point}</span></li>)}
+              </ul>
+            </section>
+
             {guide.sections.map((section) => (
-              <section key={section.heading}>
+              <section key={section.heading} id={sectionId(section.heading)} className="scroll-mt-24">
                 <h2 className="text-[27px] leading-tight">{section.heading}</h2>
                 {section.paragraphs && (
                   <div className="mt-4 space-y-4 text-[16px] leading-7 text-ink-soft">
@@ -112,7 +145,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
               </section>
             ))}
 
-            <section>
+            <section id="guide-faqs" className="scroll-mt-24">
               <h2 className="text-[27px]">Frequently asked questions</h2>
               <div className="mt-5 space-y-3">
                 {guide.faqs.map((faq) => (
@@ -131,19 +164,28 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
             </section>
           </div>
 
-          <aside className="card p-5 lg:sticky lg:top-24">
-            <h2 className="text-[17px]">Useful official sources</h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">Housing rules vary by nation and council. Use these sources to check the details for your situation.</p>
-            <ul className="mt-4 space-y-3 text-[14px]">
-              {guide.sources.map((source) => (
-                <li key={source.href}>
-                  <a href={source.href} target="_blank" rel="noreferrer" className="font-medium text-pine-dark hover:underline">{source.label} ↗</a>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-5 border-t border-line pt-5">
-              <Link href="/safety" className="text-[14px] font-semibold text-pine-dark hover:underline">Read RoomsNow safety advice →</Link>
-            </div>
+          <aside className="card space-y-6 p-5 lg:sticky lg:top-24">
+            <nav aria-label="On this page" className="guide-print-hidden hidden lg:block">
+              <h2 className="text-[17px]">On this page</h2>
+              <ol className="mt-3 space-y-2 border-l-2 border-pine/20 pl-4 text-[13px]">
+                {guide.sections.map((section) => <li key={section.heading}><a className="text-ink-soft hover:text-pine-dark hover:underline" href={`#${sectionId(section.heading)}`}>{section.heading}</a></li>)}
+                <li><a className="text-ink-soft hover:text-pine-dark hover:underline" href="#guide-faqs">FAQs</a></li>
+              </ol>
+            </nav>
+            <section>
+              <h2 className="text-[17px]">Useful official sources</h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">Housing rules vary by nation and council. Use these sources to check the details for your situation.</p>
+              <ul className="mt-4 space-y-3 text-[14px]">
+                {guide.sources.map((source) => (
+                  <li key={source.href}>
+                    <a href={source.href} target="_blank" rel="noreferrer" className="font-medium text-pine-dark hover:underline">{source.label} ↗</a>
+                  </li>
+                ))}
+              </ul>
+              <div className="guide-print-hidden mt-5 border-t border-line pt-5">
+                <Link href="/safety" className="text-[14px] font-semibold text-pine-dark hover:underline">Read RoomsNow safety advice →</Link>
+              </div>
+            </section>
           </aside>
         </div>
       </article>

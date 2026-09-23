@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { guides } from "@/lib/guides";
 import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
+import { GuideVisual } from "@/components/guide-visual";
 
 export const metadata = pageMetadata({
   title: "HMO & Supported Accommodation Guides",
@@ -41,8 +42,10 @@ export default function GuidesPage() {
             <Link
               key={guide.slug}
               href={`/guides/${guide.slug}`}
-              className={`card interactive-card group flex min-h-[245px] flex-col p-6 sm:p-7 ${index === 0 ? "border-pine/30 bg-pine-light/30" : ""}`}
+              className={`card interactive-card group flex min-h-[360px] flex-col overflow-hidden ${index === 0 ? "border-pine/30 bg-pine-light/30" : ""}`}
             >
+              <GuideVisual kind={guide.visual} compact />
+              <div className="flex flex-1 flex-col p-6 sm:p-7">
               <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold tracking-[0.06em] text-pine-dark">
                 <span>{guide.eyebrow}</span>
                 <span aria-hidden="true">•</span>
@@ -50,7 +53,8 @@ export default function GuidesPage() {
               </div>
               <h2 className="mt-4 text-[25px] leading-tight transition-colors group-hover:text-pine-dark">{guide.title}</h2>
               <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{guide.description}</p>
-              <span className="mt-auto pt-6 text-[14px] font-semibold text-pine-dark">Read guide →</span>
+              <span className="mt-auto flex items-center justify-between gap-3 pt-6 text-[14px] font-semibold text-pine-dark"><span>Read guide →</span><span className="font-medium text-ink-faint">Save as PDF available</span></span>
+              </div>
             </Link>
           ))}
         </div>

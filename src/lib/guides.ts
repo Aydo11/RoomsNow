@@ -14,6 +14,8 @@ export type Guide = {
   publishedAt: string;
   updatedAt: string;
   introduction: string;
+  visual: "home" | "checklist" | "building" | "support" | "legal" | "costs";
+  keyPoints: string[];
   sections: GuideSection[];
   faqs: Array<{ question: string; answer: string }>;
   sources: Array<{ label: string; href: string }>;
@@ -31,6 +33,8 @@ export const guides: Guide[] = [
     publishedAt: "2026-09-08",
     updatedAt: "2026-09-08",
     introduction: "Finding a shared home is easier when you decide what you need before you start contacting landlords. This guide takes you from the first search to a confident enquiry.",
+    visual: "home",
+    keyPoints: ["Set a realistic total budget before you search.", "Check availability, bills and referral requirements with the provider.", "Read the written agreement and verify the property before paying."],
     sections: [
       {
         heading: "1. Set your non-negotiables",
@@ -75,6 +79,8 @@ export const guides: Guide[] = [
     publishedAt: "2026-09-08",
     updatedAt: "2026-09-08",
     introduction: "A good viewing checks more than the bedroom. Take this list with you, make notes and ask for written answers when a cost or responsibility is not clear.",
+    visual: "checklist",
+    keyPoints: ["Inspect the bedroom, shared spaces and escape routes.", "Ask who handles repairs and exactly which bills are included.", "Keep written answers and compare them with the advert afterwards."],
     sections: [
       {
         heading: "Before the viewing",
@@ -123,6 +129,8 @@ export const guides: Guide[] = [
     publishedAt: "2026-09-08",
     updatedAt: "2026-09-08",
     introduction: "HMO means house in multiple occupation. The term describes a particular kind of shared rented home and can affect the standards and licensing rules that apply.",
+    visual: "building",
+    keyPoints: ["An HMO is defined by how many people live there and how facilities are shared.", "Licensing requirements can differ by nation and local council.", "A platform badge does not replace checking a property's licence where required."],
     sections: [
       {
         heading: "The basic HMO definition",
@@ -167,6 +175,8 @@ export const guides: Guide[] = [
     publishedAt: "2026-09-08",
     updatedAt: "2026-09-08",
     introduction: "A strong referral gives the provider enough relevant information to assess suitability while following your organisation's consent, privacy and safeguarding procedures.",
+    visual: "support",
+    keyPoints: ["Confirm consent, responsibility and the funding route before sharing details.", "Match a live vacancy to the person's needs and the provider's criteria.", "Record decisions clearly; a referral is not a placement guarantee."],
     sections: [
       {
         heading: "1. Confirm the person's housing route",
@@ -210,6 +220,8 @@ export const guides: Guide[] = [
     publishedAt: "2026-09-15",
     updatedAt: "2026-09-15",
     introduction: "HMO licensing rules decide whether a landlord must apply to the council before letting a shared property. The rules depend on the number of occupants, the property and the local area, so this guide explains the main categories and how to check your own position.",
+    visual: "legal",
+    keyPoints: ["The national mandatory HMO licence threshold is not the only licensing rule.", "Additional and selective schemes are set locally and can change.", "Check the exact address with the relevant council before advertising or letting."],
     sections: [
       {
         heading: "Mandatory licensing",
@@ -253,6 +265,8 @@ export const guides: Guide[] = [
     publishedAt: "2026-09-15",
     updatedAt: "2026-09-15",
     introduction: "Supported exempt accommodation is a specific legal category of supported housing that is treated differently for housing benefit purposes. The term causes confusion because it describes a funding and regulatory status, not a single type of building or service.",
+    visual: "support",
+    keyPoints: ["“Exempt” describes a specific housing-benefit category, not a building type.", "It does not automatically mean a service is regulated, inspected or accredited.", "Confirm the support, rent breakdown and local requirements independently."],
     sections: [
       {
         heading: "What makes accommodation \"exempt\"",
@@ -292,6 +306,8 @@ export const guides: Guide[] = [
     publishedAt: "2026-09-15",
     updatedAt: "2026-09-15",
     introduction: "HMO room rents vary enormously by city, neighbourhood and what's included, which makes it hard to compare adverts at a glance. This guide breaks down what actually drives the price so you can budget realistically and compare like with like.",
+    visual: "costs",
+    keyPoints: ["Compare total monthly cost, not only the headline weekly rent.", "Ask which bills, services and council tax are included or excluded.", "Get deposits, payment dates and refund conditions in writing."],
     sections: [
       {
         heading: "What drives the rent",
@@ -331,6 +347,8 @@ export const guides: Guide[] = [
     publishedAt: "2026-09-15",
     updatedAt: "2026-09-15",
     introduction: "Living in an HMO doesn't mean giving up the legal protections that apply to renters generally. This guide covers the areas that most commonly matter to HMO tenants, though the detail can depend on your specific tenancy type and location.",
+    visual: "legal",
+    keyPoints: ["Your rights depend on the agreement and where in the UK you live.", "Report safety and repair issues in writing and keep a record.", "Get independent advice quickly if you face eviction, harassment or unsafe conditions."],
     sections: [
       {
         heading: "Safety standards",

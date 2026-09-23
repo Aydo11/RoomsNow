@@ -480,3 +480,56 @@ html.machine-translated :where(h1, h2, h3, h4, p, a, button, label, dt, dd, span
   height: 9px;
   border-radius: 999px;
 }
+
+@media print {
+  @page { margin: 16mm 17mm; }
+
+  body {
+    background: #fff !important;
+    color: #172033 !important;
+    font-size: 11pt;
+  }
+
+  .guide-document .shell {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .guide-document > .shell.grid {
+    display: block !important;
+  }
+
+  .guide-document .max-w-3xl {
+    max-width: none !important;
+  }
+
+  .guide-document aside {
+    margin-top: 12mm;
+  }
+
+  .guide-document .surface-home {
+    background: #fff !important;
+    border: 0 !important;
+  }
+
+  .guide-document details:not([open]) > :not(summary) {
+    display: block !important;
+  }
+
+  .guide-document section,
+  .guide-document figure,
+  .guide-document li {
+    break-inside: avoid;
+  }
+
+  .guide-document a {
+    color: #174f7a !important;
+    text-decoration: underline;
+  }
+
+  .guide-document .card {
+    box-shadow: none !important;
+  }
+}
