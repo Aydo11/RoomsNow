@@ -141,10 +141,9 @@ export default async function LookingForAdPage({ params }: { params: Promise<{ i
 function ExampleProfile({ person }: { person: ExamplePerson }) {
   return (
     <div className="shell max-w-4xl py-10">
-      <div role="note" className="mb-6 rounded-card border border-dashed border-pine/40 bg-pine-light/40 px-4 py-3 text-[14px] leading-relaxed text-ink-soft">
-        <strong className="font-semibold text-ink">This is an example profile, not a real person.</strong>{" "}
-        It shows the kind of information people share when they&apos;re looking for accommodation on RoomsNow.
-      </div>
+      <p role="note" className="mb-6 text-[13px] text-ink-faint">
+        Sample profile showing the kind of information people share on RoomsNow — not a real person.
+      </p>
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <div>
           <div className="flex items-center gap-4">
@@ -153,9 +152,8 @@ function ExampleProfile({ person }: { person: ExamplePerson }) {
               {person.lastInitial}
             </span>
             <div>
-              <p className="flex items-center gap-2 text-[15px]">
+              <p className="text-[15px]">
                 {person.firstName} {person.lastInitial}.
-                <span className="rounded-pill bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-white">Example</span>
               </p>
               <p className="text-[13px] text-ink-faint">
                 {person.city} · {person.age} years old
