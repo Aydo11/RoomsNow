@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const user = await requireUser("/dashboard/settings");
-  const nav = user.role === "REFERRER" ? await referrerNav(user.id) : await userNav(user.id);
+  const nav = user.role === "REFERRER" || user.role === "ADMIN" ? await referrerNav(user.id) : await userNav(user.id);
 
   return (
     <DashboardShell title="Settings" nav={nav} active="/dashboard/settings">
