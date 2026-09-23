@@ -10,6 +10,7 @@ import {
 } from "./boost-packages";
 import { highestProviderMembership, highestReferrerMembership } from "./membership-access";
 import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
+import { teamFor } from "@/lib/referral-team";
 
 export type CheckoutRequest = {
   companyId: string;
@@ -701,8 +702,12 @@ export async function activeReferrerMembershipGrant(userId: string) {
  * profile can be shared with simultaneously. Both default to unlimited on the
  * catalogue's REFERRER_FREE row unless you tighten it in the seed.
  */
-export async function referrerPlanLimits(userId: string) {
+export async function referrerPlanLimits(memberId: string) {
   await ensureReferrerMembershipCatalogue();
+  // Colleagues in a referral organisation share the owner's plan, and client
+  // limits are pooled across the whole team.
+  const team = await teamFor(memberId);
+  const userId = team.ownerId;
   const [subscription, grant, freeMembership] = await Promise.all([
     db.referrerSubscription.findUnique({ where: { userId }, include: { membership: true } }),
     activeReferrerMembershipGrant(userId),
@@ -715,7 +720,7 @@ export async function referrerPlanLimits(userId: string) {
     freeMembership,
   );
   if (!membership) throw new Error("Referrer membership catalogue is empty. Run npm run db:seed.");
-  const clients = await db.client.count({ where: { referrerId: userId, status: { not: "ARCHIVED" }, deletedAt: null } });
+  const clients = await db.client.count({ where: { referrerId: { in: team.memberIds }, status: { not: "ARCHIVED" }, deletedAt: null } });
   const canAddClient = membership.maxClients === -1 || clients < membership.maxClients;
   return {
     membership,
