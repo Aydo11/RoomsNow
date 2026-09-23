@@ -15,6 +15,7 @@ export async function referrerNav(userId: string): Promise<NavItem[]> {
     { href: "/referrals/clients", label: "My clients", badge: activeClients || undefined },
     { href: "/referrals/analytics", label: "Analytics" },
     { href: "/search", label: "Search accommodation" },
+    { href: "/referrals/vetted", label: "Vetted providers" },
     { href: "/dashboard/alerts", label: "Saved alerts" },
     { href: "/messages", label: "Messages" },
     { href: "/referrals/membership", label: "Membership" },
