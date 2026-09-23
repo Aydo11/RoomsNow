@@ -12,6 +12,9 @@ import { PIPELINE_LABELS, supportLabel } from "@/lib/taxonomy";
 import { ageFrom, shortDate, timeAgo } from "@/lib/format";
 import { clsx } from "@/lib/clsx";
 import { referrerNav } from "../../nav";
+import { matchesForClient } from "@/server/client-matches";
+import { assessmentCompleteness, parseAssessment, raisedRisks, SUPPORT_LEVELS, FUNDING } from "@/lib/assessment";
+import { matchBand } from "@/lib/client-matching";
 
 export const dynamic = "force-dynamic";
 
@@ -57,11 +60,16 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const companyIds = Array.from(
     new Set(client.messages.map((m) => m.conversation.companyId ?? m.conversation.participants[0]?.companyId).filter(Boolean) as string[]),
   );
-  const [nav, suggestions, companies] = await Promise.all([
+  const [nav, suggestions, companies, matches] = await Promise.all([
     referrerNav(user.id),
     deleted ? Promise.resolve([]) : suggestProvidersForClient(client),
     companyIds.length ? db.company.findMany({ where: { id: { in: companyIds } }, select: { id: true, name: true } }) : Promise.resolve([]),
+    deleted ? Promise.resolve({ rows: [], considered: 0 }) : matchesForClient(client),
   ]);
+  const assessment = parseAssessment(client.assessment);
+  const completeness = assessmentCompleteness(assessment);
+  const risks = raisedRisks(assessment);
+  const topMatches = matches.rows.filter((row) => row.match.score >= 46).slice(0, 3);
   const companyName = new Map(companies.map((c) => [c.id, c.name]));
 
   // One row per conversation: the most recent time this client was raised in it.
@@ -87,7 +95,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       action={
         deleted ? undefined : (
           <div className="flex flex-wrap gap-2">
-            <Link href={`/referrals/new?clientId=${client.id}`} className="btn-primary">
+            <Link href={`/referrals/clients/${client.id}/matches`} className="btn-primary">
               Refer to an advert
             </Link>
             <Link href={`/referrals/clients/${client.id}/edit`} className="btn-secondary">
@@ -170,6 +178,107 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               </div>
             )}
           </section>
+
+          {!deleted && (
+            <section className="card p-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-[18px]">Best matches</h2>
+                <Link href={`/referrals/clients/${client.id}/matches`} className="text-[14px] text-pine-dark hover:underline">
+                  See all {matches.considered} adverts ranked
+                </Link>
+              </div>
+              {topMatches.length === 0 ? (
+                <p className="mt-2 text-[14px] text-ink-soft">
+                  No strong matches among live adverts right now.{" "}
+                  {completeness < 50 && "Adding the needs assessment sharpens the ranking."}
+                </p>
+              ) : (
+                <ul className="mt-3 divide-y divide-line">
+                  {topMatches.map(({ listing, match }) => {
+                    const band = matchBand(match.score);
+                    return (
+                      <li key={listing.id} className="flex flex-wrap items-center gap-3 py-3">
+                        <span className={clsx("w-[72px] shrink-0 rounded-pill px-2 py-1 text-center text-[13px] font-semibold tabular-nums", band.tone)}>
+                          {match.score}%
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <Link href={`/listings/${listing.id}`} className="block truncate text-[14px] font-medium text-ink hover:text-pine-dark">
+                            {listing.title}
+                          </Link>
+                          <p className="truncate text-[12px] text-ink-faint">
+                            {listing.company.name} · {listing.property.city}
+                            {match.room ? ` · ${match.room.name}` : ""}
+                            {match.flags.length ? ` · ${match.flags.length} thing${match.flags.length === 1 ? "" : "s"} to check` : ""}
+                          </p>
+                        </div>
+                        <Link href={`/referrals/new?clientId=${client.id}&listingId=${listing.id}`} className="btn-secondary shrink-0 py-1.5 text-[13px]">
+                          Refer
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          )}
+
+          {!deleted && (
+            <section className="card p-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-[18px]">Needs and risk assessment</h2>
+                <Link href={`/referrals/clients/${client.id}/assessment`} className="text-[14px] text-pine-dark hover:underline">
+                  {completeness ? "Update" : "Add assessment"}
+                </Link>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <div className="h-1.5 w-40 overflow-hidden rounded-full bg-paper-sunk" aria-hidden="true">
+                  <div className="h-full rounded-full bg-pine" style={{ width: `${completeness}%` }} />
+                </div>
+                <span className="text-[13px] text-ink-faint">
+                  {completeness ? `${completeness}% complete` : "Optional — helps match to the right room"}
+                  {client.assessedAt ? ` · updated ${shortDate(client.assessedAt)}` : ""}
+                </span>
+              </div>
+              {completeness > 0 && (
+                <dl className="mt-4 grid gap-3 text-[14px] sm:grid-cols-2">
+                  {assessment.supportLevel && (
+                    <div>
+                      <dt className="text-[12px] text-ink-faint">Support level</dt>
+                      <dd>{SUPPORT_LEVELS[assessment.supportLevel]}</dd>
+                    </div>
+                  )}
+                  {assessment.funding && (
+                    <div>
+                      <dt className="text-[12px] text-ink-faint">Rent paid by</dt>
+                      <dd>{FUNDING[assessment.funding]}{assessment.maxWeeklyRent ? ` · up to £${assessment.maxWeeklyRent}/wk` : ""}</dd>
+                    </div>
+                  )}
+                  {assessment.moveBy && (
+                    <div>
+                      <dt className="text-[12px] text-ink-faint">Needs to move by</dt>
+                      <dd>{shortDate(assessment.moveBy)}</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt className="text-[12px] text-ink-faint">Raised risks (private)</dt>
+                    <dd>
+                      {risks.length ? (
+                        <span className="flex flex-wrap gap-1.5">
+                          {risks.map((r) => (
+                            <span key={r.area} className={clsx("rounded-pill px-2 py-0.5 text-[12px]", r.level === "HIGH" ? "bg-red-50 text-red-800" : "bg-clay-light text-clay")}>
+                              {r.label.split(" (")[0]} · {r.level === "HIGH" ? "high" : "medium"}
+                            </span>
+                          ))}
+                        </span>
+                      ) : (
+                        "None recorded above low"
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+              )}
+            </section>
+          )}
 
           <section className="card p-6">
             <h2 className="text-[18px]">Referral history</h2>
