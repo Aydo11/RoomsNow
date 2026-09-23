@@ -10,6 +10,7 @@ import { SUPPORT_TYPES } from "@/lib/taxonomy";
 import { AGENCY_TYPES } from "@/lib/agency";
 import { fieldErrors, referrerProfileSchema, socialLinksSchema, type FormState } from "@/lib/validation";
 import { list, socialLinks, text } from "../form";
+import { teamFor } from "@/lib/referral-team";
 
 const optional = (max: number) => z.string().trim().max(max).optional().or(z.literal(""));
 
@@ -39,6 +40,11 @@ async function storeImage(file: File, folder: string): Promise<{ error: string; 
 
 export async function updateReferrerProfileAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireReferrer();
+  // In an organisation the agency details are shared (stored on the owner's
+  // profile) and only owners and admins can change them; everyone edits their
+  // own personal details.
+  const team = await teamFor(user.id);
+  const canEditAgency = !team.organisation || team.canManage;
 
   const parsed = referrerProfileSchema.safeParse({
     firstName: text(formData, "firstName"),
@@ -74,7 +80,7 @@ export async function updateReferrerProfileAction(_prev: FormState, formData: Fo
   if (!parsedSocial.success) return { ok: false, errors: { socialUrl: "Enter valid links, including https://." } };
 
   const uploads: Record<"avatar" | "banner" | "logo", string | undefined> = { avatar: undefined, banner: undefined, logo: undefined };
-  for (const field of ["avatar", "banner", "logo"] as const) {
+  for (const field of (canEditAgency ? ["avatar", "banner", "logo"] : ["avatar"]) as ("avatar" | "banner" | "logo")[]) {
     const file = formData.get(field);
     if (file instanceof File && file.size > 0) {
       const stored = await storeImage(file, field === "avatar" ? `profiles/${user.id}` : `agencies/${user.id}`);
@@ -103,21 +109,25 @@ export async function updateReferrerProfileAction(_prev: FormState, formData: Fo
         lastName: d.lastName,
         phone: d.phone || null,
         locationLabel: d.locationLabel || null,
-        organisation: d.organisation || null,
+        organisation: team.organisation ? team.organisation.name : d.organisation || null,
         jobTitle: d.jobTitle || null,
         socialLinks: parsedSocial.data,
         ...(uploads.avatar ? { avatarUrl: uploads.avatar } : {}),
       },
     }),
-    db.referrerProfile.upsert({
-      where: { userId: user.id },
-      create: { userId: user.id, ...agencyValues },
-      update: agencyValues,
-    }),
+    ...(canEditAgency
+      ? [
+          db.referrerProfile.upsert({
+            where: { userId: team.ownerId },
+            create: { userId: team.ownerId, ...agencyValues },
+            update: agencyValues,
+          }),
+        ]
+      : []),
   ]);
 
   await audit({ actorId: user.id, action: "profile.updated", targetType: "User", targetId: user.id });
   revalidatePath("/referrals/profile");
-  revalidatePath(`/agencies/${user.id}`);
+  for (const id of team.memberIds) revalidatePath(`/agencies/${id}`);
   return { ok: true, message: "Profile saved." };
 }
