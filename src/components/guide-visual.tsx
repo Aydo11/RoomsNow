@@ -7,7 +7,7 @@ const visuals = {
   costs: { label: "Illustration of comparing housing costs", accent: "#1769aa", detail: "#e0eefb" },
 } as const;
 
-export function GuideVisual({ kind, compact = false }: { kind: keyof typeof visuals; compact?: boolean }) {
+export function GuideVisual({ kind, compact = false, className }: { kind: keyof typeof visuals; compact?: boolean; className?: string }) {
   const visual = visuals[kind];
 
   return (
@@ -15,7 +15,7 @@ export function GuideVisual({ kind, compact = false }: { kind: keyof typeof visu
       viewBox="0 0 640 280"
       role="img"
       aria-label={visual.label}
-      className={`block w-full ${compact ? "h-[132px]" : "h-full min-h-[190px]"}`}
+      className={className ?? `block w-full ${compact ? "h-[132px]" : "h-full min-h-[190px]"}`}
       xmlns="http://www.w3.org/2000/svg"
     >
       <rect width="640" height="280" rx="24" fill={visual.detail} />

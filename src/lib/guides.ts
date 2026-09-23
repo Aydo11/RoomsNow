@@ -387,3 +387,20 @@ export const guides: Guide[] = [
 export function findGuide(slug: string) {
   return guides.find((guide) => guide.slug === slug);
 }
+
+const relatedGuideMap: Record<string, string[]> = {
+  "how-to-find-an-hmo-room": ["hmo-room-viewing-checklist", "what-is-an-hmo", "how-much-does-an-hmo-room-cost"],
+  "hmo-room-viewing-checklist": ["how-to-find-an-hmo-room", "hmo-tenant-rights", "hmo-licensing-explained"],
+  "what-is-an-hmo": ["hmo-licensing-explained", "how-to-find-an-hmo-room", "hmo-room-viewing-checklist"],
+  "supported-accommodation-referral-guide": ["what-is-supported-exempt-accommodation"],
+  "hmo-licensing-explained": ["what-is-an-hmo", "hmo-room-viewing-checklist", "hmo-tenant-rights"],
+  "what-is-supported-exempt-accommodation": ["supported-accommodation-referral-guide"],
+  "how-much-does-an-hmo-room-cost": ["how-to-find-an-hmo-room", "hmo-room-viewing-checklist", "hmo-tenant-rights"],
+  "hmo-tenant-rights": ["hmo-room-viewing-checklist", "hmo-licensing-explained", "how-much-does-an-hmo-room-cost"],
+};
+
+export function relatedGuides(slug: string) {
+  return (relatedGuideMap[slug] ?? [])
+    .map((relatedSlug) => findGuide(relatedSlug))
+    .filter((guide): guide is Guide => Boolean(guide));
+}

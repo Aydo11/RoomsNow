@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { findGuide, guides } from "@/lib/guides";
+import { findGuide, guides, relatedGuides } from "@/lib/guides";
 import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
 import { GuideVisual } from "@/components/guide-visual";
 import { PrintButton } from "@/components/print-button";
@@ -32,6 +32,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   if (!guide) notFound();
 
   const path = `/guides/${guide.slug}`;
+  const furtherReading = relatedGuides(guide.slug);
   const updatedAt = new Date(`${guide.updatedAt}T00:00:00.000Z`);
   const updatedAtLabel = new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
@@ -156,6 +157,26 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                 ))}
               </div>
             </section>
+
+            {furtherReading.length > 0 && (
+              <nav aria-labelledby="related-guides-heading">
+                <h2 id="related-guides-heading" className="text-[25px]">Related guides</h2>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">Continue with practical guidance on connected housing topics.</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {furtherReading.map((related) => (
+                    <Link key={related.slug} href={`/guides/${related.slug}`} className="card interactive-card group flex min-h-[100px] items-center gap-4 p-4">
+                      <span className="h-16 w-24 shrink-0 overflow-hidden rounded-[10px] bg-paper-sunk">
+                        <GuideVisual kind={related.visual} className="block h-full w-full" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[15px] font-semibold leading-snug text-ink group-hover:text-pine-dark">{related.title}</span>
+                        <span className="mt-1 block text-[12px] text-ink-faint">{related.readTime}</span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </nav>
+            )}
 
             <section className="rounded-card border border-pine/25 bg-pine-light/35 p-6 sm:p-8">
               <h2 className="text-[25px]">{guide.cta.title}</h2>

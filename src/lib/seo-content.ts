@@ -61,6 +61,7 @@ export const supportedAccommodationContent: LandingPageContent = {
     { label: "Supported accommodation in Manchester", href: "/supported-accommodation-manchester" },
     { label: "Mental-health supported accommodation", href: "/mental-health-supported-accommodation" },
     { label: "Accommodation for care leavers", href: "/accommodation-for-care-leavers" },
+    { label: "How to make a supported accommodation referral", href: "/guides/supported-accommodation-referral-guide" },
   ],
   resources: [
     { label: "CQC: scope of registration", href: "https://www.cqc.org.uk/guidance-regulation/providers/registration/scope-registration" },
@@ -189,6 +190,7 @@ export const accommodationReferralsContent: LandingPageContent = {
     { label: "Accommodation for care leavers", href: "/accommodation-for-care-leavers" },
     { label: "Accommodation for prison leavers", href: "/accommodation-for-prison-leavers" },
     { label: "Mental-health supported accommodation", href: "/mental-health-supported-accommodation" },
+    { label: "Supported accommodation referral guide", href: "/guides/supported-accommodation-referral-guide" },
   ],
 };
 
