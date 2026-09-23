@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, useActionState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useActionState } from "react";
 import { sendMessageAction, togglePinnedMessageAction } from "@/server/actions/engagement";
 import { parseClientCard, type ClientCard } from "@/lib/client-card";
 import { ClientAvatar } from "./client-avatar";
@@ -62,7 +62,8 @@ export function Thread({
   const [pickerQuery, setPickerQuery] = useState("");
   const [recording, setRecording] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
-  const [selectedMediaLabel, setSelectedMediaLabel] = useState<string | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
+  const [selectedMediaPreview, setSelectedMediaPreview] = useState<string | null>(null);
 
   const refreshMessages = useCallback(async () => {
     try {
@@ -90,10 +91,20 @@ export function Thread({
     if (state.ok) {
       formRef.current?.reset();
       setAttached(null);
-      setSelectedMediaLabel(null);
+      setSelectedMedia(null);
       void refreshMessages();
     }
   }, [state, refreshMessages]);
+
+  useEffect(() => {
+    if (!selectedMedia) {
+      setSelectedMediaPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(selectedMedia);
+    setSelectedMediaPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [selectedMedia]);
 
   useEffect(() => {
     const timer = setInterval(() => void refreshMessages(), 2500);
@@ -160,13 +171,13 @@ export function Thread({
         stream.getTracks().forEach((track) => track.stop());
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
         const extension = blob.type.includes("mp4") ? "m4a" : "webm";
-        const file = new File([blob], `voice-note.${extension}`, { type: blob.type });
+          const file = new File([blob], `voice-note.${extension}`, { type: blob.type });
         const input = mediaInputRef.current;
         if (input) {
           const transfer = new DataTransfer();
           transfer.items.add(file);
           input.files = transfer.files;
-          setSelectedMediaLabel(file.name);
+          setSelectedMedia(file);
         }
       };
       recorderRef.current = recorder;
@@ -179,11 +190,12 @@ export function Thread({
 
   return (
     <>
-      {pinnedMessages.length > 0 && <section aria-label="Pinned messages" className="mt-4 rounded-card border border-brand/20 bg-brand/5 p-3">
+      <div className="flex min-h-0 flex-1 flex-col">
+      {pinnedMessages.length > 0 && <section aria-label="Pinned messages" className="mt-3 shrink-0 rounded-card border border-brand/20 bg-brand/5 p-3">
         <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-brand">Pinned in this conversation</p>
         <div className="space-y-1">{pinnedMessages.map((message) => <button key={message.id} type="button" onClick={() => document.getElementById(`message-${message.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })} className="block max-w-full truncate text-left text-[13px] text-ink hover:underline">{message.body || (message.attachmentType?.startsWith("audio/") ? "Voice note" : "Photo")}</button>)}</div>
       </section>}
-      <ol className="mt-6 space-y-3 pb-4" aria-live="polite" aria-relevant="additions">
+      <ol className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pb-4" aria-live="polite" aria-relevant="additions">
         {messages.map((message) => {
           const mine = message.senderId === currentUserId;
           const cardHref = message.clientId
@@ -217,17 +229,17 @@ export function Thread({
             </li>
           );
         })}
-        <div ref={endRef} />
+        <li aria-hidden="true" className="list-none"><div ref={endRef} /></li>
       </ol>
 
       <form
         ref={formRef}
         action={action}
-        className="sticky bottom-20 rounded-card border border-line bg-white p-2 lg:bottom-4"
+        className="z-20 shrink-0 rounded-card border border-line bg-white p-2 shadow-[0_-8px_24px_rgba(20,45,72,0.07)] sm:p-3"
       >
         <input type="hidden" name="conversationId" value={conversationId} />
         <input type="hidden" name="clientId" value={attached?.id ?? ""} />
-        <input ref={mediaInputRef} type="file" name="media" accept="image/jpeg,image/png,image/webp,image/avif,audio/webm,audio/mp4,audio/mpeg,audio/wav" className="sr-only" onChange={(event) => { setMediaError(null); setSelectedMediaLabel(event.currentTarget.files?.[0]?.name ?? null); }} />
+        <input ref={mediaInputRef} type="file" name="media" accept="image/jpeg,image/png,image/webp,image/avif,audio/webm,audio/mp4,audio/mpeg,audio/wav" className="sr-only" onChange={(event) => { setMediaError(null); setSelectedMedia(event.currentTarget.files?.[0] ?? null); }} />
 
         {attached && (
           <div className="mb-2 flex items-center gap-2.5 rounded-[10px] bg-pine-light px-2.5 py-2">
@@ -251,17 +263,22 @@ export function Thread({
           </div>
         )}
 
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <button type="button" className="btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px]" onClick={() => mediaInputRef.current?.click()}>Photo / audio</button>
-          <button type="button" className={`btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px] ${recording ? "!border-red-300 !text-red-700" : ""}`} onClick={() => void toggleRecording()}>{recording ? "Stop recording" : "Record voice note"}</button>
-          <button type="button" className="btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px]" onClick={() => insertIntoMessage("🙂")}>🙂</button>
-          <button type="button" className="btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px]" onClick={() => insertIntoMessage("👍")}>👍</button>
-          <button type="button" className="btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px]" onClick={() => insertIntoMessage("❤️")}>❤️</button>
-          {shareProfileUrl && <button type="button" className="btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px]" onClick={() => insertIntoMessage(`${window.location.origin}${shareProfileUrl}`)}>Share profile / page</button>}
+        <div className="mb-2 flex flex-wrap items-center gap-1.5 border-b border-line/70 pb-2">
+          <button type="button" className="rounded-pill px-2.5 py-1.5 text-[12px] font-medium text-brand hover:bg-brand/5" onClick={() => mediaInputRef.current?.click()}>＋ Photo or audio</button>
+          <button type="button" className={`rounded-pill px-2.5 py-1.5 text-[12px] font-medium hover:bg-brand/5 ${recording ? "text-red-700" : "text-brand"}`} onClick={() => void toggleRecording()}>{recording ? "■ Stop recording" : "◉ Voice note"}</button>
+          <span className="mx-1 hidden h-5 w-px bg-line sm:block" aria-hidden="true" />
+          <button type="button" aria-label="Insert smiling face" className="grid h-8 w-8 place-items-center rounded-full text-[17px] hover:bg-paper-sunk" onClick={() => insertIntoMessage("🙂")}>🙂</button>
+          <button type="button" aria-label="Insert thumbs-up" className="grid h-8 w-8 place-items-center rounded-full text-[17px] hover:bg-paper-sunk" onClick={() => insertIntoMessage("👍")}>👍</button>
+          <button type="button" aria-label="Insert heart" className="grid h-8 w-8 place-items-center rounded-full text-[17px] hover:bg-paper-sunk" onClick={() => insertIntoMessage("❤️")}>❤️</button>
+          {shareProfileUrl && <button type="button" className="ml-auto rounded-pill px-2.5 py-1.5 text-[12px] font-medium text-brand hover:bg-brand/5" onClick={() => insertIntoMessage(`${window.location.origin}${shareProfileUrl}`)}>↗ Share profile</button>}
         </div>
-        <p className="mb-2 text-[11px] leading-relaxed text-ink-faint">Photos and voice notes are private to this conversation. Only share content you have permission to send; avoid IDs and sensitive support or health documents.</p>
+        <p className="mb-2 text-[11px] leading-relaxed text-ink-faint">Photos and voice notes are private to this conversation. Avoid IDs and sensitive support or health documents.</p>
         {(mediaError || state.errors?.form || state.errors?.body) && <p className="mb-2 text-[13px] text-clay">{mediaError || state.errors?.form || state.errors?.body}</p>}
-        {selectedMediaLabel && <p className="mb-2 truncate text-[12px] text-ink-soft">Attached: {selectedMediaLabel}</p>}
+        {selectedMedia && <div className="mb-2 flex max-w-full items-center gap-3 rounded-[12px] border border-brand/15 bg-paper-card p-2">
+          {selectedMedia.type.startsWith("image/") && selectedMediaPreview ? <img src={selectedMediaPreview} alt="Photo ready to send" className="h-14 w-14 rounded-[8px] object-cover" /> : selectedMedia.type.startsWith("audio/") && selectedMediaPreview ? <audio controls preload="metadata" src={selectedMediaPreview} className="h-10 min-w-0 max-w-[190px]" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[9px] bg-brand/10 text-brand" aria-hidden="true">♫</span>}
+          <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-ink">{selectedMedia.name}</span>
+          <button type="button" onClick={() => { if (mediaInputRef.current) mediaInputRef.current.value = ""; setSelectedMedia(null); setMediaError(null); }} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-white hover:text-clay" aria-label={`Remove ${selectedMedia.name}`} title="Remove attachment">×</button>
+        </div>}
         <div className="relative flex gap-2">
           {canAttach && (
             <button
@@ -289,7 +306,7 @@ export function Thread({
             ref={textareaRef}
             name="body"
             rows={1}
-            required={!attached && !selectedMediaLabel}
+            required={!attached && !selectedMedia}
             placeholder={attached ? `Add a note about ${attached.name.split(" ")[0]} (optional)` : "Write a message"}
             className="min-h-[46px] flex-1 resize-none rounded-[10px] border-0 px-3 py-3 text-[15px] focus:ring-0"
             onInput={(event) => {
@@ -347,6 +364,7 @@ export function Thread({
           )}
         </div>
       </form>
+      </div>
       {!online && <p className="mt-2 text-[13px] text-clay">Connection interrupted. Your messages will refresh when you are back online.</p>}
     </>
   );
@@ -354,7 +372,22 @@ export function Thread({
 
 function MessageBody({ body }: { body: string }) {
   const parts = body.split(/(https?:\/\/[^\s<]+)/gi);
-  return <p className="whitespace-pre-line break-words text-[15px] leading-relaxed">{parts.map((part, index) => /^https?:\/\//i.test(part) ? <a key={index} href={part.replace(/[),.!?]+$/, "")} target="_blank" rel="noopener noreferrer nofollow" className="underline underline-offset-2">{part}</a> : part)}</p>;
+  return <p className="whitespace-pre-line break-words text-[15px] leading-relaxed">{parts.map((part, index) => {
+    if (!/^https?:\/\//i.test(part)) return part;
+    const href = part.replace(/[),.!?]+$/, "");
+    let label = "Open shared link";
+    try {
+      const url = new URL(href);
+      if (url.pathname.startsWith("/listings/")) label = "View room advert";
+      else if (url.pathname.startsWith("/people/")) label = "View accommodation profile";
+      else if (url.pathname.startsWith("/companies/") || url.pathname.startsWith("/agencies/")) label = "View provider profile";
+      else label = url.hostname.replace(/^www\./, "");
+    } catch { /* Keep the generic link label for malformed URLs. */ }
+    return <Fragment key={index}><a href={href} target="_blank" rel="noopener noreferrer nofollow" className="my-2 flex max-w-full items-center gap-3 rounded-[10px] border border-current/15 bg-black/[0.04] px-3 py-2.5 text-inherit no-underline transition-colors hover:bg-black/[0.08]">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand/10 text-brand" aria-hidden="true">↗</span>
+      <span className="min-w-0"><span className="block text-[13px] font-semibold">{label}</span><span className="block truncate text-[11px] opacity-70">{href}</span></span>
+    </a>{part.slice(href.length)}</Fragment>;
+  })}</p>;
 }
 
 /** A client profile dropped into the conversation — who, where, and what they need. */

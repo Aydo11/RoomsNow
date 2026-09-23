@@ -47,15 +47,25 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const providerCompany = providerCompanyId
     ? await db.company.findUnique({ where: { id: providerCompanyId }, select: { slug: true } })
     : null;
-  const shareProfileUrl = conversation.listing
+  const otherLookingForAd = others[0]?.user.role === "USER"
+    ? await db.lookingForAd.findFirst({
+        where: { userId: others[0].userId, status: "ACTIVE", user: { profile: { is: { discoverable: true } } } },
+        orderBy: { updatedAt: "desc" },
+        select: { id: true },
+      })
+    : null;
+  const otherProfileUrl = otherReferrer
+    ? `/agencies/${otherReferrer.userId}`
+    : providerCompany?.slug
+      ? `/companies/${providerCompany.slug}`
+      : otherLookingForAd
+        ? `/people/${otherLookingForAd.id}`
+        : null;
+  const shareProfileUrl = otherProfileUrl ?? (conversation.listing
     ? `/listings/${conversation.listing.id}`
     : conversation.lookingForAd
       ? `/people/${conversation.lookingForAd.id}`
-      : providerCompany?.slug
-        ? `/companies/${providerCompany.slug}`
-        : otherReferrer
-          ? `/agencies/${otherReferrer.userId}`
-          : null;
+      : null);
 
   const attachableClients =
     user.role === "REFERRER"
@@ -82,13 +92,17 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     : false;
 
   return (
-    <div className="flex h-full flex-col p-4 sm:p-6">
+    <div className="flex h-full min-h-0 flex-col p-4 sm:p-6">
       <Link href="/messages" className="text-[14px] text-ink-soft hover:text-ink lg:hidden">← All messages</Link>
 
       <header className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4 lg:mt-0">
         <div>
           <h1 className="text-[22px]">
-            {others.map((p) => `${p.user.firstName} ${p.user.lastName.charAt(0)}.`).join(", ") || "Conversation"}
+            {others[0] && otherProfileUrl ? (
+              <Link href={otherProfileUrl} className="rounded-sm underline decoration-brand/40 underline-offset-4 hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">
+                {others[0].user.firstName} {others[0].user.lastName.charAt(0)}.
+              </Link>
+            ) : others.map((p) => `${p.user.firstName} ${p.user.lastName.charAt(0)}.`).join(", ") || "Conversation"}
           </h1>
           {conversation.listing && (
             <Link href={`/listings/${conversation.listing.id}`} className="text-[14px] text-pine-dark hover:underline">

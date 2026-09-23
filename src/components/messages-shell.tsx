@@ -29,7 +29,7 @@ export function MessagesShell({
         >
           {list}
         </aside>
-        <main className={clsx("min-h-[70vh] lg:min-h-[75vh]", onIndex ? "hidden lg:block" : "block")}>
+        <main className={clsx("flex h-[calc(100dvh-9rem)] min-h-[34rem] flex-col lg:h-[75vh] lg:min-h-[540px]", onIndex ? "hidden lg:flex" : "flex")}>
           {children}
         </main>
       </div>
