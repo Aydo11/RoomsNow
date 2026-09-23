@@ -6,18 +6,23 @@ import { EmptyState } from "@/components/ui";
 import { referrerNav } from "./nav";
 import { PIPELINE_LABELS, URGENCY_LABELS } from "@/lib/taxonomy";
 import { shortDate, timeAgo } from "@/lib/format";
+import { teamMemberIds } from "@/lib/referral-team";
 
 export const metadata = { title: "My referrals" };
 export const dynamic = "force-dynamic";
 
 export default async function ReferralsPage() {
   const user = await requireReferrer();
+  const teamIds = await teamMemberIds(user.id);
   const [nav, referrals] = await Promise.all([
     referrerNav(user.id),
     db.referral.findMany({
-      where: { referrerId: user.id },
+      where: { referrerId: { in: teamIds } },
       orderBy: { updatedAt: "desc" },
-      include: { listing: { select: { id: true, title: true, company: { select: { name: true } } } } },
+      include: {
+        listing: { select: { id: true, title: true, company: { select: { name: true } } } },
+        referrer: { select: { id: true, firstName: true, lastName: true } },
+      },
     }),
   ]);
 
@@ -27,7 +32,7 @@ export default async function ReferralsPage() {
   return (
     <DashboardShell
       title="My referrals"
-      subtitle="Referrals you've made on behalf of the people you support."
+      subtitle={teamIds.length > 1 ? "Every referral your team has made, with who made it." : "Referrals you've made on behalf of the people you support."}
       nav={nav}
       active="/referrals"
       action={<Link href="/referrals/new" className="btn-primary">New referral</Link>}
@@ -60,6 +65,7 @@ export default async function ReferralsPage() {
                       ? `${referral.listing.title}, ${referral.listing.company.name}`
                       : "General referral"}{" "}
                     · sent {shortDate(referral.createdAt)}
+                    {teamIds.length > 1 && ` by ${referral.referrerId === user.id ? "you" : `${referral.referrer.firstName} ${referral.referrer.lastName}`}`}
                   </p>
                 </div>
                 <span className="chip">{URGENCY_LABELS[referral.urgency]}</span>
