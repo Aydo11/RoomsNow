@@ -13,6 +13,8 @@ import { headerKey, parseCsv, parseUkDate } from "@/lib/csv-import";
 import { SUPPORT_TYPES } from "@/lib/taxonomy";
 import { clientSchema, clientShareSchema, fieldErrors, type FormState } from "@/lib/validation";
 import { bool, date, list, text } from "../form";
+import { Prisma } from "@prisma/client";
+import { assessmentFromForm } from "@/lib/assessment";
 
 type ClientStatusValue = "ACTIVE" | "PLACED" | "ARCHIVED";
 
@@ -573,4 +575,28 @@ export async function searchCompaniesAction(query: string) {
     orderBy: { name: "asc" },
     take: 8,
   });
+}
+
+/**
+ * Saves the optional needs and risk assessment. Everything in it is optional;
+ * an empty form simply clears it. It stays private to the referrer.
+ */
+export async function saveAssessmentAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireReferrer();
+  const clientId = String(formData.get("clientId") ?? "");
+  const client = await ownedLiveClient(user.id, clientId);
+  if (!client) return { ok: false, errors: { form: "Client not found." } };
+
+  const assessment = assessmentFromForm(formData);
+  const empty = Object.keys(assessment).length === 0;
+  await db.client.update({
+    where: { id: clientId },
+    data: { assessment: empty ? Prisma.DbNull : (assessment as Prisma.InputJsonValue), assessedAt: empty ? null : new Date() },
+  });
+  await audit({ actorId: user.id, action: "client.assessment_saved", targetType: "Client", targetId: clientId });
+  revalidateClient(clientId);
+  revalidatePath(`/referrals/clients/${clientId}/matches`);
+
+  if (formData.get("then") === "matches") redirect(`/referrals/clients/${clientId}/matches`);
+  return { ok: true, message: empty ? "Assessment cleared." : "Assessment saved. Matches now use it." };
 }
