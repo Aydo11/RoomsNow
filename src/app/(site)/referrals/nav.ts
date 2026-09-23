@@ -2,11 +2,12 @@ import { db } from "@/lib/db";
 import type { NavItem } from "@/components/dashboard-shell";
 
 export async function referrerNav(userId: string): Promise<NavItem[]> {
-  const [open, activeClients] = await Promise.all([
+  const [open, activeClients, unread] = await Promise.all([
     db.referral.count({
       where: { referrerId: userId, status: { notIn: ["MOVED_IN", "DECLINED", "WITHDRAWN"] } },
     }),
     db.client.count({ where: { referrerId: userId, status: { not: "ARCHIVED" }, deletedAt: null } }),
+    db.notification.count({ where: { userId, readAt: null } }),
   ]);
 
   return [
@@ -20,7 +21,7 @@ export async function referrerNav(userId: string): Promise<NavItem[]> {
     { href: "/messages", label: "Messages" },
     { href: "/referrals/membership", label: "Membership" },
     { href: "/referrals/profile", label: "Agency profile" },
-    { href: "/dashboard/notifications", label: "Notifications" },
+    { href: "/dashboard/notifications", label: "Notifications", badge: unread || undefined },
     { href: "/dashboard/settings", label: "Settings" },
   ];
 }
