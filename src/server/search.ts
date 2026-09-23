@@ -43,7 +43,7 @@ export const MAX_PAGES = 40;
 /** How many pins the map will draw before it asks for a tighter area. */
 export const MAP_PIN_LIMIT = 500;
 
-const LISTING_CARD_SELECT = {
+export const LISTING_CARD_SELECT = {
   company: { select: { id: true, name: true, slug: true, logoUrl: true, verification: true } },
   property: {
     select: {
