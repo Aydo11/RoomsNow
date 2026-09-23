@@ -296,25 +296,30 @@ html.machine-translated :where(h1, h2, h3, h4, p, a, button, label, dt, dd, span
            placeholder:text-ink-faint transition-[border-color,box-shadow,background-color] duration-200 focus:border-pine focus:outline-none focus:ring-2 focus:ring-pine/25;
   }
 
-  /* Mobile Safari gives date controls a wide intrinsic size unless it is
-     explicitly allowed to shrink with its grid column. */
-  input[type="date"].field {
+  /* Mobile Safari gives date controls a wide intrinsic size unless both the
+     input and its grid/flex cell are explicitly allowed to shrink. Keep the
+     actual control inside the card; the native calendar UI remains browser
+     controlled. */
+  input[type="date"].field,
+  input[type="datetime-local"].field {
     display: block;
     box-sizing: border-box;
+    width: 100%;
     min-width: 0;
     max-width: 100%;
-    /* Some WebKit builds still paint the native date control at its
-       intrinsic width even once the box itself has shrunk to fit the
-       grid column, which is what let the control's right edge draw past
-       the card on narrow screens. Clipping here doesn't change layout --
-       the box is already 100% width -- it just stops that overpaint from
-       being visible. */
     overflow: hidden;
   }
 
-  input[type="date"].field::-webkit-date-and-time-value {
+  input[type="date"].field::-webkit-date-and-time-value,
+  input[type="datetime-local"].field::-webkit-date-and-time-value {
     min-width: 0;
     text-align: left;
+  }
+
+  input[type="date"].field::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"].field::-webkit-calendar-picker-indicator {
+    flex: 0 0 auto;
+    margin-inline-start: 0.25rem;
   }
 
   .field-error {

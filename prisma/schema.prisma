@@ -127,6 +127,20 @@ enum ReferralStatus {
   WITHDRAWN
 }
 
+/// Basis the professional referrer says their organisation relies on to share
+/// personal data for this referral. This is an audit declaration, not a legal
+/// determination by RoomsNow and not a substitute for the referrer's records.
+enum ReferralDataBasis {
+  CONSENT
+  CONTRACT
+  LEGAL_OBLIGATION
+  VITAL_INTERESTS
+  PUBLIC_TASK
+  LEGITIMATE_INTERESTS
+  RECOGNISED_LEGITIMATE_INTERESTS
+  OTHER
+}
+
 enum Urgency {
   LOW
   MEDIUM
@@ -258,67 +272,67 @@ enum AcquisitionSource {
 // ---------------------------------------------------------------- identity
 
 model User {
-  id                        String        @id @default(cuid())
-  email                     String        @unique
+  id                        String             @id @default(cuid())
+  email                     String             @unique
   passwordHash              String
-  role                      Role          @default(USER)
-  adminPermissions          String[]      @default(["ALL"])
-  status                    AccountStatus @default(ACTIVE)
+  role                      Role               @default(USER)
+  adminPermissions          String[]           @default(["ALL"])
+  status                    AccountStatus      @default(ACTIVE)
   firstName                 String
   lastName                  String
   phone                     String?
   locationLabel             String?
-  contactMethod             ContactMethod @default(MESSAGE)
+  contactMethod             ContactMethod      @default(MESSAGE)
   /// Account-level profile picture. Used by roles (REFERRER) that don't have
   /// their own profile record with a photo field.
   avatarUrl                 String?
   /// Referrer-only: organisation and role, captured at registration.
-  organisation               String?
-  jobTitle                   String?
+  organisation              String?
+  jobTitle                  String?
   /// Array of { platform, url }. Shown on the account's own profile pages.
-  socialLinks                Json?
+  socialLinks               Json?
   emailVerified             DateTime?
-  emailVerificationRequired Boolean       @default(false)
+  emailVerificationRequired Boolean            @default(false)
   lastLoginAt               DateTime?
   /// Bumped on password change, logout-everywhere and suspension. Any session
   /// token issued before the current value is rejected, so a stolen cookie stops
   /// working the moment the account owner reacts.
-  tokenVersion              Int           @default(0)
+  tokenVersion              Int                @default(0)
   passwordChangedAt         DateTime?
   deletedAt                 DateTime?
   retainUntil               DateTime?
   /// Marketing channel attribution, captured once at sign-up — see AcquisitionSource.
   acquisitionSource         AcquisitionSource?
-  createdAt                 DateTime      @default(now())
-  updatedAt                 DateTime      @updatedAt
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
 
-  profile                 UserProfile?
-  staffOf                 CompanyStaff[]
-  lookingForAds           LookingForAd[]
-  requests                AccommodationRequest[]    @relation("RequestApplicant")
-  referralsMade           Referral[]                @relation("ReferralReferrer")
-  savedListings           SavedListing[]
-  notifications           Notification[]
-  messages                Message[]
-  participations          ConversationParticipant[]
-  reportsFiled            Report[]                  @relation("ReportReporter")
-  reportEvents            ReportEvent[]             @relation("ReportEventActor")
-  documents               Document[]
-  auditLogs               AuditLog[]
-  blocksMade              Block[]                   @relation("Blocker")
-  blocksReceived          Block[]                   @relation("Blocked")
-  passwordResetTokens     PasswordResetToken[]
-  emailVerificationTokens EmailVerificationToken[]
-  referrerSubscription    ReferrerSubscription?
-  referrerPayments        ReferrerPayment[]
-  clients                 Client[]                  @relation("ReferrerClients")
-  clientSharesSent        ClientShare[]             @relation("ClientSharesSent")
-  membershipGrantsMade    MembershipGrant[]         @relation("MembershipGrantAdmin")
-  userMembershipGrants    UserMembershipGrant[]     @relation("UserMembershipGrantRecipient")
-  userMembershipGrantsMade UserMembershipGrant[]    @relation("UserMembershipGrantAdmin")
-  savedSearches           SavedSearch[]
-  providerReviews         ProviderReview[]
-  referrerProfile         ReferrerProfile?
+  profile                  UserProfile?
+  staffOf                  CompanyStaff[]
+  lookingForAds            LookingForAd[]
+  requests                 AccommodationRequest[]    @relation("RequestApplicant")
+  referralsMade            Referral[]                @relation("ReferralReferrer")
+  savedListings            SavedListing[]
+  notifications            Notification[]
+  messages                 Message[]
+  participations           ConversationParticipant[]
+  reportsFiled             Report[]                  @relation("ReportReporter")
+  reportEvents             ReportEvent[]             @relation("ReportEventActor")
+  documents                Document[]
+  auditLogs                AuditLog[]
+  blocksMade               Block[]                   @relation("Blocker")
+  blocksReceived           Block[]                   @relation("Blocked")
+  passwordResetTokens      PasswordResetToken[]
+  emailVerificationTokens  EmailVerificationToken[]
+  referrerSubscription     ReferrerSubscription?
+  referrerPayments         ReferrerPayment[]
+  clients                  Client[]                  @relation("ReferrerClients")
+  clientSharesSent         ClientShare[]             @relation("ClientSharesSent")
+  membershipGrantsMade     MembershipGrant[]         @relation("MembershipGrantAdmin")
+  userMembershipGrants     UserMembershipGrant[]     @relation("UserMembershipGrantRecipient")
+  userMembershipGrantsMade UserMembershipGrant[]     @relation("UserMembershipGrantAdmin")
+  savedSearches            SavedSearch[]
+  providerReviews          ProviderReview[]
+  referrerProfile          ReferrerProfile?
 
   @@index([role, status])
 }
@@ -377,32 +391,32 @@ model UserProfile {
 // ---------------------------------------------------------------- provider side
 
 model Company {
-  id                 String             @id @default(cuid())
-  name               String
-  tradingName        String?
-  slug               String             @unique
-  registrationNumber String?
-  email              String
-  phone              String?
-  website            String?
-  addressLine1       String?
-  addressLine2       String?
-  city               String?
-  postcode           String?
-  operatingAreas     String[]           @default([])
-  orgType            OrgType            @default(SUPPORTED_ACCOMMODATION_PROVIDER)
-  about              String?
-  logoUrl            String?
-  bannerUrl          String?
+  id                     String             @id @default(cuid())
+  name                   String
+  tradingName            String?
+  slug                   String             @unique
+  registrationNumber     String?
+  email                  String
+  phone                  String?
+  website                String?
+  addressLine1           String?
+  addressLine2           String?
+  city                   String?
+  postcode               String?
+  operatingAreas         String[]           @default([])
+  orgType                OrgType            @default(SUPPORTED_ACCOMMODATION_PROVIDER)
+  about                  String?
+  logoUrl                String?
+  bannerUrl              String?
   /// Array of { platform, url }. Shown on the public company profile page.
-  socialLinks        Json?
-  supportTypes       String[]           @default([])
-  verification       VerificationStatus @default(NOT_REQUESTED)
-  verifiedAt         DateTime?
-  status             AccountStatus      @default(ACTIVE)
+  socialLinks            Json?
+  supportTypes           String[]           @default([])
+  verification           VerificationStatus @default(NOT_REQUESTED)
+  verifiedAt             DateTime?
+  status                 AccountStatus      @default(ACTIVE)
   /// Purchased 24-hour boost credits. Membership allowances are calculated
   /// separately per billing period so paid packs never expire.
-  boostCredits       Int                @default(0)
+  boostCredits           Int                @default(0)
   /// Stable invite code for the provider-to-provider referral programme.
   /// Generated lazily the first time it's needed — see ensureReferralCode —
   /// so existing companies never need a backfill migration.
@@ -410,8 +424,8 @@ model Company {
   /// How many 5-qualified-referral reward cycles this company has already
   /// been paid out for. Prevents re-granting the same milestone twice.
   referralRewardsClaimed Int                @default(0)
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
 
   staff            CompanyStaff[]
   properties       Property[]
@@ -424,8 +438,8 @@ model Company {
   membershipGrants MembershipGrant[]
   reviews          ProviderReview[]
   accreditations   ProviderAccreditation[]
-  referralsMade    ProviderReferral[] @relation("ReferralsMade")
-  referredVia      ProviderReferral?  @relation("ReferralsReceived")
+  referralsMade    ProviderReferral[]      @relation("ReferralsMade")
+  referredVia      ProviderReferral?       @relation("ReferralsReceived")
 
   @@index([city])
 }
@@ -710,18 +724,22 @@ model Referral {
   applicantEmail     String?
   applicantUserId    String?
 
-  organisation       String?
-  referrerJobTitle   String?
-  preferredLocation  String?
-  accommodationNeeds String?
-  supportNeeds       String?
-  supportTypes       String[]       @default([])
-  urgency            Urgency        @default(MEDIUM)
-  additionalInfo     String?
-  status             ReferralStatus @default(SUBMITTED)
-  statusNote         String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  organisation                      String?
+  referrerJobTitle                  String?
+  preferredLocation                 String?
+  accommodationNeeds                String?
+  supportNeeds                      String?
+  supportTypes                      String[]           @default([])
+  urgency                           Urgency            @default(MEDIUM)
+  additionalInfo                    String?
+  dataSharingBasis                  ReferralDataBasis?
+  dataSharingConfirmedAt            DateTime?
+  specialCategoryConditionConfirmed Boolean            @default(false)
+  privacyNoticeVersion              String?
+  status                            ReferralStatus     @default(SUBMITTED)
+  statusNote                        String?
+  createdAt                         DateTime           @default(now())
+  updatedAt                         DateTime           @updatedAt
 
   application Application?
   documents   Document[]
@@ -1013,11 +1031,11 @@ model SavedListing {
 /// re-running it later — or matching a freshly published advert against it —
 /// uses exactly the same criteria the person saw on screen.
 model SavedSearch {
-  id        String @id @default(cuid())
-  userId    String
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Short label shown in "Your alerts", e.g. "Leeds · Mental health support".
-  label     String
+  label  String
 
   where         String?
   radius        Int?
@@ -1035,14 +1053,14 @@ model SavedSearch {
   minRent       Int?
   maxRent       Int?
 
-  frequency      AlertFrequency @default(INSTANT)
+  frequency     AlertFrequency @default(INSTANT)
   /// Last time this search matched at least one advert and an alert went out.
-  lastAlertedAt  DateTime?
+  lastAlertedAt DateTime?
   /// Watermark for the daily digest job — only adverts published after this
   /// are considered "new" next time it runs.
-  lastDigestAt   DateTime       @default(now())
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  lastDigestAt  DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([userId])
   @@index([frequency])
@@ -1231,31 +1249,31 @@ model Payment {
 // ---------------------------------------------------------------- trust & safety
 
 model VerificationRequest {
-  id                    String             @id @default(cuid())
-  type                  VerificationType   @default(COMPANY)
-  companyId             String
-  company               Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  propertyId            String?
-  status                VerificationStatus @default(PENDING)
-  submittedBy           String?
-  reviewedBy            String?
-  reviewedAt            DateTime?
-  note                  String?
-  reviewNote            String?
-  insuranceExpiresAt    DateTime?
+  id                      String             @id @default(cuid())
+  type                    VerificationType   @default(COMPANY)
+  companyId               String
+  company                 Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  propertyId              String?
+  status                  VerificationStatus @default(PENDING)
+  submittedBy             String?
+  reviewedBy              String?
+  reviewedAt              DateTime?
+  note                    String?
+  reviewNote              String?
+  insuranceExpiresAt      DateTime?
   /// Set once a "your insurance is expiring" reminder has gone out for this
   /// approved verification, so the hourly check (see
   /// runInsuranceExpiryCheck) never re-sends it. Cleared implicitly by a
   /// fresh submission, since that creates a brand-new row.
   insuranceReminderSentAt DateTime?
-  declarationAcceptedAt DateTime?
-  checklistVersion      String             @default("2026-09")
-  registrationChecked   Boolean            @default(false)
-  insuranceChecked      Boolean            @default(false)
-  governanceChecked     Boolean            @default(false)
-  safeguardingChecked   Boolean            @default(false)
-  identityChecked       Boolean            @default(false)
-  createdAt             DateTime           @default(now())
+  declarationAcceptedAt   DateTime?
+  checklistVersion        String             @default("2026-09")
+  registrationChecked     Boolean            @default(false)
+  insuranceChecked        Boolean            @default(false)
+  governanceChecked       Boolean            @default(false)
+  safeguardingChecked     Boolean            @default(false)
+  identityChecked         Boolean            @default(false)
+  createdAt               DateTime           @default(now())
 
   documents Document[]
 
@@ -1296,17 +1314,17 @@ model ReportEvent {
 }
 
 model Document {
-  id                    String                @id @default(cuid())
+  id                    String                 @id @default(cuid())
   ownerId               String?
-  owner                 User?                 @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  owner                 User?                  @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   companyId             String?
-  company               Company?              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company               Company?               @relation(fields: [companyId], references: [id], onDelete: Cascade)
   referralId            String?
-  referral              Referral?             @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  referral              Referral?              @relation(fields: [referralId], references: [id], onDelete: Cascade)
   requestId             String?
-  request               AccommodationRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  request               AccommodationRequest?  @relation(fields: [requestId], references: [id], onDelete: Cascade)
   verificationRequestId String?
-  verificationRequest   VerificationRequest?  @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+  verificationRequest   VerificationRequest?   @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
   accreditationId       String?
   accreditation         ProviderAccreditation? @relation(fields: [accreditationId], references: [id], onDelete: Cascade)
   name                  String
@@ -1314,8 +1332,8 @@ model Document {
   url                   String
   mimeType              String?
   sizeBytes             Int?
-  isPrivate             Boolean               @default(true)
-  createdAt             DateTime              @default(now())
+  isPrivate             Boolean                @default(true)
+  createdAt             DateTime               @default(now())
 }
 
 model AuditLog {

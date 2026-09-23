@@ -6,7 +6,7 @@ export const metadata = { title: "Privacy notice" };
 
 export default function PrivacyPage() {
   return (
-    <ProsePage title="Privacy notice" intro={`This notice explains how ${brand.name} collects, uses, shares and protects personal information across its housing, messaging, referral and verification services.`} updated="6 September 2026">
+    <ProsePage title="Privacy notice" intro={`This notice explains how ${brand.name} collects, uses, shares and protects personal information across its housing, messaging, referral and verification services.`} updated="23 September 2026">
       <Section heading="1. Who is responsible for your information">
         <p>RoomsNow is responsible for personal information it determines how and why to use. Contact the privacy team at {brand.supportEmail} for questions, rights requests or complaints.</p>
         <p>Providers and professional referrers are normally separate controllers for information they collect for their own housing, support, safeguarding, commissioning or referral work. Their privacy notices also apply.</p>
@@ -65,23 +65,29 @@ export default function PrivacyPage() {
       </Section>
 
       <Section heading="9. Retention">
-        <p>RoomsNow keeps information only while needed for the stated purpose, safety, disputes and legal obligations. Normal retention targets are: account and operational records while the account is active and for up to 24 months afterwards; closed requests, referrals and messages for up to 24 months; verification evidence while a badge is active and for up to 12 months after it ends; security and audit logs for up to 12 months; and billing/tax records for the legally required accounting period. Records may be kept longer for an active complaint, safeguarding concern, fraud investigation or legal claim. Backups expire on a rolling schedule.</p>
+        <p>RoomsNow aims to keep information only while needed for the stated purpose, safety, disputes and legal obligations. The intended review periods are: account and operational records while the account is active and for up to 24 months afterwards; closed requests, referrals and messages for up to 24 months; verification evidence while a badge is active and for up to 12 months after it ends; security and audit logs for up to 12 months; and billing/tax records for the applicable accounting period. Records may be kept longer for an active complaint, safeguarding concern, fraud investigation or legal claim.</p>
+        <p className="rounded-[10px] border border-line bg-paper-sunk px-4 py-3">These are review targets, not a promise that every record is automatically erased on those dates. Automated deletion and backup expiry are not yet fully enforced across all data types. Until the retention jobs and backup lifecycle are operationally configured, some records may remain longer. Contact {brand.supportEmail} about a specific retention concern.</p>
       </Section>
 
-      <Section heading="10. Security">
+      <Section heading="10. Professional referral declarations">
+        <p>When a professional submits a referral, RoomsNow records the data-sharing basis they select, the time of their declaration, a confirmation that they have considered privacy information and data minimisation, and a confirmation that any additional condition and safeguards for special-category or criminal-offence data have been considered. This is an accountability record of what the referrer declared; it is not a finding by RoomsNow that the basis or condition is legally valid.</p>
+        <p>The referring organisation remains responsible for its own lawful-basis assessment, any Article 9 condition, any DPA 2018 Schedule 1 condition where required, transparency to the person, confidentiality duties, and its case records. RoomsNow receives only the information submitted and does not independently assess the person's case.</p>
+      </Section>
+
+      <Section heading="11. Security">
         <p>RoomsNow uses role-based access, private document storage, access checks, audit logs, upload validation, rate limiting, encrypted transport, session controls, backups and error monitoring. No service can guarantee absolute security. Report suspected compromise immediately and do not send passwords or unnecessary sensitive information in messages.</p>
       </Section>
 
-      <Section heading="11. Your rights">
+      <Section heading="12. Your rights">
         <p>Depending on the circumstances, you may ask for access, correction, deletion, restriction, portability or objection, and may withdraw consent without affecting earlier lawful use. RoomsNow may need to verify identity and may retain information where law permits or requires it. Rights requests can be sent to {brand.supportEmail}.</p>
         <p>You may complain to the Information Commissioner&apos;s Office at <a href="https://ico.org.uk/make-a-complaint/" className="text-pine-dark hover:underline">ico.org.uk</a>. Please contact RoomsNow first if you would like the opportunity for the issue to be resolved directly.</p>
       </Section>
 
-      <Section heading="12. Automated decisions and children">
+      <Section heading="13. Automated decisions and children">
         <p>RoomsNow does not make solely automated decisions that produce legal or similarly significant effects. Search ordering and filters assist discovery but do not decide eligibility or placements. RoomsNow accounts are for people aged 18 or over; information about a child must be entered only by an authorised professional with an appropriate lawful basis and safeguarding controls.</p>
       </Section>
 
-      <Section heading="13. Cookies and changes to this notice">
+      <Section heading="14. Cookies and changes to this notice">
         <p>Strictly necessary cookies support login, security and core service operation. Optional analytics or marketing technologies will not be enabled without the consent controls required by law. RoomsNow may update this notice when its services, suppliers or legal duties change and will highlight material changes to account holders.</p>
         <p>Related information appears in the <Link href="/terms" className="text-pine-dark hover:underline">terms of use</Link> and <Link href="/verification" className="text-pine-dark hover:underline">verification policy</Link>.</p>
       </Section>

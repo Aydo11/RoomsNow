@@ -36,7 +36,9 @@ export async function createReferralAction(_prev: FormState, formData: FormData)
     supportTypes: list(formData, "supportTypes"),
     urgency: text(formData, "urgency") || "MEDIUM",
     additionalInfo: text(formData, "additionalInfo"),
-    consent: formData.get("consent") === "on" ? "on" : "",
+    dataSharingBasis: text(formData, "dataSharingBasis"),
+    dataSharingConfirmed: formData.get("dataSharingConfirmed") === "on" ? "on" : "",
+    specialCategoryConditionConfirmed: formData.get("specialCategoryConditionConfirmed") === "on" ? "on" : "",
   });
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
   const d = parsed.data;
@@ -63,6 +65,8 @@ export async function createReferralAction(_prev: FormState, formData: FormData)
     listingCompanyId = listing.companyId;
   }
 
+  const dataSharingConfirmedAt = new Date();
+
   const referral = await db.referral.create({
     data: {
       reference: reference("REF"),
@@ -82,6 +86,10 @@ export async function createReferralAction(_prev: FormState, formData: FormData)
       supportTypes: d.supportTypes,
       urgency: d.urgency,
       additionalInfo: d.additionalInfo || null,
+      dataSharingBasis: d.dataSharingBasis,
+      dataSharingConfirmedAt,
+      specialCategoryConditionConfirmed: true,
+      privacyNoticeVersion: "2026-09-23",
       events: { create: { status: "SUBMITTED", note: "Referral submitted", actorId: user.id } },
     },
   });
@@ -125,7 +133,14 @@ export async function createReferralAction(_prev: FormState, formData: FormData)
     action: "referral.created",
     targetType: "Referral",
     targetId: referral.id,
-    metadata: { listingId: d.listingId || null, urgency: d.urgency },
+    metadata: {
+      listingId: d.listingId || null,
+      urgency: d.urgency,
+      dataSharingBasis: d.dataSharingBasis,
+      dataSharingConfirmedAt: dataSharingConfirmedAt.toISOString(),
+      specialCategoryConditionConfirmed: true,
+      privacyNoticeVersion: "2026-09-23",
+    },
   });
 
   redirect(`/referrals/${referral.id}`);

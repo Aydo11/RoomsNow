@@ -89,6 +89,15 @@ admin actions and every private document read. Admins can moderate accounts but
 Addresses show town and outward postcode unless the provider publishes more. Map
 pins sit on the postcode, not the door.
 
+**Referral sharing accountability.** New professional referrals require the
+referrer to select the Article 6 basis their organisation has assessed and
+confirm data minimisation, transparency and any additional condition/safeguards
+for special-category or criminal-offence information. The selected basis,
+timestamp and privacy-notice version are stored on the referral and in its
+creation audit event. This is only the referrer's declaration: RoomsNow does not
+verify that the basis, Article 9 condition or DPA 2018 Schedule 1 condition is
+valid. Historical referrals have no retroactive declaration.
+
 ## Not done yet — do these before real data
 
 1. **No MFA.** Admin accounts especially should have TOTP.
@@ -104,10 +113,24 @@ pins sit on the postcode, not the door.
    plain files on disk. Consider envelope encryption for the private bucket.
 7. **No penetration test.** Nothing here has been tested by anyone but its
    author. For a service holding this kind of data, get one.
-8. **No backup or retention policy in code.** Deletion soft-deletes and keeps a
-   minimal record for 30 days; nothing purges it yet. Write the cron job.
+8. **Retention is not enforced end to end.** Account deletion sets a 30-day
+   `retainUntil` marker but there is no scheduled purge job. The privacy notice
+   now describes published timeframes as review targets and discloses that
+   automated deletion and backup expiry are not fully enforced. Implement and
+   monitor a tested retention job before accepting sensitive production data.
 9. **Logging goes to the console.** Ship it somewhere durable, and make sure it
     never captures message bodies or referral contents.
+10. **No completed DPIA / ROPA / processor pack is included in the repository.**
+    Complete a data protection impact assessment, records of processing, lawful
+    basis and special-category condition register, processor contracts, transfer
+    assessments and a tested rights-request/incident process with the controller
+    before launch. The referral declaration feature does not replace any of
+    these governance records.
+11. **Rights workflows are incomplete.** Self-service export, correction and
+    deletion exist, but the export should be checked for completeness per role,
+    third-party information and attachments; erasure exceptions and outcomes
+    need a case-managed human review. Do not treat account deletion as erasure
+    of every related legal, safety or third-party record.
 
 ## Reporting
 

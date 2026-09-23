@@ -84,6 +84,21 @@ export default async function ReferralPage({ params }: { params: Promise<{ id: s
               <dt className="text-[13px] text-ink-faint">Urgency</dt>
               <dd>{URGENCY_LABELS[referral.urgency]}</dd>
             </div>
+            {isReferrer && referral.dataSharingBasis && referral.dataSharingConfirmedAt && (
+              <div className="rounded-[10px] border border-line bg-paper-sunk/60 p-4">
+                <dt className="text-[13px] font-medium text-ink">Data-sharing declaration</dt>
+                <dd className="mt-1 text-[14px] text-ink-soft">
+                  Basis recorded: {referral.dataSharingBasis.toLowerCase().replace(/_/g, " ")}
+                </dd>
+                <dd className="mt-1 text-[13px] text-ink-faint">
+                  Confirmed {referral.dataSharingConfirmedAt.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/London" })}
+                  {referral.privacyNoticeVersion ? ` · Privacy notice ${referral.privacyNoticeVersion}` : ""}
+                </dd>
+                <dd className="mt-2 text-[12px] leading-relaxed text-ink-faint">
+                  This records your declaration and is not a legal assessment by RoomsNow. Keep your organisation&apos;s supporting records.
+                </dd>
+              </div>
+            )}
             {!isReferrer && (
               <div>
                 <dt className="text-[13px] text-ink-faint">Referred by</dt>

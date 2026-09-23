@@ -205,8 +205,21 @@ export const referralSchema = z.object({
   supportTypes: z.array(z.string()).default([]),
   urgency: z.enum(["LOW", "MEDIUM", "HIGH", "EMERGENCY"]).default("MEDIUM"),
   additionalInfo: z.string().trim().max(3000).optional().or(z.literal("")),
-  consent: z.literal("on", {
-    errorMap: () => ({ message: "Confirm you have the applicant's consent to share this information." }),
+  dataSharingBasis: z.enum([
+    "CONSENT",
+    "CONTRACT",
+    "LEGAL_OBLIGATION",
+    "VITAL_INTERESTS",
+    "PUBLIC_TASK",
+    "LEGITIMATE_INTERESTS",
+    "RECOGNISED_LEGITIMATE_INTERESTS",
+    "OTHER",
+  ], { errorMap: () => ({ message: "Select the data-sharing basis your organisation has assessed for this referral." }) }),
+  dataSharingConfirmed: z.literal("on", {
+    errorMap: () => ({ message: "Confirm you have completed your organisation's sharing and privacy checks." }),
+  }),
+  specialCategoryConditionConfirmed: z.literal("on", {
+    errorMap: () => ({ message: "Confirm the additional checks for sensitive or criminal-offence data, where applicable." }),
   }),
 });
 
