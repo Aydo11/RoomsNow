@@ -9,6 +9,7 @@ import { providerNav } from "./nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { timeAgo } from "@/lib/format";
 import { computeReferralOutcomes } from "@/lib/referral-outcomes";
+import { ProviderActivityChart, type ProviderActivityPoint } from "@/components/provider-activity-chart";
 
 export const metadata = { title: "Provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -17,9 +18,10 @@ export default async function ProviderDashboard() {
   const { companyId, user } = await requireCompany();
   const nav = await providerNav(companyId);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60_000);
+  const twelveWeeksAgo = new Date(Date.now() - 12 * 7 * 24 * 60 * 60_000);
   const now = new Date();
 
-  const [company, limits, boosts, activeBoosts, activeSponsored, listings, rooms, requests, referrals, views, requests30d, referrals30d, requestStatuses, referralStatuses, unreadThreads, topListings, resolvedReferrals] = await Promise.all([
+  const [company, limits, boosts, activeBoosts, activeSponsored, listings, rooms, requests, referrals, views, requests30d, referrals30d, requestStatuses, referralStatuses, unreadThreads, topListings, resolvedReferrals, requestActivity, referralActivity] = await Promise.all([
     db.company.findUniqueOrThrow({ where: { id: companyId } }),
     planLimits(companyId),
     boostAllowance(companyId),
@@ -54,9 +56,31 @@ export default async function ProviderDashboard() {
       where: { listing: { companyId }, status: { in: ["MOVED_IN", "DECLINED", "WITHDRAWN"] } },
       select: { status: true, createdAt: true, events: { select: { status: true, createdAt: true } } },
     }),
+    db.accommodationRequest.findMany({
+      where: { listing: { companyId }, createdAt: { gte: twelveWeeksAgo } },
+      select: { createdAt: true },
+    }),
+    db.referral.findMany({
+      where: { listing: { companyId }, createdAt: { gte: twelveWeeksAgo } },
+      select: { createdAt: true },
+    }),
   ]);
 
   const outcomes = computeReferralOutcomes(resolvedReferrals);
+  const weekStart = new Date(now);
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+  const activityPoints: ProviderActivityPoint[] = Array.from({ length: 12 }, (_, index) => {
+    const from = new Date(weekStart.getTime() - (11 - index) * 7 * 24 * 60 * 60_000);
+    const to = new Date(from.getTime() + 7 * 24 * 60 * 60_000);
+    const label = from.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return {
+      label,
+      longLabel: `Week commencing ${label}`,
+      requests: requestActivity.filter((request) => request.createdAt >= from && request.createdAt < to).length,
+      referrals: referralActivity.filter((referral) => referral.createdAt >= from && referral.createdAt < to).length,
+    };
+  });
 
   const available = rooms.find((r) => r.status === "AVAILABLE")?._count ?? 0;
   const totalRooms = rooms.reduce((sum, r) => sum + r._count, 0);
@@ -198,6 +222,18 @@ export default async function ProviderDashboard() {
               </div>
             </div>
           </div>
+          <section className="card p-5 sm:p-6" aria-labelledby="provider-activity-heading">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <div>
+                <h3 id="provider-activity-heading" className="text-[18px]">Enquiry activity</h3>
+                <p className="mt-1 text-[13px] text-ink-soft">New enquiries received across your company&apos;s adverts, grouped by week.</p>
+              </div>
+              <span className="text-[13px] text-ink-faint">Last 12 weeks</span>
+            </div>
+            <div className="mt-4">
+              <ProviderActivityChart points={activityPoints} />
+            </div>
+          </section>
           <div className="card mt-4 overflow-hidden">
             <div className="border-b border-line px-5 py-4">
               <h3 className="text-[17px]">Referral outcomes</h3>
