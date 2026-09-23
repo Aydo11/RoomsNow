@@ -30,7 +30,17 @@ export type ReferrerProfileDefaults = {
   logoUrl: string | null;
 };
 
-export function ReferrerProfileForm({ user }: { user: ReferrerProfileDefaults }) {
+export function ReferrerProfileForm({
+  user,
+  agencyLocked = false,
+  inOrganisation = false,
+}: {
+  user: ReferrerProfileDefaults;
+  /** A team member who isn't an owner/admin sees the shared agency details read-only. */
+  agencyLocked?: boolean;
+  /** The organisation name is managed on the Team page. */
+  inOrganisation?: boolean;
+}) {
   const [state, action] = useActionState(updateReferrerProfileAction, { ok: false });
   const [bannerPreview, setBannerPreview] = useState(user.bannerUrl);
   const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase();
@@ -52,15 +62,23 @@ export function ReferrerProfileForm({ user }: { user: ReferrerProfileDefaults })
       <FormError message={state.errors?.form} />
       <FormSuccess message={state.ok ? state.message : undefined} />
 
+      {agencyLocked && (
+        <p className="rounded-[10px] border border-line bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft">
+          Your organisation&apos;s owners and admins manage the agency details below. You can update your own details further down.
+        </p>
+      )}
+      <fieldset disabled={agencyLocked} className="m-0 min-w-0 border-0 p-0">
       <section className="card overflow-hidden">
         <div className="relative h-40 bg-gradient-to-br from-pine-dark via-pine to-pine-light sm:h-48">
           {bannerPreview && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={bannerPreview} alt="Agency banner preview" className="h-full w-full object-cover" />
           )}
-          <label htmlFor="banner" className="btn absolute bottom-3 right-3 cursor-pointer bg-white/95 text-pine-dark shadow-raise hover:bg-white">
-            {bannerPreview ? "Change banner" : "Add a banner"}
-          </label>
+          {!agencyLocked && (
+            <label htmlFor="banner" className="btn absolute bottom-3 right-3 cursor-pointer bg-white/95 text-pine-dark shadow-raise hover:bg-white">
+              {bannerPreview ? "Change banner" : "Add a banner"}
+            </label>
+          )}
           <input
             id="banner"
             name="banner"
@@ -88,8 +106,13 @@ export function ReferrerProfileForm({ user }: { user: ReferrerProfileDefaults })
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Agency or organisation name" name="organisation" error={state.errors?.organisation}>
-              <input id="organisation" name="organisation" defaultValue={user.organisation} className="field" />
+            <Field
+              label="Agency or organisation name"
+              name="organisation"
+              error={state.errors?.organisation}
+              hint={inOrganisation ? "Rename your organisation from the Team page." : undefined}
+            >
+              <input id="organisation" name="organisation" defaultValue={user.organisation} readOnly={inOrganisation} className="field" />
             </Field>
             <Field label="Type of agency" name="agencyType" error={state.errors?.agencyType}>
               <select id="agencyType" name="agencyType" defaultValue={user.agencyType} className="field">
@@ -145,6 +168,7 @@ export function ReferrerProfileForm({ user }: { user: ReferrerProfileDefaults })
           </Field>
         </div>
       </section>
+      </fieldset>
 
       <section className="card space-y-4 p-6">
         <h2 className="text-[20px]">About you</h2>
