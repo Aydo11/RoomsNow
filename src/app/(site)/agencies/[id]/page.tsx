@@ -7,6 +7,7 @@ import { DirectMessageForm } from "@/components/direct-message-form";
 import { AGENCY_TYPES, websiteHref } from "@/lib/agency";
 import { supportLabel } from "@/lib/taxonomy";
 import { monthYear } from "@/lib/format";
+import { teamFor } from "@/lib/referral-team";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Referral agency", robots: { index: false, follow: false } };
@@ -40,13 +41,24 @@ export default async function AgencyPage({ params }: { params: Promise<{ id: str
   });
   if (!agent || agent.role !== "REFERRER" || agent.status !== "ACTIVE" || agent.deletedAt) notFound();
 
-  const [placed, referralsMade] = await Promise.all([
-    db.referral.count({ where: { referrerId: agent.id, status: "MOVED_IN" } }),
-    db.referral.count({ where: { referrerId: agent.id } }),
+  // Colleagues in one organisation share the agency page (the owner's profile)
+  // and its track record; the person card stays whoever's page this is.
+  const team = await teamFor(agent.id);
+  const [placed, referralsMade, ownerProfile, colleagues] = await Promise.all([
+    db.referral.count({ where: { referrerId: { in: team.memberIds }, status: "MOVED_IN" } }),
+    db.referral.count({ where: { referrerId: { in: team.memberIds } } }),
+    team.ownerId === agent.id ? Promise.resolve(agent.referrerProfile) : db.referrerProfile.findUnique({ where: { userId: team.ownerId } }),
+    team.memberIds.length > 1
+      ? db.user.findMany({
+          where: { id: { in: team.memberIds }, status: "ACTIVE", deletedAt: null },
+          orderBy: { firstName: "asc" },
+          select: { id: true, firstName: true, lastName: true, jobTitle: true, avatarUrl: true },
+        })
+      : Promise.resolve([]),
   ]);
 
-  const profile = agent.referrerProfile;
-  const name = agent.organisation || `${agent.firstName} ${agent.lastName}`;
+  const profile = ownerProfile;
+  const name = team.organisation?.name || agent.organisation || `${agent.firstName} ${agent.lastName}`;
   const initials = name
     .split(/\s+/)
     .slice(0, 2)
@@ -197,6 +209,31 @@ export default async function AgencyPage({ params }: { params: Promise<{ id: str
               )}
 
               <p className="text-[12px] text-ink-faint">On RoomsNow since {monthYear(agent.createdAt)}</p>
+
+              {colleagues.length > 1 && (
+                <div className="border-t border-line pt-4">
+                  <p className="text-[12px] font-medium text-ink-faint">Team at {name}</p>
+                  <ul className="mt-2 space-y-2">
+                    {colleagues.map((person) => (
+                      <li key={person.id}>
+                        <Link href={`/agencies/${person.id}`} className="flex items-center gap-2 hover:text-pine-dark">
+                          {person.avatarUrl ? (
+                            <img src={person.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+                          ) : (
+                            <span className="grid h-7 w-7 place-items-center rounded-full bg-pine-light text-[11px] font-semibold text-pine-dark">
+                              {`${person.firstName[0] ?? ""}${person.lastName[0] ?? ""}`.toUpperCase()}
+                            </span>
+                          )}
+                          <span className="min-w-0 truncate text-[13px]">
+                            {person.firstName} {person.lastName}
+                            {person.jobTitle && <span className="text-ink-faint"> · {person.jobTitle}</span>}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {!isSelf && viewerIsProvider && (
                 <div className="border-t border-line pt-4">
