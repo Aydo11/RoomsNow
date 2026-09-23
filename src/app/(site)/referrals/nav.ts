@@ -1,12 +1,14 @@
 import { db } from "@/lib/db";
 import type { NavItem } from "@/components/dashboard-shell";
+import { teamMemberIds } from "@/lib/referral-team";
 
 export async function referrerNav(userId: string): Promise<NavItem[]> {
+  const teamIds = await teamMemberIds(userId);
   const [open, activeClients, unread] = await Promise.all([
     db.referral.count({
-      where: { referrerId: userId, status: { notIn: ["MOVED_IN", "DECLINED", "WITHDRAWN"] } },
+      where: { referrerId: { in: teamIds }, status: { notIn: ["MOVED_IN", "DECLINED", "WITHDRAWN"] } },
     }),
-    db.client.count({ where: { referrerId: userId, status: { not: "ARCHIVED" }, deletedAt: null } }),
+    db.client.count({ where: { referrerId: { in: teamIds }, status: { not: "ARCHIVED" }, deletedAt: null } }),
     db.notification.count({ where: { userId, readAt: null } }),
   ]);
 
@@ -20,6 +22,7 @@ export async function referrerNav(userId: string): Promise<NavItem[]> {
     { href: "/dashboard/alerts", label: "Saved alerts" },
     { href: "/messages", label: "Messages" },
     { href: "/referrals/membership", label: "Membership" },
+    { href: "/referrals/team", label: "Team" },
     { href: "/referrals/profile", label: "Agency profile" },
     { href: "/dashboard/notifications", label: "Notifications", badge: unread || undefined },
     { href: "/dashboard/settings", label: "Settings" },
