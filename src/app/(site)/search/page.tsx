@@ -145,6 +145,9 @@ export default async function SearchPage({
               <p className="mt-1 text-[14px] text-ink-soft">
                 {results.total.toLocaleString("en-GB")} {results.total === 1 ? "live advert" : "live adverts"}{where}
               </p>
+              <p className="mt-1 text-[12px] text-ink-faint">
+                Ordinary results rotate daily. Sponsored and boosted adverts are labelled separately.
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <Suspense fallback={null}>

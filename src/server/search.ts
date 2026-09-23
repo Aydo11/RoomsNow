@@ -215,6 +215,18 @@ function rankSponsored<T extends { id: string }>(items: T[], now: Date) {
 }
 
 /**
+ * Rotate the visible organic results once per UTC day. This shares the first
+ * positions among the set already selected by relevance and availability,
+ * while keeping one consistent order for every visitor during that day.
+ */
+function rotateOrganicDaily<T>(items: T[], now: Date): T[] {
+  if (items.length < 2) return items;
+  const day = Math.floor(now.getTime() / (24 * 60 * 60 * 1000));
+  const offset = day % items.length;
+  return [...items.slice(offset), ...items.slice(0, offset)];
+}
+
+/**
  * Public search. Only ACTIVE adverts from ACTIVE companies are ever returned.
  *
  * Four separate lanes keep placement clear and predictable: boosted, sponsored,
@@ -290,10 +302,15 @@ export async function searchListings(params: SearchParams) {
       ? db.listing.findMany({ where: freeWhere, orderBy: orderFor(params.sort), skip: freeSkip, take: freeTake, include: LISTING_CARD_SELECT })
       : Promise.resolve([]),
   ]);
-  const items = [
+  const orderedItems = [
     ...paidItems.map((listing) => ({ ...listing, memberListing: true })),
     ...freeItems.map((listing) => ({ ...listing, memberListing: false })),
   ];
+  // “Most relevant” is the default. Rotate its ordinary, non-sponsored and
+  // non-boosted results daily; explicit user-selected sorts remain untouched.
+  const items = !params.sort || params.sort === "featured"
+    ? rotateOrganicDaily(orderedItems, now)
+    : orderedItems;
 
   const sponsoredIds = sponsored.map((listing) => listing.id);
   const boostedIds = boosted.map((listing) => listing.id);
