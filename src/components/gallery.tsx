@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { createPortal } from "react-dom";
 import { demoListingGallery, demoListingImage } from "@/lib/demo-listings";
 import { ResilientImage } from "./resilient-image";
 
@@ -186,8 +187,8 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
         </ul>
       )}
 
-      {lightboxActive !== null && photos[lightboxActive] && (
-        <div role="dialog" aria-modal="true" aria-label={`${title} enlarged photos`} className="fixed inset-0 z-[100] flex flex-col bg-black/95 text-white backdrop-blur-sm">
+      {lightboxActive !== null && photos[lightboxActive] && typeof document !== "undefined" && createPortal(
+        <div role="dialog" aria-modal="true" aria-label={`${title} enlarged photos`} className="fixed inset-0 z-[2147483647] flex h-screen h-[100dvh] w-screen flex-col overflow-hidden bg-black text-white">
           <div className="flex min-h-14 items-center justify-between gap-4 px-4 py-2 sm:px-6">
             <p className="truncate text-sm font-medium">{photos[lightboxActive].caption ?? title}</p>
             <div className="flex shrink-0 items-center gap-3">
@@ -225,7 +226,8 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
           <p className="px-4 pb-[max(12px,env(safe-area-inset-bottom))] text-center text-xs text-white/65 sm:text-sm">
             Swipe or scroll to see more photos
           </p>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
