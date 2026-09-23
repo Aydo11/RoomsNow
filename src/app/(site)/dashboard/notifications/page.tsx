@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {
   const user = await requireUser("/dashboard/notifications");
-  const nav = user.role === "REFERRER" ? await referrerNav(user.id) : await userNav(user.id);
+  const nav = user.role === "REFERRER" || user.role === "ADMIN" ? await referrerNav(user.id) : await userNav(user.id);
   const notifications = await db.notification.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
