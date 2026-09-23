@@ -9,6 +9,7 @@ import { ageFrom, shortDate } from "@/lib/format";
 import Link from "next/link";
 import { ClientAvatar } from "@/components/client-avatar";
 import { clientPhotoSrc } from "@/lib/client-card";
+import { ClientSuitabilityReview } from "@/components/client-suitability-review";
 
 export const dynamic = "force-dynamic";
 
@@ -54,57 +55,49 @@ export default async function ProviderClientDetailPage({ params }: { params: Pro
       nav={nav}
       active="/provider/clients"
     >
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <section className="card p-6">
-          <div className="flex items-center gap-4">
-            <ClientAvatar name={`${client.firstName} ${client.lastName}`} src={clientPhotoSrc(client)} size="lg" />
-            <h2 className="text-[18px]">Profile</h2>
+      <section className="card p-5 sm:p-7">
+        <div className="flex flex-wrap items-center gap-4 border-b border-line pb-5">
+          <ClientAvatar name={`${client.firstName} ${client.lastName}`} src={clientPhotoSrc(client)} size="lg" />
+          <div>
+            <p className="text-[12px] font-semibold uppercase tracking-wide text-pine-dark">Shared accommodation profile</p>
+            <h2 className="mt-0.5 text-[20px]">Profile overview</h2>
+            <p className="mt-1 text-[14px] text-ink-soft">
+              {[client.dateOfBirth ? `${ageFrom(client.dateOfBirth)} years old` : null, client.preferredLocation].filter(Boolean).join(" · ") || "Age and preferred area not provided"}
+            </p>
           </div>
-          <dl className="mt-4 grid gap-4 text-[15px] sm:grid-cols-2">
-            {client.dateOfBirth && (
-              <div>
-                <dt className="text-[13px] text-ink-faint">Age</dt>
-                <dd>{ageFrom(client.dateOfBirth)}</dd>
-              </div>
-            )}
-            {client.preferredLocation && (
-              <div>
-                <dt className="text-[13px] text-ink-faint">Preferred area</dt>
-                <dd>{client.preferredLocation}</dd>
-              </div>
-            )}
-          </dl>
+        </div>
 
-          {client.supportTypes.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {client.supportTypes.map((slug) => (
-                <span key={slug} className="chip">{supportLabel(slug)}</span>
-              ))}
-            </div>
-          )}
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <section className="rounded-[12px] border border-line bg-paper-card p-4 sm:p-5">
+            <h3 className="text-[16px] font-semibold">Accommodation needs</h3>
+            <p className="mt-2 whitespace-pre-line text-[15px] leading-7 text-ink">{client.accommodationNeeds || "No specific accommodation needs have been added."}</p>
+          </section>
+          <section className="rounded-[12px] border border-line bg-paper-card p-4 sm:p-5">
+            <h3 className="text-[16px] font-semibold">Support needs</h3>
+            <p className="mt-2 whitespace-pre-line text-[15px] leading-7 text-ink">{client.supportNeeds || "No detailed support needs have been added."}</p>
+          </section>
+        </div>
 
-          {client.accommodationNeeds && (
-            <div className="mt-5">
-              <h3 className="text-[14px] font-medium text-ink-soft">Accommodation needs</h3>
-              <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed">{client.accommodationNeeds}</p>
+        {client.supportTypes.length > 0 && (
+          <div className="mt-5">
+            <h3 className="text-[14px] font-medium text-ink-soft">Support categories</h3>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {client.supportTypes.map((slug) => <span key={slug} className="chip">{supportLabel(slug)}</span>)}
             </div>
-          )}
-          {client.supportNeeds && (
-            <div className="mt-5">
-              <h3 className="text-[14px] font-medium text-ink-soft">Support needs</h3>
-              <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed">{client.supportNeeds}</p>
-            </div>
-          )}
+          </div>
+        )}
 
-          {share.note && (
-            <div className="mt-5 rounded-[10px] bg-pine-light px-4 py-3">
-              <h3 className="text-[13px] font-medium text-pine-dark">Note from the referrer</h3>
-              <p className="mt-1 whitespace-pre-line text-[14px] leading-relaxed text-pine-dark">{share.note}</p>
-            </div>
-          )}
-        </section>
+        {share.note && (
+          <div className="mt-5 rounded-[10px] bg-pine-light px-4 py-3">
+            <h3 className="text-[13px] font-medium text-pine-dark">Note from the referrer</h3>
+            <p className="mt-1 whitespace-pre-line text-[14px] leading-relaxed text-pine-dark">{share.note}</p>
+          </div>
+        )}
+      </section>
 
-        <aside className="card p-6">
+      <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <ClientSuitabilityReview shareId={share.id} initialStatus={share.reviewStatus} initialNote={share.reviewNote} />
+        <aside className="card p-5 sm:p-6">
           <h2 className="text-[16px]">Get in touch</h2>
           <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">
             This is a heads-up, not an application — there's no referral form filled in yet. If you

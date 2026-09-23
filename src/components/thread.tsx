@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useActionState } from "react";
-import { sendMessageAction, togglePinnedMessageAction } from "@/server/actions/engagement";
+import { deleteMessageAction, sendMessageAction, togglePinnedMessageAction } from "@/server/actions/engagement";
 import { parseClientCard, type ClientCard } from "@/lib/client-card";
 import { ClientAvatar } from "./client-avatar";
 import { SubmitButton } from "./ui";
@@ -20,6 +20,7 @@ type ThreadMessage = {
   attachmentName?: string | null;
   attachmentType?: string | null;
   isPinned?: boolean;
+  isDeleted?: boolean;
 };
 
 export type AttachableClient = { id: string; name: string; photo: string | null; detail: string };
@@ -57,6 +58,7 @@ export function Thread({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const [online, setOnline] = useState(true);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [attached, setAttached] = useState<AttachableClient | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerQuery, setPickerQuery] = useState("");
@@ -72,8 +74,8 @@ export function Thread({
       const data = (await response.json()) as { messages: (Omit<ThreadMessage, "clientCard"> & { clientCard?: unknown })[] };
       setOnline(true);
       setMessages((current) => {
-        const currentVersion = current.map((message) => `${message.id}:${message.readAt ?? ""}:${message.isPinned ?? false}:${message.attachmentUrl ?? ""}`).join("|");
-        const nextVersion = data.messages.map((message) => `${message.id}:${message.readAt ?? ""}:${message.isPinned ?? false}:${message.attachmentUrl ?? ""}`).join("|");
+        const currentVersion = current.map((message) => `${message.id}:${message.readAt ?? ""}:${message.isPinned ?? false}:${message.isDeleted ?? false}:${message.body}:${message.attachmentUrl ?? ""}`).join("|");
+        const nextVersion = data.messages.map((message) => `${message.id}:${message.readAt ?? ""}:${message.isPinned ?? false}:${message.isDeleted ?? false}:${message.body}:${message.attachmentUrl ?? ""}`).join("|");
         return currentVersion === nextVersion
           ? current
           : data.messages.map((message) => ({ ...message, clientCard: parseClientCard(message.clientCard) }));
@@ -129,12 +131,25 @@ export function Thread({
   }, [attachableClients, pickerQuery]);
 
   const canAttach = Boolean(attachableClients && attachableClients.length > 0);
-  const pinnedMessages = messages.filter((message) => message.isPinned);
+  const pinnedMessages = messages.filter((message) => message.isPinned && !message.isDeleted);
 
   async function togglePin(messageId: string) {
     const result = await togglePinnedMessageAction(messageId);
     if (!result.ok) return;
     setMessages((current) => current.map((message) => message.id === messageId ? { ...message, isPinned: result.isPinned } : message));
+  }
+
+  async function deleteMessage(messageId: string) {
+    if (!window.confirm("Delete this message for everyone in the conversation? This cannot be undone.")) return;
+    setDeleteError(null);
+    const result = await deleteMessageAction(messageId);
+    if (!result.ok) {
+      setDeleteError(result.message);
+      return;
+    }
+    setMessages((current) => current.map((message) => message.id === messageId
+      ? { ...message, body: "", clientId: null, clientCard: null, attachmentUrl: null, attachmentName: null, attachmentType: null, isPinned: false, isDeleted: true }
+      : message));
   }
 
   function insertIntoMessage(value: string) {
@@ -209,21 +224,22 @@ export function Thread({
             <li key={message.id} className={mine ? "flex justify-end" : "flex justify-start"}>
               <div id={`message-${message.id}`}
                 className={`max-w-[85%] rounded-card px-4 py-2.5 sm:max-w-[80%] ${
-                  mine ? "bg-ink text-white" : "border border-line bg-white text-ink"
+                  message.isDeleted ? "border border-dashed border-line bg-paper-sunk/60 text-ink-faint" : mine ? "bg-ink text-white" : "border border-line bg-white text-ink"
                 }`}
               >
-                {message.clientCard && (
+                {message.isDeleted ? <p className="py-1 text-[14px] italic">This message was deleted.</p> : message.clientCard && (
                   <ClientCardView card={message.clientCard} clientId={message.clientId ?? null} href={cardHref} />
                 )}
-                {message.body && <MessageBody body={message.body} />}
-                {message.attachmentUrl && message.attachmentType?.startsWith("image/") && <a href={message.attachmentUrl} target="_blank" rel="noreferrer"><img src={message.attachmentUrl} alt={message.attachmentName || "Image attachment"} className="mt-2 max-h-80 max-w-full rounded-[10px] object-contain" loading="lazy" /></a>}
-                {message.attachmentUrl && message.attachmentType?.startsWith("audio/") && <audio className="mt-2 max-w-full" controls preload="none" src={message.attachmentUrl}>Your browser cannot play this voice note.</audio>}
+                {!message.isDeleted && message.body && <MessageBody body={message.body} />}
+                {!message.isDeleted && message.attachmentUrl && message.attachmentType?.startsWith("image/") && <a href={message.attachmentUrl} target="_blank" rel="noreferrer"><img src={message.attachmentUrl} alt={message.attachmentName || "Image attachment"} className="mt-2 max-h-80 max-w-full rounded-[10px] object-contain" loading="lazy" /></a>}
+                {!message.isDeleted && message.attachmentUrl && message.attachmentType?.startsWith("audio/") && <audio className="mt-2 max-w-full" controls preload="none" src={message.attachmentUrl}>Your browser cannot play this voice note.</audio>}
                 <div className="mt-1 flex items-center gap-2">
                 <p className={`mt-1 text-[12px] ${mine ? "text-white/60" : "text-ink-faint"}`}>
                   {new Date(message.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                   {mine && message.readAt ? " · Read" : ""}
                 </p>
-                <button type="button" onClick={() => void togglePin(message.id)} className={`text-[11px] underline ${mine ? "text-white/70" : "text-ink-faint"}`}>{message.isPinned ? "Unpin" : "Pin"}</button>
+                {!message.isDeleted && <button type="button" onClick={() => void togglePin(message.id)} className={`text-[11px] underline ${mine ? "text-white/70" : "text-ink-faint"}`}>{message.isPinned ? "Unpin" : "Pin"}</button>}
+                {mine && !message.isDeleted && <button type="button" onClick={() => void deleteMessage(message.id)} className="text-[11px] text-clay underline underline-offset-2">Delete</button>}
                 </div>
               </div>
             </li>
@@ -232,6 +248,7 @@ export function Thread({
         <li aria-hidden="true" className="list-none"><div ref={endRef} /></li>
       </ol>
 
+      {deleteError && <p role="alert" className="mb-2 text-[13px] text-clay">{deleteError}</p>}
       <form
         ref={formRef}
         action={action}

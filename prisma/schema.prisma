@@ -849,6 +849,9 @@ model ClientShare {
   sharedById String
   sharedBy   User      @relation("ClientSharesSent", fields: [sharedById], references: [id], onDelete: Cascade)
   note       String?
+  reviewStatus String?
+  reviewNote String?
+  reviewedAt DateTime?
   revokedAt  DateTime?
   createdAt  DateTime  @default(now())
 
@@ -995,6 +998,7 @@ model Message {
   client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   clientCard     Json?
   isPinned       Boolean      @default(false)
+  isDeleted      Boolean      @default(false)
   pinnedAt       DateTime?
   pinnedById     String?
   readAt         DateTime?

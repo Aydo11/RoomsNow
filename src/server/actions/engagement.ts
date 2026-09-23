@@ -16,7 +16,7 @@ import { notify, notifyCompany } from "@/lib/notify";
 import { fieldErrors, messageSchema, reportSchema, requestSchema, type FormState } from "@/lib/validation";
 import { storage, validateUpload, verifyFileContents } from "@/lib/storage";
 import { date, text } from "../form";
-import type { RequestStatus } from "@prisma/client";
+import { Prisma, type RequestStatus } from "@prisma/client";
 import { clientAttachment, conversationCompanyId } from "@/lib/client-sharing";
 
 // ------------------------------------------------------------------ saving
@@ -348,6 +348,49 @@ export async function togglePinnedMessageAction(messageId: string) {
   });
   revalidatePath(`/messages/${message.conversationId}`);
   return { ok: true, isPinned: !message.isPinned };
+}
+
+/** A sender can permanently remove the content of their own message for every participant. */
+export async function deleteMessageAction(messageIdInput: unknown) {
+  const user = await requireUser();
+  if (typeof messageIdInput !== "string" || !messageIdInput || messageIdInput.length > 64) {
+    return { ok: false as const, message: "This message could not be found." };
+  }
+  const messageId = messageIdInput;
+  const message = await db.message.findUnique({
+    where: { id: messageId },
+    select: { id: true, senderId: true, conversationId: true, attachmentUrl: true, isDeleted: true },
+  });
+  if (!message || message.senderId !== user.id) return { ok: false as const, message: "You can only delete a message you sent." };
+  await assertConversationAccess(user.id, message.conversationId);
+  if (message.isDeleted) return { ok: true as const };
+
+  await db.message.update({
+    where: { id: message.id },
+    data: {
+      isDeleted: true,
+      body: "",
+      attachmentUrl: null,
+      attachmentName: null,
+      attachmentType: null,
+      clientId: null,
+      clientCard: Prisma.DbNull,
+      isPinned: false,
+      pinnedAt: null,
+      pinnedById: null,
+    },
+  });
+  if (message.attachmentUrl?.startsWith("private:")) {
+    try {
+      await storage.remove(message.attachmentUrl, "private");
+    } catch (error) {
+      console.error("Unable to remove deleted message attachment:", error);
+    }
+  }
+  await audit({ actorId: user.id, action: "message.deleted", targetType: "Message", targetId: message.id });
+  revalidatePath(`/messages/${message.conversationId}`);
+  revalidatePath("/messages");
+  return { ok: true as const };
 }
 
 export async function markConversationReadAction(conversationId: string) {

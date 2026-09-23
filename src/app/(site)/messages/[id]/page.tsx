@@ -151,6 +151,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           attachmentName: m.attachmentName,
           attachmentType: m.attachmentType,
           isPinned: m.isPinned,
+          isDeleted: m.isDeleted,
         }))}
       />
     </div>

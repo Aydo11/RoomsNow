@@ -69,7 +69,12 @@ export async function shareClientWithCompany(params: {
   await db.clientShare.upsert({
     where: { clientId_companyId: { clientId, companyId } },
     create: { clientId, companyId, sharedById: user.id, note: params.note || null },
-    update: { revokedAt: null, sharedById: user.id, ...(params.note !== undefined ? { note: params.note || null } : {}) },
+    update: {
+      revokedAt: null,
+      sharedById: user.id,
+      ...(existing?.revokedAt ? { reviewStatus: null, reviewNote: null, reviewedAt: null } : {}),
+      ...(params.note !== undefined ? { note: params.note || null } : {}),
+    },
   });
 
   if (!alreadyShared) {

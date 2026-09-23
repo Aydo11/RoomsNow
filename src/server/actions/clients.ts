@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireReferrer } from "@/lib/rbac";
+import { requireCompany, requireReferrer } from "@/lib/rbac";
 import { audit } from "@/lib/audit";
 import { referrerPlanLimits } from "@/lib/billing";
 import { storage, validateUpload, verifyFileContents } from "@/lib/storage";
@@ -553,6 +553,34 @@ export async function deleteClientShareAction(shareId: string) {
   await db.clientShare.delete({ where: { id: shareId } });
   await audit({ actorId: user.id, action: "client.share_deleted", targetType: "ClientShare", targetId: shareId });
   revalidatePath(`/referrals/clients/${share.client.id}`);
+}
+
+export async function saveClientShareReviewAction(shareId: string, reviewStatusInput: unknown, reviewNoteInput: unknown) {
+  const { user, companyId } = await requireCompany();
+  const allowedStatuses = new Set(["POTENTIAL_FIT", "NEEDS_INFORMATION", "CANNOT_MEET_NEEDS"]);
+  const reviewStatus = typeof reviewStatusInput === "string" ? reviewStatusInput : "";
+  const note = typeof reviewNoteInput === "string" ? reviewNoteInput.trim() : "";
+  if (typeof shareId !== "string" || !shareId || shareId.length > 64) return { ok: false as const, message: "This profile could not be found." };
+  if (!allowedStatuses.has(reviewStatus)) return { ok: false as const, message: "Choose a review outcome." };
+  if (note.length > 1200) return { ok: false as const, message: "Keep the review note under 1,200 characters." };
+  if (reviewStatus !== "POTENTIAL_FIT" && note.length < 12) {
+    return { ok: false as const, message: "Add a brief, factual reason linked to the stated accommodation or support requirements." };
+  }
+
+  const share = await db.clientShare.findFirst({
+    where: { id: shareId, companyId, revokedAt: null, client: { deletedAt: null } },
+    select: { id: true, clientId: true },
+  });
+  if (!share) return { ok: false as const, message: "This profile is no longer shared with your organisation." };
+
+  await db.clientShare.update({
+    where: { id: share.id },
+    data: { reviewStatus, reviewNote: note || null, reviewedAt: new Date() },
+  });
+  await audit({ actorId: user.id, action: "client.share_reviewed", targetType: "ClientShare", targetId: share.id, metadata: { reviewStatus } });
+  revalidatePath(`/provider/clients/${share.clientId}`);
+  revalidatePath("/provider/clients");
+  return { ok: true as const, message: "Your organisation’s suitability review has been saved." };
 }
 
 /** Lightweight provider search for the "share with a provider" picker. */
