@@ -29,10 +29,8 @@ const staticPages: Array<[string, MetadataRoute.Sitemap[number]["changeFrequency
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticContentUpdatedAt = new Date("2026-09-18T00:00:00.000Z");
   const base = staticPages.map(([path, changeFrequency, priority]) => ({
     url: absoluteUrl(path),
-    lastModified: staticContentUpdatedAt,
     changeFrequency,
     priority,
   }));
@@ -46,15 +44,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const [listings, companies, cities] = await Promise.all([
       db.listing.findMany({
-        where: { status: "ACTIVE" },
+        where: { status: "ACTIVE", rooms: { some: { status: "AVAILABLE" } } },
         select: { id: true, updatedAt: true },
       }),
       db.company.findMany({
-        where: { status: "ACTIVE", listings: { some: { status: "ACTIVE" } } },
+        where: { status: "ACTIVE", listings: { some: { status: "ACTIVE", rooms: { some: { status: "AVAILABLE" } } } } },
         select: { slug: true, updatedAt: true },
       }),
       db.property.findMany({
-        where: { listings: { some: { status: "ACTIVE" } } },
+        where: { listings: { some: { status: "ACTIVE", rooms: { some: { status: "AVAILABLE" } } } } },
         select: { city: true, updatedAt: true },
         distinct: ["city"],
       }),

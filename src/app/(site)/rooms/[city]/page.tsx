@@ -12,7 +12,7 @@ type Props = { params: Promise<{ city: string }> };
 
 async function findCity(slug: string) {
   const cities = await db.property.findMany({
-    where: { listings: { some: { status: "ACTIVE" } } },
+    where: { listings: { some: { status: "ACTIVE", rooms: { some: { status: "AVAILABLE" } } } } },
     select: { city: true },
     distinct: ["city"],
   });
@@ -36,7 +36,11 @@ export default async function CityRoomsPage({ params }: Props) {
   if (!city) notFound();
 
   const listings = await db.listing.findMany({
-    where: { status: "ACTIVE", property: { city: { equals: city, mode: "insensitive" } } },
+    where: {
+      status: "ACTIVE",
+      rooms: { some: { status: "AVAILABLE" } },
+      property: { city: { equals: city, mode: "insensitive" } },
+    },
     orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
     include: {
       company: { select: { id: true, name: true, slug: true, logoUrl: true, verification: true } },

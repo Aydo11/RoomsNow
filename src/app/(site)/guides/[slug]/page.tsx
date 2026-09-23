@@ -26,6 +26,13 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   if (!guide) notFound();
 
   const path = `/guides/${guide.slug}`;
+  const updatedAt = new Date(`${guide.updatedAt}T00:00:00.000Z`);
+  const updatedAtLabel = new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(updatedAt);
   const schemas = [
     {
       "@context": "https://schema.org",
@@ -76,7 +83,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
               <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-ink-faint">
                 <span>{guide.audience}</span>
                 <span>{guide.readTime}</span>
-                <span>Updated 8 September 2026</span>
+                <span>Updated {updatedAtLabel}</span>
               </div>
             </div>
           </div>
