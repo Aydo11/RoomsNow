@@ -5,6 +5,7 @@ import { notifyCompany } from "@/lib/notify";
 import { referrerPlanLimits } from "@/lib/billing";
 import { clientCardFrom } from "@/lib/client-card";
 import type { CurrentUser } from "@/lib/session";
+import { inTeam } from "@/lib/referral-team";
 
 type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -23,9 +24,10 @@ const CLIENT_SHAREABLE = {
 } as const;
 
 /** Loads a client the referrer owns and hasn't deleted — the only kind they can share. */
-export async function ownedLiveClient(referrerId: string, clientId: string) {
+/** A live client in this referrer's team caseload (their own or a colleague's). */
+export async function ownedLiveClient(userId: string, clientId: string) {
   const client = await db.client.findUnique({ where: { id: clientId }, select: CLIENT_SHAREABLE });
-  if (!client || client.referrerId !== referrerId || client.deletedAt) return null;
+  if (!client || client.deletedAt || !(await inTeam(userId, client.referrerId))) return null;
   return client;
 }
 
