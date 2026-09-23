@@ -11,6 +11,7 @@ import { storage, validateUpload, verifyFileContents } from "@/lib/storage";
 import { fieldErrors, referralSchema, type FormState } from "@/lib/validation";
 import { date, list, reference, text } from "../form";
 import type { ReferralStatus } from "@prisma/client";
+import { inTeam, teamMemberIds } from "@/lib/referral-team";
 
 export async function createReferralAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireReferrer();
@@ -48,7 +49,7 @@ export async function createReferralAction(_prev: FormState, formData: FormData)
   // referrer — never trust a clientId blindly from the form.
   let clientId: string | null = null;
   if (d.clientId) {
-    const client = await db.client.findFirst({ where: { id: d.clientId, referrerId: user.id, deletedAt: null }, select: { id: true } });
+    const client = await db.client.findFirst({ where: { id: d.clientId, referrerId: { in: await teamMemberIds(user.id) }, deletedAt: null }, select: { id: true } });
     if (!client) return { ok: false, errors: { form: "That client record could not be found." } };
     clientId = client.id;
   }
@@ -151,7 +152,7 @@ export async function updateReferralStatusAction(referralId: string, status: Ref
   const referral = await assertReferralAccess(user, referralId);
 
   const isProvider = referral.listing ? canActForCompany(user, referral.listing.companyId) : false;
-  const isReferrer = referral.referrerId === user.id;
+  const isReferrer = await inTeam(user.id, referral.referrerId);
   if (!isProvider && user.role !== "ADMIN" && !(isReferrer && status === "WITHDRAWN")) return;
 
   await db.$transaction([
@@ -196,7 +197,7 @@ export async function addReferralDocumentAction(_prev: FormState, formData: Form
   if (!referralId) return { ok: false, errors: { form: "Referral not found." } };
 
   const referral = await db.referral.findUnique({ where: { id: referralId }, select: { id: true, referrerId: true, reference: true } });
-  if (!referral || referral.referrerId !== user.id) return { ok: false, errors: { form: "Referral not found." } };
+  if (!referral || !(await inTeam(user.id, referral.referrerId))) return { ok: false, errors: { form: "Referral not found." } };
 
   const files = formData.getAll("documents").filter((f): f is File => f instanceof File && f.size > 0);
   if (files.length === 0) return { ok: false, errors: { documents: "Choose at least one file." } };
@@ -263,7 +264,7 @@ export async function submitProviderReviewAction(_prev: FormState, formData: For
       listing: { select: { companyId: true, company: { select: { slug: true } } } },
     },
   });
-  if (!referral || referral.referrerId !== user.id) return { ok: false, errors: { form: "Referral not found." } };
+  if (!referral || !(await inTeam(user.id, referral.referrerId))) return { ok: false, errors: { form: "Referral not found." } };
   if (!referral.listing) return { ok: false, errors: { form: "This referral isn't linked to a provider advert." } };
   if (referral.status !== "MOVED_IN") {
     return { ok: false, errors: { form: "You can review a placement once it has moved in." } };
