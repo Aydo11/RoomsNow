@@ -14,6 +14,8 @@ export async function SiteHeader() {
 
   const home =
     user?.role === "ADMIN" ? "/admin" : user?.role === "PROVIDER" ? "/provider" : user?.role === "REFERRER" ? "/referrals" : "/dashboard";
+  // The vetted (CQC/BVSC-checked) provider list is only for referral professionals.
+  const showVetted = user?.role === "REFERRER" || user?.role === "ADMIN";
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/90 bg-paper/90 backdrop-blur-lg">
@@ -24,6 +26,14 @@ export async function SiteHeader() {
 
         <nav aria-label="Main navigation" className="hidden items-center gap-5 whitespace-nowrap text-[14px] text-ink-soft xl:flex">
           <Link href="/search" className="font-medium text-pine-dark transition-colors hover:text-ink">Search accommodation</Link>
+          {showVetted && (
+            <Link href="/referrals/vetted" className="inline-flex items-center gap-1 font-medium text-pine-dark transition-colors hover:text-ink">
+              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true" fill="currentColor">
+                <path d="M8 0 9.9 1.4l2.3-.2.7 2.2 1.9 1.3-.9 2.2.9 2.2-1.9 1.3-.7 2.2-2.3-.2L8 14l-1.9-1.4-2.3.2-.7-2.2L1.2 9.3l.9-2.2-.9-2.2 1.9-1.3.7-2.2 2.3.2L8 0Zm3.2 5.3-.9-.9-3.4 3.4-1.5-1.5-.9.9 2.4 2.4 4.3-4.3Z" />
+              </svg>
+              Vetted providers
+            </Link>
+          )}
           <Link href="/people" className="transition-colors hover:text-ink">People looking</Link>
           <Link href="/how-it-works" className="transition-colors hover:text-ink">How it works</Link>
           <Link href="/advertise-accommodation" className="transition-colors hover:text-ink">Advertise</Link>
@@ -55,6 +65,7 @@ export async function SiteHeader() {
 
           <MobileMenu>
               <MobileLink href="/search">Search accommodation</MobileLink>
+              {showVetted && <MobileLink href="/referrals/vetted">Vetted providers</MobileLink>}
               <MobileLink href="/how-it-works">How it works</MobileLink>
               <MobileLink href="/people">People looking</MobileLink>
               <MobileLink href="/advertise-accommodation">Advertise</MobileLink>
