@@ -6,6 +6,7 @@ import { Thread } from "@/components/thread";
 import { ConversationMenu } from "@/components/conversation-menu";
 import { ConversationActions } from "@/components/conversation-actions";
 import { clientPhotoSrc, parseClientCard } from "@/lib/client-card";
+import { teamMemberIds } from "@/lib/referral-team";
 
 export const metadata = { title: "Conversation" };
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser(`/messages/${id}`);
+  const teamIds = await teamMemberIds(user.id);
 
   const participant = await db.conversationParticipant.findUnique({
     where: { conversationId_userId: { conversationId: id, userId: user.id } },
@@ -71,7 +73,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     user.role === "REFERRER"
       ? (
           await db.client.findMany({
-            where: { referrerId: user.id, deletedAt: null, status: { not: "ARCHIVED" } },
+            where: { referrerId: { in: teamIds }, deletedAt: null, status: { not: "ARCHIVED" } },
             orderBy: { updatedAt: "desc" },
             take: 200,
             select: { id: true, firstName: true, lastName: true, preferredLocation: true, photoUrl: true, updatedAt: true, status: true },
