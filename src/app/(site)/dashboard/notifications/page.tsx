@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { EmptyState } from "@/components/ui";
 import { markNotificationsReadAction } from "@/server/actions/engagement";
 import { userNav } from "../nav";
+import { referrerNav } from "../../referrals/nav";
 import { timeAgo } from "@/lib/format";
 
 export const metadata = { title: "Notifications" };
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {
   const user = await requireUser("/dashboard/notifications");
-  const nav = await userNav(user.id);
+  const nav = user.role === "REFERRER" ? await referrerNav(user.id) : await userNav(user.id);
   const notifications = await db.notification.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
