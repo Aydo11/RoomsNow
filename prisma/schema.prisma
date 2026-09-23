@@ -986,6 +986,7 @@ model Message {
   body           String
   attachmentUrl  String?
   attachmentName String?
+  attachmentType String?
   /// A client profile a referrer dropped into the conversation. clientCard is
   /// a snapshot of the shareable fields (never riskNotes) taken at send time,
   /// so the card still reads correctly if the record is later edited or
@@ -993,6 +994,9 @@ model Message {
   clientId       String?
   client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   clientCard     Json?
+  isPinned       Boolean      @default(false)
+  pinnedAt       DateTime?
+  pinnedById     String?
   readAt         DateTime?
   createdAt      DateTime     @default(now())
 

@@ -14,6 +14,7 @@ import {
 import { audit } from "@/lib/audit";
 import { notify, notifyCompany } from "@/lib/notify";
 import { fieldErrors, messageSchema, reportSchema, requestSchema, type FormState } from "@/lib/validation";
+import { storage, validateUpload, verifyFileContents } from "@/lib/storage";
 import { date, text } from "../form";
 import type { RequestStatus } from "@prisma/client";
 import { clientAttachment, conversationCompanyId } from "@/lib/client-sharing";
@@ -247,6 +248,22 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
   const clientId = text(formData, "clientId") || null;
   let body = text(formData, "body");
   const conversationIdInput = text(formData, "conversationId");
+  const media = formData.get("media");
+  let mediaFile: File | null = null;
+  if (media instanceof File && media.size > 0) {
+    const isImage = media.type.startsWith("image/");
+    const isVoice = ["audio/webm", "audio/mp4", "audio/mpeg", "audio/wav", "audio/x-wav"].includes(media.type);
+    if (!isImage && !isVoice) return { ok: false, errors: { form: "Attach a JPG, PNG, WebP photo or a supported voice note." } };
+    if (isImage) {
+      const problem = validateUpload(media, "image");
+      if (problem) return { ok: false, errors: { form: problem } };
+    } else if (media.size > 8 * 1024 * 1024) {
+      return { ok: false, errors: { form: "Voice notes must be under 8 MB." } };
+    }
+    const mismatch = await verifyFileContents(media, Buffer.from(await media.arrayBuffer()));
+    if (mismatch) return { ok: false, errors: { form: mismatch } };
+    mediaFile = media;
+  }
 
   // A referrer can drop one of their clients' profiles into the thread. With a
   // provider on the other side, that also shares the profile with them.
@@ -261,6 +278,7 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
     if (!body.trim()) body = `Sharing ${attachment.name}'s profile with you.`;
   }
 
+  if (!body.trim() && mediaFile) body = mediaFile.type.startsWith("audio/") ? "Voice note" : "Photo";
   const parsed = messageSchema.safeParse({ conversationId: conversationIdInput, body });
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
 
@@ -282,12 +300,19 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
   });
   if (blocked) return { ok: false, errors: { form: "You can't message this account." } };
 
+  let storedMedia: { url: string; name: string; type: string } | null = null;
+  if (mediaFile) {
+    const saved = await storage.put(mediaFile, `messages/${parsed.data.conversationId}`, "private");
+    storedMedia = { url: saved.url, name: mediaFile.name.slice(0, 160), type: mediaFile.type };
+  }
+
   await db.message.create({
     data: {
       conversationId: parsed.data.conversationId,
       senderId: user.id,
-      body: parsed.data.body,
+      body: body.trim(),
       ...(attachment ? { clientId: attachment.clientId, clientCard: attachment.clientCard } : {}),
+      ...(storedMedia ? { attachmentUrl: storedMedia.url, attachmentName: storedMedia.name, attachmentType: storedMedia.type } : {}),
     },
   });
   await db.conversation.update({
@@ -310,6 +335,19 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
   revalidatePath(`/messages/${parsed.data.conversationId}`);
   if (attachment) revalidatePath(`/referrals/clients/${attachment.clientId}`);
   return { ok: true };
+}
+
+export async function togglePinnedMessageAction(messageId: string) {
+  const user = await requireUser();
+  const message = await db.message.findUnique({ where: { id: messageId }, select: { id: true, conversationId: true, isPinned: true } });
+  if (!message) return { ok: false, message: "Message not found." };
+  await assertConversationAccess(user.id, message.conversationId);
+  await db.message.update({
+    where: { id: message.id },
+    data: message.isPinned ? { isPinned: false, pinnedAt: null, pinnedById: null } : { isPinned: true, pinnedAt: new Date(), pinnedById: user.id },
+  });
+  revalidatePath(`/messages/${message.conversationId}`);
+  return { ok: true, isPinned: !message.isPinned };
 }
 
 export async function markConversationReadAction(conversationId: string) {

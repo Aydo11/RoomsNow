@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useActionState } from "react";
-import { sendMessageAction } from "@/server/actions/engagement";
+import { sendMessageAction, togglePinnedMessageAction } from "@/server/actions/engagement";
 import { parseClientCard, type ClientCard } from "@/lib/client-card";
 import { ClientAvatar } from "./client-avatar";
 import { SubmitButton } from "./ui";
@@ -16,6 +16,10 @@ type ThreadMessage = {
   readAt: string | null;
   clientId?: string | null;
   clientCard?: ClientCard | null;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
+  attachmentType?: string | null;
+  isPinned?: boolean;
 };
 
 export type AttachableClient = { id: string; name: string; photo: string | null; detail: string };
@@ -31,6 +35,7 @@ export function Thread({
   attachableClients,
   viewerIsProvider = false,
   withProvider = false,
+  shareProfileUrl,
 }: {
   conversationId: string;
   currentUserId: string;
@@ -40,15 +45,24 @@ export function Thread({
   viewerIsProvider?: boolean;
   /** The other side is a provider, so attaching a profile also shares it with them. */
   withProvider?: boolean;
+  /** A shareable RoomsNow listing, client, agency or company profile URL. */
+  shareProfileUrl?: string | null;
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [state, action] = useActionState(sendMessageAction, { ok: false });
   const endRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
   const [online, setOnline] = useState(true);
   const [attached, setAttached] = useState<AttachableClient | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerQuery, setPickerQuery] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const [selectedMediaLabel, setSelectedMediaLabel] = useState<string | null>(null);
 
   const refreshMessages = useCallback(async () => {
     try {
@@ -57,8 +71,8 @@ export function Thread({
       const data = (await response.json()) as { messages: (Omit<ThreadMessage, "clientCard"> & { clientCard?: unknown })[] };
       setOnline(true);
       setMessages((current) => {
-        const currentVersion = current.map((message) => `${message.id}:${message.readAt ?? ""}`).join("|");
-        const nextVersion = data.messages.map((message) => `${message.id}:${message.readAt ?? ""}`).join("|");
+        const currentVersion = current.map((message) => `${message.id}:${message.readAt ?? ""}:${message.isPinned ?? false}:${message.attachmentUrl ?? ""}`).join("|");
+        const nextVersion = data.messages.map((message) => `${message.id}:${message.readAt ?? ""}:${message.isPinned ?? false}:${message.attachmentUrl ?? ""}`).join("|");
         return currentVersion === nextVersion
           ? current
           : data.messages.map((message) => ({ ...message, clientCard: parseClientCard(message.clientCard) }));
@@ -76,6 +90,7 @@ export function Thread({
     if (state.ok) {
       formRef.current?.reset();
       setAttached(null);
+      setSelectedMediaLabel(null);
       void refreshMessages();
     }
   }, [state, refreshMessages]);
@@ -92,6 +107,10 @@ export function Thread({
     };
   }, [refreshMessages]);
 
+  useEffect(() => () => {
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+  }, []);
+
   const filteredClients = useMemo(() => {
     const q = pickerQuery.trim().toLowerCase();
     const list = attachableClients ?? [];
@@ -99,9 +118,71 @@ export function Thread({
   }, [attachableClients, pickerQuery]);
 
   const canAttach = Boolean(attachableClients && attachableClients.length > 0);
+  const pinnedMessages = messages.filter((message) => message.isPinned);
+
+  async function togglePin(messageId: string) {
+    const result = await togglePinnedMessageAction(messageId);
+    if (!result.ok) return;
+    setMessages((current) => current.map((message) => message.id === messageId ? { ...message, isPinned: result.isPinned } : message));
+  }
+
+  function insertIntoMessage(value: string) {
+    const input = textareaRef.current;
+    if (!input) return;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const next = `${input.value.slice(0, start)}${value}${input.value.slice(end)}`;
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+    setter?.call(input, next);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.focus();
+    input.setSelectionRange(start + value.length, start + value.length);
+  }
+
+  async function toggleRecording() {
+    setMediaError(null);
+    if (recorderRef.current?.state === "recording") {
+      recorderRef.current.stop();
+      setRecording(false);
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setMediaError("Voice recording isn't supported in this browser. You can attach an audio file instead.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((type) => MediaRecorder.isTypeSupported(type));
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      chunksRef.current = [];
+      recorder.ondataavailable = (event) => { if (event.data.size) chunksRef.current.push(event.data); };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        const extension = blob.type.includes("mp4") ? "m4a" : "webm";
+        const file = new File([blob], `voice-note.${extension}`, { type: blob.type });
+        const input = mediaInputRef.current;
+        if (input) {
+          const transfer = new DataTransfer();
+          transfer.items.add(file);
+          input.files = transfer.files;
+          setSelectedMediaLabel(file.name);
+        }
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+    } catch {
+      setMediaError("Microphone access was unavailable. Check your browser permissions and try again.");
+    }
+  }
 
   return (
     <>
+      {pinnedMessages.length > 0 && <section aria-label="Pinned messages" className="mt-4 rounded-card border border-brand/20 bg-brand/5 p-3">
+        <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-brand">Pinned in this conversation</p>
+        <div className="space-y-1">{pinnedMessages.map((message) => <button key={message.id} type="button" onClick={() => document.getElementById(`message-${message.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })} className="block max-w-full truncate text-left text-[13px] text-ink hover:underline">{message.body || (message.attachmentType?.startsWith("audio/") ? "Voice note" : "Photo")}</button>)}</div>
+      </section>}
       <ol className="mt-6 space-y-3 pb-4" aria-live="polite" aria-relevant="additions">
         {messages.map((message) => {
           const mine = message.senderId === currentUserId;
@@ -114,7 +195,7 @@ export function Thread({
             : null;
           return (
             <li key={message.id} className={mine ? "flex justify-end" : "flex justify-start"}>
-              <div
+              <div id={`message-${message.id}`}
                 className={`max-w-[85%] rounded-card px-4 py-2.5 sm:max-w-[80%] ${
                   mine ? "bg-ink text-white" : "border border-line bg-white text-ink"
                 }`}
@@ -122,11 +203,16 @@ export function Thread({
                 {message.clientCard && (
                   <ClientCardView card={message.clientCard} clientId={message.clientId ?? null} href={cardHref} />
                 )}
-                <p className="whitespace-pre-line text-[15px] leading-relaxed">{message.body}</p>
+                {message.body && <MessageBody body={message.body} />}
+                {message.attachmentUrl && message.attachmentType?.startsWith("image/") && <a href={message.attachmentUrl} target="_blank" rel="noreferrer"><img src={message.attachmentUrl} alt={message.attachmentName || "Image attachment"} className="mt-2 max-h-80 max-w-full rounded-[10px] object-contain" loading="lazy" /></a>}
+                {message.attachmentUrl && message.attachmentType?.startsWith("audio/") && <audio className="mt-2 max-w-full" controls preload="none" src={message.attachmentUrl}>Your browser cannot play this voice note.</audio>}
+                <div className="mt-1 flex items-center gap-2">
                 <p className={`mt-1 text-[12px] ${mine ? "text-white/60" : "text-ink-faint"}`}>
                   {new Date(message.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                   {mine && message.readAt ? " · Read" : ""}
                 </p>
+                <button type="button" onClick={() => void togglePin(message.id)} className={`text-[11px] underline ${mine ? "text-white/70" : "text-ink-faint"}`}>{message.isPinned ? "Unpin" : "Pin"}</button>
+                </div>
               </div>
             </li>
           );
@@ -141,6 +227,7 @@ export function Thread({
       >
         <input type="hidden" name="conversationId" value={conversationId} />
         <input type="hidden" name="clientId" value={attached?.id ?? ""} />
+        <input ref={mediaInputRef} type="file" name="media" accept="image/jpeg,image/png,image/webp,image/avif,audio/webm,audio/mp4,audio/mpeg,audio/wav" className="sr-only" onChange={(event) => { setMediaError(null); setSelectedMediaLabel(event.currentTarget.files?.[0]?.name ?? null); }} />
 
         {attached && (
           <div className="mb-2 flex items-center gap-2.5 rounded-[10px] bg-pine-light px-2.5 py-2">
@@ -164,6 +251,17 @@ export function Thread({
           </div>
         )}
 
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <button type="button" className="btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px]" onClick={() => mediaInputRef.current?.click()}>Photo / audio</button>
+          <button type="button" className={`btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px] ${recording ? "!border-red-300 !text-red-700" : ""}`} onClick={() => void toggleRecording()}>{recording ? "Stop recording" : "Record voice note"}</button>
+          <button type="button" className="btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px]" onClick={() => insertIntoMessage("🙂")}>🙂</button>
+          <button type="button" className="btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px]" onClick={() => insertIntoMessage("👍")}>👍</button>
+          <button type="button" className="btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px]" onClick={() => insertIntoMessage("❤️")}>❤️</button>
+          {shareProfileUrl && <button type="button" className="btn-secondary !min-h-9 !px-3 !py-1.5 text-[13px]" onClick={() => insertIntoMessage(`${window.location.origin}${shareProfileUrl}`)}>Share profile / page</button>}
+        </div>
+        <p className="mb-2 text-[11px] leading-relaxed text-ink-faint">Photos and voice notes are private to this conversation. Only share content you have permission to send; avoid IDs and sensitive support or health documents.</p>
+        {(mediaError || state.errors?.form || state.errors?.body) && <p className="mb-2 text-[13px] text-clay">{mediaError || state.errors?.form || state.errors?.body}</p>}
+        {selectedMediaLabel && <p className="mb-2 truncate text-[12px] text-ink-soft">Attached: {selectedMediaLabel}</p>}
         <div className="relative flex gap-2">
           {canAttach && (
             <button
@@ -188,9 +286,10 @@ export function Thread({
           <label className="sr-only" htmlFor="body">Message</label>
           <textarea
             id="body"
+            ref={textareaRef}
             name="body"
             rows={1}
-            required={!attached}
+            required={!attached && !selectedMediaLabel}
             placeholder={attached ? `Add a note about ${attached.name.split(" ")[0]} (optional)` : "Write a message"}
             className="min-h-[46px] flex-1 resize-none rounded-[10px] border-0 px-3 py-3 text-[15px] focus:ring-0"
             onInput={(event) => {
@@ -249,11 +348,13 @@ export function Thread({
         </div>
       </form>
       {!online && <p className="mt-2 text-[13px] text-clay">Connection interrupted. Your messages will refresh when you are back online.</p>}
-      {(state.errors?.form || state.errors?.body) && (
-        <p className="mt-2 text-[13px] text-clay">{state.errors?.form ?? state.errors?.body}</p>
-      )}
     </>
   );
+}
+
+function MessageBody({ body }: { body: string }) {
+  const parts = body.split(/(https?:\/\/[^\s<]+)/gi);
+  return <p className="whitespace-pre-line break-words text-[15px] leading-relaxed">{parts.map((part, index) => /^https?:\/\//i.test(part) ? <a key={index} href={part.replace(/[),.!?]+$/, "")} target="_blank" rel="noopener noreferrer nofollow" className="underline underline-offset-2">{part}</a> : part)}</p>;
 }
 
 /** A client profile dropped into the conversation — who, where, and what they need. */

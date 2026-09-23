@@ -44,6 +44,18 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const viewerCompanyIds = new Set(user.staffOf.map((s) => s.companyId));
   const viewerIsProvider = Boolean(providerCompanyId && viewerCompanyIds.has(providerCompanyId));
   const otherReferrer = others.find((p) => p.user.role === "REFERRER");
+  const providerCompany = providerCompanyId
+    ? await db.company.findUnique({ where: { id: providerCompanyId }, select: { slug: true } })
+    : null;
+  const shareProfileUrl = conversation.listing
+    ? `/listings/${conversation.listing.id}`
+    : conversation.lookingForAd
+      ? `/people/${conversation.lookingForAd.id}`
+      : providerCompany?.slug
+        ? `/companies/${providerCompany.slug}`
+        : otherReferrer
+          ? `/agencies/${otherReferrer.userId}`
+          : null;
 
   const attachableClients =
     user.role === "REFERRER"
@@ -112,6 +124,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         attachableClients={attachableClients}
         viewerIsProvider={viewerIsProvider}
         withProvider={Boolean(providerCompanyId) && !viewerIsProvider}
+        shareProfileUrl={shareProfileUrl}
         initialMessages={conversation.messages.map((m) => ({
           id: m.id,
           senderId: m.senderId,
@@ -120,6 +133,10 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           readAt: m.readAt?.toISOString() ?? null,
           clientId: m.clientId,
           clientCard: parseClientCard(m.clientCard),
+          attachmentUrl: m.attachmentUrl ? `/api/conversations/${conversation.id}/messages/${m.id}/attachment` : null,
+          attachmentName: m.attachmentName,
+          attachmentType: m.attachmentType,
+          isPinned: m.isPinned,
         }))}
       />
     </div>

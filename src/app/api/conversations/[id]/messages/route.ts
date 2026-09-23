@@ -17,7 +17,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     where: { conversationId: id },
     orderBy: { createdAt: "asc" },
     take: 200,
-    select: { id: true, senderId: true, body: true, createdAt: true, readAt: true, clientId: true, clientCard: true },
+    select: { id: true, senderId: true, body: true, createdAt: true, readAt: true, clientId: true, clientCard: true, attachmentUrl: true, attachmentName: true, attachmentType: true, isPinned: true },
   });
 
   await db.message.updateMany({
@@ -25,5 +25,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     data: { readAt: new Date() },
   });
 
-  return NextResponse.json({ messages }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ messages: messages.map((message) => ({
+    ...message,
+    attachmentUrl: message.attachmentUrl ? `/api/conversations/${id}/messages/${message.id}/attachment` : null,
+  })) }, { headers: { "Cache-Control": "no-store" } });
 }
