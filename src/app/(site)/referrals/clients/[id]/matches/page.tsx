@@ -12,6 +12,7 @@ import { demoListingImage } from "@/lib/demo-listings";
 import { ACCOMMODATION_TYPES, supportLabel } from "@/lib/taxonomy";
 import { clsx } from "@/lib/clsx";
 import { referrerNav } from "../../../nav";
+import { teamMemberIds } from "@/lib/referral-team";
 
 export const metadata = { title: "Match to an advert" };
 export const dynamic = "force-dynamic";
@@ -26,8 +27,9 @@ export default async function ClientMatchesPage({
   searchParams: Promise<{ vetted?: string; all?: string; more?: string }>;
 }) {
   const [{ id }, query, user] = await Promise.all([params, searchParams, requireReferrer()]);
+  const teamIds = await teamMemberIds(user.id);
   const client = await db.client.findFirst({
-    where: { id, referrerId: user.id },
+    where: { id, referrerId: { in: teamIds } },
     select: {
       id: true,
       firstName: true,
