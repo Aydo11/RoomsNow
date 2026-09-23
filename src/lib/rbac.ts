@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "./db";
 import { getCurrentUser, type CurrentUser } from "./session";
 import { hasAdminPermission, type AdminPermission } from "./admin-permissions";
+import { inTeam } from "@/lib/referral-team";
 
 export class AuthorisationError extends Error {
   constructor(message = "You do not have access to this.") {
@@ -82,7 +83,7 @@ export async function assertReferralAccess(user: CurrentUser, referralId: string
     include: { listing: { select: { companyId: true } } },
   });
   if (!referral) throw new AuthorisationError("Referral not found.");
-  const isReferrer = referral.referrerId === user.id;
+  const isReferrer = await inTeam(user.id, referral.referrerId);
   const isReceivingCompany = referral.listing ? canActForCompany(user, referral.listing.companyId) : false;
   if (!isReferrer && !isReceivingCompany && !hasAdminPermission(user)) {
     throw new AuthorisationError("Referral not found.");
@@ -133,7 +134,7 @@ export async function assertClientAccess(user: CurrentUser, clientId: string) {
     include: { shares: { where: { revokedAt: null }, select: { companyId: true } } },
   });
   if (!client) throw new AuthorisationError("Client not found.");
-  const isOwner = client.referrerId === user.id;
+  const isOwner = await inTeam(user.id, client.referrerId);
   const isSharedWith = client.shares.some((share) => canActForCompany(user, share.companyId));
   if (!isOwner && !isSharedWith && !hasAdminPermission(user)) {
     throw new AuthorisationError("Client not found.");
