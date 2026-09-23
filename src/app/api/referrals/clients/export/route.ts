@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/session";
 import { audit } from "@/lib/audit";
 import { csvResponse } from "@/lib/csv";
 import { supportLabel } from "@/lib/taxonomy";
+import { teamMemberIds } from "@/lib/referral-team";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,10 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const user = await getCurrentUser();
   if (!user || user.role !== "REFERRER") return new NextResponse("Not found", { status: 404 });
+  const teamIds = await teamMemberIds(user.id);
 
   const clients = await db.client.findMany({
-    where: { referrerId: user.id, deletedAt: null },
+    where: { referrerId: { in: teamIds }, deletedAt: null },
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     include: {
       _count: { select: { referrals: true } },
