@@ -235,8 +235,39 @@ html.machine-translated :where(h1, h2, h3, h4, p, a, button, label, dt, dd, span
 
 @layer base {
   :root {
+    color-scheme: light;
+    --color-ink: 23 31 46;
+    --color-ink-soft: 68 80 100;
+    --color-ink-faint: 117 129 150;
+    --color-paper: 246 248 251;
+    --color-paper-card: 255 255 255;
+    --color-paper-sunk: 237 242 247;
+    --color-pine: 22 102 170;
+    --color-pine-dark: 15 79 135;
+    --color-pine-light: 232 242 252;
+    --color-clay: 164 85 18;
+    --color-clay-light: 255 244 232;
+    --color-line: 217 226 236;
+    --color-line-strong: 186 199 213;
     --font-sans: "Instrument Sans", system-ui, sans-serif;
     --font-display: "Plus Jakarta Sans", "Instrument Sans", system-ui, sans-serif;
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --color-ink: 235 241 248;
+    --color-ink-soft: 185 199 216;
+    --color-ink-faint: 145 161 182;
+    --color-paper: 13 20 31;
+    --color-paper-card: 22 32 47;
+    --color-paper-sunk: 29 42 60;
+    --color-pine: 22 102 170;
+    --color-pine-dark: 15 79 135;
+    --color-pine-light: 28 55 81;
+    --color-clay: 242 171 99;
+    --color-clay-light: 62 43 27;
+    --color-line: 48 64 83;
+    --color-line-strong: 73 91 112;
   }
 
   html {
@@ -484,6 +515,104 @@ html.machine-translated :where(h1, h2, h3, h4, p, a, button, label, dt, dd, span
   width: 9px;
   height: 9px;
   border-radius: 999px;
+}
+
+/* Dark appearance overrides for legacy surfaces that still use literal
+   white/pastel Tailwind utilities instead of the shared semantic tokens. */
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] [class~="bg-white/95"],
+html[data-theme="dark"] [class~="bg-white/90"],
+html[data-theme="dark"] [class~="bg-white/85"],
+html[data-theme="dark"] [class~="bg-white/80"],
+html[data-theme="dark"] [class~="bg-white/70"],
+html[data-theme="dark"] [class~="bg-white/60"] {
+  background-color: rgb(var(--color-paper-card) / 0.98);
+}
+
+html[data-theme="dark"] .text-pine-dark,
+html[data-theme="dark"] .hover\:text-pine-dark:hover,
+html[data-theme="dark"] .text-blue-800,
+html[data-theme="dark"] .text-blue-900,
+html[data-theme="dark"] .text-sky-700,
+html[data-theme="dark"] .text-emerald-800,
+html[data-theme="dark"] .text-green-800 {
+  color: #8ecaff;
+}
+
+html[data-theme="dark"] .bg-blue-50,
+html[data-theme="dark"] .bg-sky-50,
+html[data-theme="dark"] .bg-sky-100,
+html[data-theme="dark"] .bg-emerald-50,
+html[data-theme="dark"] .bg-green-50 {
+  background-color: #19344b;
+}
+
+html[data-theme="dark"] .bg-amber-50,
+html[data-theme="dark"] .bg-yellow-50 {
+  background-color: #3e321f;
+}
+
+html[data-theme="dark"] .text-amber-950,
+html[data-theme="dark"] .text-yellow-900 {
+  color: #f5d69a;
+}
+
+html[data-theme="dark"] .bg-red-50 {
+  background-color: #3b252d;
+}
+
+html[data-theme="dark"] .text-red-700,
+html[data-theme="dark"] .text-red-800 {
+  color: #ffabb3;
+}
+
+html[data-theme="dark"] .border-blue-200,
+html[data-theme="dark"] .border-blue-300,
+html[data-theme="dark"] .border-emerald-200,
+html[data-theme="dark"] .border-red-200,
+html[data-theme="dark"] .border-amber-300 {
+  border-color: rgb(var(--color-line-strong));
+}
+
+html[data-theme="dark"] .surface-home {
+  background-color: #0d141f;
+  background-image:
+    radial-gradient(ellipse at 8% 12%, rgb(22 102 170 / 20%) 0%, transparent 38%),
+    radial-gradient(ellipse at 92% 8%, rgb(52 126 184 / 16%) 0%, transparent 34%),
+    linear-gradient(145deg, #0d141f 0%, #111d2b 48%, #13263a 100%);
+}
+
+html[data-theme="dark"] .soft-orb {
+  background: radial-gradient(circle, rgb(34 88 132 / 42%) 0%, transparent 68%);
+}
+
+html[data-theme="dark"] .skeleton {
+  background-image: linear-gradient(90deg, rgb(255 255 255 / 3%) 0%, rgb(255 255 255 / 8%) 50%, rgb(255 255 255 / 3%) 100%);
+}
+
+html[data-theme="dark"] .celebration-card {
+  background: rgb(22 32 47 / 98%);
+  color: #ebf1f8;
+}
+
+html[data-theme="dark"] .celebration-icon {
+  border-color: #16202f;
+}
+
+html[data-theme="dark"] .leaflet-container {
+  background: #16202f;
+}
+
+html[data-theme="dark"] .leaflet-bar a,
+html[data-theme="dark"] .leaflet-bar a:hover {
+  color: #ebf1f8;
+  background-color: #16202f;
+  border-color: #304053;
+}
+
+html[data-theme="dark"] .leaflet-bar a.leaflet-disabled {
+  color: #718096;
+  background-color: #1d2a3c;
 }
 
 @media print {

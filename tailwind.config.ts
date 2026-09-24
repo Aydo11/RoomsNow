@@ -5,13 +5,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: { DEFAULT: "#171F2E", soft: "#445064", faint: "#758196" },
-        paper: { DEFAULT: "#F6F8FB", card: "#FFFFFF", sunk: "#EDF2F7" },
+        ink: {
+          DEFAULT: "rgb(var(--color-ink) / <alpha-value>)",
+          soft: "rgb(var(--color-ink-soft) / <alpha-value>)",
+          faint: "rgb(var(--color-ink-faint) / <alpha-value>)",
+        },
+        paper: {
+          DEFAULT: "rgb(var(--color-paper) / <alpha-value>)",
+          card: "rgb(var(--color-paper-card) / <alpha-value>)",
+          sunk: "rgb(var(--color-paper-sunk) / <alpha-value>)",
+        },
         // Existing semantic class names are retained to keep the UI stable;
         // these values are the RoomsNow accent-blue palette.
-        pine: { DEFAULT: "#1666AA", dark: "#0F4F87", light: "#E8F2FC" },
-        clay: { DEFAULT: "#A45512", light: "#FFF4E8" },
-        line: { DEFAULT: "#D9E2EC", strong: "#BAC7D5" },
+        pine: {
+          DEFAULT: "rgb(var(--color-pine) / <alpha-value>)",
+          dark: "rgb(var(--color-pine-dark) / <alpha-value>)",
+          light: "rgb(var(--color-pine-light) / <alpha-value>)",
+        },
+        clay: {
+          DEFAULT: "rgb(var(--color-clay) / <alpha-value>)",
+          light: "rgb(var(--color-clay-light) / <alpha-value>)",
+        },
+        line: {
+          DEFAULT: "rgb(var(--color-line) / <alpha-value>)",
+          strong: "rgb(var(--color-line-strong) / <alpha-value>)",
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],

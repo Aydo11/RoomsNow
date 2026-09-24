@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { logoutAction } from "@/server/actions/auth";
 import { LanguageSelector } from "./language-selector";
+import { ThemeToggle } from "./theme-toggle";
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
@@ -41,6 +42,7 @@ export async function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle compact />
           {user ? (
             <>
               <Link href="/messages" className="btn-ghost hidden whitespace-nowrap xl:inline-flex">Messages</Link>
@@ -70,6 +72,7 @@ export async function SiteHeader() {
               <MobileLink href="/people">People looking</MobileLink>
               <MobileLink href="/advertise-accommodation">Advertise</MobileLink>
               <MobileLink href="/pricing">Membership</MobileLink>
+              <ThemeToggle />
               <LanguageSelector mobile />
               <div className="my-2 border-t border-line" />
               {user ? (
