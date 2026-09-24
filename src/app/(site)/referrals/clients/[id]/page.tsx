@@ -15,15 +15,18 @@ import { referrerNav } from "../../nav";
 import { matchesForClient } from "@/server/client-matches";
 import { assessmentCompleteness, parseAssessment, raisedRisks, SUPPORT_LEVELS, FUNDING } from "@/lib/assessment";
 import { matchBand } from "@/lib/client-matching";
+import { teamFor, teamMemberIds } from "@/lib/referral-team";
+import { CaseOwnerSelect } from "@/components/referral-team-forms";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireReferrer();
+  const teamIds = await teamMemberIds(user.id);
 
   const client = await db.client.findFirst({
-    where: { id, referrerId: user.id },
+    where: { id, referrerId: { in: teamIds } },
     include: {
       referrals: {
         orderBy: { createdAt: "desc" },
@@ -60,11 +63,15 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const companyIds = Array.from(
     new Set(client.messages.map((m) => m.conversation.companyId ?? m.conversation.participants[0]?.companyId).filter(Boolean) as string[]),
   );
-  const [nav, suggestions, companies, matches] = await Promise.all([
+  const team = await teamFor(user.id);
+  const [nav, suggestions, companies, matches, colleagues] = await Promise.all([
     referrerNav(user.id),
     deleted ? Promise.resolve([]) : suggestProvidersForClient(client),
     companyIds.length ? db.company.findMany({ where: { id: { in: companyIds } }, select: { id: true, name: true } }) : Promise.resolve([]),
     deleted ? Promise.resolve({ rows: [], considered: 0 }) : matchesForClient(client),
+    teamIds.length > 1
+      ? db.user.findMany({ where: { id: { in: teamIds } }, orderBy: { firstName: "asc" }, select: { id: true, firstName: true, lastName: true } })
+      : Promise.resolve([]),
   ]);
   const assessment = parseAssessment(client.assessment);
   const completeness = assessmentCompleteness(assessment);
@@ -121,6 +128,16 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                   {deleted ? "Deleted" : CLIENT_STATUS_LABEL[client.status]}
                 </span>
                 <p className="mt-2 text-[13px] text-ink-faint">Last updated {timeAgo(client.updatedAt)}</p>
+                {colleagues.length > 1 && !deleted && (
+                  <div className="mt-2">
+                    <CaseOwnerSelect
+                      clientId={client.id}
+                      ownerId={client.referrerId}
+                      disabled={!team.canManage && client.referrerId !== user.id}
+                      colleagues={colleagues.map((c) => ({ id: c.id, name: c.id === user.id ? `${c.firstName} ${c.lastName} (you)` : `${c.firstName} ${c.lastName}` }))}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

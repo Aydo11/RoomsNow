@@ -7,6 +7,7 @@ import { PIPELINE, PIPELINE_LABELS, supportLabel } from "@/lib/taxonomy";
 import { shortDate } from "@/lib/format";
 import { clsx } from "@/lib/clsx";
 import { referrerNav } from "../nav";
+import { teamMemberIds } from "@/lib/referral-team";
 
 export const metadata = { title: "Analytics" };
 export const dynamic = "force-dynamic";
@@ -46,6 +47,7 @@ export default async function ReferrerAnalyticsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireReferrer();
+  const teamIds = await teamMemberIds(user.id);
   const params = await searchParams;
   const rangeParam = (Array.isArray(params.range) ? params.range[0] : params.range) ?? "12m";
   const rangeKey: RangeKey = rangeParam in RANGES ? (rangeParam as RangeKey) : "12m";
@@ -56,7 +58,7 @@ export default async function ReferrerAnalyticsPage({
   const [nav, referrals, clientStatus, deletedClients, activeClientNeeds, clientsAdded, shares, profileMessages] = await Promise.all([
     referrerNav(user.id),
     db.referral.findMany({
-      where: { referrerId: user.id, ...(since ? { createdAt: { gte: since } } : {}) },
+      where: { referrerId: { in: teamIds }, ...(since ? { createdAt: { gte: since } } : {}) },
       select: {
         id: true,
         status: true,
@@ -66,13 +68,13 @@ export default async function ReferrerAnalyticsPage({
         events: { select: { status: true, createdAt: true }, orderBy: { createdAt: "asc" } },
       },
     }),
-    db.client.groupBy({ by: ["status"], where: { referrerId: user.id, deletedAt: null }, _count: { _all: true } }),
-    db.client.count({ where: { referrerId: user.id, deletedAt: { not: null } } }),
+    db.client.groupBy({ by: ["status"], where: { referrerId: { in: teamIds }, deletedAt: null }, _count: { _all: true } }),
+    db.client.count({ where: { referrerId: { in: teamIds }, deletedAt: { not: null } } }),
     db.client.findMany({
-      where: { referrerId: user.id, deletedAt: null, status: { not: "ARCHIVED" } },
+      where: { referrerId: { in: teamIds }, deletedAt: null, status: { not: "ARCHIVED" } },
       select: { supportTypes: true, preferredLocation: true },
     }),
-    db.client.count({ where: { referrerId: user.id, ...(since ? { createdAt: { gte: since } } : {}) } }),
+    db.client.count({ where: { referrerId: { in: teamIds }, ...(since ? { createdAt: { gte: since } } : {}) } }),
     db.clientShare.findMany({
       where: { sharedById: user.id, ...(since ? { createdAt: { gte: since } } : {}) },
       select: { companyId: true },

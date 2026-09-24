@@ -15,6 +15,7 @@ import { referrerNav } from "../nav";
 import { URGENCY_LABELS } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
 import { buildReferralTimeline } from "@/lib/referral-timeline";
+import { inTeam } from "@/lib/referral-team";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,7 @@ export default async function ReferralPage({ params }: { params: Promise<{ id: s
 
   const timeline = buildReferralTimeline(referral);
 
-  const isReferrer = referral.referrerId === user.id;
+  const isReferrer = await inTeam(user.id, referral.referrerId);
   const isProvider = referral.listing
     ? user.staffOf.some((s) => s.companyId === referral.listing!.companyId)
     : false;

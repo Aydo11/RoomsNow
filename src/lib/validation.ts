@@ -305,6 +305,8 @@ export type FormState = {
   broadcastId?: string;
   importId?: string;
   recipientCount?: number;
+  /** A link to show the person, e.g. a colleague's invitation link as a fallback to email. */
+  link?: string;
   /**
    * The raw field values a rejected submission was sent with, echoed back so
    * the form can redisplay them. Needed because React resets every

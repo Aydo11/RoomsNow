@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { storage } from "@/lib/storage";
 import { rateLimit } from "@/lib/rate-limit";
+import { inTeam } from "@/lib/referral-team";
 
 /**
  * Client profile pictures are private files. The same rule as the record
@@ -31,7 +32,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!client?.photoUrl) return new NextResponse("Not found", { status: 404 });
 
   const companyIds = new Set(user.staffOf.map((s) => s.companyId));
-  const isOwner = client.referrerId === user.id;
+  const isOwner = await inTeam(user.id, client.referrerId);
   const isSharedWith = !client.deletedAt && client.shares.some((share) => companyIds.has(share.companyId));
   if (!isOwner && !isSharedWith && !hasAdminPermission(user)) {
     return new NextResponse("Not found", { status: 404 });

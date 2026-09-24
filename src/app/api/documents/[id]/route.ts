@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/session";
 import { audit } from "@/lib/audit";
 import { storage } from "@/lib/storage";
 import { rateLimit } from "@/lib/rate-limit";
+import { inTeam } from "@/lib/referral-team";
 
 /**
  * Private documents (referral attachments, verification evidence) are never linked
@@ -36,7 +37,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     hasAdminPermission(user) ||
     document.ownerId === user.id ||
     (document.companyId && companyIds.has(document.companyId)) ||
-    document.referral?.referrerId === user.id ||
+    (await inTeam(user.id, document.referral?.referrerId)) ||
     (document.referral?.listing && companyIds.has(document.referral.listing.companyId)) ||
     document.request?.applicantId === user.id ||
     (document.request?.listing && companyIds.has(document.request.listing.companyId)) ||

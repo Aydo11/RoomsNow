@@ -12,6 +12,7 @@ import { clientPhotoSrc } from "@/lib/client-card";
 import { PIPELINE_LABELS, SUPPORT_TYPES, supportLabel } from "@/lib/taxonomy";
 import { ageFrom, shortDate, timeAgo } from "@/lib/format";
 import { clsx } from "@/lib/clsx";
+import { teamMemberIds } from "@/lib/referral-team";
 
 export const metadata = { title: "My clients" };
 export const dynamic = "force-dynamic";
@@ -50,6 +51,7 @@ export default async function ClientsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireReferrer();
+  const teamIds = await teamMemberIds(user.id);
   const params = await searchParams;
 
   const q = pick(params.q).trim().slice(0, 80);
@@ -63,7 +65,7 @@ export default async function ClientsPage({
   const page = Math.max(1, Number.parseInt(pick(params.page), 10) || 1);
 
   const where: Prisma.ClientWhereInput = {
-    referrerId: user.id,
+    referrerId: { in: teamIds },
     deletedAt: status === "DELETED" ? { not: null } : null,
     ...(status !== "ALL" && status !== "DELETED" ? { status } : {}),
     ...(support ? { supportTypes: { has: support } } : {}),
@@ -91,12 +93,13 @@ export default async function ClientsPage({
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: {
+        referrer: { select: { id: true, firstName: true, lastName: true } },
         _count: { select: { referrals: true, shares: { where: { revokedAt: null } } } },
         referrals: { orderBy: { updatedAt: "desc" }, take: 1, select: { status: true, updatedAt: true } },
       },
     }),
-    db.client.groupBy({ by: ["status"], where: { referrerId: user.id, deletedAt: null }, _count: { _all: true } }),
-    db.client.count({ where: { referrerId: user.id, deletedAt: { not: null } } }),
+    db.client.groupBy({ by: ["status"], where: { referrerId: { in: teamIds }, deletedAt: null }, _count: { _all: true } }),
+    db.client.count({ where: { referrerId: { in: teamIds }, deletedAt: { not: null } } }),
   ]);
 
   const countFor = (tab: Tab) => {
@@ -139,6 +142,7 @@ export default async function ClientsPage({
     added: shortDate(client.createdAt),
     updated: timeAgo(client.updatedAt),
     deleted: client.deletedAt ? shortDate(client.deletedAt) : null,
+    owner: teamIds.length > 1 ? (client.referrer.id === user.id ? "you" : `${client.referrer.firstName} ${client.referrer.lastName}`) : null,
   }));
 
   return (

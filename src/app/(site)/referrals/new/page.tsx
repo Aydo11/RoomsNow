@@ -5,6 +5,7 @@ import { requireReferrer } from "@/lib/rbac";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { ReferralForm } from "@/components/referral-form";
 import { referrerNav } from "../nav";
+import { teamMemberIds } from "@/lib/referral-team";
 
 export const metadata = { title: "New referral" };
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export default async function NewReferralPage({
 }) {
   const query = await searchParams;
   const user = await requireReferrer();
+  const teamIds = await teamMemberIds(user.id);
   // A referral always goes to a specific advert, so its provider is known. With
   // a client but no advert, send the referrer to that client's ranked matches.
   if (!query.listingId && query.clientId) redirect(`/referrals/clients/${encodeURIComponent(query.clientId)}/matches`);
@@ -24,7 +26,7 @@ export default async function NewReferralPage({
 
   if (!query.listingId) {
     const clients = await db.client.findMany({
-      where: { referrerId: user.id, deletedAt: null, status: "ACTIVE" },
+      where: { referrerId: { in: teamIds }, deletedAt: null, status: "ACTIVE" },
       orderBy: { updatedAt: "desc" },
       take: 50,
       select: { id: true, firstName: true, lastName: true, preferredLocation: true },
@@ -75,7 +77,7 @@ export default async function NewReferralPage({
   }
 
   const client = query.clientId
-    ? await db.client.findFirst({ where: { id: query.clientId, referrerId: user.id, deletedAt: null } })
+    ? await db.client.findFirst({ where: { id: query.clientId, referrerId: { in: teamIds }, deletedAt: null } })
     : null;
 
   const listing = query.listingId

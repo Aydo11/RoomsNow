@@ -7,6 +7,7 @@ import { ReferrerPlanPicker } from "@/components/referrer-plan-picker";
 import { SuccessCelebration } from "@/components/success-celebration";
 import { referrerNav } from "../nav";
 import { money, shortDate } from "@/lib/format";
+import { teamFor } from "@/lib/referral-team";
 
 export const metadata = { title: "Referrer membership" };
 export const dynamic = "force-dynamic";
@@ -24,6 +25,11 @@ export default async function ReferrerMembershipPage({
   // Resolve limits first: it also creates the two referrer catalogue rows when
   // upgrading an older production database that has no seed data yet.
   const limits = await referrerPlanLimits(user.id);
+  const team = await teamFor(user.id);
+  const planManagedByOwner = Boolean(team.organisation) && team.ownerId !== user.id;
+  const owner = planManagedByOwner
+    ? await db.user.findUnique({ where: { id: team.ownerId }, select: { firstName: true, lastName: true } })
+    : null;
   const [nav, plans, payments] = await Promise.all([
     referrerNav(user.id),
     db.membership.findMany({ where: { audience: "REFERRER" }, orderBy: { priceMonthly: "asc" } }),
@@ -92,7 +98,14 @@ export default async function ReferrerMembershipPage({
         </p>
       </section>
 
-      <section className="mt-6">
+      {planManagedByOwner && (
+        <p className="mt-6 rounded-[10px] border border-line bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft">
+          Your plan comes from {team.organisation!.name}. {owner ? `${owner.firstName} ${owner.lastName}` : "The owner"} manages it for the
+          whole team, and client limits are shared across everyone.
+        </p>
+      )}
+
+      <section className={planManagedByOwner ? "hidden" : "mt-6"}>
         <h2 className="text-[20px]">Plans</h2>
         <div className="mt-3">
           <ReferrerPlanPicker

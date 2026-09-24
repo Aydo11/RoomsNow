@@ -25,6 +25,8 @@ export type ClientRow = {
   added: string;
   updated: string;
   deleted: string | null;
+  /** Case owner's name, shown when the caseload is shared with colleagues. */
+  owner?: string | null;
 };
 
 const STATUS_LABEL: Record<string, string> = { ACTIVE: "Active", PLACED: "Placed", ARCHIVED: "Archived", DELETED: "Deleted" };
@@ -120,7 +122,7 @@ export function ClientList({ rows, view }: { rows: ClientRow[]; view: "current" 
                     </span>
                   </span>
                   <span className="mt-0.5 block truncate text-[13px] text-ink-faint">
-                    {[row.age !== null ? `${row.age}` : null, row.location || "No preferred area"].filter(Boolean).join(" · ")}
+                    {[row.age !== null ? `${row.age}` : null, row.location || "No preferred area", row.owner ? `Case owner: ${row.owner}` : null].filter(Boolean).join(" · ")}
                   </span>
                 </span>
               </span>

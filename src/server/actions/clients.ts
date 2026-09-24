@@ -15,6 +15,7 @@ import { clientSchema, clientShareSchema, fieldErrors, type FormState } from "@/
 import { bool, date, list, text } from "../form";
 import { Prisma } from "@prisma/client";
 import { assessmentFromForm } from "@/lib/assessment";
+import { inTeam, teamMemberIds } from "@/lib/referral-team";
 
 type ClientStatusValue = "ACTIVE" | "PLACED" | "ARCHIVED";
 
@@ -72,7 +73,7 @@ export async function saveClientAction(_prev: FormState, formData: FormData): Pr
   if (id) {
     // Editing: ownership check first, no upsert-by-accident.
     const existing = await db.client.findUnique({ where: { id }, select: { referrerId: true, photoUrl: true, deletedAt: true } });
-    if (!existing || existing.referrerId !== user.id || existing.deletedAt) {
+    if (!existing || existing.deletedAt || !(await inTeam(user.id, existing.referrerId))) {
       return { ok: false, errors: { form: "Client not found." } };
     }
     existingPhoto = existing.photoUrl;
@@ -134,7 +135,7 @@ export async function saveClientAction(_prev: FormState, formData: FormData): Pr
 export async function archiveClientAction(clientId: string, status: ClientStatusValue) {
   const user = await requireReferrer();
   const client = await db.client.findUnique({ where: { id: clientId }, select: { referrerId: true, status: true, deletedAt: true } });
-  if (!client || client.referrerId !== user.id || client.deletedAt) return { ok: false, message: "Client not found." };
+  if (!client || client.deletedAt || !(await inTeam(user.id, client.referrerId))) return { ok: false, message: "Client not found." };
 
   // Re-activating an archived client takes a plan slot back up.
   if (client.status === "ARCHIVED" && status !== "ARCHIVED") {
@@ -159,7 +160,7 @@ export async function archiveClientAction(clientId: string, status: ClientStatus
 export async function deleteClientAction(clientId: string) {
   const user = await requireReferrer();
   const client = await db.client.findUnique({ where: { id: clientId }, select: { referrerId: true } });
-  if (!client || client.referrerId !== user.id) return;
+  if (!client || !(await inTeam(user.id, client.referrerId))) return;
 
   const now = new Date();
   await db.$transaction([
@@ -174,7 +175,7 @@ export async function deleteClientAction(clientId: string) {
 export async function restoreClientAction(clientId: string) {
   const user = await requireReferrer();
   const client = await db.client.findUnique({ where: { id: clientId }, select: { referrerId: true, status: true, deletedAt: true } });
-  if (!client || client.referrerId !== user.id || !client.deletedAt) return { ok: false, message: "Client not found." };
+  if (!client || !client.deletedAt || !(await inTeam(user.id, client.referrerId))) return { ok: false, message: "Client not found." };
 
   let status = client.status;
   let message = "Restored.";
@@ -198,7 +199,7 @@ export async function restoreClientAction(clientId: string) {
 export async function purgeClientAction(clientId: string) {
   const user = await requireReferrer();
   const client = await db.client.findUnique({ where: { id: clientId }, select: { referrerId: true, deletedAt: true, photoUrl: true } });
-  if (!client || client.referrerId !== user.id || !client.deletedAt) return { ok: false, message: "Client not found." };
+  if (!client || !client.deletedAt || !(await inTeam(user.id, client.referrerId))) return { ok: false, message: "Client not found." };
 
   await db.client.delete({ where: { id: clientId } });
   await removeStoredPhoto(client.photoUrl);
@@ -216,7 +217,7 @@ export async function bulkClientAction(ids: string[], operation: BulkClientOpera
   if (unique.length === 0) return { ok: false, message: "Select at least one client." };
 
   const owned = await db.client.findMany({
-    where: { id: { in: unique }, referrerId: user.id },
+    where: { id: { in: unique }, referrerId: { in: await teamMemberIds(user.id) } },
     select: { id: true, status: true, deletedAt: true, photoUrl: true },
   });
   const now = new Date();
@@ -533,7 +534,7 @@ export async function revokeClientShareAction(shareId: string) {
     where: { id: shareId },
     include: { client: { select: { referrerId: true, id: true } } },
   });
-  if (!share || share.client.referrerId !== user.id) return;
+  if (!share || !(await inTeam(user.id, share.client.referrerId))) return;
 
   await db.clientShare.update({ where: { id: shareId }, data: { revokedAt: new Date() } });
   await audit({ actorId: user.id, action: "client.share_revoked", targetType: "ClientShare", targetId: shareId });
@@ -550,7 +551,7 @@ export async function deleteClientShareAction(shareId: string) {
     where: { id: shareId },
     include: { client: { select: { referrerId: true, id: true } } },
   });
-  if (!share || share.client.referrerId !== user.id) return;
+  if (!share || !(await inTeam(user.id, share.client.referrerId))) return;
 
   await db.clientShare.delete({ where: { id: shareId } });
   await audit({ actorId: user.id, action: "client.share_deleted", targetType: "ClientShare", targetId: shareId });

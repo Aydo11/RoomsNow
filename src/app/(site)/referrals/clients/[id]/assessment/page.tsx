@@ -7,14 +7,16 @@ import { AssessmentForm } from "@/components/assessment-form";
 import { parseAssessment } from "@/lib/assessment";
 import { shortDate } from "@/lib/format";
 import { referrerNav } from "../../../nav";
+import { teamMemberIds } from "@/lib/referral-team";
 
 export const metadata = { title: "Needs and risk assessment" };
 export const dynamic = "force-dynamic";
 
 export default async function ClientAssessmentPage({ params }: { params: Promise<{ id: string }> }) {
   const [{ id }, user] = await Promise.all([params, requireReferrer()]);
+  const teamIds = await teamMemberIds(user.id);
   const client = await db.client.findFirst({
-    where: { id, referrerId: user.id },
+    where: { id, referrerId: { in: teamIds } },
     select: { id: true, firstName: true, lastName: true, assessment: true, assessedAt: true, deletedAt: true },
   });
   if (!client) notFound();
