@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { GoodNews } from "@/components/good-news";
 import { MobileTabs } from "@/components/mobile-tabs";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
@@ -10,6 +12,9 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       </main>
       <div className="print:hidden"><SiteFooter /></div>
       <div className="print:hidden"><MobileTabs /></div>
+      <Suspense fallback={null}>
+        <GoodNews />
+      </Suspense>
     </>
   );
 }
