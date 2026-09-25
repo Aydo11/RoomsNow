@@ -13,6 +13,8 @@ import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, timeAgo } from "@/lib/format";
 import { SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import { COVER_MEDIA, coverImage, videoPosterSrc } from "@/lib/cover-image";
+import { advertStrength } from "@/lib/advert-strength";
+import { AdvertStrengthBar } from "@/components/advert-strength";
 
 export const metadata = { title: "My adverts" };
 export const dynamic = "force-dynamic";
@@ -29,7 +31,7 @@ export default async function ProviderAdvertsPage({
   const { sponsor, boost_pack: boostPurchase } = await searchParams;
   const sponsorChoice = isSponsorPackage(sponsor) ? sponsor : null;
   const { companyId } = await requireCompany();
-  const [nav, limits, listings, boosts] = await Promise.all([
+  const [nav, limits, listings, boosts, mediaCounts] = await Promise.all([
     providerNav(companyId),
     planLimits(companyId),
     db.listing.findMany({
@@ -43,7 +45,19 @@ export default async function ProviderAdvertsPage({
       },
     }),
     boostAllowance(companyId),
+    // COVER_MEDIA only loads a few items, so count every photo and video for the strength score.
+    db.listingMedia.groupBy({
+      by: ["listingId", "type"],
+      where: { listing: { companyId } },
+      _count: { _all: true },
+    }),
   ]);
+  const mediaByListing = new Map<string, { type: string }[]>();
+  for (const row of mediaCounts) {
+    const items = mediaByListing.get(row.listingId) ?? [];
+    for (let i = 0; i < Math.min(row._count._all, 10); i++) items.push({ type: row.type });
+    mediaByListing.set(row.listingId, items);
+  }
 
   return (
     <DashboardShell
@@ -115,6 +129,9 @@ export default async function ProviderAdvertsPage({
                   {listing.reference} · {listing.views} views · {listing._count.requests} requests ·{" "}
                   {listing._count.referrals} referrals · updated {timeAgo(listing.updatedAt)}
                 </p>
+                <Link href={`/provider/adverts/${listing.id}#advert-strength-heading`} className="mt-2 inline-flex hover:opacity-80">
+                  <AdvertStrengthBar strength={advertStrength({ ...listing, media: mediaByListing.get(listing.id) ?? [] })} />
+                </Link>
                 <div className="mt-3">
                   <RoomStrip rooms={listing.rooms} showLabels />
                 </div>
