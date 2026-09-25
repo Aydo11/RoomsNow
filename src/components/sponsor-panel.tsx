@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { endSponsorshipAction, featureListingAction } from "@/server/actions/billing";
+import { endSponsorshipAction, featureListingAction, spendFreeSponsorMonthAction } from "@/server/actions/billing";
 import type { SponsorPackage } from "@/lib/sponsor-packages";
 import { money, shortDate } from "@/lib/format";
 import { clsx } from "@/lib/clsx";
@@ -24,6 +24,7 @@ export function SponsorPanel({
   live,
   paymentsEnabled,
   initialDuration,
+  freeMonths = 0,
 }: {
   listingId: string;
   featured: boolean;
@@ -35,6 +36,8 @@ export function SponsorPanel({
   live: boolean;
   paymentsEnabled: boolean;
   initialDuration?: SponsorPackage;
+  /** Free 30-day placements earned by inviting other providers. */
+  freeMonths?: number;
 }) {
   const router = useRouter();
   const [choice, setChoice] = useState<SponsorPackage>(initialDuration ?? "WEEK");
@@ -110,6 +113,30 @@ export function SponsorPanel({
       </div>
 
       <div className="p-5">
+      {freeMonths > 0 && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-pine/30 bg-pine-light/50 p-4">
+          <div>
+            <p className="text-[15px] font-semibold text-ink">
+              You have {freeMonths} free month{freeMonths === 1 ? "" : "s"} of sponsorship
+            </p>
+            <p className="mt-0.5 text-[13px] text-ink-soft">Earned by inviting other providers. Each one sponsors an advert for 30 days, at no cost.</p>
+          </div>
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={pending}
+            onClick={() =>
+              startTransition(async () => {
+                const response = await spendFreeSponsorMonthAction(listingId);
+                setResult(response?.message ?? null);
+                router.refresh();
+              })
+            }
+          >
+            {isActive ? "Add a free month" : "Use a free month"}
+          </button>
+        </div>
+      )}
       <fieldset>
         <legend className="text-[15px] font-medium text-ink">Choose how long to sponsor this advert</legend>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
