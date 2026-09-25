@@ -4,6 +4,8 @@ import { sendEmail } from "./notify";
 import { escapeHtml, renderEmail } from "./email-template";
 import { advertStrength } from "./advert-strength";
 import { isSummaryTime } from "./uk-time";
+import { pounds } from "./void-cost";
+import { companyVoidCost } from "@/server/void-cost";
 
 /**
  * A short Monday-morning email to each provider with live adverts: views,
@@ -30,11 +32,13 @@ export type WeeklyStats = {
   referrals: number;
   moveIns: number;
   tip: { title: string; listingId: string; score: number; action: string; gain: number } | null;
+  /** Rent lost each week to empty rooms, when there are any with a rent set. */
+  voids?: { emptyRooms: number; weeklyCost: number } | null;
 };
 
 export async function weeklyStatsFor(companyId: string, baselineViews: number | null, now = new Date()) {
   const since = new Date(now.getTime() - WEEK_MS);
-  const [listings, enquiries, referrals, referralMoveIns, requestMoveIns] = await Promise.all([
+  const [listings, enquiries, referrals, referralMoveIns, requestMoveIns, voids] = await Promise.all([
     db.listing.findMany({
       where: { companyId, status: { in: ["ACTIVE", "PAUSED", "PENDING_REVIEW", "DRAFT"] } },
       select: {
@@ -48,6 +52,7 @@ export async function weeklyStatsFor(companyId: string, baselineViews: number | 
     db.referral.count({ where: { listing: { companyId }, createdAt: { gte: since } } }),
     db.referral.count({ where: { listing: { companyId }, status: "MOVED_IN", updatedAt: { gte: since } } }),
     db.accommodationRequest.count({ where: { listing: { companyId }, status: "MOVED_IN", updatedAt: { gte: since } } }),
+    companyVoidCost(companyId),
   ]);
 
   const totalViews = listings.reduce((sum, listing) => sum + listing.views, 0);
@@ -72,6 +77,7 @@ export async function weeklyStatsFor(companyId: string, baselineViews: number | 
           gain: weakest.strength.todo[0].points - weakest.strength.todo[0].earned,
         }
       : null,
+    voids: voids.weeklyCost > 0 ? { emptyRooms: voids.emptyRooms, weeklyCost: voids.weeklyCost } : null,
   };
   return { stats, totalViews, liveAdverts: live.length };
 }
@@ -101,6 +107,13 @@ export function renderWeeklySummary(companyName: string, stats: WeeklyStats) {
         <a href="${app}/provider/adverts/${stats.tip.listingId}" style="color:#0F4F87;">Improve it</a>
       </p>`
     : "";
+  const voidHtml = stats.voids
+    ? `<p style="margin:18px 0 0; padding:14px 16px; border-radius:10px; background:#FBEFE8; color:#7A3413; font-size:14px; line-height:1.55;">
+        <strong>${stats.voids.emptyRooms} empty ${plural(stats.voids.emptyRooms, "room is", "rooms are")} costing you ${pounds(stats.voids.weeklyCost)} a week.</strong>
+        Fast replies and up-to-date adverts fill rooms quickest.
+        <a href="${app}/provider/rooms" style="color:#7A3413;">See your empty rooms</a>
+      </p>`
+    : "";
   const bodyHtml = `<p style="margin:0 0 16px;">${escapeHtml(headline)}</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="6" style="border-collapse:separate;">
       <tr>
@@ -112,6 +125,7 @@ export function renderWeeklySummary(companyName: string, stats: WeeklyStats) {
         ${statCell(stats.moveIns, plural(stats.moveIns, "move-in", "move-ins"))}
       </tr>
     </table>
+    ${voidHtml}
     ${tipHtml}`;
   const subject = stats.viewsAreTotal
     ? `Your RoomsNow summary: ${stats.views} ${viewsLabel}`
@@ -125,6 +139,7 @@ export function renderWeeklySummary(companyName: string, stats: WeeklyStats) {
     `${stats.enquiries} ${plural(stats.enquiries, "enquiry", "enquiries")}`,
     `${stats.referrals} ${plural(stats.referrals, "referral", "referrals")}`,
     `${stats.moveIns} ${plural(stats.moveIns, "move-in", "move-ins")}`,
+    ...(stats.voids ? ["", `${stats.voids.emptyRooms} empty ${plural(stats.voids.emptyRooms, "room is", "rooms are")} costing you ${pounds(stats.voids.weeklyCost)} a week: ${app}/provider/rooms`] : []),
     ...(stats.tip ? ["", `Tip: "${stats.tip.title}" is at ${stats.tip.score}% strength. Next step: ${lowerFirst(stats.tip.action)} (+${stats.tip.gain}%): ${app}/provider/adverts/${stats.tip.listingId}`] : []),
     "",
     `Open your dashboard: ${app}/provider`,
