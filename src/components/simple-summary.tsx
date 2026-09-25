@@ -3,26 +3,53 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { clsx } from "@/lib/clsx";
 import { speechChunks } from "@/lib/plain-summary";
+import { SUMMARY_LANGUAGES, type SummaryLanguage } from "@/lib/plain-summary-i18n";
 
 type Status = "idle" | "playing" | "paused";
+const LANG_KEY = "roomsnow:summary-lang";
 
 /**
- * "In simple words" box on an advert, with a Listen button that reads it out
- * using the phone or computer's own voice (no audio is sent anywhere). While
- * it reads, the line being spoken is highlighted so people can follow along.
- * After the simple version it reads the provider's own description.
+ * "In simple words" box on an advert, in English and five other languages,
+ * with a Listen button that reads it out using the phone or computer's own
+ * voice (no audio is sent anywhere). While it reads, the line being spoken is
+ * highlighted so people can follow along. In English it then reads the
+ * provider's own description too.
  */
-export function SimpleSummary({ title, lines, fullText }: { title: string; lines: string[]; fullText: string | null }) {
+export function SimpleSummary({
+  title,
+  summaries,
+  fullText,
+}: {
+  title: string;
+  summaries: Record<SummaryLanguage, string[]>;
+  fullText: string | null;
+}) {
   const [supported, setSupported] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [lang, setLang] = useState<SummaryLanguage>("en");
   const [status, setStatus] = useState<Status>("idle");
   const [current, setCurrent] = useState<number | null>(null);
   const [slow, setSlow] = useState(false);
   const run = useRef(0);
 
+  const meta = SUMMARY_LANGUAGES.find((item) => item.code === lang) ?? SUMMARY_LANGUAGES[0];
+  const lines = summaries[lang] ?? summaries.en;
+
   useEffect(() => {
-    setSupported(typeof window !== "undefined" && "speechSynthesis" in window && "SpeechSynthesisUtterance" in window);
+    try {
+      const saved = window.localStorage.getItem(LANG_KEY) as SummaryLanguage | null;
+      if (saved && SUMMARY_LANGUAGES.some((item) => item.code === saved)) setLang(saved);
+    } catch {
+      // English it is.
+    }
+    const ok = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+    setSupported(ok);
+    if (!ok) return;
     // Voices load after page load in some browsers.
-    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.getVoices();
+    const load = () => setVoices(window.speechSynthesis.getVoices());
+    load();
+    window.speechSynthesis.addEventListener?.("voiceschanged", load);
+    return () => window.speechSynthesis.removeEventListener?.("voiceschanged", load);
   }, []);
 
   const stop = useCallback(() => {
@@ -42,49 +69,54 @@ export function SimpleSummary({ title, lines, fullText }: { title: string; lines
     };
   }, [stop]);
 
+  function voiceFor(code: string) {
+    const prefix = code.split("-")[0].toLowerCase();
+    const matching = voices.filter((v) => v.lang.toLowerCase().replace("_", "-").startsWith(prefix));
+    if (code === "en-GB") {
+      return (
+        matching.find((v) => v.lang === "en-GB" && /natural|google|serena|daniel|kate|libby|sonia/i.test(v.name)) ??
+        matching.find((v) => v.lang === "en-GB") ??
+        matching[0] ??
+        null
+      );
+    }
+    return matching.find((v) => /natural|google|premium|enhanced/i.test(v.name)) ?? matching[0] ?? null;
+  }
+
+  const voice = supported ? voiceFor(meta.speech) : null;
+  const canListen = supported && (lang === "en" || Boolean(voice));
+
   function play(useSlow = slow) {
     const synth = window.speechSynthesis;
     synth.cancel();
     const id = ++run.current;
-    const voices = synth.getVoices();
-    const voice =
-      voices.find((v) => v.lang === "en-GB" && /natural|google|serena|daniel|kate|libby|sonia/i.test(v.name)) ??
-      voices.find((v) => v.lang === "en-GB") ??
-      voices.find((v) => v.lang.startsWith("en")) ??
-      null;
 
     // Each summary line is its own utterance so it can be highlighted.
     const queue: { text: string; line: number | null }[] = [
-      { text: title, line: null },
+      ...(lang === "en" ? [{ text: title, line: null }] : []),
       ...lines.map((text, index) => ({ text, line: index })),
     ];
-    if (fullText) {
+    if (lang === "en" && fullText) {
       queue.push({ text: "Here is what the provider says.", line: null });
       for (const chunk of speechChunks(fullText)) queue.push({ text: chunk, line: null });
     }
 
     queue.forEach((item, index) => {
       const utterance = new SpeechSynthesisUtterance(item.text);
-      utterance.lang = "en-GB";
+      utterance.lang = voice?.lang ?? meta.speech;
       if (voice) utterance.voice = voice;
       utterance.rate = useSlow ? 0.8 : 0.98;
       utterance.onstart = () => {
         if (run.current === id) setCurrent(item.line);
       };
-      if (index === queue.length - 1) {
-        utterance.onend = () => {
-          if (run.current === id) {
-            setStatus("idle");
-            setCurrent(null);
-          }
-        };
-      }
-      utterance.onerror = () => {
+      const finish = () => {
         if (run.current === id && index === queue.length - 1) {
           setStatus("idle");
           setCurrent(null);
         }
       };
+      utterance.onend = finish;
+      utterance.onerror = finish;
       synth.speak(utterance);
     });
     setStatus("playing");
@@ -108,13 +140,23 @@ export function SimpleSummary({ title, lines, fullText }: { title: string; lines
     if (status !== "idle") play(next);
   }
 
+  function chooseLanguage(code: SummaryLanguage) {
+    stop();
+    setLang(code);
+    try {
+      window.localStorage.setItem(LANG_KEY, code);
+    } catch {
+      // Not remembered.
+    }
+  }
+
   return (
     <section className="mt-6 rounded-card border border-pine/20 bg-pine-light/40 p-5" aria-labelledby="simple-summary-heading">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="simple-summary-heading" className="text-[18px] font-bold text-ink">
-          In simple words
+        <h2 id="simple-summary-heading" className="text-[18px] font-bold text-ink" lang={lang} dir={meta.dir}>
+          {meta.heading}
         </h2>
-        {supported && (
+        {canListen && (
           <div className="flex items-center gap-2">
             {status === "idle" ? (
               <button type="button" onClick={() => play()} className="btn-primary min-h-[40px] py-2">
@@ -144,12 +186,29 @@ export function SimpleSummary({ title, lines, fullText }: { title: string; lines
           </div>
         )}
       </div>
-      <ul className="mt-3 space-y-1.5">
+
+      <div className="-mx-1 mt-3 flex gap-1.5 overflow-x-auto px-1 pb-1" role="group" aria-label="Language">
+        {SUMMARY_LANGUAGES.map((item) => (
+          <button
+            key={item.code}
+            type="button"
+            lang={item.code}
+            onClick={() => chooseLanguage(item.code)}
+            aria-pressed={lang === item.code}
+            className={clsx("chip shrink-0 px-3", lang === item.code && "chip-active")}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <ul className="mt-3 space-y-1.5" lang={lang} dir={meta.dir}>
         {lines.map((line, index) => (
           <li
-            key={index}
+            key={`${lang}-${index}`}
             className={clsx(
               "flex gap-2.5 rounded-[8px] px-2 py-1 text-[16px] leading-relaxed text-ink transition-colors duration-200",
+              meta.dir === "rtl" && "text-[17px] leading-loose",
               current === index && "bg-white shadow-raise",
             )}
           >
@@ -158,7 +217,16 @@ export function SimpleSummary({ title, lines, fullText }: { title: string; lines
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-[12px] text-ink-faint">Written from the advert&apos;s details. Check anything important with the provider.</p>
+      {supported && !canListen && (
+        <p className="mt-3 text-[13px] text-ink-soft">
+          This phone doesn&apos;t have a voice for {meta.label} yet. You can add one in your phone&apos;s language or text-to-speech settings.
+        </p>
+      )}
+      <p className="mt-3 text-[12px] text-ink-faint">
+        {lang === "en"
+          ? "Written from the advert's details. Check anything important with the provider."
+          : "Translated by RoomsNow from the advert's details. The provider's own description is in English. Check anything important with the provider."}
+      </p>
     </section>
   );
 }
