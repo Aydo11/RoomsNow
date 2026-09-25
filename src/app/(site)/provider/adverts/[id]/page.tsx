@@ -15,6 +15,7 @@ import { providerNav } from "../../nav";
 import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, shortDate } from "@/lib/format";
 import { SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
+import { SuccessCelebration } from "@/components/success-celebration";
 
 export const dynamic = "force-dynamic";
 
@@ -27,11 +28,11 @@ export default async function ProviderAdvertPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ duration?: string }>;
+  searchParams: Promise<{ duration?: string; submitted?: string }>;
 }) {
   const { companyId } = await requireCompany();
   const { id } = await params;
-  const { duration } = await searchParams;
+  const { duration, submitted } = await searchParams;
   const initialDuration = isSponsorPackage(duration) ? duration : undefined;
   const listing = await db.listing.findFirst({
     where: { id, companyId },
@@ -70,6 +71,9 @@ export default async function ProviderAdvertPage({
         ) : null
       }
     >
+      {submitted === "1" && listing.status === "PENDING_REVIEW" && (
+        <SuccessCelebration kind="submitted" clearQueryParam="submitted" />
+      )}
       <section aria-label="Manage advert" className="card overflow-hidden">
         <div className="flex flex-wrap items-center gap-2 border-b border-line bg-paper-sunk/50 px-5 py-3">
           <span className="mr-2 text-[13px] font-medium text-ink-soft">Advert status</span>
