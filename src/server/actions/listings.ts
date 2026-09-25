@@ -471,7 +471,8 @@ export async function submitListingAction(listingId: string) {
     href: `/provider/adverts/${listingId}`,
   });
   revalidatePath("/provider/adverts");
-  redirect(`/provider/adverts/${listingId}`);
+  // ?submitted=1 shows the "on its way" celebration (and chime) on the advert page.
+  redirect(`/provider/adverts/${listingId}?submitted=1`);
 }
 
 export async function setListingStatusAction(
