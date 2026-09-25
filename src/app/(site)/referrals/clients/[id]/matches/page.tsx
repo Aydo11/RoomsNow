@@ -13,6 +13,7 @@ import { ACCOMMODATION_TYPES, supportLabel } from "@/lib/taxonomy";
 import { clsx } from "@/lib/clsx";
 import { referrerNav } from "../../../nav";
 import { teamMemberIds } from "@/lib/referral-team";
+import { ShortlistButton } from "@/components/shortlist-controls";
 
 export const metadata = { title: "Match to an advert" };
 export const dynamic = "force-dynamic";
@@ -40,6 +41,7 @@ export default async function ClientMatchesPage({
       assessment: true,
       deletedAt: true,
       referrals: { select: { listingId: true } },
+      shortlist: { select: { listingId: true } },
     },
   });
   if (!client) notFound();
@@ -53,6 +55,7 @@ export default async function ClientMatchesPage({
   const assessment = parseAssessment(client.assessment);
   const completeness = assessmentCompleteness(assessment);
   const referred = new Set(client.referrals.map((r) => r.listingId).filter(Boolean));
+  const shortlisted = new Set(client.shortlist.map((item) => item.listingId));
   const visible = rows.filter((r) => showPoor || r.match.score >= 46);
   const hidden = rows.length - visible.length;
   const areas = clientAreas({ ...client, assessment });
@@ -123,6 +126,11 @@ export default async function ClientMatchesPage({
         <span className="ml-auto text-[13px] text-ink-faint">
           {visible.length} of {considered} live adverts
         </span>
+        {shortlisted.size > 0 && (
+          <Link href={`/referrals/clients/${client.id}/shortlist`} className="btn-secondary py-1.5">
+            Compare shortlist ({shortlisted.size})
+          </Link>
+        )}
         {visible.length > 0 && (
           <Link
             href={`/referrals/clients/${client.id}/tour${vettedOnly || showPoor ? `?${new URLSearchParams({ ...(vettedOnly ? { vetted: "1" } : {}), ...(showPoor ? { all: "1" } : {}) }).toString()}` : ""}`}
@@ -224,7 +232,8 @@ export default async function ClientMatchesPage({
                   <Link href={`/referrals/new?clientId=${client.id}&listingId=${listing.id}`} className="btn-primary w-full justify-center">
                     Refer to this advert
                   </Link>
-                  <Link href={`/listings/${listing.id}`} className="btn-secondary w-full justify-center">
+                  <ShortlistButton clientId={client.id} listingId={listing.id} initial={shortlisted.has(listing.id)} />
+                  <Link href={`/listings/${listing.id}`} className="btn-ghost w-full justify-center">
                     View advert
                   </Link>
                 </div>
