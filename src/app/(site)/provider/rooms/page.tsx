@@ -5,13 +5,15 @@ import { DashboardShell, StatCard } from "@/components/dashboard-shell";
 import { EmptyState } from "@/components/ui";
 import { RoomBoard } from "@/components/room-board";
 import { providerNav } from "../nav";
+import { VoidCostPanel } from "@/components/void-cost-panel";
+import { companyVoidCost } from "@/server/void-cost";
 
 export const metadata = { title: "Rooms" };
 export const dynamic = "force-dynamic";
 
 export default async function RoomsPage() {
   const { companyId } = await requireCompany();
-  const [nav, listings, counts] = await Promise.all([
+  const [nav, listings, counts, voids] = await Promise.all([
     providerNav(companyId),
     db.listing.findMany({
       where: { companyId, status: { not: "ARCHIVED" } },
@@ -22,6 +24,7 @@ export default async function RoomsPage() {
       },
     }),
     db.room.groupBy({ by: ["status"], where: { property: { companyId } }, _count: true }),
+    companyVoidCost(companyId),
   ]);
 
   const count = (status: string) => counts.find((c) => c.status === status)?._count ?? 0;
@@ -40,6 +43,8 @@ export default async function RoomsPage() {
         <StatCard label="Occupied" value={count("OCCUPIED")} />
         <StatCard label="Void or maintenance" value={count("VOID") + count("MAINTENANCE")} />
       </div>
+
+      {total > 0 && <VoidCostPanel cost={voids} limit={20} className="mt-5" />}
 
       {listings.length === 0 ? (
         <div className="mt-6">
