@@ -31,11 +31,11 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
       onSubmit={submit}
       className={
         hero
-          ? "grid gap-3 rounded-card border border-line bg-white p-4 shadow-raise sm:grid-cols-[1.3fr_1.1fr_0.9fr_auto] sm:items-end"
-          : "grid gap-2 sm:grid-cols-[1.2fr_1fr_0.8fr_auto] sm:items-end"
+          ? "grid grid-cols-1 gap-3 rounded-card border border-line bg-white p-4 shadow-raise sm:grid-cols-[1.3fr_1.1fr_0.9fr_auto] sm:items-end"
+          : "grid grid-cols-1 gap-2 sm:grid-cols-[1.2fr_1fr_0.8fr_auto] sm:items-end"
       }
     >
-      <div>
+      <div className="min-w-0">
         <label className="label" htmlFor="where">Where</label>
         <input
           id="where"
@@ -52,7 +52,7 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
         </datalist>
       </div>
 
-      <div>
+      <div className="min-w-0">
         <label className="label" htmlFor="support">Support needed</label>
         <select id="support" value={support} onChange={(e) => setSupport(e.target.value)} className="field">
           <option value="">Any support</option>
