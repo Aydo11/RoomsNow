@@ -148,3 +148,23 @@ export function MatchScore({ score }: { score: number }) {
     </span>
   );
 }
+
+/** "Usually replies within…" for fast-responding providers. Renders nothing otherwise. */
+export function ResponseBadge({ label, compact = false }: { label: string | null; compact?: boolean }) {
+  if (!label) return null;
+  return (
+    <span
+      className={clsx(
+        "inline-flex shrink-0 items-center gap-1 rounded-pill bg-paper-sunk font-medium text-ink-soft",
+        compact ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-[12px]",
+      )}
+      title="Based on how quickly this provider has replied to new messages over the last 90 days."
+    >
+      <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-pine" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+        <circle cx="8" cy="8" r="6.2" />
+        <path d="M8 4.6V8l2.3 1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {compact ? label.replace("Usually replies", "Replies") : label}
+    </span>
+  );
+}
