@@ -427,6 +427,19 @@ model Company {
   /// How many 5-qualified-referral reward cycles this company has already
   /// been paid out for. Prevents re-granting the same milestone twice.
   referralRewardsClaimed Int                @default(0)
+  /// Median minutes to first reply to a new conversation, over the last 90
+  /// days. Recalculated hourly by lib/response-time.ts; null until there's
+  /// enough history. Drives the "Usually replies within…" badge.
+  responseMinutes        Int?
+  /// How many conversations responseMinutes is based on.
+  responseSampleSize     Int                @default(0)
+  /// Weekly performance summary email (lib/weekly-summary.ts). On by default;
+  /// providers can turn it off in their company settings.
+  weeklySummary          Boolean            @default(true)
+  weeklySummarySentAt    DateTime?
+  /// Total advert views when the last summary went out, so the next one can
+  /// report views for that week alone.
+  weeklySummaryViews     Int?
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
@@ -443,8 +456,20 @@ model Company {
   accreditations   ProviderAccreditation[]
   referralsMade    ProviderReferral[]      @relation("ReferralsMade")
   referredVia      ProviderReferral?       @relation("ReferralsReceived")
+  quickReplies     QuickReply[]
 
   @@index([city])
+}
+
+/// A saved message a provider's team can drop into a conversation in one tap.
+model QuickReply {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([companyId, createdAt])
 }
 
 model ProviderAccreditation {
