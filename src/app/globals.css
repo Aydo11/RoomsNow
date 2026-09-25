@@ -539,6 +539,13 @@ html[data-theme="dark"] .text-green-800 {
   color: #8ecaff;
 }
 
+/* `ink` is a foreground token, so it becomes light in dark mode. When the
+   same token is used as a selected-control background (`bg-ink`), keep that
+   surface dark; otherwise its white label disappears against the highlight. */
+html[data-theme="dark"] .bg-ink {
+  background-color: #24547d;
+}
+
 html[data-theme="dark"] .bg-blue-50,
 html[data-theme="dark"] .bg-sky-50,
 html[data-theme="dark"] .bg-sky-100,
