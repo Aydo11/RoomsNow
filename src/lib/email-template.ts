@@ -155,161 +155,101 @@ export function renderEmail(params: {
 }
 
 /**
- * Wider, multi-section marketing shell for one specific send: the pre-launch
- * provider invitation (see sendPreLaunchInvite in server/actions/marketing.ts).
- * Deliberately a separate builder from renderEmail rather than an extra mode
- * bolted onto it — renderEmail's shape (single heading, single CTA, ~480px)
- * is right for a transactional notice and wrong for a stat-led sales email
- * with several sections. Same table-based/inline-style approach for Outlook
- * compatibility, same palette, wider card (600px).
+ * Shared building blocks for the two wider marketing emails: the pre-launch
+ * provider invitation and the provider mailshot. They use the same table-based,
+ * inline-style approach as renderEmail, so Outlook desktop keeps the layout.
+ * The <style> block only adds phone-width stacking, which clients that support
+ * it (Apple Mail, the Gmail apps) will apply. Clients that ignore it still get
+ * a clean 600px card.
  */
-export function renderPreLaunchInviteEmail(params: {
-  /** First name only, already trusted (pulled from our own outreach list, not user input) — escaped anyway. */
-  recipientName?: string;
-  /** Whoever is sending this send — set from the admin form, so it can change per outreach batch. */
-  senderName: string;
-  ctaUrl: string;
+const MKT = {
+  heroText: "#E8F2FC",
+  heroMuted: "#BFDDF7",
+  offerMuted: "#D6E8F8",
+  offerLabel: "#9CC9F2",
+  tint: "#E8F2FC",
+  tintLine: "#CFE1F2",
+  surfaceLine: "#DCE5EF",
+  hairline: "#E4EAF1",
+  serif: "Georgia, 'Times New Roman', serif",
+  sans: "Arial, Helvetica, sans-serif",
+};
+
+function marketingDocument(params: {
+  preheader: string;
+  /** Small label in the logo bar, e.g. "Provider invitation". */
+  badge: string;
+  /** Pill above the hero headline. Already-safe HTML. */
+  heroEyebrow?: string;
+  /** Already-safe HTML. */
+  heroTitle: string;
+  /** Already-safe HTML. */
+  heroIntro?: string;
+  /** Pre-built <tr> rows for the body of the card. */
+  rows: string;
+  /** Why the recipient is getting this, shown with the unsubscribe link. */
+  footerReason: string;
 }) {
-  const { recipientName, senderName, ctaUrl } = params;
-  const greeting = recipientName ? `Hi ${escapeHtml(recipientName)},` : "Hi,";
-  const sender = escapeHtml(senderName);
+  const { preheader, badge, heroEyebrow, heroTitle, heroIntro, rows, footerReason } = params;
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
     <title>${brand.name}</title>
+    <style>
+      @media only screen and (max-width: 620px) {
+        .mk-container { width: 100% !important; }
+        .mk-px { padding-left: 22px !important; padding-right: 22px !important; }
+        .mk-stack { display: block !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .mk-gap { padding-top: 12px !important; }
+        .mk-offer-fig { display: block !important; width: auto !important; padding: 24px 24px 12px 24px !important; }
+        .mk-offer-text { display: block !important; width: auto !important; padding: 0 24px 24px 24px !important; }
+        .mk-h1 { font-size: 27px !important; line-height: 34px !important; }
+        .mk-badge { display: none !important; }
+      }
+    </style>
   </head>
-  <body style="margin:0; padding:0; background-color:${COLORS.paper}; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <span style="display:none; font-size:1px; color:${COLORS.paper}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">Put your available rooms in front of people and professional referrers searching by need, location and live availability.</span>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.paper};">
+  <body style="margin:0; padding:0; background-color:${COLORS.paper};">
+    <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:${COLORS.paper};">${preheader}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${COLORS.paper};">
       <tr>
-        <td align="center" style="padding:32px 16px;">
-          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background-color:${COLORS.card}; border-radius:14px; border:1px solid ${COLORS.line};">
+        <td align="center" style="padding:28px 12px;">
+          <table role="presentation" class="mk-container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background-color:${COLORS.card}; border:1px solid ${COLORS.line}; border-radius:14px; overflow:hidden; font-family:${MKT.sans}; color:${COLORS.ink};">
             <tr>
-              <td style="padding:28px 40px 20px; border-bottom:1px solid ${COLORS.line};">
-                ${logoImgHtml()}
-                <span style="margin-left:10px; display:inline-block; padding:3px 10px; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark}; background-color:#EAF2FA; border-radius:999px;">Provider invitation</span>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="padding:28px 40px 0;">
-                <p style="margin:0; font-size:16px; font-weight:900; letter-spacing:0.045em; text-transform:uppercase; color:#C1440E;">FILL YOUR VOIDS NOW</p>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="padding:8px 40px 4px;">
-                <h1 style="margin:0 0 14px; font-size:26px; line-height:1.25; color:${COLORS.ink};">Make your available rooms easier to find</h1>
-                <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">${greeting}</p>
-                <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  I&apos;m ${sender}. I built ${brand.name} after seeing suitable rooms sit empty while
-                  referrers and people looking for accommodation struggled to find accurate,
-                  up-to-date vacancies.
-                </p>
-                <p style="margin:0; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  ${brand.name} gives providers one place to publish live availability and receive
-                  relevant enquiries. People and professional referrers can search by location,
-                  accommodation type and support need instead of relying on outdated lists and
-                  repeated phone calls.
-                </p>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="padding:18px 30px 8px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.paper}; border:1px solid ${COLORS.line}; border-radius:12px;">
+              <td class="mk-px" style="padding:22px 40px; background-color:${COLORS.card};">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
-                    <td style="padding:20px 24px;">
-                      <p style="margin:0 0 10px; font-size:13px; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark};">What providers can do</p>
-                      <p style="margin:0 0 8px; font-size:14.5px; line-height:1.55; color:${COLORS.inkSoft};">&#10003;&nbsp; Advertise HMOs, supported, transitional and adult social care accommodation</p>
-                      <p style="margin:0 0 8px; font-size:14.5px; line-height:1.55; color:${COLORS.inkSoft};">&#10003;&nbsp; Show room-level availability, photos, video and eligibility information</p>
-                      <p style="margin:0 0 8px; font-size:14.5px; line-height:1.55; color:${COLORS.inkSoft};">&#10003;&nbsp; Receive direct enquiries and professional referrals in one dashboard</p>
-                      <p style="margin:0; font-size:14.5px; line-height:1.55; color:${COLORS.inkSoft};">&#10003;&nbsp; Build trust with due-diligence verification and approved accreditations</p>
+                    <td valign="middle">${logoImgHtml()}</td>
+                    <td class="mk-badge" align="right" valign="middle">
+                      <span style="display:inline-block; padding:5px 12px; font-size:11px; font-weight:bold; letter-spacing:1.2px; text-transform:uppercase; color:${COLORS.pineDark}; background-color:${MKT.tint}; border-radius:999px;">${badge}</span>
                     </td>
                   </tr>
                 </table>
               </td>
             </tr>
-
             <tr>
-              <td style="padding:16px 40px 4px;">
-                <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  It takes only a few minutes to create your provider profile and first advert.
-                  There is no promise of a placement &mdash; but keeping accurate vacancies visible
-                  gives the right referrers and applicants a clearer route to contact you.
-                </p>
-                <p style="margin:0; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">
-                  We are inviting a limited group of providers to list before wider outreach begins,
-                  so we can improve the service around real vacancies and genuine referral workflows.
-                </p>
+              <td class="mk-px" style="background-color:${COLORS.pine}; padding:38px 40px 42px;">
+                ${
+                  heroEyebrow
+                    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="border:2px solid #FFFFFF; border-radius:999px; padding:7px 16px; font-size:11px; font-weight:bold; letter-spacing:1.6px; text-transform:uppercase; color:#FFFFFF;">${heroEyebrow}</td></tr></table>`
+                    : ""
+                }
+                <h1 class="mk-h1" style="margin:${heroEyebrow ? "22px" : "0"} 0 0; font-family:${MKT.serif}; font-size:32px; line-height:39px; font-weight:normal; color:#FFFFFF;">${heroTitle}</h1>
+                ${heroIntro ? `<p style="margin:16px 0 0; font-size:16px; line-height:25px; color:${MKT.heroText};">${heroIntro}</p>` : ""}
               </td>
             </tr>
-
+            ${rows}
             <tr>
-              <td style="padding:20px 30px 8px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EAF2FA; border:1px solid #CFE1F2; border-radius:12px;">
-                  <tr>
-                    <td style="padding:22px 26px;">
-                      <p style="margin:0 0 6px; font-size:12px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark};">Founding-provider offer</p>
-                      <p style="margin:0 0 10px; font-size:20px; line-height:1.4; color:${COLORS.ink}; font-weight:800;">1 month of Professional, free &mdash; worth &pound;49</p>
-                      <p style="margin:0; font-size:14.5px; line-height:1.6; color:${COLORS.inkSoft};">
-                        Publish up to 15 live adverts, manage room availability, receive enquiries
-                        and referrals, view advert analytics and use one promoted slot. No card is
-                        needed for the trial and there is no obligation to continue afterwards.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="padding:14px 40px 8px;">
-                <table role="presentation" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td style="border-radius:8px; background-color:${COLORS.pine};">
-                      <a href="${ctaUrl}" style="display:inline-block; padding:13px 30px; font-size:15px; font-weight:700; color:#FFFFFF; text-decoration:none; border-radius:8px;">List your available rooms</a>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="padding:10px 40px 4px;">
-                <p style="margin:0; font-size:13px; line-height:1.6; color:${COLORS.inkFaint};">
-                  Create a provider account and reply to this email after registering. We&apos;ll apply
-                  the one-month Professional trial without asking for payment details. If the button
-                  doesn&apos;t work, copy this link instead:<br />
-                  <a href="${ctaUrl}" style="color:${COLORS.pine}; word-break:break-all;">${ctaUrl}</a>
+              <td class="mk-px" style="background-color:${COLORS.paper}; border-top:1px solid ${MKT.hairline}; padding:22px 40px;">
+                <p style="margin:0; font-size:12px; line-height:19px; color:${COLORS.inkFaint};">
+                  ${brand.name} &middot; ${brand.tagline}<br />
+                  Questions? Email <a href="mailto:${brand.supportEmail}" style="color:${COLORS.inkFaint};">${brand.supportEmail}</a>
                 </p>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="padding:24px 40px 8px;">
-                <p style="margin:0; font-size:14.5px; line-height:1.65; color:${COLORS.inkSoft};">
-                  ${sender}
-                </p>
-                <p style="margin:14px 0 0; font-size:13px; line-height:1.6; color:${COLORS.inkFaint}; font-style:italic;">
-                  P.S. If RoomsNow is not relevant to your organisation, you can unsubscribe below.
-                  If it is, I&apos;d genuinely value your feedback on what would make vacancy and referral
-                  management more useful for your team.
-                </p>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="padding:20px 40px 28px;">
-                <div style="border-top:1px solid ${COLORS.line}; padding-top:20px;">
-                  <p style="margin:0; font-size:12px; line-height:1.6; color:${COLORS.inkFaint};">
-                    ${brand.name} &middot; ${brand.tagline}<br />
-                    Questions? Email <a href="mailto:${brand.supportEmail}" style="color:${COLORS.inkFaint};">${brand.supportEmail}</a>
-                  </p>
-                  ${marketingUnsubscribeHtml("You are receiving this provider invitation because your organisation may offer accommodation relevant to RoomsNow users.")}
-                </div>
+                ${marketingUnsubscribeHtml(footerReason)}
               </td>
             </tr>
           </table>
@@ -318,6 +258,178 @@ export function renderPreLaunchInviteEmail(params: {
     </table>
   </body>
 </html>`;
+}
+
+/** A body row. `top` is the space above it in px. */
+function mkRow(inner: string, top = 28) {
+  return `<tr>
+              <td class="mk-px" style="padding:${top}px 40px 0;">
+                ${inner}
+              </td>
+            </tr>`;
+}
+
+function mkParagraph(html: string, first = false) {
+  return `<p style="margin:${first ? "0" : "14px"} 0 0; font-size:15px; line-height:24px; color:${COLORS.inkSoft};">${html}</p>`;
+}
+
+/** Small uppercase label, then a serif section title. */
+function mkSectionHeading(eyebrow: string, title: string) {
+  return `<p style="margin:0; font-size:11px; font-weight:bold; letter-spacing:1.4px; text-transform:uppercase; color:${COLORS.pine};">${eyebrow}</p>
+                <h2 style="margin:8px 0 0; font-family:${MKT.serif}; font-size:24px; line-height:31px; font-weight:normal; color:${COLORS.ink};">${title}</h2>`;
+}
+
+/** Two-by-two grid of feature cards that stacks to one column on phones. */
+function mkFeatureGrid(items: { icon: string; title: string; text: string }[]) {
+  const card = (item: { icon: string; title: string; text: string }) =>
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${COLORS.paper}; border:1px solid ${MKT.surfaceLine}; border-radius:12px;">
+                        <tr><td style="padding:18px;">
+                          <p style="margin:0; font-size:20px; line-height:22px; color:${COLORS.pine};">${item.icon}</p>
+                          <p style="margin:10px 0 0; font-size:15px; font-weight:bold; color:${COLORS.ink};">${item.title}</p>
+                          <p style="margin:6px 0 0; font-size:14px; line-height:21px; color:${COLORS.inkSoft};">${item.text}</p>
+                        </td></tr>
+                      </table>`;
+  const rows: string[] = [];
+  for (let i = 0; i < items.length; i += 2) {
+    const top = i === 0 ? 0 : 12;
+    const right = items[i + 1];
+    rows.push(`<tr>
+                    <td class="mk-stack" width="50%" valign="top" style="padding:${top}px 6px 0 0;">${card(items[i])}</td>
+                    <td class="mk-stack mk-gap" width="50%" valign="top" style="padding:${top}px 0 0 6px;">${right ? card(right) : "&nbsp;"}</td>
+                  </tr>`);
+  }
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows.join("")}</table>`;
+}
+
+/** Deep-blue offer panel with a big figure on the left. */
+function mkOfferPanel(params: { figure: string; figureLabel: string; title: string; text: string }) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${COLORS.pineDark}; border-radius:12px;">
+                  <tr>
+                    <td class="mk-offer-fig" valign="middle" width="130" style="padding:24px 0 24px 24px;">
+                      <p style="margin:0; font-family:${MKT.serif}; font-size:46px; line-height:46px; color:#FFFFFF;">${params.figure}</p>
+                      <p style="margin:4px 0 0; font-size:12px; font-weight:bold; letter-spacing:1.2px; text-transform:uppercase; color:${MKT.offerLabel};">${params.figureLabel}</p>
+                    </td>
+                    <td class="mk-offer-text" valign="middle" style="padding:24px 24px 24px 12px;">
+                      <p style="margin:0; font-size:17px; line-height:23px; font-weight:bold; color:#FFFFFF;">${params.title}</p>
+                      <p style="margin:6px 0 0; font-size:14px; line-height:22px; color:${MKT.offerMuted};">${params.text}</p>
+                    </td>
+                  </tr>
+                </table>`;
+}
+
+/** Light-blue note box. */
+function mkTintNote(html: string) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${MKT.tint}; border:1px solid ${MKT.tintLine}; border-radius:12px;">
+                  <tr><td style="padding:18px 22px; font-size:14px; line-height:22px; color:${COLORS.pineDark};">${html}</td></tr>
+                </table>`;
+}
+
+/** Centred button (with a VML version so Outlook desktop keeps the rounded fill). */
+function mkButton(label: string, url: string) {
+  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                  <tr>
+                    <td align="center" bgcolor="${COLORS.pine}" style="border-radius:10px; background-color:${COLORS.pine};">
+                      <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${url}" style="height:50px;v-text-anchor:middle;width:300px;" arcsize="20%" stroke="f" fillcolor="${COLORS.pine}"><center style="color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">${label}</center></v:roundrect><![endif]-->
+                      <!--[if !mso]><!--><a href="${url}" style="display:inline-block; padding:16px 34px; font-family:${MKT.sans}; font-size:16px; font-weight:bold; color:#FFFFFF; text-decoration:none; border-radius:10px;">${label} &rarr;</a><!--<![endif]-->
+                    </td>
+                  </tr>
+                </table>`;
+}
+
+/**
+ * The pre-launch provider invitation (see sendPreLaunchInvite in
+ * server/actions/marketing.ts). It's deliberately separate from renderEmail:
+ * that shape (one heading, one button, about 480px) suits a transactional
+ * notice, not a multi-section sales email.
+ */
+export function renderPreLaunchInviteEmail(params: {
+  /** First name only, from our own outreach list rather than user input. Escaped anyway. */
+  recipientName?: string;
+  /** Whoever is sending this batch. Set from the admin form, so it can change per batch. */
+  senderName: string;
+  ctaUrl: string;
+}) {
+  const { recipientName, senderName, ctaUrl } = params;
+  const greeting = recipientName ? `Hi ${escapeHtml(recipientName)},` : "Hi,";
+  const sender = escapeHtml(senderName);
+  const rows = [
+    mkRow(
+      [
+        `<p style="margin:0; font-size:16px; line-height:26px; color:${COLORS.ink};">${greeting}</p>`,
+        mkParagraph(
+          `I&apos;m ${sender}. I built ${brand.name} after seeing suitable rooms sit empty while referrers and people looking for accommodation struggled to find accurate, up-to-date vacancies.`,
+        ),
+        mkParagraph(
+          `People and professional referrers can search by location, accommodation type and support need, instead of relying on outdated lists and repeated phone calls.`,
+        ),
+      ].join(""),
+      34,
+    ),
+    mkRow(mkSectionHeading("What providers can do", "One place for your vacancies and referrals"), 34),
+    mkRow(
+      mkFeatureGrid([
+        { icon: "&#8962;", title: "Advertise any type of home", text: "HMOs and supported, transitional and adult social care accommodation." },
+        { icon: "&#9719;", title: "Show live availability", text: "Room-level availability, photos, video and eligibility information." },
+        { icon: "&#9993;", title: "Enquiries and referrals", text: "Direct enquiries and professional referrals arrive in one dashboard." },
+        { icon: "&#10003;", title: "Build trust", text: "Due-diligence verification and approved accreditations on your profile." },
+      ]),
+      16,
+    ),
+    mkRow(
+      mkParagraph(
+        `It only takes a few minutes to create your provider profile and first advert. There&apos;s no promise of a placement, but keeping accurate vacancies visible gives the right referrers and applicants a clearer route to contact you.`,
+        true,
+      ) +
+        mkParagraph(
+          `We&apos;re inviting a limited group of providers to list before wider outreach begins, so we can improve the service around real vacancies and genuine referral workflows.`,
+        ),
+    ),
+    mkRow(mkSectionHeading("Founding-provider offer", "Three months of Professional, on us"), 34),
+    mkRow(
+      mkOfferPanel({
+        figure: "3",
+        figureLabel: "months free",
+        title: "Professional membership, free for 3 months",
+        text: "Worth &pound;147. Publish up to 15 live adverts, manage room availability, receive enquiries and referrals, view advert analytics and use one promoted slot. No card needed and no obligation to continue afterwards.",
+      }),
+      18,
+    ),
+    `<tr>
+              <td class="mk-px" align="center" style="padding:30px 40px 0;">
+                ${mkButton("List your available rooms", ctaUrl)}
+                <p style="margin:12px 0 0; font-size:12px; line-height:19px; color:${COLORS.inkFaint};">
+                  If the button doesn&apos;t work, copy this link:<br />
+                  <a href="${ctaUrl}" style="color:${COLORS.pine}; word-break:break-all;">${ctaUrl}</a>
+                </p>
+              </td>
+            </tr>`,
+    mkRow(
+      mkTintNote(
+        `<strong>To claim your 3 free months:</strong> create a provider account, then reply to this email. We&apos;ll switch on Professional for three months without asking for payment details.`,
+      ),
+      22,
+    ),
+    mkRow(
+      `<p style="margin:0; font-size:15px; line-height:22px; color:${COLORS.ink};">Kind regards,<br /><strong>${sender}</strong></p>
+                <p style="margin:16px 0 0; font-size:13px; line-height:20px; color:${COLORS.inkFaint}; font-style:italic;">
+                  P.S. If ${brand.name} isn&apos;t relevant to your organisation, you can unsubscribe below. If it is, I&apos;d genuinely value your feedback on what would make vacancy and referral management more useful for your team.
+                </p>`,
+      30,
+    ),
+    `<tr><td style="padding:34px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr>`,
+  ].join("\n            ");
+
+  return marketingDocument({
+    preheader:
+      "Put your available rooms in front of people and professional referrers, with 3 months of Professional free.",
+    badge: "Provider invitation",
+    heroEyebrow: "Fill your voids now",
+    heroTitle: "Make your available rooms easier to find",
+    heroIntro: `${brand.name} gives providers one place to publish live availability and receive relevant enquiries and referrals.`,
+    rows,
+    footerReason:
+      "You are receiving this provider invitation because your organisation may offer accommodation relevant to RoomsNow users.",
+  });
 }
 
 /** Plain-text fallback for renderPreLaunchInviteEmail, for email clients that don't render HTML. */
@@ -343,11 +455,11 @@ It takes only a few minutes to create your provider profile and first advert. Th
 We are inviting a limited group of providers to list before wider outreach begins, so we can improve the service around real vacancies and genuine referral workflows.
 
 FOUNDING-PROVIDER OFFER
-1 month of Professional, free — worth £49. Publish up to 15 live adverts, manage room availability, receive enquiries and referrals, view advert analytics and use one promoted slot. No card is needed for the trial and there is no obligation to continue afterwards.
+3 months of Professional, free — worth £147. Publish up to 15 live adverts, manage room availability, receive enquiries and referrals, view advert analytics and use one promoted slot. No card is needed and there is no obligation to continue afterwards.
 
 List your available rooms: ${ctaUrl}
 
-Create a provider account and reply to this email after registering. We'll apply the one-month Professional trial without asking for payment details.
+To claim your 3 free months, create a provider account and reply to this email. We'll switch on Professional for three months without asking for payment details.
 
 ${senderName}
 
@@ -362,13 +474,12 @@ Unsubscribe from RoomsNow marketing emails: ${RESEND_UNSUBSCRIBE_URL}`;
 }
 
 /**
- * The AIO provider mailshot (see sendProviderMailshot in
- * server/actions/provider-mailshot.ts) — reaches already-registered
- * providers, unlike renderPreLaunchInviteEmail above which reaches people
- * who haven't signed up yet. One shared shell for both of its "kinds":
- * a promo-code send shows the dashed-border code block, a news/update
- * send just skips it. Subject and body are admin-typed per send, so
- * everything user-supplied is escaped before it reaches the HTML.
+ * The provider mailshot (see sendProviderMailshot in
+ * server/actions/provider-mailshot.ts). Unlike renderPreLaunchInviteEmail, it
+ * goes to providers who already have an account. Both of its kinds share this
+ * layout: a promo-code send adds the offer panel with the code, and a news or
+ * update send leaves it out. The subject and body are typed by an admin for
+ * each send, so everything they supply is escaped before it reaches the HTML.
  */
 export function renderProviderMailshotEmail(params: {
   kind: "PROMO" | "NEWS" | "CUSTOM";
@@ -387,79 +498,51 @@ export function renderProviderMailshotEmail(params: {
   const badgeLabel = kind === "PROMO" ? "Provider offer" : kind === "CUSTOM" ? "Provider update" : "Fill vacant rooms";
   const promoBlock =
     kind === "PROMO" && promoCode
-      ? `<tr>
-              <td style="padding:6px 30px 6px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EAF2FA; border:1px solid #CFE1F2; border-radius:12px;">
+      ? mkRow(
+          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${COLORS.pineDark}; border-radius:12px;">
                   <tr>
-                    <td style="padding:20px 26px; text-align:center;">
-                      ${promoBlurb ? `<p style="margin:0 0 10px; font-size:14.5px; line-height:1.6; color:${COLORS.inkSoft};">${escapeHtml(promoBlurb)}</p>` : ""}
-                      <span style="display:inline-block; padding:10px 22px; font-size:18px; font-weight:700; letter-spacing:0.04em; color:${COLORS.pineDark}; background-color:#FFFFFF; border:1.5px dashed ${COLORS.pine}; border-radius:8px;">${escapeHtml(promoCode)}</span>
+                    <td align="center" style="padding:26px 24px;">
+                      <p style="margin:0; font-size:11px; font-weight:bold; letter-spacing:1.4px; text-transform:uppercase; color:${MKT.offerLabel};">Your code</p>
+                      ${promoBlurb ? `<p style="margin:10px 0 0; font-size:15px; line-height:23px; color:${MKT.offerMuted};">${escapeHtml(promoBlurb)}</p>` : ""}
+                      <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:16px auto 0;">
+                        <tr>
+                          <td style="padding:12px 26px; background-color:#FFFFFF; border:2px dashed ${MKT.offerLabel}; border-radius:10px; font-family:'Courier New', Courier, monospace; font-size:22px; font-weight:bold; letter-spacing:2px; color:${COLORS.pineDark};">${escapeHtml(promoCode)}</td>
+                        </tr>
+                      </table>
+                      <p style="margin:12px 0 0; font-size:12px; line-height:18px; color:${MKT.offerMuted};">Enter it at checkout when you choose a plan from your Membership page.</p>
                     </td>
                   </tr>
-                </table>
-              </td>
-            </tr>`
+                </table>`,
+          22,
+        )
       : "";
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${brand.name}</title>
-  </head>
-  <body style="margin:0; padding:0; background-color:${COLORS.paper}; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <span style="display:none; font-size:1px; color:${COLORS.paper}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">${escapeHtml(heading)}</span>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.paper};">
-      <tr>
-        <td align="center" style="padding:32px 16px;">
-          <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px; width:100%; background-color:${COLORS.card}; border-radius:14px; border:1px solid ${COLORS.line};">
-            <tr>
-              <td style="padding:28px 36px 20px; border-bottom:1px solid ${COLORS.line};">
-                ${logoImgHtml()}
-                <span style="margin-left:10px; display:inline-block; padding:3px 10px; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:${COLORS.pineDark}; background-color:#EAF2FA; border-radius:999px;">${badgeLabel}</span>
+
+  const rows = [
+    mkRow(
+      `<p style="margin:0; font-size:16px; line-height:26px; color:${COLORS.ink};">${greeting}</p>
+                <div style="margin-top:14px;">${paragraphsHtml(bodyText, COLORS.inkSoft)}</div>`,
+      34,
+    ),
+    promoBlock,
+    `<tr>
+              <td class="mk-px" align="center" style="padding:24px 40px 0;">
+                ${mkButton(escapeHtml(ctaLabel), ctaUrl)}
               </td>
-            </tr>
-            <tr>
-              <td style="padding:32px 36px 4px;">
-                <h1 style="margin:0 0 14px; font-size:22px; line-height:1.3; color:${COLORS.ink};">${escapeHtml(heading)}</h1>
-                <p style="margin:0 0 14px; font-size:15px; line-height:1.65; color:${COLORS.inkSoft};">${greeting}</p>
-                ${paragraphsHtml(bodyText, COLORS.inkSoft)}
-              </td>
-            </tr>
-            ${promoBlock}
-            <tr>
-              <td style="padding:12px 36px 8px;">
-                <table role="presentation" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td style="border-radius:8px; background-color:${COLORS.pine};">
-                      <a href="${ctaUrl}" style="display:inline-block; padding:12px 28px; font-size:15px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">${escapeHtml(ctaLabel)}</a>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:20px 36px 4px;">
-                <p style="margin:0; font-size:14.5px; line-height:1.65; color:${COLORS.inkSoft};">${sender}</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:20px 36px 28px;">
-                <div style="border-top:1px solid ${COLORS.line}; padding-top:20px;">
-                  <p style="margin:0; font-size:12px; line-height:1.6; color:${COLORS.inkFaint};">
-                    ${brand.name} &middot; ${brand.tagline}<br />
-                    Questions? Email <a href="mailto:${brand.supportEmail}" style="color:${COLORS.inkFaint};">${brand.supportEmail}</a>
-                  </p>
-                  ${marketingUnsubscribeHtml("You are receiving this because your organisation has a RoomsNow provider account.")}
-                </div>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
+            </tr>`,
+    mkRow(`<p style="margin:0; font-size:15px; line-height:22px; color:${COLORS.ink};">Kind regards,<br /><strong>${sender}</strong></p>`, 30),
+    `<tr><td style="padding:34px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr>`,
+  ]
+    .filter(Boolean)
+    .join("\n            ");
+
+  return marketingDocument({
+    preheader: escapeHtml(heading),
+    badge: "For providers",
+    heroEyebrow: badgeLabel,
+    heroTitle: escapeHtml(heading),
+    rows,
+    footerReason: "You are receiving this because your organisation has a RoomsNow provider account.",
+  });
 }
 
 /** Plain-text fallback for renderProviderMailshotEmail. */

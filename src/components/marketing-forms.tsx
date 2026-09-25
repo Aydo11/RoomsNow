@@ -11,7 +11,7 @@ export function PreLaunchInviteForm() {
       <h2 className="text-xl">Prepare a provider outreach campaign</h2>
       <p className="text-sm text-ink-soft">
         Imports up to 500 valid business contacts into a campaign-specific Resend segment and
-        prepares the one-month founding-provider invitation. Nothing is sent until you confirm it. Only add
+        prepares the three-month founding-provider invitation. Nothing is sent until you confirm it. Only add
         organisations you can lawfully contact; never use bought, scraped or personal lists.
       </p>
       <label className="block text-sm">
