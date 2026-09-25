@@ -96,6 +96,16 @@ export default async function SearchPage({
     : params.where
       ? ` within ${results.radius} miles of ${params.where}`
       : " across the UK";
+  // Tour mode keeps the same filters (minus the list/map view switch).
+  const tourQuery = (() => {
+    const search = new URLSearchParams();
+    for (const [key, value] of Object.entries(params as Record<string, string | string[] | undefined>)) {
+      if (key === "view" || value == null || value === "") continue;
+      for (const item of Array.isArray(value) ? value : [value]) search.append(key, item);
+    }
+    const text = search.toString();
+    return text ? `?${text}` : "";
+  })();
   const memberListings = results.items.filter((listing) => listing.memberListing);
   const freeListings = results.items.filter((listing) => !listing.memberListing);
   const visibleListingIds = [...new Set([
@@ -149,7 +159,13 @@ export default async function SearchPage({
                 Ordinary results rotate daily. Sponsored and boosted adverts are labelled separately.
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {results.total > 0 && (
+                <Link href={`/search/tour${tourQuery}`} className="btn-secondary py-2" title="Swipe through these rooms full screen">
+                  <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="5.5" y="2.5" width="9" height="15" rx="2" /><path d="m9 8 3 2-3 2V8Z" fill="currentColor" stroke="none" /></svg>
+                  Tour mode
+                </Link>
+              )}
               <Suspense fallback={null}>
                 <SortSelect />
                 <ViewToggle view={view} />
