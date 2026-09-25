@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { setWeeklySummaryAction } from "@/server/actions/weekly-summary";
+import { sendTestWeeklySummaryAction, setWeeklySummaryAction } from "@/server/actions/weekly-summary";
 
 /** Company settings card for the Monday summary email. */
 export function WeeklySummarySetting({ initial, email }: { initial: boolean; email: string }) {
   const [on, setOn] = useState(initial);
   const [pending, start] = useTransition();
+  const [sending, startSending] = useTransition();
+  const [testMessage, setTestMessage] = useState<string | null>(null);
 
   return (
     <section className="card mt-6 p-6">
@@ -34,6 +36,26 @@ export function WeeklySummarySetting({ initial, email }: { initial: boolean; ema
           </span>
         </span>
       </label>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          className="btn-secondary py-1.5 text-[13px]"
+          disabled={sending}
+          onClick={() =>
+            startSending(async () => {
+              const result = await sendTestWeeklySummaryAction();
+              setTestMessage(result.message);
+            })
+          }
+        >
+          {sending ? "Sending…" : "Send me a test"}
+        </button>
+        {testMessage && (
+          <span className="text-[13px] text-ink-soft" role="status">
+            {testMessage}
+          </span>
+        )}
+      </div>
     </section>
   );
 }
