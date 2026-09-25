@@ -313,6 +313,7 @@ model User {
   referralsMade            Referral[]                @relation("ReferralReferrer")
   savedListings            SavedListing[]
   notifications            Notification[]
+  pushSubscriptions        PushSubscription[]
   messages                 Message[]
   participations           ConversationParticipant[]
   reportsFiled             Report[]                  @relation("ReportReporter")
@@ -1089,6 +1090,10 @@ model SavedSearch {
   ensuite       Boolean         @default(false)
   selfContained Boolean         @default(false)
   petsAllowed   Boolean         @default(false)
+  /// "woman" or "man": skip homes only for the other (from the eligibility check).
+  resident      String?
+  /// Only homes that accept Housing Benefit.
+  housingBenefit Boolean        @default(false)
   referral      ReferralRoute[] @default([])
   verifiedOnly  Boolean         @default(false)
   minRent       Int?
@@ -1465,4 +1470,21 @@ model ReferralOrgInvite {
 
   @@index([organisationId, acceptedAt])
   @@index([email])
+}
+
+/// A phone or browser that asked for push notifications. One user can have
+/// several (their phone and their laptop). Removed when the push service says
+/// the subscription has gone.
+model PushSubscription {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
 }
