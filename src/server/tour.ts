@@ -5,6 +5,7 @@ import { ACCOMMODATION_TYPES, supportLabel } from "@/lib/taxonomy";
 import { youtubeId } from "@/lib/cover-image";
 import { demoListingImage } from "@/lib/demo-listings";
 import { responseLabel } from "@/lib/response-label";
+import { htmlToText } from "@/lib/html-text";
 
 /**
  * Data for Tour mode, the full-screen swipe feed of rooms. Everything here is
@@ -38,25 +39,6 @@ export type TourSlide = {
 
 const MAX_MEDIA = 10;
 const DESCRIPTION_LIMIT = 1200;
-
-/** Adverts store sanitised HTML; the tour shows it as plain text. */
-function plainText(html: string | null) {
-  if (!html) return null;
-  const text = html
-    .replace(/<\s*br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|div|li|h\d)>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-  if (!text) return null;
-  return text.length > DESCRIPTION_LIMIT ? `${text.slice(0, DESCRIPTION_LIMIT).trimEnd()}…` : text;
-}
 
 /**
  * Loads tour slides for these adverts, in the order given. Adverts that are no
@@ -126,7 +108,7 @@ export async function tourSlides(
         id: listing.id,
         title: listing.title,
         summary: listing.summary,
-        description: plainText(listing.description),
+        description: htmlToText(listing.description, DESCRIPTION_LIMIT),
         rent: rentRange(listing.weeklyRentFrom, listing.weeklyRentTo),
         location: publicLocation(listing.property),
         typeLabel: ACCOMMODATION_TYPES[listing.accommodationType as keyof typeof ACCOMMODATION_TYPES] ?? "Accommodation",
