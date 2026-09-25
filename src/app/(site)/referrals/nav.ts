@@ -4,12 +4,13 @@ import { teamMemberIds } from "@/lib/referral-team";
 
 export async function referrerNav(userId: string): Promise<NavItem[]> {
   const teamIds = await teamMemberIds(userId);
-  const [open, activeClients, unread] = await Promise.all([
+  const [open, activeClients, unread, council] = await Promise.all([
     db.referral.count({
       where: { referrerId: { in: teamIds }, status: { notIn: ["MOVED_IN", "DECLINED", "WITHDRAWN"] } },
     }),
     db.client.count({ where: { referrerId: { in: teamIds }, status: { not: "ARCHIVED" }, deletedAt: null } }),
     db.notification.count({ where: { userId, readAt: null } }),
+    db.councilAccess.findUnique({ where: { userId }, select: { id: true } }),
   ]);
 
   return [
@@ -17,6 +18,7 @@ export async function referrerNav(userId: string): Promise<NavItem[]> {
     { href: "/referrals/new", label: "New referral" },
     { href: "/referrals/clients", label: "My clients", badge: activeClients || undefined },
     { href: "/referrals/analytics", label: "Analytics" },
+    ...(council ? [{ href: "/council", label: "Council view" }] : []),
     { href: "/search", label: "Search accommodation" },
     { href: "/referrals/vetted", label: "Vetted providers" },
     { href: "/dashboard/alerts", label: "Saved alerts" },
