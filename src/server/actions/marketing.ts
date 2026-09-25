@@ -89,7 +89,7 @@ function splitRecipients(raw: string): string[] {
  * a Resend Broadcast. One submission can cover a whole outreach batch, pasted one
  * address per line or comma-separated. Resend handles queueing, suppression and
  * managed unsubscribe state; the app requires a second confirmation before send. The
- * "1 month free" offer it promises is fulfilled the same way admin already
+ * "3 months free" offer it promises is fulfilled the same way admin already
  * grants complimentary access elsewhere: manually, via the existing provider
  * membership grant form on /admin/memberships, once each recipient registers.
  */
@@ -176,7 +176,7 @@ export async function sendPreLaunchInvite(_previous: FormState, form: FormData):
     // Email subjects are plain text (so they cannot be bold). Keep the primary
     // benefit in capitals so it is immediately visible in a crowded inbox,
     // while leaving the supporting detail in normal case for deliverability.
-    const subject = "FILL YOUR VOIDS NOW — list free on RoomsNow for one month";
+    const subject = "FILL YOUR VOIDS NOW — list free on RoomsNow for three months";
     const prepared = await prepareMarketingBroadcast({
       campaignName: "Founding provider outreach",
       recipients: valid.map((email) => ({ email, firstName: valid.length === 1 ? firstName || undefined : undefined })),
