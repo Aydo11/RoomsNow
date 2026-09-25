@@ -32,6 +32,8 @@ import { PropertyMap } from "@/components/property-map";
 import { hasProviderMapAccess } from "@/lib/entitlements";
 import { coverImage } from "@/lib/cover-image";
 import { checkHundredViews } from "@/lib/milestones";
+import { ResidentRatingLine, ResidentReviews } from "@/components/resident-reviews";
+import { residentReviewsFor } from "@/server/resident-reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +112,7 @@ export default async function ListingPage({
     }
   }
 
+  const residents = await residentReviewsFor(listing.companyId, { take: 3, listingFirst: listing.id });
   const [saved, existingRequest] = user
     ? await Promise.all([
         db.savedListing.findUnique({ where: { userId_listingId: { userId: user.id, listingId: listing.id } } }),
@@ -199,6 +202,14 @@ export default async function ListingPage({
         <Link href={`/rooms/${locationSlug(listing.property.city)}`} className="hover:text-ink">
           {listing.property.city}
         </Link>
+        {listing.property.area && (
+          <>
+            <span className="mx-2">/</span>
+            <Link href={`/supported-housing/${locationSlug(listing.property.area)}`} className="hover:text-ink">
+              {listing.property.area}
+            </Link>
+          </>
+        )}
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
@@ -350,6 +361,13 @@ export default async function ListingPage({
             </section>
           )}
 
+          <ResidentReviews
+            summary={residents.summary}
+            reviews={residents.reviews}
+            moreHref={`/companies/${listing.company.slug}#resident-reviews`}
+            heading={`What residents say about ${listing.company.name}`}
+          />
+
           <div className="mt-10">
             <ReportForm targetType="LISTING" targetId={listing.id} />
           </div>
@@ -394,7 +412,10 @@ export default async function ListingPage({
               )}
             </div>
 
-            <p className="mt-4 text-[13px] leading-relaxed text-ink-faint">
+            <Link href="/next-steps" className="mt-4 inline-block text-[14px] font-semibold text-pine-dark hover:underline">
+              What happens after I ask? →
+            </Link>
+            <p className="mt-3 text-[13px] leading-relaxed text-ink-faint">
               Messages and requests stay inside {brand.name}. Your contact details are never shown to
               the provider unless you share them.
             </p>
@@ -431,6 +452,7 @@ export default async function ListingPage({
                 <ResponseBadge label={responseLabel(listing.company.responseMinutes, listing.company.responseSampleSize)} />
               </div>
             )}
+            <ResidentRatingLine summary={residents.summary} href="#resident-reviews" />
             {listing.company.about && (
               <p className="mt-3 line-clamp-4 text-[14px] leading-relaxed text-ink-soft">{listing.company.about}</p>
             )}
