@@ -10,6 +10,8 @@ import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { timeAgo } from "@/lib/format";
 import { computeReferralOutcomes } from "@/lib/referral-outcomes";
 import { ProviderActivityChart, type ProviderActivityPoint } from "@/components/provider-activity-chart";
+import { VoidCostPanel } from "@/components/void-cost-panel";
+import { companyVoidCost } from "@/server/void-cost";
 
 export const metadata = { title: "Provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -21,7 +23,7 @@ export default async function ProviderDashboard() {
   const twelveWeeksAgo = new Date(Date.now() - 12 * 7 * 24 * 60 * 60_000);
   const now = new Date();
 
-  const [company, limits, boosts, activeBoosts, activeSponsored, listings, rooms, requests, referrals, views, requests30d, referrals30d, requestStatuses, referralStatuses, unreadThreads, topListings, resolvedReferrals, requestActivity, referralActivity] = await Promise.all([
+  const [company, limits, boosts, activeBoosts, activeSponsored, listings, rooms, requests, referrals, views, requests30d, referrals30d, requestStatuses, referralStatuses, unreadThreads, topListings, resolvedReferrals, requestActivity, referralActivity, voids] = await Promise.all([
     db.company.findUniqueOrThrow({ where: { id: companyId } }),
     planLimits(companyId),
     boostAllowance(companyId),
@@ -64,6 +66,7 @@ export default async function ProviderDashboard() {
       where: { listing: { companyId }, createdAt: { gte: twelveWeeksAgo } },
       select: { createdAt: true },
     }),
+    companyVoidCost(companyId),
   ]);
 
   const outcomes = computeReferralOutcomes(resolvedReferrals);
@@ -127,6 +130,8 @@ export default async function ProviderDashboard() {
           hint={`${views._sum.enquiries ?? 0} enquiries`}
         />
       </div>
+
+      {totalRooms > 0 && <VoidCostPanel cost={voids} className="mt-5" />}
 
       <section className="card mt-5 overflow-hidden" aria-labelledby="promotion-summary-heading">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-paper-sunk/45 px-5 py-4">
