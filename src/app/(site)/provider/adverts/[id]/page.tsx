@@ -16,6 +16,8 @@ import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, shortDate } from "@/lib/format";
 import { SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import { SuccessCelebration } from "@/components/success-celebration";
+import { AdvertStrengthCard } from "@/components/advert-strength";
+import { advertStrength } from "@/lib/advert-strength";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +60,7 @@ export default async function ProviderAdvertPage({
     boostAllowance(companyId),
   ]);
   const includedSlots = limits.membership.featuredCredits;
+  const strength = advertStrength(listing);
 
   return (
     <DashboardShell
@@ -104,6 +107,8 @@ export default async function ProviderAdvertPage({
           Our team didn&apos;t approve this advert: {listing.rejectionNote}
         </p>
       )}
+
+      <AdvertStrengthCard strength={strength} />
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Views" value={listing.views} />
