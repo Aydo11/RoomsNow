@@ -56,9 +56,16 @@ const STEPS = ["Property", "Accommodation", "Support", "Description"];
 const DESCRIPTION_MAX = 50000;
 const HOUSE_RULES_MAX = 8000;
 
-export function AdvertForm({ defaults = {} }: { defaults?: AdvertDefaults }) {
+export function AdvertForm({
+  defaults = {},
+  initialStep = 0,
+}: {
+  defaults?: AdvertDefaults;
+  /** Opens the form on a given step (0-based), e.g. from an advert strength tip. */
+  initialStep?: number;
+}) {
   const [state, action] = useActionState(saveListingAction, { ok: false });
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(Math.min(Math.max(initialStep, 0), STEPS.length - 1));
   const [descriptionLength, setDescriptionLength] = useState(defaults.description?.length ?? 0);
   const [houseRulesLength, setHouseRulesLength] = useState(defaults.houseRules?.length ?? 0);
   const editing = Boolean(defaults.id);
