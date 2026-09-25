@@ -44,7 +44,7 @@ export const MAX_PAGES = 40;
 export const MAP_PIN_LIMIT = 500;
 
 export const LISTING_CARD_SELECT = {
-  company: { select: { id: true, name: true, slug: true, logoUrl: true, verification: true } },
+  company: { select: { id: true, name: true, slug: true, logoUrl: true, verification: true, responseMinutes: true, responseSampleSize: true } },
   property: {
     select: {
       city: true, area: true, postcode: true, showExactAddress: true,
@@ -489,6 +489,7 @@ export async function getListing(id: string) {
         select: {
           id: true, name: true, slug: true, about: true, logoUrl: true,
           verification: true, orgType: true, city: true, status: true,
+          responseMinutes: true, responseSampleSize: true,
           subscription: { include: { membership: true } },
           membershipGrants: {
             where: { revokedAt: null },
