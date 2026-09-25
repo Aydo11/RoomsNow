@@ -6,6 +6,10 @@ import { EmptyState, FormSuccess } from "@/components/ui";
 import { PipelineTrail } from "@/components/pipeline";
 import { userNav } from "../nav";
 import { shortDate } from "@/lib/format";
+import { stepForStatus } from "@/lib/next-steps";
+import { NextStepsGuide } from "@/components/next-steps-guide";
+import { ResidentReviewForm } from "@/components/resident-review-form";
+import { reviewablePlacements } from "@/server/resident-reviews";
 
 export const metadata = { title: "My requests" };
 export const dynamic = "force-dynamic";
@@ -15,7 +19,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
   const query = await searchParams;
   const nav = await userNav(user.id);
 
-  const [requests, referrals] = await Promise.all([
+  const [requests, referrals, placements] = await Promise.all([
     db.accommodationRequest.findMany({
       where: { applicantId: user.id },
       orderBy: { updatedAt: "desc" },
@@ -26,7 +30,10 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
       orderBy: { updatedAt: "desc" },
       select: { id: true, reference: true, status: true, organisation: true, updatedAt: true },
     }),
+    reviewablePlacements(user),
   ]);
+  const reviewFor = (kind: "request" | "referral", id: string) => placements.find((p) => p.kind === kind && p.id === id);
+  const referralPlacements = placements.filter((p) => p.kind === "referral");
 
   return (
     <DashboardShell
@@ -36,8 +43,11 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
       active="/dashboard/requests"
     >
       {query.submitted && (
-        <div className="mb-5">
+        <div className="mb-8 space-y-5">
           <FormSuccess message="Request sent. The provider has been notified and will be in touch through messages." />
+          <div className="card p-5 sm:p-6">
+            <NextStepsGuide current="applied" compact />
+          </div>
         </div>
       )}
 
@@ -67,10 +77,18 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
                   <div className="flex flex-wrap gap-2">
                     <Link href={`/listings/${request.listing.id}`} className="btn-secondary">View advert</Link>
                     <Link href="/messages" className="btn-secondary">Message provider</Link>
+                    {stepForStatus(request.status) && (
+                      <Link href={`/next-steps?step=${stepForStatus(request.status)}#step-${stepForStatus(request.status)}`} className="btn-ghost">
+                        What happens next
+                      </Link>
+                    )}
                   </div>
                   <div className="mt-5"><PipelineTrail status={request.status} /></div>
                   {request.statusNote && (
                     <p className="mt-4 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft">{request.statusNote}</p>
+                  )}
+                  {reviewFor("request", request.id) && (
+                    <ReviewBox placement={reviewFor("request", request.id)!} />
                   )}
                 </div>
               </details>
@@ -97,8 +115,39 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
               ))}
             </DataTable>
           </div>
+          {referralPlacements.map((placement) => (
+            <div key={placement.id} className="card mt-4 p-5">
+              <p className="text-[15px] font-semibold">{placement.listingTitle}</p>
+              <p className="text-[13px] text-ink-soft">{placement.companyName}</p>
+              <ReviewBox placement={placement} />
+            </div>
+          ))}
         </section>
       )}
     </DashboardShell>
+  );
+}
+
+function ReviewBox({ placement }: { placement: Awaited<ReturnType<typeof reviewablePlacements>>[number] }) {
+  return (
+    <div className="mt-5 rounded-[12px] border border-line bg-paper/60 p-4">
+      <h3 className="text-[16px] font-semibold">{placement.review ? "Your review" : "How is it living here?"}</h3>
+      <p className="mt-1 text-[13px] text-ink-soft">
+        {placement.review?.hiddenAt
+          ? "RoomsNow has taken this review down. You can edit it below."
+          : placement.review
+            ? "Thanks for sharing. You can change it at any time."
+            : "Your review helps other people choose a safe, good home."}
+      </p>
+      {placement.review?.providerReply && (
+        <div className="mt-3 rounded-[10px] border-l-2 border-pine bg-white px-3.5 py-2.5">
+          <p className="text-[12.5px] font-semibold text-ink-soft">Reply from the provider</p>
+          <p className="mt-1 whitespace-pre-line text-[14px] text-ink-soft">{placement.review.providerReply}</p>
+        </div>
+      )}
+      <div className="mt-4">
+        <ResidentReviewForm kind={placement.kind} id={placement.id} existing={placement.review} />
+      </div>
+    </div>
   );
 }
