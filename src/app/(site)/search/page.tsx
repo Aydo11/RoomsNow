@@ -158,6 +158,12 @@ export default async function SearchPage({
               <p className="mt-1 text-[12px] text-ink-faint">
                 Ordinary results rotate daily. Sponsored and boosted adverts are labelled separately.
               </p>
+              <p className="mt-1.5 text-[13px] text-ink-soft">
+                Not sure what fits?{" "}
+                <Link href="/eligibility" className="font-semibold text-pine-dark underline-offset-4 hover:underline">
+                  Take the 1-minute check
+                </Link>
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {results.total > 0 && (
