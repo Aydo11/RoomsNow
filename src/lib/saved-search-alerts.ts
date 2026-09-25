@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { notify, sendEmail } from "./notify";
+import { pushToUser } from "./web-push";
 import { escapeHtml, renderEmail } from "./email-template";
 import { ACCOMMODATION_TYPES, supportLabel } from "./taxonomy";
 import type { Listing, Property, Company, SavedSearch } from "@prisma/client";
@@ -52,6 +53,10 @@ export function listingMatchesSavedSearch(listing: MatchableListing, search: Sav
     return false;
   }
   if (search.minAge !== null && listing.minAge !== null && listing.minAge > search.minAge) return false;
+  if (search.minAge !== null && listing.maxAge !== null && listing.maxAge < search.minAge) return false;
+  if (search.resident === "woman" && listing.genderArrangement === "MALE_ONLY") return false;
+  if (search.resident === "man" && listing.genderArrangement === "FEMALE_ONLY") return false;
+  if (search.housingBenefit && !listing.housingBenefit) return false;
   if (search.wheelchair && !listing.wheelchairAccess) return false;
   if (search.furnished && !listing.furnished) return false;
   if (search.ensuite && !listing.ensuite) return false;
@@ -152,6 +157,12 @@ export async function runSavedSearchDigest() {
           body: shown.map((m) => m.title).join(", "),
           href: "/dashboard/alerts",
         },
+      });
+      void pushToUser(search.userId, {
+        title: subject,
+        body: shown.slice(0, 3).map((m) => m.title).join(", "),
+        url: "/dashboard/alerts",
+        tag: `digest-${search.id}`,
       });
       sent += 1;
     }
