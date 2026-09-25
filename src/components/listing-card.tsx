@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { FeaturedBadge, MatchScore, RoomStrip, VerifiedBadge } from "./badges";
+import { FeaturedBadge, MatchScore, ResponseBadge, RoomStrip, VerifiedBadge } from "./badges";
+import { responseLabel } from "@/lib/response-label";
 import { monthYear, publicLocation, rentRange } from "@/lib/format";
 import { supportLabel, ACCOMMODATION_TYPES } from "@/lib/taxonomy";
 import type { SearchResult } from "@/server/search";
@@ -173,6 +174,7 @@ export function ListingCard({
               )}
               <span className="truncate text-[13px] text-ink-soft">{listing.company.name}</span>
             </span>
+            <ResponseBadge label={responseLabel(listing.company.responseMinutes, listing.company.responseSampleSize)} compact />
           </div>
         </div>
       </div>
