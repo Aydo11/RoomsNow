@@ -39,6 +39,11 @@ export function RefineBar({ facets, total }: { facets: Facets; total: number }) 
   if (params.get("ensuite")) add("ensuite", "En-suite");
   if (params.get("selfContained")) add("selfContained", "Self-contained");
   if (params.get("maxRent")) add("maxRent", `Up to £${params.get("maxRent")}/wk`);
+  if (params.get("minAge")) add("minAge", `Age ${params.get("minAge")}`);
+  if (params.get("resident") === "woman") add("resident", "Homes open to women");
+  if (params.get("resident") === "man") add("resident", "Homes open to men");
+  if (params.get("hb")) add("hb", "Accepts Housing Benefit");
+  if ((params.get("referral") ?? "").includes("SELF_REFERRAL")) add("referral", "You can apply yourself");
   for (const slug of (params.get("support") ?? "").split(",").filter(Boolean)) {
     add("support", supportLabel(slug));
   }
