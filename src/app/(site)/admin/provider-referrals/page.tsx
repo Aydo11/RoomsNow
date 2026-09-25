@@ -29,7 +29,7 @@ export default async function AdminProviderReferralsPage() {
   return (
     <DashboardShell
       title="Provider referral programme"
-      subtitle={`Providers who've invited other providers to join RoomsNow. Every ${REFERRALS_PER_REWARD} qualified sign-ups (registered and posted an advert) earns an automatic reward — no action needed from your side.`}
+      subtitle={`Providers who've invited other providers to join RoomsNow. Each qualified sign-up (registered and posted an advert) earns the inviter a free month of featured placement, and every ${REFERRALS_PER_REWARD} earns a free month of Professional and boosts. All automatic — no action needed from your side.`}
       nav={nav}
       active="/admin/provider-referrals"
     >
