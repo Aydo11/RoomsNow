@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireCompany } from "@/lib/rbac";
 import { DashboardShell, DataTable, MetricBar, StatCard } from "@/components/dashboard-shell";
@@ -15,7 +16,7 @@ export default async function ProviderInvitePage() {
   const [nav, code, company, referrals] = await Promise.all([
     providerNav(companyId),
     ensureReferralCode(companyId),
-    db.company.findUniqueOrThrow({ where: { id: companyId }, select: { referralRewardsClaimed: true } }),
+    db.company.findUniqueOrThrow({ where: { id: companyId }, select: { referralRewardsClaimed: true, freeSponsorMonths: true } }),
     db.providerReferral.findMany({
       where: { referrerCompanyId: companyId },
       orderBy: { createdAt: "desc" },
@@ -29,6 +30,9 @@ export default async function ProviderInvitePage() {
     }),
   ]);
 
+  const liveAdverts = company.freeSponsorMonths > 0
+    ? await db.listing.findMany({ where: { companyId, status: "ACTIVE" }, orderBy: { updatedAt: "desc" }, take: 12, select: { id: true, title: true } })
+    : [];
   const qualifiedCount = referrals.filter((r) => r.status === "QUALIFIED").length;
   const towardNext = qualifiedCount % REFERRALS_PER_REWARD;
   const inviteUrl = absoluteUrl(`/register?type=PROVIDER&ref=${code}`);
@@ -36,15 +40,38 @@ export default async function ProviderInvitePage() {
   return (
     <DashboardShell
       title="Refer & earn"
-      subtitle="Invite other providers to RoomsNow. Once 5 of them sign up and post their first advert, you get a free month of Professional and 2 boosts — automatically, no need to ask us."
+      subtitle="Invite other providers to RoomsNow. Every provider who signs up with your link and posts their first advert earns you a free month of featured (sponsored) placement for one of your adverts. Every 5 also unlock a free month of Professional and 2 boosts. It all happens automatically."
       nav={nav}
       active="/provider/invite"
     >
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Providers referred" value={referrals.length} />
         <StatCard label="Posted an advert" value={qualifiedCount} />
-        <StatCard className="col-span-2 sm:col-span-1" label="Rewards earned" value={company.referralRewardsClaimed} />
+        <StatCard label="Free featured months to use" value={company.freeSponsorMonths} />
+        <StatCard label="Professional months earned" value={company.referralRewardsClaimed} />
       </div>
+
+      {company.freeSponsorMonths > 0 && (
+        <section className="card mt-5 border-pine/30 bg-pine-light/40 p-5">
+          <h2 className="text-[18px]">
+            You have {company.freeSponsorMonths} free month{company.freeSponsorMonths === 1 ? "" : "s"} of featured placement
+          </h2>
+          <p className="mt-1 text-[14px] text-ink-soft">Pick a live advert to put it in the sponsored spots at the top of search for 30 days.</p>
+          {liveAdverts.length === 0 ? (
+            <p className="mt-3 text-[14px] text-ink-soft">You don&apos;t have a live advert yet. Your free months will wait for you.</p>
+          ) : (
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {liveAdverts.map((advert) => (
+                <li key={advert.id}>
+                  <Link href={`/provider/adverts/${advert.id}#sponsored`} className="btn-secondary">
+                    {advert.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <section className="card mt-6 p-5">
         <h2 className="text-[18px]">Invite other providers</h2>
@@ -86,8 +113,8 @@ export default async function ProviderInvitePage() {
       </section>
 
       <p className="mt-6 text-[13px] text-ink-faint">
-        Rewards give {REWARD_BOOST_CREDITS} boost credits every {REFERRALS_PER_REWARD} qualified
-        referrals, plus a free month of Professional unless you&apos;re already on Business.
+        Each qualified referral gives one free 30-day featured placement. Every {REFERRALS_PER_REWARD} qualified referrals also give{" "}
+        {REWARD_BOOST_CREDITS} boost credits, plus a free month of Professional unless you&apos;re already on Business.
       </p>
     </DashboardShell>
   );
