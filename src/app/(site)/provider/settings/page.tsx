@@ -5,6 +5,8 @@ import { CompanyForm, VerificationForm } from "@/components/company-forms";
 import { providerNav } from "../nav";
 import { shortDate } from "@/lib/format";
 import { SoundSetting } from "@/components/sound-setting";
+import { AppSettings } from "@/components/app-install";
+import { vapidPublicKey } from "@/lib/web-push";
 import { WeeklySummarySetting } from "@/components/weekly-summary-setting";
 
 export const metadata = { title: "Company profile" };
@@ -120,6 +122,7 @@ export default async function ProviderSettingsPage() {
       </section>
 
       <WeeklySummarySetting initial={company.weeklySummary} email={company.email} />
+      <AppSettings vapidKey={vapidPublicKey()} />
       <SoundSetting />
     </DashboardShell>
   );
