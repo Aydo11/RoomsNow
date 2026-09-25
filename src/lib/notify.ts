@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { escapeHtml, renderEmail } from "./email-template";
+import { pushToUser } from "./web-push";
 import type { NotificationType } from "@prisma/client";
 
 /**
@@ -26,6 +27,15 @@ export async function notify(params: {
       body: params.body,
       href: params.href,
     },
+  });
+
+  // Phone/browser notification for anyone who turned them on. Not awaited:
+  // a slow push service must never hold up the action that caused this.
+  void pushToUser(params.userId, {
+    title: params.title,
+    body: params.body,
+    url: params.href ?? "/dashboard/notifications",
+    tag: notification.id,
   });
 
   if (params.email) {
