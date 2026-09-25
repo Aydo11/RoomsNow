@@ -407,7 +407,9 @@ export default async function ListingPage({
             </Link>
           </div>
 
-          <MessageProviderForm listingId={listing.id} signedIn={Boolean(user)} companyName={listing.company.name} />
+          <div id="message" className="scroll-mt-24">
+            <MessageProviderForm listingId={listing.id} signedIn={Boolean(user)} companyName={listing.company.name} />
+          </div>
         </aside>
       </div>
 
