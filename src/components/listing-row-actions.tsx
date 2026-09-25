@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteListingAction, setListingStatusAction, submitListingAction } from "@/server/actions/listings";
+import { deleteListingAction, duplicateListingAction, setListingStatusAction, submitListingAction } from "@/server/actions/listings";
 import { toast } from "./toast";
 import { ConfirmDialog } from "./confirm-dialog";
 
@@ -25,6 +25,15 @@ export function ListingRowActions({ id, status }: { id: string; status: string }
     // Next surfaces as a special thrown "error" the framework handles itself
     // — don't swallow it in a try/catch or the redirect silently breaks.
     startTransition(() => submitListingAction(id));
+  }
+
+  function duplicate() {
+    // On success this redirects to the new draft's edit form (see submit above
+    // for why there's no try/catch); it only returns when something's wrong.
+    startTransition(async () => {
+      const result = await duplicateListingAction(id);
+      if (result?.message) toast.error(result.message);
+    });
   }
 
   function remove() {
@@ -52,6 +61,9 @@ export function ListingRowActions({ id, status }: { id: string; status: string }
     <div aria-label="Advert actions" aria-busy={pending} className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
       <Link href={`/provider/adverts/${id}/edit`} className="btn-secondary">Edit advert</Link>
       <Link href={`/provider/adverts/${id}/media`} className="btn-secondary">Photos & video</Link>
+      <button className="btn-ghost" disabled={pending} onClick={duplicate} title="Copy this advert to a new draft for a similar property">
+        Duplicate
+      </button>
 
       {(status === "DRAFT" || status === "REJECTED") && (
         <button className="btn-primary" disabled={pending} onClick={submit}>
