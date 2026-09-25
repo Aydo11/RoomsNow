@@ -8,7 +8,8 @@ import { Gallery } from "@/components/gallery";
 import { SaveButton } from "@/components/save-button";
 import { ShareListingButton } from "@/components/listing-actions";
 import { ReportForm } from "@/components/report-form";
-import { BenefitsBadge, MatchScore, RoomStrip, StatusPill, VerifiedBadge } from "@/components/badges";
+import { BenefitsBadge, MatchScore, ResponseBadge, RoomStrip, StatusPill, VerifiedBadge } from "@/components/badges";
+import { responseLabel } from "@/lib/response-label";
 import { MessageProviderForm } from "@/components/message-provider-form";
 import { monthYear, publicLocation, rentRange, shortDate, timeAgo } from "@/lib/format";
 import {
@@ -26,6 +27,7 @@ import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
 import { PropertyMap } from "@/components/property-map";
 import { hasProviderMapAccess } from "@/lib/entitlements";
 import { coverImage } from "@/lib/cover-image";
+import { checkHundredViews } from "@/lib/milestones";
 
 export const dynamic = "force-dynamic";
 
@@ -93,7 +95,12 @@ export default async function ListingPage({
     const viewer = user?.id ?? await callerIp();
     const countView = await rateLimit(`view:${listing.id}:${viewer}`, LIMITS.view);
     if (countView.ok) {
-      await db.listing.update({ where: { id: listing.id }, data: { views: { increment: 1 } } });
+      const counted = await db.listing.update({
+        where: { id: listing.id },
+        data: { views: { increment: 1 } },
+        select: { id: true, companyId: true, title: true, views: true },
+      });
+      await checkHundredViews(counted);
     }
   }
 
@@ -387,6 +394,11 @@ export default async function ListingPage({
               </div>
               {listing.company.verification === "APPROVED" && <VerifiedBadge />}
             </div>
+            {responseLabel(listing.company.responseMinutes, listing.company.responseSampleSize) && (
+              <div className="mt-3">
+                <ResponseBadge label={responseLabel(listing.company.responseMinutes, listing.company.responseSampleSize)} />
+              </div>
+            )}
             {listing.company.about && (
               <p className="mt-3 line-clamp-4 text-[14px] leading-relaxed text-ink-soft">{listing.company.about}</p>
             )}
