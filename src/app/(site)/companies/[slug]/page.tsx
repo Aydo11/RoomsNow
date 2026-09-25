@@ -10,6 +10,8 @@ import { AccreditationBadge, VerifiedBadge } from "@/components/badges";
 import { DirectMessageForm } from "@/components/direct-message-form";
 import { VerificationPanel } from "@/components/verification-panel";
 import { ProviderReviews } from "@/components/provider-reviews";
+import { ResidentReviews } from "@/components/resident-reviews";
+import { residentReviewsFor } from "@/server/resident-reviews";
 import { ORG_TYPES, supportLabel } from "@/lib/taxonomy";
 import { JsonLd, absoluteUrl } from "@/lib/seo";
 import { COVER_MEDIA } from "@/lib/cover-image";
@@ -76,7 +78,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
       })
     : null;
 
-  const [reviewAgg, reviewRows] = await Promise.all([
+  const [reviewAgg, reviewRows, residents] = await Promise.all([
     db.providerReview.aggregate({ where: { companyId: company.id }, _avg: { rating: true }, _count: true }),
     db.providerReview.findMany({
       where: { companyId: company.id },
@@ -84,6 +86,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
       take: 6,
       select: { id: true, rating: true, comment: true, createdAt: true, referral: { select: { organisation: true } } },
     }),
+    residentReviewsFor(company.id, { take: 20 }),
   ]);
   const reviews = reviewRows.map((review) => ({ ...review, organisation: review.referral.organisation }));
 
@@ -207,6 +210,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
           {reviewAgg._count > 0 && (
             <ProviderReviews average={reviewAgg._avg.rating ?? 0} count={reviewAgg._count} reviews={reviews} />
           )}
+
+          <ResidentReviews summary={residents.summary} reviews={residents.reviews} />
 
           <div className="mt-7 grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px]">
             <div>
