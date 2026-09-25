@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallHint } from "@/components/app-install";
 import Image from "next/image";
 import { Fragment, Suspense } from "react";
 import { db } from "@/lib/db";
@@ -122,6 +123,13 @@ export default async function HomePage() {
             <Suspense fallback={<div className="h-[300px] rounded-card border border-line bg-white sm:h-[120px]" />}>
               <SearchPanel />
             </Suspense>
+            <p className="mt-3 text-center text-[14px] text-ink-soft">
+              Not sure what you can get?{" "}
+              <Link href="/eligibility" className="font-semibold text-pine-dark underline-offset-4 hover:underline">
+                Take the 1-minute check →
+              </Link>
+            </p>
+            <InstallHint />
           </div>
 
           <dl className="mt-7 flex flex-wrap justify-center gap-x-8 gap-y-3 text-[14px]">
