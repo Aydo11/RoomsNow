@@ -49,7 +49,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
       listings: {
         where: { status: "ACTIVE" },
         include: {
-          company: { select: { id: true, name: true, slug: true, logoUrl: true, verification: true } },
+          company: { select: { id: true, name: true, slug: true, logoUrl: true, verification: true, responseMinutes: true, responseSampleSize: true } },
           property: { select: { city: true, area: true, postcode: true, showExactAddress: true, addressLine1: true, latitude: true, longitude: true, verification: true } },
           media: COVER_MEDIA,
           rooms: { select: { status: true } },
