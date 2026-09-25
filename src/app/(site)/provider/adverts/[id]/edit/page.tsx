@@ -11,9 +11,18 @@ export const dynamic = "force-dynamic";
 const pounds = (pence: number | null) => (pence == null ? "" : (pence / 100).toFixed(2));
 const day = (value: Date | null) => value?.toISOString().slice(0, 10) ?? "";
 
-export default async function EditAdvertPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditAdvertPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ step?: string }>;
+}) {
   const { companyId } = await requireCompany();
   const { id } = await params;
+  // ?step=1–4 opens a specific step (links from the advert strength card use it).
+  const stepParam = Number((await searchParams).step);
+  const initialStep = Number.isInteger(stepParam) && stepParam >= 1 && stepParam <= 4 ? stepParam - 1 : 0;
   const listing = await db.listing.findFirst({
     where: { id, companyId },
     include: { property: true },
@@ -30,6 +39,7 @@ export default async function EditAdvertPage({ params }: { params: Promise<{ id:
       active="/provider/adverts"
     >
       <AdvertForm
+        initialStep={initialStep}
         defaults={{
           id: listing.id,
           propertyName: listing.property.name,
