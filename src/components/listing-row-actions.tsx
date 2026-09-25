@@ -61,6 +61,11 @@ export function ListingRowActions({ id, status }: { id: string; status: string }
     <div aria-label="Advert actions" aria-busy={pending} className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
       <Link href={`/provider/adverts/${id}/edit`} className="btn-secondary">Edit advert</Link>
       <Link href={`/provider/adverts/${id}/media`} className="btn-secondary">Photos & video</Link>
+      {status === "ACTIVE" && (
+        <Link href={`/listings/${id}?share=1`} className="btn-ghost" title="Get a ready-made image to post on WhatsApp, Facebook or Instagram">
+          Share card
+        </Link>
+      )}
       <button className="btn-ghost" disabled={pending} onClick={duplicate} title="Copy this advert to a new draft for a similar property">
         Duplicate
       </button>
