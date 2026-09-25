@@ -9,6 +9,7 @@ export async function adminNav(): Promise<NavItem[]> {
   if (!hasAdminPermission(user)) return [
     { href: "/admin/listings", label: "Adverts" },
     { href: "/admin/reports", label: "Reports" },
+    { href: "/admin/reviews", label: "Resident reviews" },
   ];
   const [pendingListings, pendingVerification, pendingAccreditations, openReports, newFeedback] = await Promise.all([
     db.listing.count({ where: { status: "PENDING_REVIEW" } }),
@@ -24,6 +25,7 @@ export async function adminNav(): Promise<NavItem[]> {
     { href: "/admin/verification", label: "Verification", badge: pendingVerification || undefined },
     { href: "/admin/accreditations", label: "Accreditations", badge: pendingAccreditations || undefined },
     { href: "/admin/reports", label: "Reports", badge: openReports || undefined },
+    { href: "/admin/reviews", label: "Resident reviews" },
     { href: "/admin/feedback", label: "Site feedback", badge: newFeedback || undefined },
     { href: "/admin/users", label: "Users" },
     { href: "/admin/team", label: "Team & permissions" },
