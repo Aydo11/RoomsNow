@@ -10,6 +10,7 @@ import { DirectMessageForm } from "@/components/direct-message-form";
 import { AddReferralDocumentForm } from "@/components/add-referral-document-form";
 import { ReferralTimeline } from "@/components/referral-timeline";
 import { ReviewForm } from "@/components/review-form";
+import { CheckInCard } from "@/components/checkin-card";
 import { Stars } from "@/components/star-rating";
 import { referrerNav } from "../nav";
 import { URGENCY_LABELS } from "@/lib/taxonomy";
@@ -181,6 +182,8 @@ export default async function ReferralPage({ params }: { params: Promise<{ id: s
               )}
             </div>
           )}
+
+          <CheckInCard referralId={referral.id} status={referral.status} />
 
           {referral.listing && (referral.status === "MOVED_IN" || referral.review) && (
             <div className="card p-5">
