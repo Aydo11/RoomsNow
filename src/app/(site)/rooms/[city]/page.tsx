@@ -76,7 +76,10 @@ export default async function CityRoomsPage({ params }: Props) {
           <nav className="text-[14px] text-ink-faint"><Link href="/search" className="hover:text-ink">Search accommodation</Link> / {city}</nav>
           <h1 className="mt-5 text-[40px] font-bold leading-tight sm:text-[52px]">HMO rooms and accommodation in {city}</h1>
           <p className="mt-4 max-w-3xl text-[17px] leading-relaxed text-ink-soft">Search available HMO rooms, shared homes, supported housing and specialist accommodation in {city}. Check rent, facilities, support, referral routes and live room availability before contacting the provider.</p>
-          <Link href={`/search?where=${encodeURIComponent(city)}`} className="btn-primary mt-7">Refine your {city} search</Link>
+          <div className="mt-7 flex flex-wrap gap-2">
+            <Link href={`/search?where=${encodeURIComponent(city)}`} className="btn-primary">Refine your {city} search</Link>
+            <Link href={`/supported-housing/${slug}`} className="btn-secondary">Supported housing in {city} by area</Link>
+          </div>
         </div>
       </section>
       <div className="shell py-12">
