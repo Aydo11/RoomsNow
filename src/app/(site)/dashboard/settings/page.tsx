@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/rbac";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { AccountSettings } from "@/components/account-settings";
+import { SoundSetting } from "@/components/sound-setting";
 import { userNav } from "../nav";
 import { referrerNav } from "../../referrals/nav";
 
@@ -36,6 +37,7 @@ export default async function SettingsPage() {
       </div>
 
       <AccountSettings />
+      <SoundSetting />
     </DashboardShell>
   );
 }
