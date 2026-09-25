@@ -66,14 +66,17 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
         <label className="label" htmlFor="from">
           Move in by <span className="font-normal text-ink-faint">(e.g. 30/09/2026)</span>
         </label>
-        <input
-          id="from"
-          type="date"
-          value={from}
-          onChange={(e) => setFrom(e.target.value)}
-          className="field block min-w-0 max-w-full"
-          aria-label="Move in by, for example 30 September 2026"
-        />
+        <div className="w-full min-w-0 max-w-full overflow-hidden">
+          <input
+            id="from"
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="field block min-w-0 max-w-full"
+            style={{ boxSizing: "border-box", width: "100%", minWidth: 0, maxWidth: "100%" }}
+            aria-label="Move in by, for example 30 September 2026"
+          />
+        </div>
       </div>
 
       <button type="submit" className="btn-primary h-[46px] px-6">Search</button>
