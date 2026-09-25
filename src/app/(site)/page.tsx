@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Suspense } from "react";
+import { Fragment, Suspense } from "react";
 import { db } from "@/lib/db";
 import { SearchPanel } from "@/components/search-panel";
 import { ListingCard } from "@/components/listing-card";
@@ -92,15 +92,17 @@ export default async function HomePage() {
         <span aria-hidden="true" className="absolute -left-24 top-8 h-64 w-64 rounded-full bg-pine-light/55 blur-3xl" />
         <span aria-hidden="true" className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-[#d8ebfb]/65 blur-3xl" />
         <div className="shell relative py-10 text-center sm:py-14 lg:py-16">
-          <div className="home-welcome eyebrow mb-5">More housing, in one place</div>
-          <h1 className="home-headline mx-auto max-w-[19ch] text-[clamp(2rem,8vw,3.5rem)] font-bold leading-[1.12]">
+          <h1 className="home-headline mx-auto max-w-[19ch] [text-wrap:balance] text-[clamp(2rem,8vw,3.5rem)] font-bold leading-[1.12]">
             <span className="sr-only">Find an HMO room or accommodation that fits</span>
             <span aria-hidden="true">
               {"Find an HMO room or accommodation that fits".split(" ").map((word, index) => (
-                <span key={index} className="home-word-slot"><span
-                  className={`home-word ${index >= 2 && index <= 5 ? "text-pine-dark" : ""} ${word === "fits" ? "home-word-accent" : ""}`}
-                  style={{ animationDelay: `${index * 80}ms` }}
-                >{word}</span>{" "}</span>
+                // The space sits outside each word's span so the heading can wrap between words.
+                <Fragment key={index}>
+                  <span className="home-word-slot"><span
+                    className={`home-word ${index >= 2 && index <= 5 ? "text-pine-dark" : ""} ${word === "fits" ? "home-word-accent" : ""}`}
+                    style={{ animationDelay: `${index * 80}ms` }}
+                  >{word}</span></span>{" "}
+                </Fragment>
               ))}
             </span>
           </h1>
@@ -357,7 +359,7 @@ function AudienceCard({
   return (
     <article className={`home-audience ${highlighted ? "rounded-card bg-gradient-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card border-t-4 border-t-pine/30 bg-pine-light/25 p-6"}`}>
       <div className="flex items-center justify-between gap-4">
-        <span className={highlighted ? "text-[11px] font-semibold tracking-[0.08em] text-pine-light" : "text-[11px] font-semibold tracking-[0.08em] text-pine-dark"}>{eyebrow}</span>
+        <span className={highlighted ? "text-[11px] font-semibold tracking-[0.08em] text-white/80" : "text-[11px] font-semibold tracking-[0.08em] text-pine-dark"}>{eyebrow}</span>
         <AudienceIcon type={icon} highlighted={highlighted} />
       </div>
       <h3 className={highlighted ? "mt-3 text-[21px] text-white" : "mt-3 text-[21px]"}>{title}</h3>
