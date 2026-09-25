@@ -36,6 +36,9 @@ export async function createSavedSearchAction(_prev: FormState, formData: FormDa
   const ensuite = text(formData, "ensuite") === "1";
   const selfContained = text(formData, "selfContained") === "1";
   const petsAllowed = text(formData, "petsAllowed") === "1";
+  const residentInput = text(formData, "resident");
+  const resident = residentInput === "woman" || residentInput === "man" ? residentInput : null;
+  const housingBenefit = text(formData, "hb") === "1";
   const referral = list(formData, "referral") as ReferralRoute[];
   const verifiedOnly = text(formData, "verified") === "1";
   const minRent = num(formData, "minRent");
@@ -60,6 +63,8 @@ export async function createSavedSearchAction(_prev: FormState, formData: FormDa
       ensuite,
       selfContained,
       petsAllowed,
+      resident,
+      housingBenefit,
       referral,
       verifiedOnly,
       minRent: minRent ?? null,
