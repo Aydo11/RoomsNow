@@ -18,6 +18,7 @@ import { storage, validateUpload, verifyFileContents } from "@/lib/storage";
 import { date, text } from "../form";
 import { Prisma, type RequestStatus } from "@prisma/client";
 import { clientAttachment, conversationCompanyId } from "@/lib/client-sharing";
+import { checkFirstEnquiry, checkFirstMoveIn } from "@/lib/milestones";
 
 // ------------------------------------------------------------------ saving
 
@@ -510,6 +511,7 @@ export async function createRequestAction(_prev: FormState, formData: FormData):
     href: `/provider/requests?request=${encodeURIComponent(request.id)}`,
     email: true,
   });
+  await checkFirstEnquiry(listing.companyId, request.id);
   await audit({ actorId: user.id, action: "request.created", targetType: "AccommodationRequest", targetId: request.id });
 
   redirect(`/dashboard/requests?submitted=${request.id}`);
@@ -534,6 +536,9 @@ export async function updateRequestStatusAction(requestId: string, status: Reque
     href: `/dashboard/requests`,
     email: true,
   });
+  if (status === "MOVED_IN" && isProvider) {
+    await checkFirstMoveIn(request.listing.companyId, `/provider/requests?request=${encodeURIComponent(requestId)}`);
+  }
   await audit({
     actorId: user.id,
     action: "request.status_changed",
