@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { playSuccessChime } from "@/lib/chime";
 
-type CelebrationKind = "boost" | "boost-purchase" | "membership";
+export type CelebrationKind =
+  | "boost"
+  | "boost-purchase"
+  | "membership"
+  | "submitted"
+  | "approved"
+  | "verified"
+  | "accreditation";
 
 const COPY: Record<CelebrationKind, { eyebrow: string; title: string; message: string }> = {
   boost: {
@@ -21,6 +29,26 @@ const COPY: Record<CelebrationKind, { eyebrow: string; title: string; message: s
     title: "A stronger plan is on its way",
     message: "Payment is complete. Your new access will appear as soon as Stripe confirms it.",
   },
+  submitted: {
+    eyebrow: "ADVERT SUBMITTED",
+    title: "Nice work, it's on its way",
+    message: "Our team will review it, usually within one working day. We'll let you know the moment it's live.",
+  },
+  approved: {
+    eyebrow: "ADVERT APPROVED",
+    title: "Your advert is live",
+    message: "People and referrers can now find it in search.",
+  },
+  verified: {
+    eyebrow: "VERIFICATION APPROVED",
+    title: "You're verified",
+    message: "Your company now shows as verified on RoomsNow.",
+  },
+  accreditation: {
+    eyebrow: "ACCREDITATION APPROVED",
+    title: "Accreditation approved",
+    message: "It now shows on your company profile.",
+  },
 };
 
 const PARTICLES = [
@@ -31,18 +59,29 @@ const PARTICLES = [
 
 export function SuccessCelebration({
   kind,
+  message,
   onDone,
   clearQueryParam,
 }: {
   kind: CelebrationKind;
+  /** Replaces the standard message, e.g. to name the advert that was approved. */
+  message?: string;
   onDone?: () => void;
   clearQueryParam?: string;
 }) {
   const [visible, setVisible] = useState(true);
+  const chimed = useRef(false);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const copy = COPY[kind];
+
+  // A little "ding" to go with the good news (silent if turned off in settings).
+  useEffect(() => {
+    if (chimed.current) return;
+    chimed.current = true;
+    playSuccessChime();
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -75,11 +114,19 @@ export function SuccessCelebration({
 
       <div className="celebration-card">
         <div className={`celebration-icon celebration-icon-${kind}`} aria-hidden="true">
-          {kind === "boost" ? <LightningIcon /> : kind === "boost-purchase" ? <RocketIcon /> : <MembershipIcon />}
+          {kind === "boost" ? (
+            <LightningIcon />
+          ) : kind === "boost-purchase" ? (
+            <RocketIcon />
+          ) : kind === "submitted" ? (
+            <SentIcon />
+          ) : (
+            <MembershipIcon />
+          )}
         </div>
         <p className="text-[11px] font-extrabold tracking-[0.14em] text-pine-dark">{copy.eyebrow}</p>
         <p className="mt-1 font-display text-[23px] font-bold leading-tight text-ink">{copy.title}</p>
-        <p className="mt-2 max-w-[34ch] text-[14px] leading-relaxed text-ink-soft">{copy.message}</p>
+        <p className="mt-2 max-w-[34ch] text-[14px] leading-relaxed text-ink-soft">{message ?? copy.message}</p>
       </div>
     </div>
   );
@@ -109,6 +156,15 @@ function MembershipIcon() {
     <svg viewBox="0 0 48 48" fill="none" className="h-12 w-12" aria-hidden="true">
       <path d="m24 4.5 5.7 11.6 12.8 1.9-9.3 9 2.2 12.7L24 33.8l-11.4 5.9L14.8 27l-9.3-9 12.8-1.9L24 4.5Z" fill="currentColor" />
       <path d="m18.6 24 3.5 3.5 7.8-8" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SentIcon() {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className="h-12 w-12" aria-hidden="true">
+      <path d="M42.6 6.2 5.9 21.1c-1.6.7-1.5 3 .2 3.5l12.1 3.6 3.6 12.1c.5 1.7 2.8 1.8 3.5.2L41.2 7.8c.5-1.1-.6-2.1-1.6-1.6Z" fill="currentColor" />
+      <path d="m18.4 28.1 11.8-11.8" stroke="#1666AA" strokeWidth="3" strokeLinecap="round" />
     </svg>
   );
 }
