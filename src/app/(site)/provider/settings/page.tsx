@@ -5,6 +5,7 @@ import { CompanyForm, VerificationForm } from "@/components/company-forms";
 import { providerNav } from "../nav";
 import { shortDate } from "@/lib/format";
 import { SoundSetting } from "@/components/sound-setting";
+import { WeeklySummarySetting } from "@/components/weekly-summary-setting";
 
 export const metadata = { title: "Company profile" };
 export const dynamic = "force-dynamic";
@@ -118,6 +119,7 @@ export default async function ProviderSettingsPage() {
         </ul>
       </section>
 
+      <WeeklySummarySetting initial={company.weeklySummary} email={company.email} />
       <SoundSetting />
     </DashboardShell>
   );
