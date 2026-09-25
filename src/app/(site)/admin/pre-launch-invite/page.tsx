@@ -72,7 +72,7 @@ export default async function PreLaunchInvitePage({
             A founder-voice invitation (signed with whatever name you enter, framed as someone
             with hands-on experience in the sector) focused on one clear outcome: making live
             vacancies easier to find. It explains the provider workflow in a short, scannable
-            format and offers one month of Professional free (worth &pound;49), without requesting
+            format and offers three months of Professional free (worth &pound;147), without requesting
             payment details. One submission imports the addresses into a dedicated Resend segment and
             prepares one throttled Broadcast &mdash; up to 500 contacts at a time. A separate
             confirmation is required before anything is sent.
