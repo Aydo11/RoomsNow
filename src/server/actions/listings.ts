@@ -673,3 +673,106 @@ export async function addRoomAction(listingId: string, name: string) {
   await db.room.create({ data: { propertyId: listing.propertyId, listingId, name } });
   revalidatePath("/provider/rooms");
 }
+
+/**
+ * Copies an advert into a new draft for a similar property: the support,
+ * rent, rules, description and the same rooms (all set to available). Photos
+ * and videos aren't copied because they show the original home, and the
+ * street address is left blank so it can't go live pointing at the wrong
+ * house. The provider lands on the edit form to fill in the new details.
+ */
+export async function duplicateListingAction(listingId: string) {
+  const { user } = await requireCompany();
+  const source = await db.listing.findUnique({
+    where: { id: listingId },
+    include: { property: true, rooms: { orderBy: { name: "asc" } } },
+  });
+  if (!source) return { ok: false, message: "Advert not found." };
+  await assertCompanyAccess(user, source.companyId);
+
+  const limits = await planLimits(source.companyId);
+  if (!limits.canAddListing) {
+    return {
+      ok: false,
+      message: `Your ${limits.membership.name} plan covers ${limits.membership.maxListings} live adverts. Upgrade to add another.`,
+    };
+  }
+
+  const { property } = source;
+  const copy = await db.$transaction(async (transaction) => {
+    const newProperty = await transaction.property.create({
+      data: {
+        companyId: source.companyId,
+        name: `${property.name} (copy)`.slice(0, 120),
+        city: property.city,
+        area: property.area,
+        postcode: property.postcode,
+        latitude: property.latitude,
+        longitude: property.longitude,
+        showExactAddress: false,
+        propertyType: property.propertyType,
+        bedrooms: property.bedrooms,
+      },
+    });
+    const listing = await transaction.listing.create({
+      data: {
+        companyId: source.companyId,
+        propertyId: newProperty.id,
+        reference: reference("SR"),
+        status: "DRAFT",
+        title: `${source.title} (copy)`.slice(0, 120),
+        summary: source.summary,
+        description: source.description,
+        accommodationType: source.accommodationType,
+        genderArrangement: source.genderArrangement,
+        minAge: source.minAge,
+        maxAge: source.maxAge,
+        ensuite: source.ensuite,
+        furnished: source.furnished,
+        selfContained: source.selfContained,
+        sharedFacilities: source.sharedFacilities,
+        wheelchairAccess: source.wheelchairAccess,
+        accessibilityNotes: source.accessibilityNotes,
+        petsAllowed: source.petsAllowed,
+        supportTypes: source.supportTypes,
+        supportDescription: source.supportDescription,
+        supportAvailability: source.supportAvailability,
+        supportProvider: source.supportProvider,
+        referralRoutes: source.referralRoutes,
+        eligibility: source.eligibility,
+        referralProcess: source.referralProcess,
+        houseRules: source.houseRules,
+        weeklyRentFrom: source.weeklyRentFrom,
+        weeklyRentTo: source.weeklyRentTo,
+        billsIncluded: source.billsIncluded,
+        housingBenefit: source.housingBenefit,
+      },
+    });
+    if (source.rooms.length > 0) {
+      await transaction.room.createMany({
+        data: source.rooms.map((room) => ({
+          propertyId: newProperty.id,
+          listingId: listing.id,
+          name: room.name,
+          status: "AVAILABLE" as RoomStatus,
+          weeklyRent: room.weeklyRent,
+          monthlyRent: room.monthlyRent,
+          ensuite: room.ensuite,
+          furnished: room.furnished,
+          sizeSqm: room.sizeSqm,
+        })),
+      });
+    }
+    return listing;
+  });
+
+  await audit({
+    actorId: user.id,
+    action: "listing.duplicated",
+    targetType: "Listing",
+    targetId: copy.id,
+    metadata: { from: source.id },
+  });
+  revalidatePath("/provider/adverts");
+  redirect(`/provider/adverts/${copy.id}/edit?duplicated=1`);
+}
