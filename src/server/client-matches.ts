@@ -23,7 +23,10 @@ const matchListingSelect = () => ({
   sharedFacilities: true,
   petsAllowed: true,
   housingBenefit: true,
+  billsIncluded: true,
+  referralRoutes: true,
   weeklyRentFrom: true,
+  weeklyRentTo: true,
   availableFrom: true,
   supportTypes: true,
   supportDescription: true,
@@ -37,6 +40,8 @@ const matchListingSelect = () => ({
       name: true,
       slug: true,
       verification: true,
+      responseMinutes: true,
+      responseSampleSize: true,
       accreditations: {
         where: { status: "APPROVED", scheme: { in: ["CQC", "BVSC"] }, OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }] },
         select: { scheme: true, rating: true },
@@ -54,7 +59,8 @@ export type ClientMatchRow = { listing: CandidateListing; match: ClientMatch; di
 
 export async function matchesForClient(
   client: { dateOfBirth: Date | null; preferredLocation: string | null; supportTypes: string[]; assessment: unknown },
-  options: { vettedOnly?: boolean } = {},
+  /** onlyIds: score just these adverts (a shortlist), even if their rooms have since filled. */
+  options: { vettedOnly?: boolean; onlyIds?: string[] } = {},
 ): Promise<{ rows: ClientMatchRow[]; considered: number }> {
   const matchClient: MatchClient = {
     dateOfBirth: client.dateOfBirth,
@@ -65,7 +71,7 @@ export async function matchesForClient(
 
   const [listings, origin] = await Promise.all([
     db.listing.findMany({
-      where: {
+      where: options.onlyIds ? { id: { in: options.onlyIds }, status: "ACTIVE" } : {
         status: "ACTIVE",
         company: {
           status: "ACTIVE",
