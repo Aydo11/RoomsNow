@@ -94,5 +94,21 @@ export async function sendSms(msg: { to: string; text: string }) {
     console.info(`[sms:${msg.to}] ${msg.text}`);
     return;
   }
+  if (driver === "twilio") {
+    const sid = process.env.TWILIO_ACCOUNT_SID;
+    const token = process.env.TWILIO_AUTH_TOKEN;
+    const from = process.env.TWILIO_FROM;
+    if (!sid || !token || !from) throw new Error("TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM are required for SMS.");
+    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(sid)}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ To: msg.to, From: from, Body: msg.text }).toString(),
+    });
+    if (!response.ok) throw new Error(`SMS delivery failed with status ${response.status}.`);
+    return;
+  }
   throw new Error(`SMS driver "${driver}" is not implemented. See src/lib/notify.ts.`);
 }
