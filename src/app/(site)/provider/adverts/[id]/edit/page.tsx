@@ -16,12 +16,13 @@ export default async function EditAdvertPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ step?: string }>;
+  searchParams: Promise<{ step?: string; duplicated?: string }>;
 }) {
   const { companyId } = await requireCompany();
   const { id } = await params;
   // ?step=1–4 opens a specific step (links from the advert strength card use it).
-  const stepParam = Number((await searchParams).step);
+  const query = await searchParams;
+  const stepParam = Number(query.step);
   const initialStep = Number.isInteger(stepParam) && stepParam >= 1 && stepParam <= 4 ? stepParam - 1 : 0;
   const listing = await db.listing.findFirst({
     where: { id, companyId },
@@ -38,6 +39,12 @@ export default async function EditAdvertPage({
       nav={nav}
       active="/provider/adverts"
     >
+      {query.duplicated === "1" && (
+        <p className="mb-4 rounded-[10px] border border-pine/25 bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">
+          This is a copy of your advert. Add the new property&apos;s address, check the rooms and rent, then add its own photos before
+          submitting it for review.
+        </p>
+      )}
       <AdvertForm
         initialStep={initialStep}
         defaults={{
