@@ -47,7 +47,7 @@ export default async function ProviderAdvertPage({
   });
   if (!listing) notFound();
 
-  const [nav, limits, usedSlots, boosts] = await Promise.all([
+  const [nav, limits, usedSlots, boosts, company] = await Promise.all([
     providerNav(companyId),
     planLimits(companyId),
     db.listing.count({
@@ -58,6 +58,7 @@ export default async function ProviderAdvertPage({
       },
     }),
     boostAllowance(companyId),
+    db.company.findUniqueOrThrow({ where: { id: companyId }, select: { freeSponsorMonths: true } }),
   ]);
   const includedSlots = limits.membership.featuredCredits;
   const strength = advertStrength(listing);
@@ -186,6 +187,7 @@ export default async function ProviderAdvertPage({
             live={listing.status === "ACTIVE"}
             paymentsEnabled={billingAvailable()}
             initialDuration={initialDuration}
+            freeMonths={company.freeSponsorMonths}
           />
         </div>
       </section>
