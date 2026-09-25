@@ -23,6 +23,10 @@ export type SearchParams = {
   ensuite?: string;
   selfContained?: string;
   petsAllowed?: string;
+  /** Who the room is for ("woman" or "man"); hides homes only for the other. */
+  resident?: string;
+  /** "1" = only homes that accept Housing Benefit / Universal Credit housing costs. */
+  hb?: string;
   referral?: string[];
   verified?: string;
   maxRent?: string;
@@ -128,9 +132,14 @@ async function buildWhere(params: SearchParams) {
   if (params.from) {
     AND.push({ OR: [{ availableFrom: null }, { availableFrom: { lte: new Date(params.from) } }] });
   }
-  if (params.minAge) {
-    AND.push({ OR: [{ minAge: null }, { minAge: { lte: Number(params.minAge) } }] });
+  // "minAge" is the searcher's own age: the advert must accept it at both ends.
+  const age = Number(params.minAge);
+  if (params.minAge && Number.isFinite(age)) {
+    AND.push({ OR: [{ minAge: null }, { minAge: { lte: age } }] });
+    AND.push({ OR: [{ maxAge: null }, { maxAge: { gte: age } }] });
   }
+  if (params.resident === "woman") AND.push({ genderArrangement: { not: "MALE_ONLY" } });
+  if (params.resident === "man") AND.push({ genderArrangement: { not: "FEMALE_ONLY" } });
 
   const where: Prisma.ListingWhereInput = {
     status: "ACTIVE",
@@ -148,6 +157,7 @@ async function buildWhere(params: SearchParams) {
     ...(params.ensuite === "1" ? { ensuite: true } : {}),
     ...(params.selfContained === "1" ? { selfContained: true } : {}),
     ...(params.petsAllowed === "1" ? { petsAllowed: true } : {}),
+    ...(params.hb === "1" ? { housingBenefit: true } : {}),
     ...(referral.length ? { referralRoutes: { hasSome: referral as never } } : {}),
     ...(params.maxRent || params.minRent
       ? {
@@ -358,6 +368,12 @@ export async function searchListings(params: SearchParams) {
 
 type RankedSearchResult = Awaited<ReturnType<typeof searchListings>>["items"][number];
 export type SearchResult = Omit<RankedSearchResult, "memberListing"> & { memberListing?: boolean };
+
+/** How many live adverts match, for the eligibility check's running total. */
+export async function countListings(params: SearchParams) {
+  const { where } = await buildWhere(params);
+  return db.listing.count({ where });
+}
 
 /**
  * Counts for the refine panel, so people can narrow a big result set without
