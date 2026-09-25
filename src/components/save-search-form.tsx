@@ -74,6 +74,8 @@ export function SaveSearchForm({ params, resultCount }: { params: SearchParams; 
       {params.ensuite === "1" && <input type="hidden" name="ensuite" value="1" />}
       {params.selfContained === "1" && <input type="hidden" name="selfContained" value="1" />}
       {params.petsAllowed === "1" && <input type="hidden" name="petsAllowed" value="1" />}
+      {(params.resident === "woman" || params.resident === "man") && <input type="hidden" name="resident" value={params.resident} />}
+      {params.hb === "1" && <input type="hidden" name="hb" value="1" />}
       {referral.map((r) => (
         <input key={r} type="hidden" name="referral" value={r} />
       ))}
