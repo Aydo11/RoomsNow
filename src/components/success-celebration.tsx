@@ -11,7 +11,11 @@ export type CelebrationKind =
   | "submitted"
   | "approved"
   | "verified"
-  | "accreditation";
+  | "accreditation"
+  | "first-enquiry"
+  | "first-referral"
+  | "first-move-in"
+  | "views-100";
 
 const COPY: Record<CelebrationKind, { eyebrow: string; title: string; message: string }> = {
   boost: {
@@ -48,6 +52,26 @@ const COPY: Record<CelebrationKind, { eyebrow: string; title: string; message: s
     eyebrow: "ACCREDITATION APPROVED",
     title: "Accreditation approved",
     message: "It now shows on your company profile.",
+  },
+  "first-enquiry": {
+    eyebrow: "MILESTONE",
+    title: "Your first enquiry!",
+    message: "Someone wants to live in one of your homes. Replying quickly makes a big difference.",
+  },
+  "first-referral": {
+    eyebrow: "MILESTONE",
+    title: "Your first referral!",
+    message: "A professional has referred someone to your advert.",
+  },
+  "first-move-in": {
+    eyebrow: "MILESTONE",
+    title: "Your first move-in!",
+    message: "Someone has a new home because of you.",
+  },
+  "views-100": {
+    eyebrow: "MILESTONE",
+    title: "100 views!",
+    message: "One of your adverts has been viewed 100 times.",
   },
 };
 
