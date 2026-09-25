@@ -3,13 +3,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { SimpleSummary } from "@/components/simple-summary";
-import { plainSummary } from "@/lib/plain-summary";
+import { plainSummaries } from "@/lib/plain-summary-i18n";
 import { htmlToText } from "@/lib/html-text";
 import { getListing } from "@/server/search";
 import { getCurrentUser } from "@/lib/session";
 import { Gallery } from "@/components/gallery";
 import { SaveButton } from "@/components/save-button";
 import { ShareListingButton } from "@/components/listing-actions";
+import { ShareCardButton } from "@/components/share-card";
 import { ReportForm } from "@/components/report-form";
 import { BenefitsBadge, MatchScore, ResponseBadge, RoomStrip, StatusPill, VerifiedBadge } from "@/components/badges";
 import { responseLabel } from "@/lib/response-label";
@@ -56,7 +57,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const url = absoluteUrl(`/listings/${id}`);
   const photos = listing.media.filter((m) => m.type === "IMAGE").map((m) => absoluteUrl(m.url));
   const cover = coverImage(listing.media);
-  const shareImages = photos.length ? photos : cover ? [cover.url] : [];
+  // The generated share card leads, so WhatsApp and Facebook previews show rent and area too.
+  const card = listing.status === "ACTIVE" ? [{ url: absoluteUrl(`/share-card/${id}`), width: 1200, height: 630, alt: listing.title }] : [];
+  const shareImages = [...card, ...(photos.length ? photos : cover ? [cover.url] : [])];
   return {
     title,
     description,
@@ -80,7 +83,7 @@ export default async function ListingPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ref?: string }>;
+  searchParams: Promise<{ ref?: string; share?: string }>;
 }) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const [listing, user] = await Promise.all([getListing(id), getCurrentUser()]);
@@ -223,7 +226,7 @@ export default async function ListingPage({
 
           <SimpleSummary
             title={listing.title}
-            lines={plainSummary({
+            summaries={plainSummaries({
               accommodationType: listing.accommodationType,
               area: listing.property.area,
               city: listing.property.city,
@@ -386,6 +389,9 @@ export default async function ListingPage({
                 </Link>
               )}
               <ShareListingButton listingId={listing.id} title={listing.title} />
+              {listing.status === "ACTIVE" && (
+                <ShareCardButton listingId={listing.id} title={listing.title} autoOpen={query.share === "1"} />
+              )}
             </div>
 
             <p className="mt-4 text-[13px] leading-relaxed text-ink-faint">
