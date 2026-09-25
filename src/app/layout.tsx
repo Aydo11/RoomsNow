@@ -3,6 +3,7 @@ import { Instrument_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import { brand } from "@/brand.config";
 import { JsonLd, SITE_URL } from "@/lib/seo";
 import { Toaster } from "@/components/toast";
+import { PwaRegister } from "@/components/app-install";
 import "./globals.css";
 
 const sans = Instrument_Sans({
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
   title: { default: "HMO Rooms & Supported Accommodation UK | RoomsNow", template: `%s | ${brand.name}` },
   description: brand.description,
   applicationName: brand.name,
-  appleWebApp: { title: brand.shortName },
+  appleWebApp: { capable: true, title: brand.shortName, statusBarStyle: "default" },
   robots: {
     index: true,
     follow: true,
@@ -91,6 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         {children}
         <Toaster />
+        <PwaRegister />
       </body>
     </html>
   );
