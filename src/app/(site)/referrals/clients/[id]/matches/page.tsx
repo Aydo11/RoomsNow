@@ -123,6 +123,16 @@ export default async function ClientMatchesPage({
         <span className="ml-auto text-[13px] text-ink-faint">
           {visible.length} of {considered} live adverts
         </span>
+        {visible.length > 0 && (
+          <Link
+            href={`/referrals/clients/${client.id}/tour${vettedOnly || showPoor ? `?${new URLSearchParams({ ...(vettedOnly ? { vetted: "1" } : {}), ...(showPoor ? { all: "1" } : {}) }).toString()}` : ""}`}
+            className="btn-primary py-1.5"
+            title="Swipe through these rooms full screen"
+          >
+            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="5.5" y="2.5" width="9" height="15" rx="2" /><path d="m9 8 3 2-3 2V8Z" fill="currentColor" stroke="none" /></svg>
+            Tour matches
+          </Link>
+        )}
       </div>
 
       {visible.length === 0 ? (
