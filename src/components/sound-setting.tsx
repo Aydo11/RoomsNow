@@ -30,7 +30,7 @@ export function SoundSetting() {
         <span>
           Play a chime for good news
           <span className="mt-0.5 block text-[13px] text-ink-faint">
-            When you submit an advert, or an advert, verification or accreditation is approved. Saved on this device.
+            When you submit an advert, something is approved, or you reach a milestone like your first referral. Saved on this device.
           </span>
         </span>
       </label>
