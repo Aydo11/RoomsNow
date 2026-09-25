@@ -316,6 +316,7 @@ model User {
   pushSubscriptions        PushSubscription[]
   councilAccess            CouncilAccess?
   placementCheckIns        PlacementCheckIn[]
+  residentReviews          ResidentReview[]   @relation("ResidentReviewAuthor")
   messages                 Message[]
   participations           ConversationParticipant[]
   reportsFiled             Report[]                  @relation("ReportReporter")
@@ -430,6 +431,10 @@ model Company {
   /// How many 5-qualified-referral reward cycles this company has already
   /// been paid out for. Prevents re-granting the same milestone twice.
   referralRewardsClaimed Int                @default(0)
+  /// Free 30-day sponsored placements earned by inviting other providers (one
+  /// per invited provider who posts their first advert). Spent one at a time
+  /// on any live advert from the advert's Sponsor panel.
+  freeSponsorMonths      Int                @default(0)
   /// Median minutes to first reply to a new conversation, over the last 90
   /// days. Recalculated hourly by lib/response-time.ts; null until there's
   /// enough history. Drives the "Usually replies within…" badge.
@@ -460,6 +465,7 @@ model Company {
   referralsMade    ProviderReferral[]      @relation("ReferralsMade")
   referredVia      ProviderReferral?       @relation("ReferralsReceived")
   quickReplies     QuickReply[]
+  residentReviews  ResidentReview[]
 
   @@index([city])
 }
@@ -548,6 +554,10 @@ model Room {
   furnished     Boolean        @default(true)
   sizeSqm       Float?
   availableFrom DateTime?
+  /// When the room last became empty (AVAILABLE or VOID). Drives the void
+  /// cost counter. Null on rooms empty since before tracking began, where
+  /// updatedAt is used instead.
+  vacantSince   DateTime?
   notes         String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -642,6 +652,7 @@ model Listing {
   requests      AccommodationRequest[]
   referrals     Referral[]
   shortlistedBy ShortlistItem[]
+  residentReviews ResidentReview[]
   conversations Conversation[]
   applications  Application[]
   viewings      Viewing[]
@@ -1571,3 +1582,34 @@ model CouncilAccess {
   createdAt   DateTime @default(now())
 }
 
+/// A review from someone who actually lived in the accommodation. Only
+/// possible once their own request (or a referral made for them) reached
+/// MOVED_IN, once per placement, so every review maps to a real stay. Shown
+/// publicly as "Verified resident", never with the person's name.
+model ResidentReview {
+  id               String    @id @default(cuid())
+  companyId        String
+  company          Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  listingId        String?
+  listing          Listing?  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  authorId         String
+  author           User      @relation("ResidentReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  requestId        String?   @unique
+  referralId       String?   @unique
+  rating           Int
+  feelSafe         Boolean?
+  supportHelpful   Boolean?
+  comment          String?
+  stillLivingThere Boolean   @default(true)
+  /// Set by an admin to take a review down (e.g. it names someone).
+  hiddenAt         DateTime?
+  hiddenReason     String?
+  providerReply    String?
+  providerReplyAt  DateTime?
+  providerReplyBy  String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([companyId, hiddenAt, createdAt])
+  @@index([listingId])
+}
