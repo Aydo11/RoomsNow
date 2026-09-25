@@ -12,6 +12,7 @@ import { fieldErrors, referralSchema, type FormState } from "@/lib/validation";
 import { date, list, reference, text } from "../form";
 import type { ReferralStatus } from "@prisma/client";
 import { inTeam, teamMemberIds } from "@/lib/referral-team";
+import { checkFirstMoveIn, checkFirstReferral } from "@/lib/milestones";
 
 export async function createReferralAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireReferrer();
@@ -127,6 +128,7 @@ export async function createReferralAction(_prev: FormState, formData: FormData)
       href: `/provider/referrals/${referral.id}`,
       email: true,
     });
+    await checkFirstReferral(listingCompanyId, referral.id);
   }
 
   await audit({
@@ -170,6 +172,9 @@ export async function updateReferralStatusAction(referralId: string, status: Ref
     href: `/referrals/${referralId}`,
     email: true,
   });
+  if (status === "MOVED_IN" && referral.listing) {
+    await checkFirstMoveIn(referral.listing.companyId, `/provider/referrals/${referralId}`);
+  }
 
   await audit({
     actorId: user.id,
