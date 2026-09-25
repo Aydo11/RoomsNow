@@ -102,7 +102,11 @@ function MobileLink({ href, children }: { href: string; children: React.ReactNod
 
 export function Logo({ className = "h-9 w-auto" }: { className?: string }) {
   return (
-    <img src="/brand/roomsnow-logo-fullcolor.svg" alt="" aria-hidden="true" className={className} />
+    <>
+      {/* The dark-ink wordmark disappears on the dark theme, so swap in the white one there. */}
+      <img src="/brand/roomsnow-logo-fullcolor.svg" alt="" aria-hidden="true" className={`${className} [html[data-theme=dark]_&]:hidden`} />
+      <img src="/brand/roomsnow-logo-white.svg" alt="" aria-hidden="true" className={`${className} hidden [html[data-theme=dark]_&]:inline`} />
+    </>
   );
 }
 
