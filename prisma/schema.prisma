@@ -314,6 +314,8 @@ model User {
   savedListings            SavedListing[]
   notifications            Notification[]
   pushSubscriptions        PushSubscription[]
+  councilAccess            CouncilAccess?
+  placementCheckIns        PlacementCheckIn[]
   messages                 Message[]
   participations           ConversationParticipant[]
   reportsFiled             Report[]                  @relation("ReportReporter")
@@ -639,6 +641,7 @@ model Listing {
   saves         SavedListing[]
   requests      AccommodationRequest[]
   referrals     Referral[]
+  shortlistedBy ShortlistItem[]
   conversations Conversation[]
   applications  Application[]
   viewings      Viewing[]
@@ -775,6 +778,10 @@ model Referral {
   events      ReferralEvent[]
   viewings    Viewing[]
   review      ProviderReview?
+  checkIns    PlacementCheckIn[]
+  /// When the 4-week and 12-week "how is the placement going?" prompts went out.
+  checkIn4SentAt  DateTime?
+  checkIn12SentAt DateTime?
 
   @@index([status])
   @@index([clientId])
@@ -861,6 +868,7 @@ model Client {
   updatedAt          DateTime     @updatedAt
 
   referrals Referral[]
+  shortlist ShortlistItem[]
   shares    ClientShare[]
   messages  Message[]
 
@@ -1488,3 +1496,78 @@ model PushSubscription {
 
   @@index([userId])
 }
+
+/// "Tell me when a room comes up" for people without an account. Nothing is
+/// sent until the address is confirmed from the first message.
+model RoomAlert {
+  id            String    @id @default(cuid())
+  email         String?
+  phone         String?
+  where         String
+  support       String[]  @default([])
+  /// Random token used in the confirm and stop links.
+  token         String    @unique
+  confirmedAt   DateTime?
+  lastAlertedAt DateTime?
+  alertsSent    Int       @default(0)
+  createdAt     DateTime  @default(now())
+
+  @@index([confirmedAt])
+  @@index([email])
+  @@index([phone])
+}
+
+/// A room a referrer has shortlisted for one client (3 to 5 usually), for
+/// comparing side by side and printing a referral pack.
+model ShortlistItem {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  note      String?
+  addedById String?
+  createdAt DateTime @default(now())
+
+  @@unique([clientId, listingId])
+}
+
+enum PlacementHealth {
+  GOING_WELL
+  SOME_CONCERNS
+  AT_RISK
+  ENDED
+}
+
+/// Answer to the 4-week or 12-week "is the placement going well?" check-in,
+/// from the referrer's side or the provider's side.
+model PlacementCheckIn {
+  id         String          @id @default(cuid())
+  referralId String
+  referral   Referral        @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  week       Int
+  /// "REFERRER" or "PROVIDER"
+  side       String
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  health     PlacementHealth
+  note       String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@unique([referralId, week, side])
+  @@index([health])
+}
+
+/// Read-only council view for a local authority team. Granted by an admin.
+/// `areas` are town or city names and postcode prefixes (e.g. "Birmingham", "B").
+model CouncilAccess {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  councilName String
+  areas       String[] @default([])
+  grantedById String?
+  createdAt   DateTime @default(now())
+}
+
