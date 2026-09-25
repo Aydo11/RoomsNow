@@ -32,6 +32,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         orderBy: { createdAt: "desc" },
         include: { listing: { select: { id: true, title: true, company: { select: { name: true } } } } },
       },
+      _count: { select: { shortlist: true } },
       shares: {
         orderBy: { createdAt: "desc" },
         include: { company: { select: { name: true } } },
@@ -105,6 +106,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             <Link href={`/referrals/clients/${client.id}/matches`} className="btn-primary">
               Refer to an advert
             </Link>
+            {client._count.shortlist > 0 && (
+              <Link href={`/referrals/clients/${client.id}/shortlist`} className="btn-secondary">
+                Shortlist ({client._count.shortlist})
+              </Link>
+            )}
             <Link href={`/referrals/clients/${client.id}/edit`} className="btn-secondary">
               Edit
             </Link>
