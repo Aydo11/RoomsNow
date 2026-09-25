@@ -22,6 +22,8 @@ export async function register() {
     scheduleResponseTimeRefresh();
     const { scheduleWeeklySummary } = await import("./lib/weekly-summary");
     scheduleWeeklySummary();
+    const { schedulePlacementCheckIns } = await import("./lib/placement-checkins");
+    schedulePlacementCheckIns();
   }
 }
 
