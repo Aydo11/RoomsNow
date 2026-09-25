@@ -88,18 +88,27 @@ export default async function HomePage() {
         description: "Search HMO rooms, supported housing and specialist accommodation across the UK.",
       }} />
 
-      <section className="surface-home relative overflow-hidden border-b border-line">
+      <section className="home-arrival surface-home relative overflow-hidden border-b border-line">
         <span aria-hidden="true" className="absolute -left-24 top-8 h-64 w-64 rounded-full bg-pine-light/55 blur-3xl" />
         <span aria-hidden="true" className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-[#d8ebfb]/65 blur-3xl" />
         <div className="shell relative py-10 text-center sm:py-14 lg:py-16">
-          <h1 className="mx-auto max-w-[19ch] text-[40px] font-bold leading-[1.07] sm:text-[56px]">
-            Find an <span className="text-pine-dark">HMO room or accommodation</span> that fits
+          <div className="home-welcome eyebrow mb-5">More housing, in one place</div>
+          <h1 className="home-headline mx-auto max-w-[19ch] text-[clamp(2rem,8vw,3.5rem)] font-bold leading-[1.12]">
+            <span className="sr-only">Find an HMO room or accommodation that fits</span>
+            <span aria-hidden="true">
+              {"Find an HMO room or accommodation that fits".split(" ").map((word, index) => (
+                <span key={index} className="home-word-slot"><span
+                  className={`home-word ${index >= 2 && index <= 5 ? "text-pine-dark" : ""} ${word === "fits" ? "home-word-accent" : ""}`}
+                  style={{ animationDelay: `${index * 80}ms` }}
+                >{word}</span>{" "}</span>
+              ))}
+            </span>
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-[17px] leading-relaxed text-ink-soft">
+          <p className="home-intro mx-auto mt-5 max-w-2xl text-[17px] leading-relaxed text-ink-soft">
             Some people need more than a room — they need the right support alongside it. RoomsNow makes that connection.
           </p>
 
-          <div className="mx-auto mt-7 max-w-4xl text-left">
+          <div className="home-search mx-auto mt-7 max-w-4xl text-left">
             {/*
               The search form stacks to 4 rows on mobile (no sm: grid columns
               yet) and is a single row from the sm breakpoint up. A fallback
@@ -346,7 +355,7 @@ function AudienceCard({
   highlighted?: boolean;
 }) {
   return (
-    <article className={highlighted ? "rounded-card bg-gradient-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card border-t-4 border-t-pine/30 bg-pine-light/25 p-6"}>
+    <article className={`home-audience ${highlighted ? "rounded-card bg-gradient-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card border-t-4 border-t-pine/30 bg-pine-light/25 p-6"}`}>
       <div className="flex items-center justify-between gap-4">
         <span className={highlighted ? "text-[11px] font-semibold tracking-[0.08em] text-pine-light" : "text-[11px] font-semibold tracking-[0.08em] text-pine-dark"}>{eyebrow}</span>
         <AudienceIcon type={icon} highlighted={highlighted} />

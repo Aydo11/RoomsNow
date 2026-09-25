@@ -2,6 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Landing-page motion: the complete heading stays in the document and each
+   word reserves its final space. Animations finish once, without a timer. */
+.home-word-slot { white-space: nowrap; }
+.home-word { display: inline-block; }
+.home-word-accent { position: relative; }
+.home-word-accent::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -0.09em;
+  height: 0.07em;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1666aa, #70baff);
+}
+.home-search { border-radius: 14px; }
+.home-audience { position: relative; }
+@media (prefers-reduced-motion: no-preference) {
+  .home-word { animation: home-word-in 650ms cubic-bezier(.16,1,.3,1) both; }
+  .home-word-accent::after {
+    transform-origin: left;
+    animation: home-underline-in 700ms 950ms cubic-bezier(.16,1,.3,1) both;
+  }
+  .home-welcome { animation: home-settle 650ms ease-out both; }
+  .home-intro { animation: home-settle 850ms 200ms ease-out both; }
+  .home-search { animation: home-settle 850ms 350ms ease-out both; }
+  .home-audience { transition: transform 250ms ease, box-shadow 250ms ease; }
+  .home-audience:focus-within {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px -20px rgb(22 102 170 / 45%);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .home-audience:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 36px -20px rgb(22 102 170 / 45%);
+    }
+  }
+}
+@keyframes home-word-in {
+  from { opacity: 0; transform: translateY(.35em); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes home-underline-in {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes home-settle {
+  from { transform: translateY(10px); }
+  to { transform: translateY(0); }
+}
+
 @keyframes menu-enter {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
