@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import type { NavItem } from "@/components/dashboard-shell";
 
 export async function providerNav(companyId: string): Promise<NavItem[]> {
-  const [requests, referrals, sharedClients, viewingsToConfirm] = await Promise.all([
+  const [requests, referrals, sharedClients, viewingsToConfirm, reviewsToAnswer] = await Promise.all([
     db.accommodationRequest.count({
       where: { listing: { companyId }, status: { in: ["SUBMITTED", "RECEIVED"] } },
     }),
@@ -11,6 +11,7 @@ export async function providerNav(companyId: string): Promise<NavItem[]> {
     }),
     db.clientShare.count({ where: { companyId, revokedAt: null } }),
     db.viewing.count({ where: { listing: { companyId }, status: "PROPOSED" } }),
+    db.residentReview.count({ where: { companyId, hiddenAt: null, providerReply: null } }),
   ]);
 
   return [
@@ -21,6 +22,7 @@ export async function providerNav(companyId: string): Promise<NavItem[]> {
     { href: "/provider/referrals", label: "Referrals", badge: referrals || undefined },
     { href: "/provider/viewings", label: "Viewings", badge: viewingsToConfirm || undefined },
     { href: "/provider/clients", label: "Shared profiles", badge: sharedClients || undefined },
+    { href: "/provider/reviews", label: "Reviews", badge: reviewsToAnswer || undefined },
     { href: "/messages", label: "Messages" },
     { href: "/people", label: "Find people" },
     { href: "/provider/membership", label: "Membership" },
