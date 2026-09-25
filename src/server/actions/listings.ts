@@ -17,6 +17,7 @@ import { qualifyProviderReferral } from "@/lib/referral-program";
 import { fieldErrors, listingSchema, type FormState } from "@/lib/validation";
 import { bool, date, list, num, pence, reference, text } from "../form";
 import type { Prisma, ReferralRoute, RoomStatus } from "@prisma/client";
+import { isEmptyRoom } from "@/lib/void-cost";
 
 export async function saveListingAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const { user, companyId } = await requireCompany();
@@ -620,7 +621,10 @@ export async function updateRoomStatusAction(roomId: string, status: RoomStatus)
   await assertCompanyAccess(user, room.property.companyId);
 
   const before = room.status;
-  await db.room.update({ where: { id: roomId }, data: { status } });
+  // Start the void cost clock when a room becomes empty, and stop it when it's filled.
+  const nowEmpty = isEmptyRoom(status);
+  const vacantSince = nowEmpty ? (isEmptyRoom(before) ? room.vacantSince ?? room.updatedAt : new Date()) : null;
+  await db.room.update({ where: { id: roomId }, data: { status, vacantSince } });
   await audit({
     actorId: user.id,
     action: "room.status_changed",
