@@ -18,6 +18,10 @@ export async function register() {
     scheduleListingFreshnessCheck();
     const { scheduleInsuranceExpiryCheck } = await import("./lib/verification-expiry");
     scheduleInsuranceExpiryCheck();
+    const { scheduleResponseTimeRefresh } = await import("./lib/response-time");
+    scheduleResponseTimeRefresh();
+    const { scheduleWeeklySummary } = await import("./lib/weekly-summary");
+    scheduleWeeklySummary();
   }
 }
 
