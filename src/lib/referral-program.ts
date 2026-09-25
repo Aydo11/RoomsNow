@@ -7,8 +7,10 @@ import { activeProviderMembershipGrant, ensureProviderMembershipCatalogue } from
  * Provider-to-provider "refer & earn" growth programme. A provider shares
  * their invite code; when someone registers a new provider account with it
  * and goes on to post their first advert, that counts as one qualified
- * referral. Every 5 qualified referrals unlocks another free month of
- * Professional plus a handful of boost credits, granted automatically —
+ * referral. Each qualified referral earns a free month of sponsored
+ * (featured) placement for one advert. Every 5 qualified referrals also
+ * unlocks another free month of Professional plus a handful of boost
+ * credits, all granted automatically —
  * no admin action required. This is deliberately separate from the
  * case-worker-to-provider Referral model, which is an unrelated concept
  * (a placement referral, not a growth referral).
@@ -21,6 +23,8 @@ const CODE_LENGTH = 7;
 export const REFERRALS_PER_REWARD = 5;
 export const REWARD_BOOST_CREDITS = 2;
 export const REWARD_MONTHS = 1;
+/** Free 30-day sponsored placements per qualified referral. */
+export const FEATURED_MONTHS_PER_REFERRAL = 1;
 
 function randomCode(): string {
   let out = "";
@@ -95,6 +99,24 @@ export async function qualifyProviderReferral(referredCompanyId: string) {
     await db.providerReferral.update({
       where: { id: referral.id },
       data: { status: "QUALIFIED", qualifiedAt: new Date() },
+    });
+
+    await db.company.update({
+      where: { id: referral.referrerCompanyId },
+      data: { freeSponsorMonths: { increment: FEATURED_MONTHS_PER_REFERRAL } },
+    });
+    await notifyCompany(referral.referrerCompanyId, {
+      type: "MEMBERSHIP",
+      title: "You've earned a free month of featured adverts",
+      body: "A provider you invited has posted their first advert. Use your free month on any live advert to put it in the sponsored spots at the top of search.",
+      href: "/provider/invite",
+      email: true,
+    });
+    await audit({
+      action: "referral_program.featured_month_granted",
+      targetType: "Company",
+      targetId: referral.referrerCompanyId,
+      metadata: { referredCompanyId, months: FEATURED_MONTHS_PER_REFERRAL },
     });
 
     await grantReferralRewardIfEarned(referral.referrerCompanyId);
