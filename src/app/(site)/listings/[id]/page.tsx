@@ -2,6 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { SimpleSummary } from "@/components/simple-summary";
+import { plainSummary } from "@/lib/plain-summary";
+import { htmlToText } from "@/lib/html-text";
 import { getListing } from "@/server/search";
 import { getCurrentUser } from "@/lib/session";
 import { Gallery } from "@/components/gallery";
@@ -217,6 +220,29 @@ export default async function ListingPage({
           </header>
 
           {listing.summary && <p className="mt-6 text-[17px] leading-relaxed text-ink">{listing.summary}</p>}
+
+          <SimpleSummary
+            title={listing.title}
+            lines={plainSummary({
+              accommodationType: listing.accommodationType,
+              area: listing.property.area,
+              city: listing.property.city,
+              weeklyRentFrom: listing.weeklyRentFrom,
+              weeklyRentTo: listing.weeklyRentTo,
+              billsIncluded: listing.billsIncluded,
+              housingBenefit: listing.housingBenefit,
+              supportTypes: listing.supportTypes,
+              genderArrangement: listing.genderArrangement,
+              minAge: listing.minAge,
+              maxAge: listing.maxAge,
+              referralRoutes: listing.referralRoutes,
+              wheelchairAccess: listing.wheelchairAccess,
+              petsAllowed: listing.petsAllowed,
+              availableRooms: listing.rooms.filter((room) => room.status === "AVAILABLE").length,
+              availableFrom: listing.availableFrom,
+            })}
+            fullText={[listing.summary, htmlToText(listing.description, 3000)].filter(Boolean).join("\n\n") || null}
+          />
 
           <section className="mt-8 grid gap-x-8 gap-y-4 border-y border-line py-6 sm:grid-cols-3">
             <Fact label="Accommodation" value={ACCOMMODATION_TYPES[listing.accommodationType]} />
