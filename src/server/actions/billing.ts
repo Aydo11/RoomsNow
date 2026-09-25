@@ -139,6 +139,40 @@ export async function featureListingAction(listingId: string, pkg: SponsorPackag
   return { ok: true, message: `Sponsored for ${plan.label}, using one of your included slots.` };
 }
 
+/**
+ * Spends one free sponsored month (earned by inviting other providers) on a
+ * live advert: 30 days in the sponsored slots, added on to any time left.
+ */
+export async function spendFreeSponsorMonthAction(listingId: string) {
+  const { user, companyId } = await requireCompany();
+  const listing = await db.listing.findUnique({ where: { id: listingId }, select: { companyId: true, status: true, featuredUntil: true, sponsoredBid: true } });
+  if (!listing) return { ok: false, message: "Advert not found." };
+  await assertCompanyAccess(user, listing.companyId);
+  if (listing.status !== "ACTIVE") return { ok: false, message: "Only live adverts can be sponsored." };
+
+  // Take the credit first, and only if one is left, so two clicks can't spend one credit twice.
+  const taken = await db.company.updateMany({
+    where: { id: listing.companyId, freeSponsorMonths: { gt: 0 } },
+    data: { freeSponsorMonths: { decrement: 1 } },
+  });
+  if (taken.count === 0) return { ok: false, message: "You don't have any free months left." };
+
+  const plan = SPONSOR_PACKAGES.MONTH;
+  const from = listing.featuredUntil && listing.featuredUntil > new Date() ? listing.featuredUntil : new Date();
+  await db.listing.update({
+    where: { id: listingId },
+    data: {
+      featured: true,
+      featuredUntil: new Date(from.getTime() + plan.days * 24 * 3600 * 1000),
+      sponsoredBid: Math.max(listing.sponsoredBid, plan.bid),
+    },
+  });
+  await audit({ actorId: user.id, action: "listing.sponsored", targetType: "Listing", targetId: listingId, metadata: { package: "MONTH", source: "referral_reward", amount: 0 } });
+  revalidatePath(`/provider/adverts/${listingId}`);
+  revalidatePath("/provider/invite");
+  return { ok: true, message: "Sponsored for 30 days with your free month. Thanks for spreading the word!" };
+}
+
 /** Stops sponsorship early. Any remaining paid time is not refunded automatically. */
 export async function endSponsorshipAction(listingId: string) {
   const { user } = await requireCompany();
