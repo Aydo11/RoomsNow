@@ -46,6 +46,9 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const viewerCompanyIds = new Set(user.staffOf.map((s) => s.companyId));
   const viewerIsProvider = Boolean(providerCompanyId && viewerCompanyIds.has(providerCompanyId));
   const otherReferrer = others.find((p) => p.user.role === "REFERRER");
+  const quickReplies = viewerIsProvider && providerCompanyId
+    ? await db.quickReply.findMany({ where: { companyId: providerCompanyId }, orderBy: { createdAt: "asc" }, select: { id: true, body: true } })
+    : undefined;
   const providerCompany = providerCompanyId
     ? await db.company.findUnique({ where: { id: providerCompanyId }, select: { slug: true } })
     : null;
@@ -141,6 +144,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         viewerIsProvider={viewerIsProvider}
         withProvider={Boolean(providerCompanyId) && !viewerIsProvider}
         shareProfileUrl={shareProfileUrl}
+        quickReplies={quickReplies}
         initialMessages={conversation.messages.map((m) => ({
           id: m.id,
           senderId: m.senderId,
