@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "./db";
 import { notify, sendEmail } from "./notify";
 import { pushToUser } from "./web-push";
+import { notifyRoomAlerts } from "./room-alerts";
 import { escapeHtml, renderEmail } from "./email-template";
 import { ACCOMMODATION_TYPES, supportLabel } from "./taxonomy";
 import type { Listing, Property, Company, SavedSearch } from "@prisma/client";
@@ -76,6 +77,8 @@ export function listingMatchesSavedSearch(listing: MatchableListing, search: Sav
  * advert.
  */
 export async function notifyInstantSavedSearches(listingId: string) {
+  // People without an account who asked to hear about rooms get told too.
+  void notifyRoomAlerts(listingId);
   const listing = await db.listing.findUnique({ where: { id: listingId }, include: LISTING_MATCH_INCLUDE });
   if (!listing || listing.status !== "ACTIVE") return;
 
