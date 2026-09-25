@@ -13,6 +13,7 @@ import {
   type EligibilityAnswers,
 } from "@/lib/eligibility";
 import { countEligibleAction } from "@/server/actions/eligibility";
+import { RoomAlertSignup } from "./room-alert-signup";
 
 const STORE_KEY = "roomsnow:eligibility";
 const STEPS = 5;
@@ -23,7 +24,7 @@ const QUICK_PLACES = ["Birmingham", "Wolverhampton", "Coventry", "Manchester", "
  * plain words. A running count shows how many live rooms still fit, and the
  * end screen sends people to those rooms in Tour mode or as a list.
  */
-export function EligibilityCheck() {
+export function EligibilityCheck({ smsEnabled = false }: { smsEnabled?: boolean }) {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [answers, setAnswers] = useState<EligibilityAnswers>(EMPTY_ANSWERS);
@@ -272,6 +273,7 @@ export function EligibilityCheck() {
             onEdit={() => go(0)}
             onStartAgain={startAgain}
             onWiden={(patch) => update(patch)}
+            smsEnabled={smsEnabled}
           />
         )}
       </div>
@@ -407,7 +409,9 @@ function Result({
   onEdit,
   onStartAgain,
   onWiden,
+  smsEnabled,
 }: {
+  smsEnabled: boolean;
   headingRef: React.RefObject<HTMLHeadingElement | null>;
   count: number | "unknown" | null;
   counting: boolean;
@@ -460,9 +464,7 @@ function Result({
               Show homes with any kind of support
             </button>
           )}
-          <Link href={`/search${query}`} className="btn-ghost">
-            Set up an alert for new rooms
-          </Link>
+          <RoomAlertSignup compact className="mt-2 text-left" where={answers.where} support={realSupport} smsEnabled={smsEnabled} />
         </div>
       ) : (
         <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
