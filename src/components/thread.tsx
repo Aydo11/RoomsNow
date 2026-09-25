@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useActionState } from "react";
 import { deleteMessageAction, sendMessageAction, togglePinnedMessageAction } from "@/server/actions/engagement";
+import type { QuickReplyItem } from "@/server/actions/quick-replies";
+import { QuickReplies } from "./quick-replies";
 import { parseClientCard, type ClientCard } from "@/lib/client-card";
 import { ClientAvatar } from "./client-avatar";
 import { SubmitButton } from "./ui";
@@ -37,6 +39,7 @@ export function Thread({
   viewerIsProvider = false,
   withProvider = false,
   shareProfileUrl,
+  quickReplies,
 }: {
   conversationId: string;
   currentUserId: string;
@@ -48,6 +51,8 @@ export function Thread({
   withProvider?: boolean;
   /** A shareable RoomsNow listing, client, agency or company profile URL. */
   shareProfileUrl?: string | null;
+  /** The provider team's saved replies. Passing this (even empty) turns on the Quick replies menu. */
+  quickReplies?: QuickReplyItem[];
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [state, action] = useActionState(sendMessageAction, { ok: false });
@@ -283,6 +288,9 @@ export function Thread({
         <div className="mb-2 flex flex-wrap items-center gap-1.5 border-b border-line/70 pb-2">
           <button type="button" className="rounded-pill px-2.5 py-1.5 text-[12px] font-medium text-brand hover:bg-brand/5" onClick={() => mediaInputRef.current?.click()}>＋ Photo or audio</button>
           <button type="button" className={`rounded-pill px-2.5 py-1.5 text-[12px] font-medium hover:bg-brand/5 ${recording ? "text-red-700" : "text-brand"}`} onClick={() => void toggleRecording()}>{recording ? "■ Stop recording" : "◉ Voice note"}</button>
+          {quickReplies && (
+            <QuickReplies initial={quickReplies} onInsert={insertIntoMessage} getDraft={() => textareaRef.current?.value ?? ""} />
+          )}
           <span className="mx-1 hidden h-5 w-px bg-line sm:block" aria-hidden="true" />
           <button type="button" aria-label="Insert smiling face" className="grid h-8 w-8 place-items-center rounded-full text-[17px] hover:bg-paper-sunk" onClick={() => insertIntoMessage("🙂")}>🙂</button>
           <button type="button" aria-label="Insert thumbs-up" className="grid h-8 w-8 place-items-center rounded-full text-[17px] hover:bg-paper-sunk" onClick={() => insertIntoMessage("👍")}>👍</button>
