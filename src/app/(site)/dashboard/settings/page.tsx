@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/rbac";
+import { serviceProviderNav } from "../../service-provider/nav";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { AccountSettings } from "@/components/account-settings";
 import { SoundSetting } from "@/components/sound-setting";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const user = await requireUser("/dashboard/settings");
-  const nav = user.role === "REFERRER" || user.role === "ADMIN" ? await referrerNav(user.id) : await userNav(user.id);
+  const nav = user.role === "SERVICE_PROVIDER" ? await serviceProviderNav(user.id) : user.role === "REFERRER" || user.role === "ADMIN" ? await referrerNav(user.id) : await userNav(user.id);
 
   return (
     <DashboardShell title="Settings" nav={nav} active="/dashboard/settings">
