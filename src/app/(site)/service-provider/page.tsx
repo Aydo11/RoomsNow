@@ -117,8 +117,8 @@ export default async function ServiceProviderDashboard() {
         <StatCard label="Boost credits" value={business.subscription?.boostCredits ?? 0} hint={plan?.boostCreditsPerMonth ? `${plan.boostCreditsPerMonth} added each month` : "Included with Pro"} />
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        <section className="card p-5">
+      <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <section className="card min-w-0 p-5">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-[18px]">Latest quote requests</h2>
             <Link href="/service-provider/quotes" className="text-[14px] text-brand underline-offset-2 hover:underline">All requests</Link>
@@ -129,7 +129,7 @@ export default async function ServiceProviderDashboard() {
             <ul className="mt-3 divide-y divide-line">
               {recentQuotes.map((quote) => (
                 <li key={quote.id} className="flex items-center justify-between gap-3 py-2.5">
-                  <Link href={`/service-provider/quotes/${quote.id}`} className="min-w-0">
+                  <Link href={`/service-provider/quotes/${quote.id}`} className="min-w-0 flex-1">
                     <span className="block truncate text-[14px] font-medium text-ink">{quote.service}</span>
                     <span className="block truncate text-[13px] text-ink-faint">{quote.company.name} · {quote.location} · {timeAgo(quote.createdAt)}</span>
                   </Link>
@@ -140,7 +140,7 @@ export default async function ServiceProviderDashboard() {
           )}
         </section>
 
-        <section className="card p-5">
+        <section className="card min-w-0 p-5">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-[18px]">Your adverts</h2>
             <Link href="/service-provider/adverts" className="text-[14px] text-brand underline-offset-2 hover:underline">Manage</Link>
@@ -153,7 +153,7 @@ export default async function ServiceProviderDashboard() {
             <ul className="mt-3 divide-y divide-line">
               {adverts.slice(0, 5).map((advert) => (
                 <li key={advert.id} className="flex items-center justify-between gap-3 py-2.5">
-                  <Link href={`/service-provider/adverts/${advert.id}`} className="min-w-0">
+                  <Link href={`/service-provider/adverts/${advert.id}`} className="min-w-0 flex-1">
                     <span className="block truncate text-[14px] font-medium text-ink">{advert.title}</span>
                     <span className="block text-[13px] text-ink-faint">{categoryLabel(advert.category)} · {advert.views} views · {advert.enquiries} enquiries</span>
                   </Link>
