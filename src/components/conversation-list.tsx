@@ -9,6 +9,7 @@ import { clsx } from "@/lib/clsx";
 
 export type ConversationRow = {
   id: string;
+  kind: "accommodation" | "referrals" | "services";
   otherFirstName: string;
   otherLastName: string;
   otherName: string;
@@ -20,12 +21,16 @@ export type ConversationRow = {
 };
 
 type Tab = "all" | "unread" | "archived";
+type Kind = "any" | ConversationRow["kind"];
+const KIND_LABELS: Record<ConversationRow["kind"], string> = { accommodation: "Accommodation", referrals: "Referrals", services: "Services" };
 
 export function ConversationList({ conversations }: { conversations: ConversationRow[] }) {
   const pathname = usePathname();
   const activeId = pathname.startsWith("/messages/") ? pathname.split("/")[2] : undefined;
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
+  const [kind, setKind] = useState<Kind>("any");
+  const kinds = useMemo(() => (["accommodation", "referrals", "services"] as const).filter((k) => conversations.some((c) => c.kind === k)), [conversations]);
 
   const counts = useMemo(
     () => ({
@@ -39,6 +44,7 @@ export function ConversationList({ conversations }: { conversations: Conversatio
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return conversations.filter((c) => {
+      if (kind !== "any" && c.kind !== kind) return false;
       if (tab === "all" && c.archived) return false;
       if (tab === "unread" && (c.archived || !c.unread)) return false;
       if (tab === "archived" && !c.archived) return false;
@@ -49,7 +55,7 @@ export function ConversationList({ conversations }: { conversations: Conversatio
         (c.lastMessage ?? "").toLowerCase().includes(q)
       );
     });
-  }, [conversations, tab, query]);
+  }, [conversations, tab, query, kind]);
 
   return (
     <div className="flex h-full flex-col">
@@ -65,6 +71,23 @@ export function ConversationList({ conversations }: { conversations: Conversatio
             className="field"
           />
         </div>
+        {kinds.length > 1 && (
+          <div className="mt-3 grid auto-cols-fr grid-flow-col gap-1 rounded-[10px] bg-paper-sunk p-1" role="tablist" aria-label="Conversation type">
+            {(["any", ...kinds] as Kind[]).map((k) => (
+              <button
+                key={k}
+                type="button"
+                role="tab"
+                aria-selected={kind === k}
+                onClick={() => setKind(k)}
+                className={clsx("rounded-[8px] px-2 py-1.5 text-[12.5px] font-medium", kind === k ? "bg-white text-ink shadow-raise" : "text-ink-soft hover:text-ink")}
+              >
+                {k === "any" ? "All" : KIND_LABELS[k]}
+                {k !== "any" && conversations.some((c) => c.kind === k && c.unread && !c.archived) && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-pine align-middle" aria-label="unread" />}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="mt-3 flex flex-wrap gap-1.5">
           {(["all", "unread", "archived"] as const).map((t) => (
             <button
