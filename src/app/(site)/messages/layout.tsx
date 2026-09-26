@@ -16,8 +16,9 @@ export default async function MessagesLayout({ children }: { children: React.Rea
     include: {
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
       participants: {
-        include: { user: { select: { id: true, firstName: true, lastName: true } } },
+        include: { user: { select: { id: true, firstName: true, lastName: true, role: true, staffOf: { select: { company: { select: { name: true } } }, take: 1 } } } },
       },
+      serviceBusiness: { select: { name: true, tradingName: true, ownerId: true } },
     },
   });
 
@@ -29,11 +30,26 @@ export default async function MessagesLayout({ children }: { children: React.Rea
       last && last.senderId !== user.id && (!mine?.lastReadAt || mine.lastReadAt < last.createdAt),
     );
 
+    // Services threads are labelled with the business (for providers) or the
+    // provider organisation (for the business), so the list reads like an inbox of companies.
+    const service = conversation.serviceBusiness;
+    const serviceName = service
+      ? service.ownerId === user.id
+        ? others[0]?.user.staffOf[0]?.company.name ?? others[0]?.user.firstName ?? "Provider"
+        : service.tradingName || service.name
+      : null;
+    const kind: ConversationRow["kind"] = service
+      ? "services"
+      : user.role === "REFERRER" || others.some((p) => p.user.role === "REFERRER")
+        ? "referrals"
+        : "accommodation";
+
     return {
       id: conversation.id,
-      otherFirstName: others[0]?.user.firstName ?? "",
-      otherLastName: others[0]?.user.lastName ?? "",
-      otherName: others.map((p) => p.user.firstName).join(", ") || "Conversation",
+      kind,
+      otherFirstName: serviceName ?? others[0]?.user.firstName ?? "",
+      otherLastName: serviceName ? serviceName.split(/\s+/)[1] ?? "" : others[0]?.user.lastName ?? "",
+      otherName: serviceName ?? (others.map((p) => p.user.firstName).join(", ") || "Conversation"),
       subject: conversation.subject,
       lastMessage: last ? `${last.senderId === user.id ? "You: " : ""}${last.body}` : null,
       lastMessageAt: conversation.lastMessageAt.toISOString(),
