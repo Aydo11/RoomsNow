@@ -33,6 +33,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         "Content-Disposition": `inline; filename="${filename}"`,
         "Cache-Control": "private, no-store, max-age=0",
         "X-Content-Type-Options": "nosniff",
+        // PDFs and images render inline but can never run script in our origin.
+        "Content-Security-Policy": "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox",
       },
     });
   } catch {
