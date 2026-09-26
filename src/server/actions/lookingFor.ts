@@ -12,6 +12,7 @@ import type { AccommodationType } from "@prisma/client";
 
 export async function saveLookingForAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser("/dashboard/advert");
+  if (user.role === "SERVICE_PROVIDER") return { ok: false, errors: { form: "Service business accounts can't post accommodation adverts." } };
   const id = text(formData, "id");
 
   const parsed = lookingForSchema.safeParse({
