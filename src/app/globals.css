@@ -57,6 +57,13 @@
   to { opacity: 1; transform: translateY(0); }
 }
 .menu-panel { animation: menu-enter 160ms ease-out; }
+@keyframes sheet-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+.mobile-menu-sheet { animation: sheet-in 220ms cubic-bezier(.2,.8,.2,1); }
+.mobile-menu-backdrop { animation: backdrop-in 200ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu-sheet, .mobile-menu-backdrop, .menu-panel { animation: none; }
+}
 
 @keyframes celebration-card-in {
   0% { opacity: 0; transform: translateY(18px) scale(.84); }
@@ -579,6 +586,8 @@ html[data-theme="dark"] [class~="bg-white/60"] {
   background-color: rgb(var(--color-paper-card) / 0.98);
 }
 
+html[data-theme="dark"] .text-brand,
+html[data-theme="dark"] .hover\:text-brand:hover,
 html[data-theme="dark"] .text-pine-dark,
 html[data-theme="dark"] .hover\:text-pine-dark:hover,
 html[data-theme="dark"] .text-blue-800,
@@ -736,3 +745,15 @@ html[data-theme="dark"] .leaflet-bar a.leaflet-disabled {
     padding-bottom: 0;
   }
 }
+
+/* Provider Services filters: folded on phones, always open in the desktop sidebar. */
+@media (min-width: 1024px) {
+  .service-filters-more > summary { display: none; }
+  .service-filters-more::details-content { content-visibility: visible; display: contents; }
+  .service-filters-more > div { margin-top: 0; }
+}
+
+/* Grid items default to min-width:auto, so one long unbroken line (a title
+   set to truncate, an email address) can widen the whole column past a phone
+   screen. Let tracks shrink and the text truncate or wrap instead. */
+.grid > * { min-width: 0; }
