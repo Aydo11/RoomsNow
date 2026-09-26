@@ -4,7 +4,7 @@
  * one only fills in the box; nothing is sent until they press Send.
  */
 
-export type ReplyViewer = "provider" | "referrer" | "seeker";
+export type ReplyViewer = "provider" | "referrer" | "seeker" | "service-buyer" | "service-business";
 
 const STARTERS: Record<ReplyViewer, string[]> = {
   seeker: [
@@ -22,6 +22,22 @@ const STARTERS: Record<ReplyViewer, string[]> = {
     "Do you accept Housing Benefit?",
     "How many support hours are included?",
     "Thanks, I'll send the referral now.",
+  ],
+  "service-buyer": [
+    "Could you send us a quote?",
+    "When is your earliest availability?",
+    "Are you able to arrange access with our staff?",
+    "Does the price include certificates and VAT?",
+    "Please go ahead — thanks.",
+    "Thanks, we'll be in touch.",
+  ],
+  "service-business": [
+    "Thanks for getting in touch.",
+    "Could you send a few photos of the job?",
+    "Who should we contact to arrange access?",
+    "We can attend this week.",
+    "I'll send a quote shortly.",
+    "The job is complete.",
   ],
   provider: [
     "The room is still available.",
