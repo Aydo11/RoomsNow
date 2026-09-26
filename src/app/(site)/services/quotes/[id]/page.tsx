@@ -29,17 +29,17 @@ export default async function BuyerQuotePage({ params, searchParams }: { params:
   return (
     <div className="shell py-6 sm:py-8">
       <div className="flex justify-end"><ServicesTabs active="quotes" /></div>
-      {sent && <p className="mt-4 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">Sent. {name} has been notified — you&apos;ll get a message when they reply.</p>}
+      {sent && quote.status === "NEW" && <p className="mt-4 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">Sent. {name} has been notified — you&apos;ll get a message when they reply.</p>}
       <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-5">
-          <header className="card flex flex-wrap items-start gap-4 p-5">
+          <header className="card flex items-start gap-4 p-5">
             <BusinessLogo src={quote.business.logoUrl} name={name} size={52} />
             <div className="min-w-0 flex-1">
+              <div className="mb-1.5"><QuoteStatusPill status={quote.status} /></div>
               <Link href={`/services/business/${quote.business.slug}`} className="text-[14px] font-medium text-brand hover:underline">{name}</Link>
               <h1 className="text-[24px] leading-tight">{quote.service}</h1>
               <p className="text-[13px] text-ink-faint">Sent {dateTime(quote.createdAt)}{quote.advert ? ` · about ${quote.advert.title}` : ""}</p>
             </div>
-            <QuoteStatusPill status={quote.status} />
           </header>
 
           {quote.quoteAmount !== null && (
@@ -77,9 +77,9 @@ export default async function BuyerQuotePage({ params, searchParams }: { params:
         <aside className="space-y-4">
           {user.role === "PROVIDER" && (
             <div className="card space-y-3 p-5">
-              <h2 className="text-[16px]">Next step</h2>
+              <h2 className="text-[16px]">{quote.status === "COMPLETED" || quote.status === "CANCELLED" || quote.status === "DECLINED" ? "Conversation" : "Next step"}</h2>
               <BuyerQuoteActions quoteId={quote.id} status={quote.status} />
-              {quote.conversationId && <Link href={`/messages/${quote.conversationId}`} className="btn-ghost w-full">Open conversation</Link>}
+              {quote.conversationId && <Link href={`/messages/${quote.conversationId}`} className="btn-secondary w-full justify-center">Open conversation</Link>}
             </div>
           )}
           <PaymentsNote />
