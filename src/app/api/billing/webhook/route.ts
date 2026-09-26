@@ -7,6 +7,8 @@ import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 import type { SponsorPackage } from "@/lib/sponsor-packages";
 import { BOOST_PACKAGES, isBoostPack } from "@/lib/boost-packages";
 import { audit } from "@/lib/audit";
+import { activateServiceBoost, applyServicePlan } from "@/lib/service-billing";
+import { isServiceBoostKey, isServicePlanTier, SERVICE_BOOSTS } from "@/lib/service-marketplace";
 
 export const runtime = "nodejs";
 
@@ -32,6 +34,7 @@ export async function POST(request: Request) {
       if (customerId) {
         await db.subscription.updateMany({ where: { externalCustomerId: customerId }, data: { status: "PAST_DUE" } });
         await db.referrerSubscription.updateMany({ where: { externalCustomerId: customerId }, data: { status: "PAST_DUE" } });
+        await db.serviceSubscription.updateMany({ where: { externalCustomerId: customerId }, data: { status: "PAST_DUE" } });
       }
     } else if (event.type === "invoice.paid") {
       await invoicePaid(event.data.object);
@@ -47,6 +50,49 @@ export async function POST(request: Request) {
 async function checkoutCompleted(session: Stripe.Checkout.Session) {
   const kind = session.metadata?.kind;
   if (session.payment_status === "unpaid") return;
+
+  if (kind === "service_plan") {
+    const businessId = session.metadata?.businessId ?? session.client_reference_id;
+    const tier = session.metadata?.tier;
+    const subscriptionId = stringId(session.subscription);
+    if (!businessId || !isServicePlanTier(tier) || !subscriptionId) return;
+    const remote = await stripe().subscriptions.retrieve(subscriptionId);
+    const existing = await db.serviceSubscription.findUnique({ where: { businessId }, select: { externalSubscriptionId: true } });
+    await applyServicePlan({
+      businessId,
+      tier,
+      provider: "stripe",
+      status: stripeStatus(remote.status),
+      trialEndsAt: remote.trial_end ? new Date(remote.trial_end * 1000) : null,
+      periodEnd: periodEnd(remote) ?? null,
+      cancelAtPeriodEnd: remote.cancel_at_period_end,
+      externalCustomerId: stringId(session.customer) ?? undefined,
+      externalSubscriptionId: remote.id,
+    });
+    if (existing?.externalSubscriptionId && existing.externalSubscriptionId !== remote.id) {
+      await stripe().subscriptions.cancel(existing.externalSubscriptionId).catch((error) => console.error("Old service plan cancellation failed:", error));
+    }
+    const owner = await db.serviceBusiness.findUnique({ where: { id: businessId }, select: { ownerId: true } });
+    if (owner) await notify({ userId: owner.ownerId, type: "MEMBERSHIP", title: "Marketplace plan active", body: `Your ${tier === "PRO" ? "Pro" : "Standard"} plan is now active.`, href: "/service-provider/plan" });
+    await audit({ action: "service_billing.plan_activated", targetType: "ServiceBusiness", targetId: businessId, metadata: { tier, subscriptionId: remote.id } });
+    return;
+  }
+
+  if (kind === "service_boost") {
+    const businessId = session.metadata?.businessId;
+    const advertId = session.metadata?.advertId;
+    const pack = session.metadata?.pack;
+    if (!businessId || !advertId || !isServiceBoostKey(pack)) return;
+    await activateServiceBoost({
+      businessId,
+      advertId,
+      days: SERVICE_BOOSTS[pack].days,
+      amount: session.amount_total ?? SERVICE_BOOSTS[pack].amount,
+      source: "PURCHASE",
+      externalPaymentId: `checkout:${session.id}`,
+    });
+    return;
+  }
 
   if (kind === "referrer_membership") {
     const userId = session.metadata?.userId ?? session.client_reference_id;
@@ -138,6 +184,26 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 async function subscriptionChanged(subscription: Stripe.Subscription) {
+  if (subscription.metadata.kind === "service_plan") {
+    const businessId = subscription.metadata.businessId;
+    const serviceTier = subscription.metadata.tier;
+    if (!businessId || !isServicePlanTier(serviceTier)) return;
+    const current = await db.serviceSubscription.findUnique({ where: { businessId }, select: { externalSubscriptionId: true } });
+    if (current?.externalSubscriptionId && current.externalSubscriptionId !== subscription.id) return;
+    await applyServicePlan({
+      businessId,
+      tier: serviceTier,
+      provider: "stripe",
+      status: stripeStatus(subscription.status),
+      trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+      periodEnd: periodEnd(subscription) ?? null,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      externalCustomerId: stringId(subscription.customer) ?? undefined,
+      externalSubscriptionId: subscription.id,
+    });
+    return;
+  }
+
   const tier = subscription.metadata.tier as MembershipTier | undefined;
   if (!tier) return;
 
