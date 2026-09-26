@@ -249,6 +249,7 @@ export function Thread({
                 {!message.isDeleted && message.body && <MessageBody body={message.body} />}
                 {!message.isDeleted && message.attachmentUrl && message.attachmentType?.startsWith("image/") && <a href={message.attachmentUrl} target="_blank" rel="noreferrer"><img src={message.attachmentUrl} alt={message.attachmentName || "Image attachment"} className="mt-2 max-h-80 max-w-full rounded-[10px] object-contain" loading="lazy" /></a>}
                 {!message.isDeleted && message.attachmentUrl && message.attachmentType?.startsWith("audio/") && <audio className="mt-2 max-w-full" controls preload="none" src={message.attachmentUrl}>Your browser cannot play this voice note.</audio>}
+                {!message.isDeleted && message.attachmentUrl && message.attachmentType === "application/pdf" && <a href={message.attachmentUrl} target="_blank" rel="noreferrer" className="mt-2 flex max-w-full items-center gap-2 rounded-[10px] border border-current/20 px-2.5 py-2 text-[13px] underline-offset-2 hover:underline"><span aria-hidden="true" className="grid h-7 w-7 shrink-0 place-items-center rounded-[6px] bg-white/20 text-[10px] font-bold">PDF</span><span className="min-w-0 truncate">{message.attachmentName || "Document"}</span></a>}
                 <div className="mt-0.5 flex items-center gap-2">
                 <p className={`text-[11px] ${mine ? "text-white/60" : "text-ink-faint"}`}>
                   {new Date(message.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
@@ -272,7 +273,7 @@ export function Thread({
       >
         <input type="hidden" name="conversationId" value={conversationId} />
         <input type="hidden" name="clientId" value={attached?.id ?? ""} />
-        <input ref={mediaInputRef} type="file" name="media" accept="image/jpeg,image/png,image/webp,image/avif,audio/webm,audio/mp4,audio/mpeg,audio/wav" className="sr-only" onChange={(event) => { setMediaError(null); setSelectedMedia(event.currentTarget.files?.[0] ?? null); setToolsOpen(false); }} />
+        <input ref={mediaInputRef} type="file" name="media" accept="image/jpeg,image/png,image/webp,image/avif,application/pdf,audio/webm,audio/mp4,audio/mpeg,audio/wav" className="sr-only" onChange={(event) => { setMediaError(null); setSelectedMedia(event.currentTarget.files?.[0] ?? null); setToolsOpen(false); }} />
 
         {attached && (
           <div className="mb-2 flex items-center gap-2 rounded-[10px] bg-pine-light px-2 py-1.5">
@@ -297,7 +298,7 @@ export function Thread({
         )}
 
         {selectedMedia && <div className="mb-2 flex max-w-full items-center gap-2 rounded-[10px] border border-brand/15 bg-paper-card p-1.5">
-          {selectedMedia.type.startsWith("image/") && selectedMediaPreview ? <img src={selectedMediaPreview} alt="Photo ready to send" className="h-10 w-10 rounded-[6px] object-cover" /> : selectedMedia.type.startsWith("audio/") && selectedMediaPreview ? <audio controls preload="metadata" src={selectedMediaPreview} className="h-9 min-w-0 max-w-[190px]" /> : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[6px] bg-brand/10 text-brand" aria-hidden="true">♫</span>}
+          {selectedMedia.type.startsWith("image/") && selectedMediaPreview ? <img src={selectedMediaPreview} alt="Photo ready to send" className="h-10 w-10 rounded-[6px] object-cover" /> : selectedMedia.type.startsWith("audio/") && selectedMediaPreview ? <audio controls preload="metadata" src={selectedMediaPreview} className="h-9 min-w-0 max-w-[190px]" /> : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[6px] bg-brand/10 text-[11px] font-bold text-brand" aria-hidden="true">{selectedMedia.type === "application/pdf" ? "PDF" : "♫"}</span>}
           <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-ink">{selectedMedia.name}</span>
           <button type="button" onClick={() => { if (mediaInputRef.current) mediaInputRef.current.value = ""; setSelectedMedia(null); setMediaError(null); }} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-white hover:text-clay" aria-label={`Remove ${selectedMedia.name}`} title="Remove attachment">×</button>
         </div>}
@@ -314,7 +315,7 @@ export function Thread({
         {toolsOpen && (
           <div id="composer-tools" className="mb-2 rounded-[12px] bg-paper-sunk/70 p-2">
             <div className="flex flex-wrap items-center gap-1">
-              <button type="button" className="rounded-pill px-2.5 py-1.5 text-[12.5px] font-medium text-brand hover:bg-white" onClick={() => mediaInputRef.current?.click()}>＋ Photo or audio</button>
+              <button type="button" className="rounded-pill px-2.5 py-1.5 text-[12.5px] font-medium text-brand hover:bg-white" onClick={() => mediaInputRef.current?.click()}>＋ Photo, PDF or audio</button>
               <button type="button" className="rounded-pill px-2.5 py-1.5 text-[12.5px] font-medium text-brand hover:bg-white" onClick={() => { setToolsOpen(false); void toggleRecording(); }}>◉ Voice note</button>
               {quickReplies && (
                 <QuickReplies initial={quickReplies} onInsert={(text) => { insertIntoMessage(text); setToolsOpen(false); }} getDraft={() => textareaRef.current?.value ?? ""} />
