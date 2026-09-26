@@ -20,6 +20,13 @@ import { Prisma, type RequestStatus } from "@prisma/client";
 import { clientAttachment, conversationCompanyId } from "@/lib/client-sharing";
 import { checkFirstEnquiry, checkFirstMoveIn } from "@/lib/milestones";
 
+/**
+ * Service businesses only ever reply inside threads a paying provider opened
+ * with them (Provider Services). They can't start conversations with people,
+ * adverts or referrers, or apply for accommodation.
+ */
+const SERVICE_ACCOUNT_BLOCK = "Service business accounts can reply to providers who contact them, but can't start conversations here.";
+
 // ------------------------------------------------------------------ saving
 
 export async function toggleSaveAction(listingId: string) {
@@ -46,6 +53,7 @@ export async function toggleSaveAction(listingId: string) {
 /** Opens (or reuses) a conversation between a person and a company. */
 export async function startConversationAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
+  if (user.role === "SERVICE_PROVIDER") return { ok: false, errors: { form: SERVICE_ACCOUNT_BLOCK, body: SERVICE_ACCOUNT_BLOCK } };
   const throttle = await rateLimit(`message:${user.id}`, LIMITS.message);
   if (!throttle.ok) return { ok: false, errors: { body: "You're sending messages very quickly. Give it a minute." } };
   const listingId = text(formData, "listingId") || null;
@@ -156,6 +164,7 @@ export async function startConversationAction(_prev: FormState, formData: FormDa
  */
 export async function startDirectMessageAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
+  if (user.role === "SERVICE_PROVIDER") return { ok: false, errors: { form: SERVICE_ACCOUNT_BLOCK, body: SERVICE_ACCOUNT_BLOCK } };
   const throttle = await rateLimit(`message:${user.id}`, LIMITS.message);
   if (!throttle.ok) return { ok: false, errors: { body: "You're sending messages very quickly. Give it a minute." } };
 
@@ -191,6 +200,7 @@ export async function startDirectMessageAction(_prev: FormState, formData: FormD
     where: {
       listingId: null,
       lookingForAdId: null,
+      serviceBusinessId: null,
       companyId: companyId ?? null,
       participants: { some: { userId: user.id } },
       AND: recipientUserId ? [{ participants: { some: { userId: recipientUserId } } }] : undefined,
@@ -254,8 +264,12 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
   if (media instanceof File && media.size > 0) {
     const isImage = media.type.startsWith("image/");
     const isVoice = ["audio/webm", "audio/mp4", "audio/mpeg", "audio/wav", "audio/x-wav"].includes(media.type);
-    if (!isImage && !isVoice) return { ok: false, errors: { form: "Attach a JPG, PNG, WebP photo or a supported voice note." } };
-    if (isImage) {
+    const isPdf = media.type === "application/pdf";
+    if (!isImage && !isVoice && !isPdf) return { ok: false, errors: { form: "Attach a JPG, PNG or WebP photo, a PDF, or a supported voice note." } };
+    if (isPdf) {
+      const problem = validateUpload(media, "document");
+      if (problem) return { ok: false, errors: { form: problem } };
+    } else if (isImage) {
       const problem = validateUpload(media, "image");
       if (problem) return { ok: false, errors: { form: problem } };
     } else if (media.size > 8 * 1024 * 1024) {
@@ -279,7 +293,7 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
     if (!body.trim()) body = `Sharing ${attachment.name}'s profile with you.`;
   }
 
-  if (!body.trim() && mediaFile) body = mediaFile.type.startsWith("audio/") ? "Voice note" : "Photo";
+  if (!body.trim() && mediaFile) body = mediaFile.type.startsWith("audio/") ? "Voice note" : mediaFile.type === "application/pdf" ? "Document" : "Photo";
   const parsed = messageSchema.safeParse({ conversationId: conversationIdInput, body });
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
 
@@ -468,6 +482,7 @@ export async function unblockUserAction(blockedId: string) {
 
 export async function createRequestAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
+  if (user.role === "SERVICE_PROVIDER") return { ok: false, errors: { form: SERVICE_ACCOUNT_BLOCK, body: SERVICE_ACCOUNT_BLOCK } };
   const throttle = await rateLimit(`request:${user.id}`, LIMITS.request);
   if (!throttle.ok) return { ok: false, errors: { form: "You've sent a lot of requests recently. Try again later." } };
   const parsed = requestSchema.safeParse({
