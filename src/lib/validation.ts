@@ -36,7 +36,7 @@ export const passwordChangeSchema = z
   });
 
 export const registerSchema = z.object({
-  accountType: z.enum(["USER", "PROVIDER", "REFERRER"]),
+  accountType: z.enum(["USER", "PROVIDER", "REFERRER", "SERVICE_PROVIDER"]),
   firstName: z.string().trim().min(1, "Enter your first name.").max(80),
   lastName: z.string().trim().min(1, "Enter your last name.").max(80),
   email,
@@ -249,7 +249,7 @@ export const messageSchema = z.object({
 });
 
 export const reportSchema = z.object({
-  targetType: z.enum(["LISTING", "USER", "COMPANY", "MESSAGE", "LOOKING_FOR_AD"]),
+  targetType: z.enum(["LISTING", "USER", "COMPANY", "MESSAGE", "LOOKING_FOR_AD", "SERVICE_ADVERT", "SERVICE_BUSINESS"]),
   targetId: z.string().min(1),
   reason: z.enum([
     "SCAM",
