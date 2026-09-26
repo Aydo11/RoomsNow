@@ -14,9 +14,11 @@ export async function SiteHeader() {
     : 0;
 
   const home =
-    user?.role === "ADMIN" ? "/admin" : user?.role === "PROVIDER" ? "/provider" : user?.role === "REFERRER" ? "/referrals" : "/dashboard";
+    user?.role === "ADMIN" ? "/admin" : user?.role === "PROVIDER" ? "/provider" : user?.role === "REFERRER" ? "/referrals" : user?.role === "SERVICE_PROVIDER" ? "/service-provider" : "/dashboard";
   // The vetted (CQC/BVSC-checked) provider list is only for referral professionals.
   const showVetted = user?.role === "REFERRER" || user?.role === "ADMIN";
+  // Trades and suppliers for housing providers; free providers see a preview.
+  const showServices = user?.role === "PROVIDER" || user?.role === "ADMIN";
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/90 bg-paper/90 backdrop-blur-lg">
@@ -35,6 +37,7 @@ export async function SiteHeader() {
               Vetted providers
             </Link>
           )}
+          {showServices && <Link href="/services" className="font-medium text-pine-dark transition-colors hover:text-ink">Provider Services</Link>}
           <Link href="/people" className="transition-colors hover:text-ink">People looking</Link>
           <Link href="/how-it-works" className="transition-colors hover:text-ink">How it works</Link>
           <Link href="/advertise-accommodation" className="transition-colors hover:text-ink">Advertise</Link>
@@ -68,6 +71,7 @@ export async function SiteHeader() {
           <MobileMenu>
               <MobileLink href="/search">Search accommodation</MobileLink>
               {showVetted && <MobileLink href="/referrals/vetted">Vetted providers</MobileLink>}
+              {showServices && <MobileLink href="/services">Provider Services</MobileLink>}
               <MobileLink href="/how-it-works">How it works</MobileLink>
               <MobileLink href="/people">People looking</MobileLink>
               <MobileLink href="/advertise-accommodation">Advertise</MobileLink>
