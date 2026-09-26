@@ -1,4 +1,5 @@
 import "server-only";
+import { VETTED_SCHEMES, vettedAccreditationWhere } from "@/lib/vetted";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { boundingBox, distanceMiles, resolveArea, type Point } from "@/lib/geo";
@@ -29,6 +30,8 @@ export type SearchParams = {
   hb?: string;
   referral?: string[];
   verified?: string;
+  /** "1" = only providers with a checked, in-date CQC or BVSC accreditation. */
+  vetted?: string;
   maxRent?: string;
   minRent?: string;
   radius?: string;
@@ -48,7 +51,13 @@ export const MAX_PAGES = 40;
 export const MAP_PIN_LIMIT = 500;
 
 export const LISTING_CARD_SELECT = {
-  company: { select: { id: true, name: true, slug: true, logoUrl: true, verification: true, responseMinutes: true, responseSampleSize: true } },
+  company: {
+    select: {
+      id: true, name: true, slug: true, logoUrl: true, verification: true, responseMinutes: true, responseSampleSize: true,
+      // Just enough to show a "Vetted" badge on the card (expiry is checked when rendering).
+      accreditations: { where: { scheme: { in: [...VETTED_SCHEMES] }, status: "APPROVED" }, select: { scheme: true, expiresAt: true }, take: 4 },
+    },
+  },
   property: {
     select: {
       city: true, area: true, postcode: true, showExactAddress: true,
@@ -146,6 +155,7 @@ async function buildWhere(params: SearchParams) {
     company: {
       status: "ACTIVE",
       ...(params.verified === "1" ? { verification: "APPROVED" as const } : {}),
+      ...(params.vetted === "1" ? { accreditations: { some: vettedAccreditationWhere() } } : {}),
     },
     ...(support.length ? { supportTypes: { hasSome: support } } : {}),
     ...(types.length ? { accommodationType: { in: types as never } } : {}),
@@ -367,7 +377,12 @@ export async function searchListings(params: SearchParams) {
 }
 
 type RankedSearchResult = Awaited<ReturnType<typeof searchListings>>["items"][number];
-export type SearchResult = Omit<RankedSearchResult, "memberListing"> & { memberListing?: boolean };
+type RankedCompany = RankedSearchResult["company"];
+/** Cards are also built from other queries, so the vetted accreditations are optional. */
+export type SearchResult = Omit<RankedSearchResult, "memberListing" | "company"> & {
+  memberListing?: boolean;
+  company: Omit<RankedCompany, "accreditations"> & { accreditations?: RankedCompany["accreditations"] };
+};
 
 /** How many live adverts match, for the eligibility check's running total. */
 export async function countListings(params: SearchParams) {
@@ -382,12 +397,13 @@ export async function countListings(params: SearchParams) {
 export async function searchFacets(params: SearchParams) {
   const { where } = await buildWhere(params);
 
-  const [byType, byCity, verified, wheelchair, petsAllowed] = await Promise.all([
+  const [byType, byCity, verified, wheelchair, petsAllowed, vetted] = await Promise.all([
     db.listing.groupBy({ by: ["accommodationType"], where, _count: true }),
     db.listing.findMany({ where, select: { property: { select: { city: true } } }, take: 2000 }),
     db.listing.count({ where: { ...where, company: { status: "ACTIVE", verification: "APPROVED" } } }),
     db.listing.count({ where: { ...where, wheelchairAccess: true } }),
     db.listing.count({ where: { ...where, petsAllowed: true } }),
+    db.listing.count({ where: { ...where, company: { status: "ACTIVE", accreditations: { some: vettedAccreditationWhere() } } } }),
   ]);
 
   const cities = new Map<string, number>();
@@ -404,6 +420,7 @@ export async function searchFacets(params: SearchParams) {
     verified,
     wheelchair,
     petsAllowed,
+    vetted,
   };
 }
 
