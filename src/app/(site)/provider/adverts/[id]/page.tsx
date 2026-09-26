@@ -104,7 +104,7 @@ export default async function ProviderAdvertPage({
       />
 
       {listing.status === "REJECTED" && listing.rejectionNote && (
-        <p className="card mt-4 border-clay/30 p-4 text-[15px] text-clay-dark">
+        <p className="card mt-4 border-clay/30 p-4 text-[15px] text-clay">
           Our team didn&apos;t approve this advert: {listing.rejectionNote}
         </p>
       )}
