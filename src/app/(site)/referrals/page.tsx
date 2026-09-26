@@ -55,7 +55,7 @@ export default async function ReferralsPage() {
           <ul className="card divide-y divide-line">
             {referrals.map((referral) => (
               <li key={referral.id} className="flex flex-wrap items-center gap-4 px-4 py-4">
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 basis-[15rem]">
                   <Link href={`/referrals/${referral.id}`} className="text-[16px] hover:text-pine-dark">
                     {referral.applicantFirstName} {referral.applicantLastName}
                   </Link>
