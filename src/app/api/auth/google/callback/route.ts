@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date(), emailVerified: user.emailVerified ?? new Date() } });
     await createSession(user.id, user.role, user.tokenVersion);
     await audit({ actorId: user.id, action: "auth.google_login", targetType: "User", targetId: user.id });
-    const home = user.role === "ADMIN" ? "/admin" : user.role === "PROVIDER" ? "/provider" : user.role === "REFERRER" ? "/referrals" : "/dashboard";
+    const home = user.role === "ADMIN" ? "/admin" : user.role === "PROVIDER" ? "/provider" : user.role === "REFERRER" ? "/referrals" : user.role === "SERVICE_PROVIDER" ? "/service-provider" : "/dashboard";
     return clearOAuthCookies(NextResponse.redirect(new URL(next || home, appUrl)));
   } catch (error) {
     console.error("Google sign-in failed:", error);
