@@ -101,7 +101,7 @@ export function AdminMembershipGrantForm({
               name="intent"
               value="REVOKE"
               pendingLabel="Removing…"
-              className="btn-ghost text-clay-dark"
+              className="btn-ghost text-clay"
             >
               Remove grant
             </SubmitButton>
