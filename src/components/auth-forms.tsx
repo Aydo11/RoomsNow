@@ -106,6 +106,11 @@ const ACCOUNT_TYPES = [
     title: "I'm a professional referrer",
     body: "Refer people you support and track referrals to move-in.",
   },
+  {
+    value: "SERVICE_PROVIDER",
+    title: "I offer services to housing providers",
+    body: "Trades, cleaning, compliance, furniture and more. Advertise to paying accommodation providers.",
+  },
 ] as const;
 
 const ACQUISITION_SOURCES = [
@@ -149,8 +154,10 @@ function resolveAcquisitionSource(raw: string | null, hasReferralCode: boolean):
 
 export function RegisterForm() {
   const params = useSearchParams();
-  const initial = (params.get("type") as "USER" | "PROVIDER" | "REFERRER" | null) ?? "USER";
-  const [type, setType] = useState<"USER" | "PROVIDER" | "REFERRER">(initial);
+  type AccountType = (typeof ACCOUNT_TYPES)[number]["value"];
+  const requested = params.get("type");
+  const initial: AccountType = ACCOUNT_TYPES.some((option) => option.value === requested) ? (requested as AccountType) : "USER";
+  const [type, setType] = useState<AccountType>(initial);
   const referralCodeFromLink = params.get("ref") ?? "";
   const acquisitionSourceFromLink = resolveAcquisitionSource(params.get("src"), Boolean(referralCodeFromLink));
   const [state, action] = useActionState(registerAction, { ok: false });
@@ -208,7 +215,7 @@ export function RegisterForm() {
         >
           <input id="password" name="password" type="password" required autoComplete="new-password" className="field" />
         </Field>
-        <Field label={type === "PROVIDER" ? "Your location" : "Where are you looking?"} name="locationLabel" error={state.errors?.locationLabel}>
+        <Field label={type === "PROVIDER" || type === "SERVICE_PROVIDER" ? "Your location" : "Where are you looking?"} name="locationLabel" error={state.errors?.locationLabel}>
           <input id="locationLabel" name="locationLabel" placeholder="Birmingham" className="field" />
         </Field>
         <Field label="How did you hear about us?" name="acquisitionSource" hint="Optional" error={state.errors?.acquisitionSource}>
@@ -264,6 +271,22 @@ export function RegisterForm() {
               autoCapitalize="characters"
             />
           </Field>
+        </div>
+      )}
+
+      {type === "SERVICE_PROVIDER" && (
+        <div className="grid gap-4 rounded-card border border-line bg-white p-5 sm:grid-cols-2">
+          <h2 className="text-[18px] sm:col-span-2">Your business</h2>
+          <Field label="Business name" name="companyName" required error={state.errors?.companyName}>
+            <input id="companyName" name="companyName" autoComplete="organization" className="field" />
+          </Field>
+          <Field label="Main town or city you work in" name="companyCity">
+            <input id="companyCity" name="companyCity" placeholder="Walsall" className="field" />
+          </Field>
+          <p className="text-[13px] leading-relaxed text-ink-faint sm:col-span-2">
+            Next you&apos;ll add your services, areas and insurance. Our team checks every business before its adverts are shown, and only
+            accommodation providers on a paid RoomsNow membership can see and contact you.
+          </p>
         </div>
       )}
 
