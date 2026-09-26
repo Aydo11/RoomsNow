@@ -26,6 +26,8 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     include: {
       listing: { select: { id: true, title: true } },
       lookingForAd: { select: { id: true, title: true } },
+      serviceBusiness: { select: { id: true, name: true, tradingName: true, slug: true, logoUrl: true, ownerId: true } },
+      serviceAdvert: { select: { id: true, title: true } },
       participants: { include: { user: { select: { id: true, firstName: true, lastName: true, role: true } } } },
       messages: { orderBy: { createdAt: "asc" }, take: 200 },
     },
@@ -66,7 +68,17 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
       : otherLookingForAd
         ? `/people/${otherLookingForAd.id}`
         : null;
-  const shareProfileUrl = otherProfileUrl ?? (conversation.listing
+  // Services threads (External Services Marketplace) have their own header and
+  // never offer to share accommodation profiles across.
+  const service = conversation.serviceBusiness;
+  const viewerIsServiceBusiness = Boolean(service && service.ownerId === user.id);
+  const serviceRequesterCompany = service && viewerIsServiceBusiness
+    ? (await db.companyStaff.findFirst({ where: { userId: others[0]?.userId ?? "" }, select: { company: { select: { name: true } } } }))?.company.name ?? null
+    : null;
+  const serviceTitle = service ? (viewerIsServiceBusiness ? serviceRequesterCompany ?? others[0]?.user.firstName ?? "Provider" : service.tradingName || service.name) : null;
+  const serviceTitleHref = service && !viewerIsServiceBusiness ? `/services/business/${service.slug}` : null;
+  const serviceAdvertHref = conversation.serviceAdvert ? (viewerIsServiceBusiness ? `/service-provider/adverts/${conversation.serviceAdvert.id}` : `/services/ad/${conversation.serviceAdvert.id}`) : null;
+  const shareProfileUrl = service ? null : otherProfileUrl ?? (conversation.listing
     ? `/listings/${conversation.listing.id}`
     : conversation.lookingForAd
       ? `/people/${conversation.lookingForAd.id}`
@@ -110,12 +122,29 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         </Link>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-[17px] leading-tight sm:text-[22px]">
-            {others[0] && otherProfileUrl ? (
+            {serviceTitle ? (
+              serviceTitleHref ? (
+                <Link href={serviceTitleHref} className="rounded-sm underline decoration-brand/40 underline-offset-4 hover:text-brand">{serviceTitle}</Link>
+              ) : (
+                serviceTitle
+              )
+            ) : others[0] && otherProfileUrl ? (
               <Link href={otherProfileUrl} className="rounded-sm underline decoration-brand/40 underline-offset-4 hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">
                 {others[0].user.firstName} {others[0].user.lastName.charAt(0)}.
               </Link>
             ) : others.map((p) => `${p.user.firstName} ${p.user.lastName.charAt(0)}.`).join(", ") || "Conversation"}
           </h1>
+          {service && (
+            <span className="flex min-w-0 items-center gap-1.5 text-[12.5px] sm:text-[14px]">
+              <span className="shrink-0 rounded-pill bg-brand/10 px-1.5 py-px text-[11px] font-semibold text-brand">Services</span>
+              {conversation.serviceAdvert && serviceAdvertHref ? (
+                <Link href={serviceAdvertHref} className="truncate text-pine-dark hover:underline">{conversation.serviceAdvert.title}</Link>
+              ) : (
+                <span className="truncate text-ink-soft">{conversation.subject}</span>
+              )}
+              <Link href={viewerIsServiceBusiness ? "/service-provider/quotes" : "/services/quotes"} className="hidden shrink-0 text-ink-soft underline-offset-2 hover:underline sm:inline">Quotes</Link>
+            </span>
+          )}
           {conversation.listing && (
             <Link href={`/listings/${conversation.listing.id}`} className="block truncate text-[12.5px] text-pine-dark hover:underline sm:text-[14px]">
               {conversation.listing.title}
@@ -152,7 +181,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         withProvider={Boolean(providerCompanyId) && !viewerIsProvider}
         shareProfileUrl={shareProfileUrl}
         quickReplies={quickReplies}
-        replyViewer={viewerIsProvider ? "provider" : user.role === "REFERRER" ? "referrer" : "seeker"}
+        replyViewer={service ? (viewerIsServiceBusiness ? "service-business" : "service-buyer") : viewerIsProvider ? "provider" : user.role === "REFERRER" ? "referrer" : "seeker"}
         initialMessages={conversation.messages.map((m) => ({
           id: m.id,
           senderId: m.senderId,
