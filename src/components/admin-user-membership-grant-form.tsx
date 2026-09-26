@@ -46,7 +46,7 @@ export function AdminUserMembershipGrantForm({
             {currentGrant ? "Update grant" : "Grant Pro access"}
           </SubmitButton>
           {currentGrant && (
-            <SubmitButton name="intent" value="REVOKE" pendingLabel="Removing…" className="btn-ghost text-clay-dark">
+            <SubmitButton name="intent" value="REVOKE" pendingLabel="Removing…" className="btn-ghost text-clay">
               Remove grant
             </SubmitButton>
           )}
