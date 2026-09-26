@@ -111,8 +111,8 @@ export default async function UserDashboard() {
         </section>
       )}
 
-      <div className="mt-7 grid gap-6 lg:mt-8 lg:grid-cols-2">
-        <section>
+      <div className="mt-7 grid grid-cols-1 gap-6 lg:mt-8 lg:grid-cols-2">
+        <section className="min-w-0">
           <h2 className="text-[20px]">Recent requests</h2>
           {requests.length === 0 ? (
             <p className="card mt-3 p-5 text-[15px] text-ink-soft">
@@ -122,7 +122,7 @@ export default async function UserDashboard() {
             <ul className="card mt-3 divide-y divide-line">
               {requests.map((request) => (
                 <li key={request.id} className="flex min-w-0 items-start justify-between gap-3 px-3.5 py-3 sm:items-center sm:px-4">
-                  <Link href={`/listings/${request.listing.id}`} className="min-w-0 text-[15px] hover:text-pine-dark">
+                  <Link href={`/listings/${request.listing.id}`} className="min-w-0 flex-1 text-[15px] hover:text-pine-dark">
                     <span className="block truncate">{request.listing.title}</span>
                     <span className="block text-[13px] text-ink-faint">{timeAgo(request.updatedAt)}</span>
                   </Link>
@@ -135,7 +135,7 @@ export default async function UserDashboard() {
           )}
         </section>
 
-        <section>
+        <section className="min-w-0">
           <h2 className="text-[20px]">Notifications</h2>
           {notifications.length === 0 ? (
             <p className="card mt-3 p-5 text-[15px] text-ink-soft">Nothing yet.</p>
