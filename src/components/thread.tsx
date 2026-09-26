@@ -9,6 +9,7 @@ import { parseClientCard, type ClientCard } from "@/lib/client-card";
 import { ClientAvatar } from "./client-avatar";
 import { SubmitButton } from "./ui";
 import { clsx } from "@/lib/clsx";
+import { suggestedReplies, type ReplyViewer } from "@/lib/suggested-replies";
 
 type ThreadMessage = {
   id: string;
@@ -40,6 +41,7 @@ export function Thread({
   withProvider = false,
   shareProfileUrl,
   quickReplies,
+  replyViewer = "seeker",
 }: {
   conversationId: string;
   currentUserId: string;
@@ -53,6 +55,8 @@ export function Thread({
   shareProfileUrl?: string | null;
   /** The provider team's saved replies. Passing this (even empty) turns on the Quick replies menu. */
   quickReplies?: QuickReplyItem[];
+  /** Who is writing, so the suggested messages fit (a provider answers, a seeker asks). */
+  replyViewer?: ReplyViewer;
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [state, action] = useActionState(sendMessageAction, { ok: false });
@@ -71,6 +75,8 @@ export function Thread({
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
   const [selectedMediaPreview, setSelectedMediaPreview] = useState<string | null>(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [hasText, setHasText] = useState(false);
 
   const refreshMessages = useCallback(async () => {
     try {
@@ -97,6 +103,8 @@ export function Thread({
   useEffect(() => {
     if (state.ok) {
       formRef.current?.reset();
+      setHasText(false);
+      if (textareaRef.current) textareaRef.current.style.height = "40px";
       setAttached(null);
       setSelectedMedia(null);
       void refreshMessages();
@@ -134,6 +142,9 @@ export function Thread({
     const list = attachableClients ?? [];
     return (q ? list.filter((c) => c.name.toLowerCase().includes(q)) : list).slice(0, 30);
   }, [attachableClients, pickerQuery]);
+
+  const lastFromOther = [...messages].reverse().find((message) => message.senderId !== currentUserId && !message.isDeleted)?.body ?? null;
+  const suggestions = useMemo(() => suggestedReplies(replyViewer, lastFromOther), [replyViewer, lastFromOther]);
 
   const canAttach = Boolean(attachableClients && attachableClients.length > 0);
   const pinnedMessages = messages.filter((message) => message.isPinned && !message.isDeleted);
@@ -211,11 +222,11 @@ export function Thread({
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col">
-      {pinnedMessages.length > 0 && <section aria-label="Pinned messages" className="mt-3 shrink-0 rounded-card border border-brand/20 bg-brand/5 p-3">
-        <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-brand">Pinned in this conversation</p>
+      {pinnedMessages.length > 0 && <section aria-label="Pinned messages" className="mt-2 shrink-0 rounded-card border border-brand/20 bg-brand/5 px-3 py-2 sm:mt-3 sm:p-3">
+        <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-brand sm:mb-2 sm:text-[12px]">Pinned in this conversation</p>
         <div className="space-y-1">{pinnedMessages.map((message) => <button key={message.id} type="button" onClick={() => document.getElementById(`message-${message.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })} className="block max-w-full truncate text-left text-[13px] text-ink hover:underline">{message.body || (message.attachmentType?.startsWith("audio/") ? "Voice note" : "Photo")}</button>)}</div>
       </section>}
-      <ol className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pb-4" aria-live="polite" aria-relevant="additions">
+      <ol className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pb-3 sm:mt-4 sm:space-y-3 sm:pb-4" aria-live="polite" aria-relevant="additions">
         {messages.map((message) => {
           const mine = message.senderId === currentUserId;
           const cardHref = message.clientId
@@ -228,7 +239,7 @@ export function Thread({
           return (
             <li key={message.id} className={mine ? "flex justify-end" : "flex justify-start"}>
               <div id={`message-${message.id}`}
-                className={`max-w-[85%] rounded-card px-4 py-2.5 sm:max-w-[80%] ${
+                className={`max-w-[85%] rounded-[16px] px-3 py-2 sm:max-w-[80%] sm:rounded-card sm:px-4 sm:py-2.5 ${
                   message.isDeleted ? "border border-dashed border-line bg-paper-sunk/60 text-ink-faint" : mine ? "bg-ink text-white" : "border border-line bg-white text-ink"
                 }`}
               >
@@ -238,8 +249,8 @@ export function Thread({
                 {!message.isDeleted && message.body && <MessageBody body={message.body} />}
                 {!message.isDeleted && message.attachmentUrl && message.attachmentType?.startsWith("image/") && <a href={message.attachmentUrl} target="_blank" rel="noreferrer"><img src={message.attachmentUrl} alt={message.attachmentName || "Image attachment"} className="mt-2 max-h-80 max-w-full rounded-[10px] object-contain" loading="lazy" /></a>}
                 {!message.isDeleted && message.attachmentUrl && message.attachmentType?.startsWith("audio/") && <audio className="mt-2 max-w-full" controls preload="none" src={message.attachmentUrl}>Your browser cannot play this voice note.</audio>}
-                <div className="mt-1 flex items-center gap-2">
-                <p className={`mt-1 text-[12px] ${mine ? "text-white/60" : "text-ink-faint"}`}>
+                <div className="mt-0.5 flex items-center gap-2">
+                <p className={`text-[11px] ${mine ? "text-white/60" : "text-ink-faint"}`}>
                   {new Date(message.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                   {mine && message.readAt ? " · Read" : ""}
                 </p>
@@ -257,18 +268,18 @@ export function Thread({
       <form
         ref={formRef}
         action={action}
-        className="z-20 shrink-0 rounded-card border border-line bg-white p-2 shadow-[0_-8px_24px_rgba(20,45,72,0.07)] sm:p-3"
+        className="z-20 -mx-3 shrink-0 border-t border-line bg-white px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:mx-0 sm:rounded-card sm:border sm:p-3 sm:shadow-[0_-8px_24px_rgba(20,45,72,0.07)]"
       >
         <input type="hidden" name="conversationId" value={conversationId} />
         <input type="hidden" name="clientId" value={attached?.id ?? ""} />
-        <input ref={mediaInputRef} type="file" name="media" accept="image/jpeg,image/png,image/webp,image/avif,audio/webm,audio/mp4,audio/mpeg,audio/wav" className="sr-only" onChange={(event) => { setMediaError(null); setSelectedMedia(event.currentTarget.files?.[0] ?? null); }} />
+        <input ref={mediaInputRef} type="file" name="media" accept="image/jpeg,image/png,image/webp,image/avif,audio/webm,audio/mp4,audio/mpeg,audio/wav" className="sr-only" onChange={(event) => { setMediaError(null); setSelectedMedia(event.currentTarget.files?.[0] ?? null); setToolsOpen(false); }} />
 
         {attached && (
-          <div className="mb-2 flex items-center gap-2.5 rounded-[10px] bg-pine-light px-2.5 py-2">
+          <div className="mb-2 flex items-center gap-2 rounded-[10px] bg-pine-light px-2 py-1.5">
             <ClientAvatar name={attached.name} src={attached.photo} size="sm" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[14px] font-medium text-pine-dark">{attached.name}&apos;s profile attached</p>
-              <p className="truncate text-[12px] text-ink-soft">
+              <p className="truncate text-[13px] font-medium text-pine-dark">{attached.name}&apos;s profile attached</p>
+              <p className="truncate text-[11.5px] text-ink-soft">
                 {withProvider ? "Sending shares this profile with the provider." : "Shows their needs in the message."}
               </p>
             </div>
@@ -285,26 +296,70 @@ export function Thread({
           </div>
         )}
 
-        <div className="mb-2 flex flex-wrap items-center gap-1.5 border-b border-line/70 pb-2">
-          <button type="button" className="rounded-pill px-2.5 py-1.5 text-[12px] font-medium text-brand hover:bg-brand/5" onClick={() => mediaInputRef.current?.click()}>＋ Photo or audio</button>
-          <button type="button" className={`rounded-pill px-2.5 py-1.5 text-[12px] font-medium hover:bg-brand/5 ${recording ? "text-red-700" : "text-brand"}`} onClick={() => void toggleRecording()}>{recording ? "■ Stop recording" : "◉ Voice note"}</button>
-          {quickReplies && (
-            <QuickReplies initial={quickReplies} onInsert={insertIntoMessage} getDraft={() => textareaRef.current?.value ?? ""} />
-          )}
-          <span className="mx-1 hidden h-5 w-px bg-line sm:block" aria-hidden="true" />
-          <button type="button" aria-label="Insert smiling face" className="grid h-8 w-8 place-items-center rounded-full text-[17px] hover:bg-paper-sunk" onClick={() => insertIntoMessage("🙂")}>🙂</button>
-          <button type="button" aria-label="Insert thumbs-up" className="grid h-8 w-8 place-items-center rounded-full text-[17px] hover:bg-paper-sunk" onClick={() => insertIntoMessage("👍")}>👍</button>
-          <button type="button" aria-label="Insert heart" className="grid h-8 w-8 place-items-center rounded-full text-[17px] hover:bg-paper-sunk" onClick={() => insertIntoMessage("❤️")}>❤️</button>
-          {shareProfileUrl && <button type="button" className="ml-auto rounded-pill px-2.5 py-1.5 text-[12px] font-medium text-brand hover:bg-brand/5" onClick={() => insertIntoMessage(`${window.location.origin}${shareProfileUrl}`)}>↗ Share profile</button>}
-        </div>
-        <p className="mb-2 text-[11px] leading-relaxed text-ink-faint">Photos and voice notes are private to this conversation. Avoid IDs and sensitive support or health documents.</p>
-        {(mediaError || state.errors?.form || state.errors?.body) && <p className="mb-2 text-[13px] text-clay">{mediaError || state.errors?.form || state.errors?.body}</p>}
-        {selectedMedia && <div className="mb-2 flex max-w-full items-center gap-3 rounded-[12px] border border-brand/15 bg-paper-card p-2">
-          {selectedMedia.type.startsWith("image/") && selectedMediaPreview ? <img src={selectedMediaPreview} alt="Photo ready to send" className="h-14 w-14 rounded-[8px] object-cover" /> : selectedMedia.type.startsWith("audio/") && selectedMediaPreview ? <audio controls preload="metadata" src={selectedMediaPreview} className="h-10 min-w-0 max-w-[190px]" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[9px] bg-brand/10 text-brand" aria-hidden="true">♫</span>}
+        {selectedMedia && <div className="mb-2 flex max-w-full items-center gap-2 rounded-[10px] border border-brand/15 bg-paper-card p-1.5">
+          {selectedMedia.type.startsWith("image/") && selectedMediaPreview ? <img src={selectedMediaPreview} alt="Photo ready to send" className="h-10 w-10 rounded-[6px] object-cover" /> : selectedMedia.type.startsWith("audio/") && selectedMediaPreview ? <audio controls preload="metadata" src={selectedMediaPreview} className="h-9 min-w-0 max-w-[190px]" /> : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[6px] bg-brand/10 text-brand" aria-hidden="true">♫</span>}
           <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-ink">{selectedMedia.name}</span>
           <button type="button" onClick={() => { if (mediaInputRef.current) mediaInputRef.current.value = ""; setSelectedMedia(null); setMediaError(null); }} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-white hover:text-clay" aria-label={`Remove ${selectedMedia.name}`} title="Remove attachment">×</button>
         </div>}
-        <div className="relative flex gap-2">
+
+        {recording && (
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-[10px] bg-red-50 px-3 py-1.5 text-[13px] text-red-700" role="status">
+            <span className="flex items-center gap-2"><span className="h-2 w-2 animate-pulse rounded-full bg-red-600" aria-hidden="true" />Recording a voice note…</span>
+            <button type="button" onClick={() => void toggleRecording()} className="rounded-pill bg-white px-3 py-1 text-[12px] font-semibold">Stop</button>
+          </div>
+        )}
+
+        {(mediaError || state.errors?.form || state.errors?.body) && <p className="mb-2 text-[13px] text-clay">{mediaError || state.errors?.form || state.errors?.body}</p>}
+
+        {toolsOpen && (
+          <div id="composer-tools" className="mb-2 rounded-[12px] bg-paper-sunk/70 p-2">
+            <div className="flex flex-wrap items-center gap-1">
+              <button type="button" className="rounded-pill px-2.5 py-1.5 text-[12.5px] font-medium text-brand hover:bg-white" onClick={() => mediaInputRef.current?.click()}>＋ Photo or audio</button>
+              <button type="button" className="rounded-pill px-2.5 py-1.5 text-[12.5px] font-medium text-brand hover:bg-white" onClick={() => { setToolsOpen(false); void toggleRecording(); }}>◉ Voice note</button>
+              {quickReplies && (
+                <QuickReplies initial={quickReplies} onInsert={(text) => { insertIntoMessage(text); setToolsOpen(false); }} getDraft={() => textareaRef.current?.value ?? ""} />
+              )}
+              {shareProfileUrl && <button type="button" className="rounded-pill px-2.5 py-1.5 text-[12.5px] font-medium text-brand hover:bg-white" onClick={() => { insertIntoMessage(`${window.location.origin}${shareProfileUrl}`); setToolsOpen(false); }}>↗ Share profile</button>}
+            </div>
+            <p className="mt-1 px-2 text-[11px] leading-snug text-ink-faint">Photos and voice notes are private to this conversation. Avoid IDs and sensitive support or health documents.</p>
+          </div>
+        )}
+
+        {!hasText && !recording && (
+          <div className="-mx-2 mb-1.5 flex gap-1.5 overflow-x-auto px-2 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Suggested messages">
+            {["🙂", "👍", "❤️"].map((emoji) => (
+              <button key={emoji} type="button" aria-label={`Insert ${emoji}`} className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[14px] hover:bg-paper-sunk" onClick={() => insertIntoMessage(emoji)}>{emoji}</button>
+            ))}
+            {suggestions.map((text) => (
+              <button
+                key={text}
+                type="button"
+                onClick={() => insertIntoMessage(text)}
+                className="shrink-0 whitespace-nowrap rounded-pill border border-line bg-paper px-2.5 py-1 text-[12.5px] text-ink-soft hover:border-brand/40 hover:text-ink"
+              >
+                {text}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="relative flex items-end gap-1.5">
+          <button
+            type="button"
+            onClick={() => setToolsOpen((open) => !open)}
+            aria-expanded={toolsOpen}
+            aria-controls="composer-tools"
+            className={clsx(
+              "grid h-10 w-10 shrink-0 place-items-center rounded-full border transition-colors",
+              toolsOpen ? "border-brand bg-brand/10 text-brand" : "border-line text-ink-soft hover:text-brand",
+            )}
+            title="Photo, voice note and more"
+          >
+            <span className="sr-only">{toolsOpen ? "Close attachments" : "Add a photo, voice note or more"}</span>
+            <svg viewBox="0 0 20 20" className={clsx("h-5 w-5 transition-transform", toolsOpen && "rotate-45")} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+              <path d="M10 4v12M4 10h12" strokeLinecap="round" />
+            </svg>
+          </button>
           {canAttach && (
             <button
               type="button"
@@ -312,7 +367,7 @@ export function Thread({
               aria-expanded={pickerOpen}
               aria-haspopup="listbox"
               className={clsx(
-                "grid h-[46px] w-[46px] shrink-0 place-items-center rounded-[10px] border transition-colors",
+                "grid h-10 w-10 shrink-0 place-items-center rounded-full border transition-colors",
                 pickerOpen ? "border-pine bg-pine-light text-pine-dark" : "border-line text-ink-soft hover:border-pine/40 hover:text-pine-dark",
               )}
               title="Attach a client's profile"
@@ -333,19 +388,25 @@ export function Thread({
             rows={1}
             required={!attached && !selectedMedia}
             placeholder={attached ? `Add a note about ${attached.name.split(" ")[0]} (optional)` : "Write a message"}
-            className="min-h-[46px] flex-1 resize-none rounded-[10px] border-0 px-3 py-3 text-[15px] focus:ring-0"
+            className="max-h-32 min-h-[40px] min-w-0 flex-1 resize-none rounded-[20px] border border-line bg-paper px-3.5 py-2 text-[15px] leading-snug focus:border-brand focus:ring-0"
             onInput={(event) => {
-              event.currentTarget.style.height = "46px";
-              event.currentTarget.style.height = `${Math.min(event.currentTarget.scrollHeight, 144)}px`;
+              setHasText(event.currentTarget.value.trim().length > 0);
+              event.currentTarget.style.height = "40px";
+              event.currentTarget.style.height = `${Math.min(event.currentTarget.scrollHeight, 128)}px`;
             }}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
+              if (event.key === "Enter" && !event.shiftKey && window.matchMedia("(min-width: 640px)").matches) {
                 event.preventDefault();
                 formRef.current?.requestSubmit();
               }
             }}
           />
-          <SubmitButton className="btn-primary" pendingLabel="Sending">Send</SubmitButton>
+          <SubmitButton className="btn-primary h-10 min-h-0 shrink-0 rounded-full px-3 py-0 sm:px-4" pendingLabel="">
+            <svg viewBox="0 0 20 20" className="h-[18px] w-[18px] sm:hidden" fill="currentColor" aria-hidden="true">
+              <path d="M3.4 16.6 17.5 10 3.4 3.4 3.3 8.6l9.2 1.4-9.2 1.4.1 5.2Z" />
+            </svg>
+            <span className="sr-only sm:not-sr-only">Send</span>
+          </SubmitButton>
 
           {pickerOpen && canAttach && (
             <div className="absolute bottom-full left-0 z-30 mb-2 w-[min(360px,calc(100vw-48px))] animate-fade-in-up rounded-card border border-line bg-white p-2 shadow-float">
@@ -397,7 +458,7 @@ export function Thread({
 
 function MessageBody({ body }: { body: string }) {
   const parts = body.split(/(https?:\/\/[^\s<]+)/gi);
-  return <p className="whitespace-pre-line break-words text-[15px] leading-relaxed">{parts.map((part, index) => {
+  return <p className="whitespace-pre-line break-words text-[14.5px] leading-snug sm:text-[15px] sm:leading-relaxed">{parts.map((part, index) => {
     if (!/^https?:\/\//i.test(part)) return part;
     const href = part.replace(/[),.!?]+$/, "");
     let label = "Open shared link";
