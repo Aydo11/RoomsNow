@@ -112,7 +112,7 @@ export function Logo({ className = "h-9 w-auto" }: { className?: string }) {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-20 border-t border-line bg-white">
+    <footer className="site-footer mt-20 border-t border-line bg-white">
       <div className="shell grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Link href="/" className="inline-flex items-center" aria-label={`${brand.name} home`}>
