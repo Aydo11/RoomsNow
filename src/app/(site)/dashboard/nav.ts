@@ -1,7 +1,11 @@
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import type { NavItem } from "@/components/dashboard-shell";
 
 export async function userNav(userId: string): Promise<NavItem[]> {
+  // Seeker pages aren't for service businesses; they have their own area.
+  const account = await db.user.findUnique({ where: { id: userId }, select: { role: true } });
+  if (account?.role === "SERVICE_PROVIDER") redirect("/service-provider");
   const [requests, unread] = await Promise.all([
     db.accommodationRequest.count({ where: { applicantId: userId, status: { notIn: ["DECLINED", "WITHDRAWN"] } } }),
     db.notification.count({ where: { userId, readAt: null } }),
