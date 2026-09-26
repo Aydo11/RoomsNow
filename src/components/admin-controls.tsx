@@ -59,7 +59,7 @@ export function ListingModeration({
           <button className="btn-primary" disabled={pending} onClick={() => run(() => approveListingAction(id))}>
             Approve
           </button>
-          <button className="btn-ghost text-clay-dark" onClick={() => setRejecting(true)}>
+          <button className="btn-ghost text-clay" onClick={() => setRejecting(true)}>
             Needs changes
           </button>
         </div>
@@ -100,7 +100,7 @@ export function ListingModeration({
               {featured ? "Remove promotion" : "Promote for 30 days"}
             </button>
           )}
-          <button className="btn-ghost text-clay-dark" disabled={pending} onClick={() => setTakingDown(true)}>
+          <button className="btn-ghost text-clay" disabled={pending} onClick={() => setTakingDown(true)}>
             Take down
           </button>
         </div>
@@ -176,7 +176,7 @@ export function VerificationDecision({ id, requiredDocumentsPresent }: { id: str
           </label>
         ))}
       </fieldset>
-      {!requiredDocumentsPresent && <p className="text-[12px] text-clay-dark">Required evidence is missing. Reject and request a complete pack.</p>}
+      {!requiredDocumentsPresent && <p className="text-[12px] text-clay">Required evidence is missing. Reject and request a complete pack.</p>}
       <label className="sr-only" htmlFor={`vnote-${id}`}>Note</label>
       <input
         id={`vnote-${id}`}
@@ -187,7 +187,7 @@ export function VerificationDecision({ id, requiredDocumentsPresent }: { id: str
       />
       <div className="flex gap-2">
         <button className="btn-primary" disabled={pending || !allChecked} onClick={() => run(true)}>Approve verification</button>
-        <button className="btn-ghost text-clay-dark" disabled={pending} onClick={() => run(false)}>Reject</button>
+        <button className="btn-ghost text-clay" disabled={pending} onClick={() => run(false)}>Reject</button>
       </div>
     </div>
   );
@@ -208,7 +208,7 @@ export function AccountToggle({
 
   return (
     <button
-      className={next === "SUSPENDED" ? "btn-ghost text-clay-dark" : "btn-secondary"}
+      className={next === "SUSPENDED" ? "btn-ghost text-clay" : "btn-secondary"}
       disabled={pending}
       onClick={() =>
         startTransition(async () => {
@@ -286,7 +286,7 @@ export function ReportDecision({ id, initialResolution = "", archived = false }:
         <button className="btn-secondary" disabled={pending} onClick={() => run("REVIEWING")}>Reviewing</button>
         <button className="btn-primary" disabled={pending} onClick={() => run("ACTIONED")}>Actioned</button>
         <button className="btn-ghost" disabled={pending} onClick={() => run("DISMISSED")}>Dismiss</button>
-        <button className="btn-ghost text-clay-dark" disabled={pending} onClick={() => startTransition(async () => {
+        <button className="btn-ghost text-clay" disabled={pending} onClick={() => startTransition(async () => {
           await archiveReportAction(id, !archived);
           router.refresh();
         })}>{archived ? "Restore from archive" : "Archive case"}</button>
