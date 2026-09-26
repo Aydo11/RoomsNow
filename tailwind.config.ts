@@ -26,6 +26,8 @@ const config: Config = {
           DEFAULT: "rgb(var(--color-clay) / <alpha-value>)",
           light: "rgb(var(--color-clay-light) / <alpha-value>)",
         },
+        // Accent used by the Provider Services marketplace; same hue as pine.
+        brand: "rgb(var(--color-pine) / <alpha-value>)",
         line: {
           DEFAULT: "rgb(var(--color-line) / <alpha-value>)",
           strong: "rgb(var(--color-line-strong) / <alpha-value>)",
