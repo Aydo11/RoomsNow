@@ -33,10 +33,10 @@ export function AccreditationReview({ id, scheme, initialRating }: { id: string;
       ) : <input id={`rating-${id}`} className="field" value={rating} onChange={(event) => setRating(event.target.value)} maxLength={60} />}
       <label className="block text-[12px] font-semibold" htmlFor={`note-${id}`}>Review note</label>
       <textarea id={`note-${id}`} className="field" rows={3} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Required when rejecting; useful for the audit trail." />
-      {message && <p className="text-[12px] text-clay-dark">{message}</p>}
+      {message && <p className="text-[12px] text-clay">{message}</p>}
       <div className="flex flex-wrap gap-2">
         <button className="btn-primary" disabled={pending || !rating} onClick={() => run(true)}>Approve badge</button>
-        <button className="btn-ghost text-clay-dark" disabled={pending || note.trim().length < 4} onClick={() => run(false)}>Reject</button>
+        <button className="btn-ghost text-clay" disabled={pending || note.trim().length < 4} onClick={() => run(false)}>Reject</button>
       </div>
     </div>
   );
