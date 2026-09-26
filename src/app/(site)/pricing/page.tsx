@@ -177,7 +177,7 @@ export default async function PricingPage() {
       <section id="sponsored" className="mt-12 overflow-hidden rounded-card border border-line bg-white shadow-[0_1px_2px_rgba(21,42,58,.03)]">
         <div className="grid gap-6 border-b border-line bg-paper-sunk/60 p-6 lg:grid-cols-[1.1fr_.9fr] lg:p-8">
           <div>
-            <span className="chip border-clay/30 bg-clay-light text-clay-dark">Optional paid promotion</span>
+            <span className="chip border-clay/30 bg-clay-light text-clay">Optional paid promotion</span>
             <h2 className="mt-3 text-[26px]">Sponsored adverts</h2>
             <p className="mt-2 max-w-[62ch] text-[15px] leading-relaxed text-ink-soft">
               Put a live vacancy in up to three clearly labelled positions at the top of relevant first-page searches, with a highlighted map pin.
