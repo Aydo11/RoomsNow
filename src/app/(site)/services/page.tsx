@@ -117,6 +117,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
   ]);
   const saved = new Set(favourites.map((f) => f.advertId));
   const canAct = canContactServiceBusiness(marketplaceViewer(user));
+  const advancedFilters = [filters.location, filters.minRating, filters.maxPrice !== undefined, filters.verifiedOnly, filters.emergency, filters.sort !== "recommended"].filter(Boolean).length;
 
   const query = (overrides: Partial<Params>) => {
     const next = new URLSearchParams();
@@ -148,46 +149,54 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
               {categoryCounts.map((c) => <option key={c.slug} value={c.slug}>{c.label} ({c.count})</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-[minmax(0,1fr)_96px] gap-2">
-            <div>
-              <label htmlFor="location" className="label">Town or postcode</label>
-              <input id="location" name="location" defaultValue={filters.location} className="field" />
+          <details className="service-filters-more group" open={advancedFilters > 0}>
+            <summary className="flex cursor-pointer list-none items-center justify-between rounded-[10px] border border-line px-3 py-2.5 text-[14px] font-medium text-ink marker:hidden">
+              <span>More filters{advancedFilters > 0 ? ` (${advancedFilters})` : ""}</span>
+              <svg viewBox="0 0 20 20" className="h-4 w-4 text-ink-faint transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m5 8 5 5 5-5" /></svg>
+            </summary>
+            <div className="mt-4 space-y-4">
+            <div className="grid grid-cols-[minmax(0,1fr)_112px] gap-2">
+              <div>
+                <label htmlFor="location" className="label">Town or postcode</label>
+                <input id="location" name="location" defaultValue={filters.location} className="field" />
+              </div>
+              <div>
+                <label htmlFor="radius" className="label">Within</label>
+                <select id="radius" name="radius" defaultValue={String(filters.radius ?? "")} className="field">
+                  <option value="">Area only</option>
+                  {[5, 10, 25, 50].map((miles) => <option key={miles} value={miles}>{miles} mi</option>)}
+                </select>
+              </div>
             </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label htmlFor="rating" className="label">Rating</label>
+                <select id="rating" name="rating" defaultValue={String(filters.minRating ?? "")} className="field">
+                  <option value="">Any</option>
+                  <option value="4">4★ and up</option>
+                  <option value="4.5">4.5★ and up</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="maxPrice" className="label">Max price (£)</label>
+                <input id="maxPrice" name="maxPrice" inputMode="decimal" defaultValue={params.maxPrice ?? ""} className="field" />
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" name="verified" value="1" defaultChecked={filters.verifiedOnly} className="h-4 w-4 rounded border-line-strong text-pine" /> Verified only</label>
+            <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" name="emergency" value="1" defaultChecked={filters.emergency} className="h-4 w-4 rounded border-line-strong text-pine" /> Emergency or same day</label>
             <div>
-              <label htmlFor="radius" className="label">Within</label>
-              <select id="radius" name="radius" defaultValue={String(filters.radius ?? "")} className="field">
-                <option value="">Area only</option>
-                {[5, 10, 25, 50].map((miles) => <option key={miles} value={miles}>{miles} mi</option>)}
+              <label htmlFor="sort" className="label">Sort by</label>
+              <select id="sort" name="sort" defaultValue={filters.sort} className="field">
+                <option value="recommended">Recommended</option>
+                <option value="rating">Highest rated</option>
+                <option value="price_low">Lowest price</option>
+                <option value="price_high">Highest price</option>
+                <option value="response">Fastest response</option>
+                <option value="newest">Newest</option>
               </select>
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label htmlFor="rating" className="label">Rating</label>
-              <select id="rating" name="rating" defaultValue={String(filters.minRating ?? "")} className="field">
-                <option value="">Any</option>
-                <option value="4">4★ and up</option>
-                <option value="4.5">4.5★ and up</option>
-              </select>
             </div>
-            <div>
-              <label htmlFor="maxPrice" className="label">Max price (£)</label>
-              <input id="maxPrice" name="maxPrice" inputMode="decimal" defaultValue={params.maxPrice ?? ""} className="field" />
-            </div>
-          </div>
-          <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" name="verified" value="1" defaultChecked={filters.verifiedOnly} className="h-4 w-4 rounded border-line-strong text-pine" /> Verified only</label>
-          <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" name="emergency" value="1" defaultChecked={filters.emergency} className="h-4 w-4 rounded border-line-strong text-pine" /> Emergency or same day</label>
-          <div>
-            <label htmlFor="sort" className="label">Sort by</label>
-            <select id="sort" name="sort" defaultValue={filters.sort} className="field">
-              <option value="recommended">Recommended</option>
-              <option value="rating">Highest rated</option>
-              <option value="price_low">Lowest price</option>
-              <option value="price_high">Highest price</option>
-              <option value="response">Fastest response</option>
-              <option value="newest">Newest</option>
-            </select>
-          </div>
+          </details>
           <div className="flex gap-2">
             <button type="submit" className="btn-primary flex-1">Show results</button>
             <Link href="/services" className="btn-ghost">Clear</Link>
@@ -235,7 +244,7 @@ function ServicesForEveryoneElse({ signedIn }: { signedIn: boolean }) {
       <div className="mt-6 flex flex-wrap gap-2">
         {!signedIn && <Link href="/login?next=/services" className="btn-primary">Sign in</Link>}
         <Link href="/register?type=PROVIDER" className="btn-secondary">I provide accommodation</Link>
-        <Link href="/register?type=SERVICE_PROVIDER" className="btn-secondary">I offer services to providers</Link>
+        <Link href="/advertise-services" className="btn-secondary">I offer services to providers</Link>
       </div>
     </div>
   );
