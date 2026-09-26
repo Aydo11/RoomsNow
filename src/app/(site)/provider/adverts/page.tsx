@@ -84,7 +84,7 @@ export default async function ProviderAdvertsPage({
         </p>
       )}
       {sponsorChoice && (
-        <p className="mb-4 rounded-[10px] border border-clay/30 bg-clay-light px-4 py-3 text-[14px] text-clay-dark">
+        <p className="mb-4 rounded-[10px] border border-clay/30 bg-clay-light px-4 py-3 text-[14px] text-clay">
           Pick which live advert to sponsor for {SPONSOR_PACKAGES[sponsorChoice].label} — click{" "}
           <span className="font-medium">Sponsor this advert</span> on the one you want.
         </p>
@@ -136,12 +136,12 @@ export default async function ProviderAdvertsPage({
                   <RoomStrip rooms={listing.rooms} showLabels />
                 </div>
                 {listing.status === "REJECTED" && listing.rejectionNote && (
-                  <p className="mt-3 rounded-[10px] bg-clay-light px-3 py-2 text-[13px] text-clay-dark">
+                  <p className="mt-3 rounded-[10px] bg-clay-light px-3 py-2 text-[13px] text-clay">
                     Not approved: {listing.rejectionNote}
                   </p>
                 )}
                 {listing.status === "PAUSED" && listing.pausedReason && (
-                  <p className="mt-3 rounded-[10px] bg-clay-light px-3 py-2 text-[13px] text-clay-dark">
+                  <p className="mt-3 rounded-[10px] bg-clay-light px-3 py-2 text-[13px] text-clay">
                     Paused automatically —{" "}
                     {listing.pausedReason === "STALE"
                       ? "nobody confirmed it was still available."
