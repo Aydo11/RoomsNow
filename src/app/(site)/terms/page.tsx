@@ -71,25 +71,29 @@ export default function TermsPage() {
       <Section heading="11. Promoted adverts">
         <p>Paid promotion provides labelled placement subject to the selected duration, availability, matching filters and moderation. It does not guarantee impressions, enquiries or placements and never changes verification, safety review or organic eligibility. Promotion may be paused where an advert is paused, removed or no longer eligible.</p>
       </Section>
-      <Section heading="12. Moderation, reports and investigations">
+      <Section heading="12. Provider Services (external services marketplace)">
+        <p>Service businesses may advertise trades, supplies and professional services to accommodation providers on a paid RoomsNow membership. Service businesses must submit accurate due-diligence evidence, keep insurance and licences in date, describe services and prices honestly and respond to enquiries in good faith. RoomsNow checks evidence when it is submitted; the Verified badge reflects only those checks and is not a guarantee of work, fitness for purpose or ongoing compliance.</p>
+        <p>RoomsNow introduces the parties only. Quotes, contracts, payments, warranties and disputes are between the accommodation provider and the service business, and RoomsNow is not a party to them and does not take payment for jobs. Service businesses may only use information received through RoomsNow to respond to and carry out the requested work, and must not contact residents, request access to referral or support records, or use provider contact details for unrelated marketing. Reviews may only be left after a completed job and may be moderated or removed where they breach these terms.</p>
+      </Section>
+      <Section heading="13. Moderation, reports and investigations">
         <p>RoomsNow may review adverts, profiles, reports, account activity and verification evidence; request information; restrict visibility; preserve relevant records; or refer concerns where reasonably needed for safety, law enforcement, fraud prevention or platform integrity. Private message content is accessed only where authorised and necessary under the privacy notice and applicable law.</p>
       </Section>
-      <Section heading="13. Suspension and termination">
+      <Section heading="14. Suspension and termination">
         <p>RoomsNow may warn, restrict, suspend or close an account for a material or repeated breach, non-payment, safety risk, unlawful activity, misleading evidence or a legal requirement. Immediate action may be taken where delay could create harm. Otherwise, reasonable notice and an opportunity to respond will be given where practical. You may stop using the service and request account closure at any time, subject to lawful record-retention requirements.</p>
       </Section>
-      <Section heading="14. Service availability and changes">
+      <Section heading="15. Service availability and changes">
         <p>RoomsNow aims to provide a reliable service but does not promise uninterrupted or error-free access. Features may change for security, legal, operational or product reasons. Material changes that adversely affect paid services will be notified in advance where reasonably possible.</p>
       </Section>
-      <Section heading="15. Responsibility and liability">
+      <Section heading="16. Responsibility and liability">
         <p>Nothing excludes liability that cannot lawfully be excluded, including liability for death or personal injury caused by negligence, fraud or fraudulent misrepresentation, or statutory consumer rights. To the extent permitted by law, RoomsNow is not responsible for decisions, conduct, property conditions, services or agreements of users, or for indirect or unforeseeable loss. Business users are responsible for losses caused by their breach, unlawful content or lack of authority to share data.</p>
       </Section>
-      <Section heading="16. Privacy and confidentiality">
+      <Section heading="17. Privacy and confidentiality">
         <p>Personal information is handled as described in the <Link href="/privacy" className="text-pine-dark hover:underline">privacy notice</Link>. Users receiving confidential or personal information through RoomsNow must protect it, limit access to authorised people and use it only for the relevant housing, support or referral purpose.</p>
       </Section>
-      <Section heading="17. Changes to these terms">
+      <Section heading="18. Changes to these terms">
         <p>RoomsNow may update these terms to reflect law, safety requirements or service changes. The updated date will be shown and material changes will be brought to account holders&apos; attention. Changes do not apply retrospectively to completed transactions unless required by law.</p>
       </Section>
-      <Section heading="18. Governing law, complaints and contact">
+      <Section heading="19. Governing law, complaints and contact">
         <p>These terms are governed by the law of England and Wales. Consumers retain any mandatory rights to bring proceedings in the part of the UK where they live. Raise complaints first with RoomsNow at {brand.supportEmail}; this does not affect rights to contact a regulator, ombudsman, trading standards service or court.</p>
       </Section>
     </ProsePage>
