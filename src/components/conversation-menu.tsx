@@ -64,12 +64,18 @@ export function ConversationMenu({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex items-center gap-1 text-[13px] text-ink-faint underline decoration-dotted hover:text-ink"
+        className="flex h-9 w-9 items-center justify-center gap-1 rounded-full text-[13px] text-ink-faint hover:bg-paper-sunk hover:text-ink sm:h-auto sm:w-auto sm:rounded-none sm:underline sm:decoration-dotted sm:hover:bg-transparent"
+        aria-label="Block or report"
       >
-        Block or report
+        <svg viewBox="0 0 20 20" className="h-5 w-5 sm:hidden" fill="currentColor" aria-hidden="true">
+          <circle cx="4.5" cy="10" r="1.6" />
+          <circle cx="10" cy="10" r="1.6" />
+          <circle cx="15.5" cy="10" r="1.6" />
+        </svg>
+        <span className="hidden sm:inline">Block or report</span>
         <svg
           viewBox="0 0 16 16"
-          className={clsx("h-3 w-3 transition-transform duration-200", open && "rotate-180")}
+          className={clsx("hidden h-3 w-3 transition-transform duration-200 sm:block", open && "rotate-180")}
           fill="currentColor"
         >
           <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
