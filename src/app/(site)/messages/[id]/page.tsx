@@ -97,12 +97,19 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     : false;
 
   return (
-    <div className="flex h-full min-h-0 flex-col p-4 sm:p-6">
-      <Link href="/messages" className="text-[14px] text-ink-soft hover:text-ink lg:hidden">← All messages</Link>
-
-      <header className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4 lg:mt-0">
-        <div>
-          <h1 className="text-[22px]">
+    <div className="flex h-full min-h-0 flex-col px-3 pt-2 sm:p-6">
+      <header className="flex flex-wrap items-center gap-2 border-b border-line pb-2 sm:gap-3 sm:pb-4">
+        <Link
+          href="/messages"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-paper-sunk hover:text-ink lg:hidden"
+          aria-label="All messages"
+        >
+          <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <path d="M12.5 4.5 7 10l5.5 5.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[17px] leading-tight sm:text-[22px]">
             {others[0] && otherProfileUrl ? (
               <Link href={otherProfileUrl} className="rounded-sm underline decoration-brand/40 underline-offset-4 hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">
                 {others[0].user.firstName} {others[0].user.lastName.charAt(0)}.
@@ -110,22 +117,22 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
             ) : others.map((p) => `${p.user.firstName} ${p.user.lastName.charAt(0)}.`).join(", ") || "Conversation"}
           </h1>
           {conversation.listing && (
-            <Link href={`/listings/${conversation.listing.id}`} className="text-[14px] text-pine-dark hover:underline">
+            <Link href={`/listings/${conversation.listing.id}`} className="block truncate text-[12.5px] text-pine-dark hover:underline sm:text-[14px]">
               {conversation.listing.title}
             </Link>
           )}
           {viewerIsProvider && otherReferrer && (
-            <Link href={`/agencies/${otherReferrer.userId}`} className="block text-[14px] text-pine-dark hover:underline">
+            <Link href={`/agencies/${otherReferrer.userId}`} className="block truncate text-[12.5px] text-pine-dark hover:underline sm:text-[14px]">
               View their agency profile
             </Link>
           )}
           {conversation.lookingForAd && (
-            <Link href={`/people/${conversation.lookingForAd.id}`} className="text-[14px] text-pine-dark hover:underline">
+            <Link href={`/people/${conversation.lookingForAd.id}`} className="block truncate text-[12.5px] text-pine-dark hover:underline sm:text-[14px]">
               {conversation.lookingForAd.title}
             </Link>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-3">
           <ConversationActions conversationId={conversation.id} archived={participant.archived} variant="header" />
           {others[0] && (
             <ConversationMenu
@@ -145,6 +152,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         withProvider={Boolean(providerCompanyId) && !viewerIsProvider}
         shareProfileUrl={shareProfileUrl}
         quickReplies={quickReplies}
+        replyViewer={viewerIsProvider ? "provider" : user.role === "REFERRER" ? "referrer" : "seeker"}
         initialMessages={conversation.messages.map((m) => ({
           id: m.id,
           senderId: m.senderId,
