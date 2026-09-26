@@ -724,3 +724,15 @@ html[data-theme="dark"] .leaflet-bar a.leaflet-disabled {
     box-shadow: none !important;
   }
 }
+
+/* A conversation open on a phone or tablet gets the whole screen: no bottom
+   tab bar or footer (the thread header's back arrow returns to the list). */
+@media (max-width: 1023px) {
+  html[data-chat-open] .mobile-tabs,
+  html[data-chat-open] .site-footer {
+    display: none;
+  }
+  html[data-chat-open] #main {
+    padding-bottom: 0;
+  }
+}
