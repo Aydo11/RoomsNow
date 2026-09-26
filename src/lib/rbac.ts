@@ -12,6 +12,16 @@ export class AuthorisationError extends Error {
   }
 }
 
+/**
+ * Role gates for whole areas send people to a friendly explanation instead of
+ * throwing: a thrown error reaches the browser as a generic "Something didn't
+ * load" 500 in production, which reads like the site is broken.
+ */
+export type RestrictedArea = "admin" | "referrals" | "provider-admin" | "service";
+export function denyArea(area: RestrictedArea): never {
+  redirect(`/no-access?area=${area}`);
+}
+
 export async function requireUser(next?: string): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
@@ -20,15 +30,13 @@ export async function requireUser(next?: string): Promise<CurrentUser> {
 
 export async function requireAdmin(permission: AdminPermission = "ALL"): Promise<CurrentUser> {
   const user = await requireUser("/admin");
-  if (!hasAdminPermission(user, permission)) throw new AuthorisationError();
+  if (!hasAdminPermission(user, permission)) denyArea("admin");
   return user;
 }
 
 export async function requireReferrer(): Promise<CurrentUser> {
   const user = await requireUser("/referrals");
-  if (user.role !== "REFERRER" && !hasAdminPermission(user)) {
-    throw new AuthorisationError("Referrals can only be made by professional accounts.");
-  }
+  if (user.role !== "REFERRER" && !hasAdminPermission(user)) denyArea("referrals");
   return user;
 }
 
@@ -37,7 +45,7 @@ export async function requireCompany(): Promise<{ user: CurrentUser; companyId: 
   const user = await requireUser("/provider");
   const membership = user.staffOf[0];
   if (!membership) {
-    if (user.role === "ADMIN") throw new AuthorisationError("Admins must pick a company to act for.");
+    if (user.role === "ADMIN") denyArea("provider-admin");
     redirect("/provider/create");
   }
   return { user, companyId: membership.companyId };
