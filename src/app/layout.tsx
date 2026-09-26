@@ -4,6 +4,7 @@ import { brand } from "@/brand.config";
 import { JsonLd, SITE_URL } from "@/lib/seo";
 import { Toaster } from "@/components/toast";
 import { PwaRegister } from "@/components/app-install";
+import { GoogleAnalyticsConsent } from "@/components/google-analytics-consent";
 import "./globals.css";
 
 const sans = Instrument_Sans({
@@ -93,6 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Toaster />
         <PwaRegister />
+        <GoogleAnalyticsConsent />
       </body>
     </html>
   );

@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { logoutAction } from "@/server/actions/auth";
 import { LanguageSelector } from "./language-selector";
 import { ThemeToggle } from "./theme-toggle";
+import { CookieSettingsButton } from "@/components/cookie-settings-button";
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
@@ -165,6 +166,7 @@ export function SiteFooter() {
         <div className="shell flex flex-col gap-2 py-6 text-[13px] text-ink-faint sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} {brand.name}. All rights reserved.</p>
           <p className="max-w-xl">{brand.trustNote}</p>
+          <CookieSettingsButton />
         </div>
       </div>
     </footer>
