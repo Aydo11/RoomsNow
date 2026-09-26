@@ -24,6 +24,7 @@ enum Role {
   USER // person looking for accommodation
   PROVIDER // company / advertiser staff member
   REFERRER // professional making referrals
+  SERVICE_PROVIDER // trade / support business advertising to accommodation providers
   ADMIN
 }
 
@@ -236,6 +237,8 @@ enum ReportTargetType {
   COMPANY
   MESSAGE
   LOOKING_FOR_AD
+  SERVICE_BUSINESS
+  SERVICE_ADVERT
 }
 
 enum NotificationType {
@@ -340,6 +343,10 @@ model User {
   referralOrgMembership    ReferralOrgMember?
   referralOrgsOwned        ReferralOrganisation[]    @relation("ReferralOrgOwner")
   referralInvitesSent      ReferralOrgInvite[]       @relation("ReferralInviteSender")
+  serviceBusiness          ServiceBusiness?          @relation("ServiceBusinessOwner")
+  serviceQuotes            ServiceQuoteRequest[]     @relation("ServiceQuoteRequester")
+  serviceFavourites        ServiceFavourite[]
+  serviceReviews           ServiceReview[]           @relation("ServiceReviewAuthor")
 
   @@index([role, status])
 }
@@ -466,6 +473,7 @@ model Company {
   referredVia      ProviderReferral?       @relation("ReferralsReceived")
   quickReplies     QuickReply[]
   residentReviews  ResidentReview[]
+  serviceQuotes    ServiceQuoteRequest[]
 
   @@index([city])
 }
@@ -1010,6 +1018,11 @@ model Conversation {
   lookingForAdId String?
   lookingForAd   LookingForAd? @relation(fields: [lookingForAdId], references: [id])
   companyId      String?
+  /// Set on External Services Marketplace conversations (the Services tab).
+  serviceBusinessId String?
+  serviceBusiness   ServiceBusiness? @relation(fields: [serviceBusinessId], references: [id], onDelete: Cascade)
+  serviceAdvertId   String?
+  serviceAdvert     ServiceAdvert?   @relation(fields: [serviceAdvertId], references: [id], onDelete: SetNull)
   lastMessageAt  DateTime      @default(now())
   createdAt      DateTime      @default(now())
 
@@ -1017,6 +1030,7 @@ model Conversation {
   messages     Message[]
 
   @@index([lastMessageAt])
+  @@index([serviceBusinessId])
 }
 
 model ConversationParticipant {
@@ -1612,4 +1626,344 @@ model ResidentReview {
 
   @@index([companyId, hiddenAt, createdAt])
   @@index([listingId])
+}
+
+
+// ------------------------------------------------ external services marketplace
+//
+// Trades and support businesses (cleaners, electricians, gas engineers, pest
+// control, furniture, etc.) advertise to accommodation providers. Only paid
+// accommodation providers see who they are and can contact them. A service
+// business never gets access to accommodation clients, referrals or support
+// records: it only ever sees the quote requests and conversations it is part of.
+
+enum ServiceBusinessStatus {
+  ONBOARDING
+  PENDING_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ServiceAdvertStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  PAUSED
+  REJECTED
+  ARCHIVED
+}
+
+enum ServicePlanTier {
+  STANDARD
+  PRO
+}
+
+enum ServicePriceType {
+  FIXED
+  FROM
+  RANGE
+  HOURLY
+  QUOTE
+}
+
+enum ServiceQuoteStatus {
+  NEW
+  VIEWED
+  QUOTED
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  CANCELLED
+}
+
+enum ServiceUrgency {
+  FLEXIBLE
+  WITHIN_A_MONTH
+  WITHIN_A_WEEK
+  URGENT
+  EMERGENCY
+}
+
+enum ServiceEvidenceType {
+  PUBLIC_LIABILITY
+  EMPLOYERS_LIABILITY
+  INCORPORATION
+  QUALIFICATION
+  LICENCE
+  ACCREDITATION
+  OTHER
+}
+
+enum ServiceEvidenceStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model ServiceBusiness {
+  id                 String                @id @default(cuid())
+  ownerId            String                @unique
+  owner              User                  @relation("ServiceBusinessOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  name               String
+  tradingName        String?
+  slug               String                @unique
+  contactName        String
+  email              String
+  phone              String?
+  website            String?
+  /// Array of { platform, url }.
+  socialLinks        Json?
+  logoUrl            String?
+  coverUrl           String?
+  /// Companies House number. Shown publicly only as "Registered company".
+  companyNumber      String?
+  categories         String[]              @default([])
+  /// Towns, cities or regions covered.
+  areas              String[]              @default([])
+  /// Outward postcodes covered, e.g. B21, WS1.
+  postcodes          String[]              @default([])
+  nationalCoverage   Boolean               @default(false)
+  /// Base postcode and how far from it the business travels. The point is
+  /// geocoded on save so radius searches never call out at query time.
+  basePostcode       String?
+  latitude           Float?
+  longitude          Float?
+  radiusMiles        Int?
+  description        String?
+  yearsExperience    Int?
+  openingHours       String?
+  emergencyAvailable Boolean               @default(false)
+  pricingSummary     String?
+  quoteOnly          Boolean               @default(true)
+  terms              String?
+  cancellationPolicy String?
+  /// What the business promises, e.g. "Within 2 working hours".
+  responseTarget     String?
+  /// Median minutes to first reply to a quote request, recalculated on reply.
+  responseMinutes    Int?
+  /// Public portfolio image URLs.
+  portfolio          String[]              @default([])
+  status             ServiceBusinessStatus @default(ONBOARDING)
+  statusReason       String?
+  submittedAt        DateTime?
+  verifiedAt         DateTime?
+  reviewedAt         DateTime?
+  reviewedById       String?
+  profileViews       Int                   @default(0)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  evidence      ServiceEvidence[]
+  adverts       ServiceAdvert[]
+  subscription  ServiceSubscription?
+  quotes        ServiceQuoteRequest[]
+  reviews       ServiceReview[]
+  boosts        ServiceBoost[]
+  events        ServiceEvent[]
+  conversations Conversation[]
+
+  @@index([status])
+}
+
+/// Private due-diligence documents. Originals are only ever served to admins
+/// with full permission, and every download is written to the audit log.
+model ServiceEvidence {
+  id           String                @id @default(cuid())
+  businessId   String
+  business     ServiceBusiness       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  type         ServiceEvidenceType
+  /// Public-safe name, e.g. "Gas Safe Register" or "Public liability £5m".
+  label        String
+  issuer       String?
+  /// Policy / registration / licence number. Never shown publicly.
+  reference    String?
+  expiresAt    DateTime?
+  fileUrl      String
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  status       ServiceEvidenceStatus @default(PENDING)
+  reviewNote   String?
+  reviewedAt   DateTime?
+  reviewedById String?
+  uploadedById String
+  createdAt    DateTime              @default(now())
+
+  @@index([businessId, status])
+}
+
+model ServiceSubscription {
+  id                     String             @id @default(cuid())
+  businessId             String             @unique
+  business               ServiceBusiness    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  tier                   ServicePlanTier
+  status                 SubscriptionStatus @default(TRIALING)
+  trialEndsAt            DateTime?
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean            @default(false)
+  billingProvider        String?
+  externalCustomerId     String?
+  externalSubscriptionId String?            @unique
+  /// Boost credits (Pro includes 3 a month). Topped up once per period.
+  boostCredits           Int                @default(0)
+  creditsPeriod          String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+}
+
+model ServiceAdvert {
+  id             String              @id @default(cuid())
+  businessId     String
+  business       ServiceBusiness     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title          String
+  category       String
+  subcategory    String?
+  description    String
+  locations      String[]            @default([])
+  nationwide     Boolean             @default(false)
+  priceType      ServicePriceType    @default(QUOTE)
+  /// Pence.
+  priceFrom      Int?
+  priceTo        Int?
+  priceUnit      String?
+  images         String[]            @default([])
+  availability   String?
+  emergency      Boolean             @default(false)
+  sameDay        Boolean             @default(false)
+  qualifications String?
+  website        String?
+  status         ServiceAdvertStatus @default(DRAFT)
+  reviewNote     String?
+  submittedAt    DateTime?
+  publishedAt    DateTime?
+  reviewedAt     DateTime?
+  reviewedById   String?
+  views          Int                 @default(0)
+  enquiries      Int                 @default(0)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  boosts        ServiceBoost[]
+  quotes        ServiceQuoteRequest[]
+  favourites    ServiceFavourite[]
+  conversations Conversation[]
+
+  @@index([status, category])
+  @@index([businessId, status])
+}
+
+model ServiceBoost {
+  id                String          @id @default(cuid())
+  advertId          String
+  advert            ServiceAdvert   @relation(fields: [advertId], references: [id], onDelete: Cascade)
+  businessId        String
+  business          ServiceBusiness @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  days              Int
+  /// Pence paid; 0 when a plan credit or admin grant was used.
+  amount            Int             @default(0)
+  source            String
+  externalPaymentId String?         @unique
+  startsAt          DateTime
+  endsAt            DateTime
+  impressions       Int             @default(0)
+  clicks            Int             @default(0)
+  createdAt         DateTime        @default(now())
+
+  @@index([advertId, endsAt])
+  @@index([endsAt])
+}
+
+model ServiceQuoteRequest {
+  id              String             @id @default(cuid())
+  businessId      String
+  business        ServiceBusiness    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  advertId        String?
+  advert          ServiceAdvert?     @relation(fields: [advertId], references: [id], onDelete: SetNull)
+  requesterId     String
+  requester       User               @relation("ServiceQuoteRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  companyId       String
+  company         Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  conversationId  String?
+  service         String
+  location        String
+  preferredDate   DateTime?
+  urgency         ServiceUrgency     @default(FLEXIBLE)
+  description     String
+  /// Pence.
+  budgetMin       Int?
+  budgetMax       Int?
+  /// Array of { url, name, type, size } — private files.
+  attachments     Json?
+  status          ServiceQuoteStatus @default(NEW)
+  quoteAmount     Int?
+  quoteNote       String?
+  quoteValidUntil DateTime?
+  declineReason   String?
+  viewedAt        DateTime?
+  quotedAt        DateTime?
+  acceptedAt      DateTime?
+  declinedAt      DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  review ServiceReview?
+
+  @@index([businessId, status])
+  @@index([companyId, status])
+}
+
+model ServiceFavourite {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  advertId  String
+  advert    ServiceAdvert @relation(fields: [advertId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([userId, advertId])
+}
+
+model ServiceReview {
+  id            String              @id @default(cuid())
+  quoteId       String              @unique
+  quote         ServiceQuoteRequest @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  businessId    String
+  business      ServiceBusiness     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User                @relation("ServiceReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  companyId     String
+  rating        Int
+  quality       Int
+  communication Int
+  timeliness    Int
+  value         Int
+  comment       String?
+  hiddenAt      DateTime?
+  hiddenReason  String?
+  reply         String?
+  replyAt       DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([businessId, hiddenAt])
+}
+
+/// Lightweight analytics. businessId is null for marketplace-wide search demand.
+model ServiceEvent {
+  id         String           @id @default(cuid())
+  businessId String?
+  business   ServiceBusiness? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  advertId   String?
+  /// PROFILE_VIEW | ADVERT_VIEW | CONTACT | QUOTE | FAVOURITE | BOOST_IMPRESSION | BOOST_CLICK | SEARCH
+  type       String
+  category   String?
+  location   String?
+  createdAt  DateTime         @default(now())
+
+  @@index([businessId, type, createdAt])
+  @@index([type, createdAt])
 }
