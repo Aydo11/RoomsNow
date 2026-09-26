@@ -21,6 +21,8 @@ const staticPages: Array<[string, MetadataRoute.Sitemap[number]["changeFrequency
   ["/mental-health-supported-accommodation", "weekly", 0.8],
   ["/accommodation-for-prison-leavers", "weekly", 0.8],
   ["/advertise-accommodation", "monthly", 0.8],
+  ["/advertise-services", "monthly", 0.7],
+  ["/vetted-providers", "daily", 0.7],
   ["/accommodation-referrals", "monthly", 0.8],
   ["/how-it-works", "monthly", 0.6],
   ["/eligibility", "monthly", 0.7],
