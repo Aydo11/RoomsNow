@@ -12,6 +12,7 @@ import { callerIp, LIMITS, rateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { fieldErrors, loginSchema, password, passwordChangeSchema, registerSchema, type FormState } from "@/lib/validation";
 import { bool, slugify, text } from "../form";
 import { ensureReferralCode, recordReferralSignup } from "@/lib/referral-program";
+import { uniqueServiceSlug } from "../service-marketplace";
 
 /**
  * A real bcrypt hash of a value nobody knows, compared against when the email
@@ -77,6 +78,9 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   if (data.accountType === "PROVIDER" && !data.companyName) {
     return { ok: false, errors: { companyName: "Enter your organisation's name." } };
   }
+  if (data.accountType === "SERVICE_PROVIDER" && !data.companyName) {
+    return { ok: false, errors: { companyName: "Enter your business name." } };
+  }
 
   const existing = await db.user.findUnique({ where: { email: data.email } });
   if (existing) {
@@ -134,6 +138,22 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
 
   if (data.accountType === "REFERRER") destination = "/referrals";
 
+  if (data.accountType === "SERVICE_PROVIDER" && data.companyName) {
+    const business = await db.serviceBusiness.create({
+      data: {
+        ownerId: user.id,
+        name: data.companyName,
+        slug: await uniqueServiceSlug(data.companyName, user.id),
+        contactName: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        phone: data.phone || null,
+        areas: data.companyCity ? [data.companyCity] : [],
+      },
+    });
+    destination = "/service-provider";
+    await audit({ actorId: user.id, action: "service_business.created", targetType: "ServiceBusiness", targetId: business.id });
+  }
+
   await audit({ actorId: user.id, action: "user.registered", targetType: "User", targetId: user.id });
   await notify({
     userId: user.id,
@@ -142,7 +162,9 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     body:
       data.accountType === "PROVIDER"
         ? "Add your first advert to start receiving enquiries."
-        : "Tell providers what you're looking for — it takes about two minutes.",
+        : data.accountType === "SERVICE_PROVIDER"
+          ? "Complete your business profile and upload your insurance so we can verify you."
+          : "Tell providers what you're looking for — it takes about two minutes.",
     href: destination,
   });
 
@@ -222,7 +244,7 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   await audit({ actorId: user.id, action: "auth.login", targetType: "User", targetId: user.id, metadata: { ip } });
 
   const home =
-    user.role === "ADMIN" ? "/admin" : user.role === "PROVIDER" ? "/provider" : user.role === "REFERRER" ? "/referrals" : "/dashboard";
+    user.role === "ADMIN" ? "/admin" : user.role === "PROVIDER" ? "/provider" : user.role === "REFERRER" ? "/referrals" : user.role === "SERVICE_PROVIDER" ? "/service-provider" : "/dashboard";
 
   redirect(safeRedirect(next, home));
 }
