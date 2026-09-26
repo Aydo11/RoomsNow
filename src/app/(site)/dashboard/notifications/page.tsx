@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/rbac";
+import { serviceProviderNav } from "../../service-provider/nav";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { EmptyState } from "@/components/ui";
 import { markNotificationsReadAction } from "@/server/actions/engagement";
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {
   const user = await requireUser("/dashboard/notifications");
-  const nav = user.role === "REFERRER" || user.role === "ADMIN" ? await referrerNav(user.id) : await userNav(user.id);
+  const nav = user.role === "SERVICE_PROVIDER" ? await serviceProviderNav(user.id) : user.role === "REFERRER" || user.role === "ADMIN" ? await referrerNav(user.id) : await userNav(user.id);
   const notifications = await db.notification.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
