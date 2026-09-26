@@ -77,7 +77,7 @@ export default async function ProviderSettingsPage() {
 
         {company.verification === "APPROVED" && insuranceStatus !== "ok" ? (
           <div className="mt-4">
-            <p className="mb-4 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay-dark">
+            <p className="mb-4 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay">
               {insuranceStatus === "expired"
                 ? `The insurance evidence behind your verified badge expired on ${shortDate(verification!.insuranceExpiresAt!)}. Submit current evidence to keep the badge accurate.`
                 : `The insurance evidence behind your verified badge expires on ${shortDate(verification!.insuranceExpiresAt!)}. Submit renewed evidence before then to keep it current.`}
@@ -95,7 +95,7 @@ export default async function ProviderSettingsPage() {
         ) : (
           <div className="mt-4">
             {verification?.status === "REJECTED" && verification.reviewNote && (
-              <p className="mb-4 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay-dark">
+              <p className="mb-4 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay">
                 Last request wasn&apos;t approved: {verification.reviewNote}
               </p>
             )}
