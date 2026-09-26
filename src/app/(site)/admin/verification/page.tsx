@@ -139,7 +139,7 @@ export default async function AdminVerificationPage({ searchParams }: { searchPa
             const complete = presentRequired === REQUIRED_VERIFICATION_DOCUMENTS.length;
             return (
               <li key={request.id}>
-                <details className="group rounded-card border border-line bg-white shadow-sm open:border-blue-200 open:shadow-card">
+                <details className="group rounded-card border border-line bg-white shadow-sm open:border-blue-200 open:shadow-raise">
                   <summary className="relative grid cursor-pointer list-none items-center gap-2 px-3 py-3 marker:hidden sm:grid-cols-[minmax(0,1fr)_130px_130px_116px_22px] sm:px-4 [&::-webkit-details-marker]:hidden">
                     <div className="min-w-0 pr-8 sm:pr-0">
                       <p className="truncate text-[14px] font-semibold text-ink">{request.company.name}</p>
