@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireUser, AuthorisationError } from "@/lib/rbac";
+import { requireUser, AuthorisationError, denyArea } from "@/lib/rbac";
 import { hasAdminPermission } from "@/lib/admin-permissions";
 import type { CurrentUser } from "@/lib/session";
 import { slugify } from "./form";
@@ -54,7 +54,7 @@ export async function requireServiceBusiness() {
   const user = await requireUser("/service-provider");
   if (user.role !== "SERVICE_PROVIDER") {
     if (user.role === "PROVIDER") redirect("/services");
-    throw new AuthorisationError("This area is for service businesses.");
+    denyArea("service");
   }
   let business = await db.serviceBusiness.findUnique({ where: { ownerId: user.id }, include: { subscription: true } });
   if (!business) {
