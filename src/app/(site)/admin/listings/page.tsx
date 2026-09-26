@@ -91,7 +91,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
                   {listing.reference} · {listing._count.rooms} rooms · updated {timeAgo(listing.updatedAt)}
                 </p>
                 {listing.rejectionNote && (
-                  <p className="mt-2 text-[13px] text-clay-dark">Note: {listing.rejectionNote}</p>
+                  <p className="mt-2 text-[13px] text-clay">Note: {listing.rejectionNote}</p>
                 )}
               </div>
 
