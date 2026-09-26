@@ -28,6 +28,8 @@ const DISALLOW = [
   "/dashboard/",
   "/messages/",
   "/provider/",
+  "/service-provider/",
+  "/services/",
   "/referrals/",
   "/login",
   "/register",
