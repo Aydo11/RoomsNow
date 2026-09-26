@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { LIMITS, rateLimit } from "@/lib/rate-limit";
-import { businessTrust, recordServiceEvent, requireFullMarketplace } from "@/server/service-marketplace";
+import { businessTrust, recordServiceEvent, requireFullMarketplace, viewerAccess } from "@/server/service-marketplace";
+import { getCurrentUser } from "@/lib/session";
 import { BusinessLogo, InsuranceStatus, PaymentsNote, ServiceVerifiedBadge } from "@/components/service-ui";
 import { ServicesTabs } from "@/components/service-cards";
 import { ReportForm } from "@/components/report-form";
@@ -10,7 +11,12 @@ import { Stars } from "@/components/star-rating";
 import { categoryLabel, EVIDENCE_LABELS, priceLabel, responseLabel, serviceSubscriptionActive } from "@/lib/service-marketplace";
 import { monthYear, shortDate } from "@/lib/format";
 
-export const metadata = { title: "Service business", robots: { index: false, follow: false } };
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const user = await getCurrentUser();
+  const business = viewerAccess(user) === "full" ? await db.serviceBusiness.findUnique({ where: { slug }, select: { name: true, tradingName: true } }) : null;
+  return { title: business ? `${business.tradingName || business.name} · Provider Services` : "Provider Services", robots: { index: false, follow: false } };
+}
 export const dynamic = "force-dynamic";
 
 type Social = { platform: string; url: string };
