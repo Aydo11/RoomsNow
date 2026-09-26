@@ -6,7 +6,7 @@ export const metadata = { title: "Privacy notice" };
 
 export default function PrivacyPage() {
   return (
-    <ProsePage title="Privacy notice" intro={`This notice explains how ${brand.name} collects, uses, shares and protects personal information across its housing, messaging, referral and verification services.`} updated="23 September 2026">
+    <ProsePage title="Privacy notice" intro={`This notice explains how ${brand.name} collects, uses, shares and protects personal information across its housing, messaging, referral and verification services.`} updated="26 September 2026">
       <Section heading="1. Who is responsible for your information">
         <p>RoomsNow is responsible for personal information it determines how and why to use. Contact the privacy team at {brand.supportEmail} for questions, rights requests or complaints.</p>
         <p>Providers and professional referrers are normally separate controllers for information they collect for their own housing, support, safeguarding, commissioning or referral work. Their privacy notices also apply.</p>
@@ -88,7 +88,8 @@ export default function PrivacyPage() {
       </Section>
 
       <Section heading="14. Cookies and changes to this notice">
-        <p>Strictly necessary cookies support login, security and core service operation. Optional analytics or marketing technologies will not be enabled without the consent controls required by law. RoomsNow may update this notice when its services, suppliers or legal duties change and will highlight material changes to account holders.</p>
+        <p>Strictly necessary cookies support login, security and core service operation. If you accept optional analytics, RoomsNow loads Google Analytics 4 to measure visits to public pages and improve the site. Analytics is not loaded before you choose to accept it; search query strings and account, message, referral, provider, applicant-profile and dashboard pages are excluded from page-view tracking. You can change or withdraw your choice at any time using Cookie settings in the footer.</p>
+        <p>RoomsNow may update this notice when its services, suppliers or legal duties change and will highlight material changes to account holders.</p>
         <p>Related information appears in the <Link href="/terms" className="text-pine-dark hover:underline">terms of use</Link> and <Link href="/verification" className="text-pine-dark hover:underline">verification policy</Link>.</p>
       </Section>
     </ProsePage>

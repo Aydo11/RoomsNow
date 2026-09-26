@@ -14,12 +14,12 @@ try { sentryOrigin = new URL(process.env.NEXT_PUBLIC_SENTRY_DSN || "").origin; }
 const csp = [
   "default-src 'self'",
   // Next injects an inline bootstrap script; dev additionally needs eval for HMR.
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   // Map tiles and uploaded images.
-  "img-src 'self' data: blob: https: https://tile.openstreetmap.org https://*.tile.openstreetmap.org",
-  `connect-src 'self' https://api.postcodes.io https://tile.openstreetmap.org https://*.tile.openstreetmap.org ${sentryOrigin}`,
+  "img-src 'self' data: blob: https: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.google-analytics.com",
+  `connect-src 'self' https://api.postcodes.io https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com ${sentryOrigin}`,
   // Only the video embeds the gallery actually builds.
   "frame-src https://www.youtube.com https://player.vimeo.com",
   "media-src 'self' blob: https:",
