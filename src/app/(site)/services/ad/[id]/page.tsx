@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { LIMITS, rateLimit } from "@/lib/rate-limit";
-import { businessTrust, marketplaceViewer, recordServiceEvent, requireFullMarketplace } from "@/server/service-marketplace";
+import { businessTrust, marketplaceViewer, recordServiceEvent, requireFullMarketplace, viewerAccess } from "@/server/service-marketplace";
+import { getCurrentUser } from "@/lib/session";
 import { MessageServiceBusinessForm, ServiceFavouriteButton, ServiceQuoteRequestForm } from "@/components/service-buyer-forms";
 import { BusinessLogo, InsuranceStatus, PaymentsNote, ServiceVerifiedBadge } from "@/components/service-ui";
 import { ServicesTabs } from "@/components/service-cards";
@@ -11,7 +12,13 @@ import { Stars } from "@/components/star-rating";
 import { canContactServiceBusiness, categoryLabel, EVIDENCE_LABELS, isAdvertPublic, priceLabel, responseLabel } from "@/lib/service-marketplace";
 import { monthYear, shortDate } from "@/lib/format";
 
-export const metadata = { title: "Service", robots: { index: false, follow: false } };
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const user = await getCurrentUser();
+  // Only paying providers may learn what an advert is, so the tab title stays generic for everyone else.
+  const advert = viewerAccess(user) === "full" ? await db.serviceAdvert.findUnique({ where: { id }, select: { title: true } }) : null;
+  return { title: advert ? `${advert.title} · Provider Services` : "Provider Services", robots: { index: false, follow: false } };
+}
 export const dynamic = "force-dynamic";
 
 export default async function ServiceAdvertDetail({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string }> }) {
