@@ -184,7 +184,7 @@ export function AdvertForm({
 
       <FormError message={state.errors?.form} />
       {state.errors && Object.keys(state.errors).some((key) => key !== "form") && (
-        <p className="rounded-[10px] border border-clay/30 bg-clay-light px-4 py-3 text-[14px] text-clay-dark">
+        <p className="rounded-[10px] border border-clay/30 bg-clay-light px-4 py-3 text-[14px] text-clay">
           Some details need attention. We&apos;ve opened the relevant section to fix.
         </p>
       )}
