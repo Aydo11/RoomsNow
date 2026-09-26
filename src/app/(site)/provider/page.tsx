@@ -12,6 +12,7 @@ import { computeReferralOutcomes } from "@/lib/referral-outcomes";
 import { ProviderActivityChart, type ProviderActivityPoint } from "@/components/provider-activity-chart";
 import { VoidCostPanel } from "@/components/void-cost-panel";
 import { companyVoidCost } from "@/server/void-cost";
+import { providerIsPaid } from "@/server/service-marketplace";
 
 export const metadata = { title: "Provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -167,6 +168,24 @@ export default async function ProviderDashboard() {
         </Link>
       )}
 
+      <Link
+        href="/services"
+        className="card mt-5 flex flex-wrap items-center justify-between gap-3 p-4 transition hover:border-pine"
+      >
+        <span className="flex items-center gap-3">
+          <span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-pine-light text-pine-dark">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.5a4 4 0 0 0-5.3 5L4 15.7 8.3 20l5.2-5.2a4 4 0 0 0 5-5.3l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6Z" /></svg>
+          </span>
+          <span>
+            <strong className="block text-[15px] text-ink">Provider Services</strong>
+            <span className="text-[13.5px] text-ink-soft">
+              {providerIsPaid(user) ? "Find checked trades and suppliers, and request quotes." : "Checked trades and suppliers for your homes. Included with paid memberships."}
+            </span>
+          </span>
+        </span>
+        <span className="text-[14px] font-semibold text-pine-dark">{providerIsPaid(user) ? "Browse services →" : "Take a look →"}</span>
+      </Link>
+
       <section className="mt-8">
         <div className="flex items-center justify-between">
           <h2 className="text-[20px]">Your adverts</h2>
@@ -181,8 +200,8 @@ export default async function ProviderDashboard() {
         ) : (
           <ul className="card mt-3 divide-y divide-line">
             {listings.map((listing) => (
-              <li key={listing.id} className="flex flex-wrap items-center gap-4 px-4 py-4">
-                <div className="min-w-0 flex-1">
+              <li key={listing.id} className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4">
+                <div className="min-w-0 flex-1 basis-[15rem]">
                   <Link href={`/provider/adverts/${listing.id}`} className="text-[16px] hover:text-pine-dark">
                     {listing.title}
                   </Link>
