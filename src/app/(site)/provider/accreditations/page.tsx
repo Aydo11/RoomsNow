@@ -28,7 +28,7 @@ export default async function ProviderAccreditationsPage() {
                 <div className="text-right text-[12px] text-ink-faint">
                   <p>Submitted {shortDate(item.createdAt)}</p>
                   {item.expiresAt && <p>Review/expiry {shortDate(item.expiresAt)}</p>}
-                  {item.reviewNote && <p className="mt-1 max-w-sm text-clay-dark">{item.reviewNote}</p>}
+                  {item.reviewNote && <p className="mt-1 max-w-sm text-clay">{item.reviewNote}</p>}
                 </div>
               </li>
             ))}
