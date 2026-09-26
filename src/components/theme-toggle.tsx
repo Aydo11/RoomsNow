@@ -6,7 +6,13 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    setDark(document.documentElement.dataset.theme === "dark");
+    const root = document.documentElement;
+    const sync = () => setDark(root.dataset.theme === "dark");
+    sync();
+    // Keep every toggle on the page (header and menu) showing the same state.
+    const observer = new MutationObserver(sync);
+    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
   }, []);
 
   function toggleTheme() {
