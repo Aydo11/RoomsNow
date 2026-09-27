@@ -19,6 +19,7 @@ import {
   type EvidenceLike,
   type MarketplaceViewer,
   type RankableAdvert,
+  type ServicePlanTierValue,
 } from "@/lib/service-marketplace";
 
 /** Is this accommodation provider on a paid RoomsNow membership? See isPaidProviderCompany. */
@@ -76,7 +77,7 @@ export async function requireServiceBusiness() {
 }
 
 /** Pro plans get their monthly boost credits the first time they're looked at in a new month. */
-export async function refreshServiceCredits<T extends { id: string; tier: "STANDARD" | "PRO"; status: string; trialEndsAt: Date | null; creditsPeriod: string | null; boostCredits: number }>(subscription: T): Promise<T> {
+export async function refreshServiceCredits<T extends { id: string; tier: ServicePlanTierValue; status: string; trialEndsAt: Date | null; creditsPeriod: string | null; boostCredits: number }>(subscription: T): Promise<T> {
   const period = creditsPeriodKey();
   const perMonth = SERVICE_PLANS[subscription.tier].boostCreditsPerMonth;
   if (!perMonth || subscription.creditsPeriod === period || !serviceSubscriptionActive(subscription)) return subscription;
