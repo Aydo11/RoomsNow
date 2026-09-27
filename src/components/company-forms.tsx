@@ -28,7 +28,7 @@ function documentSize(bytes: number) {
 
 function DocumentIcon({ file }: { file: File }) {
   const kind = documentKind(file);
-  const colour = kind === "PDF" ? "bg-clay-light text-clay-dark" : kind === "IMG" ? "bg-sky-100 text-sky-700" : "bg-pine-light text-pine-dark";
+  const colour = kind === "PDF" ? "bg-clay-light text-clay" : kind === "IMG" ? "bg-sky-100 text-sky-700" : "bg-pine-light text-pine-dark";
 
   return (
     <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[8px] ${colour}`} aria-hidden="true">
