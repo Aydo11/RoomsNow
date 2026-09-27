@@ -25,7 +25,7 @@ export function ServicesTabs({ active }: { active: "browse" | "saved" | "quotes"
 
 /** Full card — only ever rendered for viewers with full marketplace access. */
 export function ServiceAdvertCard({ advert, promoted, saved, canSave = true }: { advert: MarketAdvert; promoted: boolean; saved: boolean; canSave?: boolean }) {
-  const area = advert.nationwide || advert.business.nationalCoverage ? "Nationwide" : [...advert.locations, ...advert.business.areas].slice(0, 3).join(", ");
+  const area = advert.nationwide || advert.business.nationalCoverage ? "Nationwide" : [...new Set([...advert.locations, ...advert.business.areas].map((place) => place.trim()))].slice(0, 3).join(", ");
   const response = responseLabel(advert.business.responseMinutes);
   return (
     <article className={clsx("card flex flex-col overflow-hidden", promoted && "border-brand/50 shadow-raise")}>
