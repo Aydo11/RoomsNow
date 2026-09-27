@@ -24,6 +24,8 @@ export async function register() {
     scheduleWeeklySummary();
     const { schedulePlacementCheckIns } = await import("./lib/placement-checkins");
     schedulePlacementCheckIns();
+    const { scheduleStripeCatalogueSync } = await import("./lib/stripe-catalogue-sync");
+    scheduleStripeCatalogueSync();
   }
 }
 
