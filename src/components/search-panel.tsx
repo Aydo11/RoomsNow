@@ -14,6 +14,7 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
   const [where, setWhere] = useState(params.get("where") ?? "");
   const [support, setSupport] = useState(params.get("support") ?? "");
   const [from, setFrom] = useState(params.get("from") ?? "");
+  const [vetted, setVetted] = useState(params.get("vetted") === "1");
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -21,6 +22,7 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
     if (where) query.set("where", where);
     if (support) query.set("support", support);
     if (from) query.set("from", from);
+    if (vetted) query.set("vetted", "1");
     router.push(`/search?${query.toString()}`);
   }
 
@@ -80,6 +82,19 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
       </div>
 
       <button type="submit" className="btn-primary h-[46px] px-6">Search</button>
+
+      <label htmlFor={`vetted-${size}`} className="flex cursor-pointer items-center gap-2 text-[14px] text-ink-soft sm:col-span-4">
+        <input
+          id={`vetted-${size}`}
+          type="checkbox"
+          checked={vetted}
+          onChange={(e) => setVetted(e.target.checked)}
+          className="h-4 w-4 rounded border-line-strong text-pine focus:ring-pine"
+        />
+        <span>
+          Vetted providers only <span className="text-ink-faint">— CQC or BVSC checked by RoomsNow</span>
+        </span>
+      </label>
     </form>
   );
 }
