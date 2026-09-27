@@ -86,7 +86,11 @@ export function MobileMenu({ children }: { children: React.ReactNode }) {
               aria-modal="true"
               aria-label="Menu"
               onClick={(event) => {
-                if ((event.target as HTMLElement).closest("a, form button")) setOpen(false);
+                // Close on link taps only. Form buttons (Sign out) must stay
+                // mounted: closing here would remove the form from the page
+                // before the browser submits it, silently cancelling the
+                // submission. The route change after the action closes the sheet.
+                if ((event.target as HTMLElement).closest("a")) setOpen(false);
               }}
               className="mobile-menu-sheet absolute inset-y-0 right-0 flex w-[min(24rem,100vw)] flex-col bg-paper-card shadow-float"
             >
