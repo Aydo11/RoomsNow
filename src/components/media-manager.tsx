@@ -222,7 +222,7 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
                   {item.isPrimary ? <span className="text-[12px] font-medium text-pine-dark">Main photo</span> : item.type === "IMAGE" ? (
                     <button type="button" className="text-[12px] text-ink-soft hover:text-ink" disabled={pending} onClick={() => startTransition(() => setPrimaryMediaAction(listingId, item.id))}>Make main photo</button>
                   ) : <span />}
-                  <button type="button" className="text-[12px] text-clay-dark hover:underline" disabled={pending} onClick={() => {
+                  <button type="button" className="text-[12px] text-clay hover:underline" disabled={pending} onClick={() => {
                     if (window.confirm("Remove this photo or video?")) startTransition(() => deleteMediaAction(listingId, item.id));
                   }}>Remove</button>
                 </div>
