@@ -24,7 +24,7 @@ export default async function ServiceAdvertsPage() {
   ]);
   const plan = servicePlanFor(business.subscription);
   const live = adverts.filter((a) => COUNTED_ADVERT_STATUSES.includes(a.status)).length;
-  const max = plan?.maxAdverts ?? SERVICE_PLANS.STANDARD.maxAdverts;
+  const max = plan?.maxAdverts ?? SERVICE_PLANS.FREE.maxAdverts;
 
   return (
     <DashboardShell
