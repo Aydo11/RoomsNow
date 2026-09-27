@@ -42,7 +42,7 @@ export function AvailabilityBanner({
   if (pausedReason && REASON_COPY[pausedReason]) {
     return (
       <div className="card mt-4 border-clay/30 bg-clay-light/60 p-4">
-        <p className="text-[14px] font-semibold text-clay-dark">Paused automatically</p>
+        <p className="text-[14px] font-semibold text-clay">Paused automatically</p>
         <p className="mt-1 text-[14px] text-ink-soft">{REASON_COPY[pausedReason]}</p>
         {pausedReason === "STALE" ? (
           <button className="btn-primary mt-3" disabled={pending} onClick={() => confirm(true)}>
