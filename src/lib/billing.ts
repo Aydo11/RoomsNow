@@ -11,6 +11,7 @@ import {
 import { highestProviderMembership, highestReferrerMembership } from "./membership-access";
 import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 import { teamFor } from "@/lib/referral-team";
+import { cataloguePriceId, type CataloguePlan } from "./stripe-catalogue";
 
 export type CheckoutRequest = {
   companyId: string;
@@ -124,8 +125,7 @@ async function stripeReferrerCustomer(userId: string) {
 const stripeDriver: BillingDriver = {
   name: "stripe",
   async startCheckout({ companyId, tier, successUrl, cancelUrl }) {
-    const price = priceIdFor(tier);
-    if (!price) throw new Error(`A Stripe price has not been configured for ${tier.toLowerCase()}.`);
+    const price = priceIdFor(tier) ?? (await membershipCataloguePrice(tier));
     const customer = await stripeCustomer(companyId);
     const session = await stripe().checkout.sessions.create({
       mode: "subscription",
@@ -209,8 +209,7 @@ const stripeDriver: BillingDriver = {
     return session.url;
   },
   async startReferrerCheckout({ userId, tier, successUrl, cancelUrl }) {
-    const price = referrerPriceIdFor(tier);
-    if (!price) throw new Error(`A Stripe price has not been configured for ${tier.toLowerCase()}.`);
+    const price = referrerPriceIdFor(tier) ?? (await membershipCataloguePrice(tier));
     const customer = await stripeReferrerCustomer(userId);
     const session = await stripe().checkout.sessions.create({
       mode: "subscription",
@@ -244,6 +243,30 @@ const mockAllowed = process.env.NODE_ENV !== "production" || process.env.ALLOW_M
 export const billing: BillingDriver = process.env.BILLING_DRIVER === "stripe" ? stripeDriver : mockAllowed ? mockDriver : disabledDriver;
 export const billingIsLive = () => process.env.BILLING_DRIVER === "stripe" && Boolean(process.env.STRIPE_SECRET_KEY);
 export const billingAvailable = () => billingIsLive() || mockAllowed;
+
+const MEMBERSHIP_PLAN_KEYS: Partial<Record<MembershipTier, { key: string; prefix: string; audience: string }>> = {
+  PROFESSIONAL: { key: "provider_professional", prefix: "Provider", audience: "Accommodation provider membership" },
+  BUSINESS: { key: "provider_business", prefix: "Provider", audience: "Accommodation provider membership" },
+  REFERRER_PRO: { key: "referrer_pro", prefix: "Referral Agency", audience: "Referral agency membership" },
+};
+
+/** The Stripe catalogue entry for a paid membership, priced from the membership table. */
+export async function membershipCataloguePlan(tier: MembershipTier): Promise<CataloguePlan> {
+  const entry = MEMBERSHIP_PLAN_KEYS[tier];
+  if (!entry) throw new Error(`${tier.toLowerCase()} is not a paid plan.`);
+  const plan = await db.membership.findUnique({ where: { tier }, select: { name: true, priceMonthly: true } });
+  if (!plan || plan.priceMonthly <= 0) throw new Error(`No monthly price is set for ${tier.toLowerCase()}.`);
+  return {
+    key: entry.key,
+    name: `RoomsNow ${entry.prefix} ${plan.name}`,
+    description: `${entry.audience}, billed monthly.`,
+    unitAmount: plan.priceMonthly,
+  };
+}
+
+async function membershipCataloguePrice(tier: MembershipTier) {
+  return cataloguePriceId(stripe(), await membershipCataloguePlan(tier));
+}
 
 export function priceIdFor(tier: MembershipTier) {
   return { FREE: null, PROFESSIONAL: process.env.STRIPE_PRICE_PROFESSIONAL ?? null, BUSINESS: process.env.STRIPE_PRICE_BUSINESS ?? null, REFERRER_FREE: null, REFERRER_PRO: null }[tier];
