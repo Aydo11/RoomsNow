@@ -65,6 +65,23 @@ export default async function BuyerQuotePage({ params, searchParams }: { params:
             )}
           </section>
 
+          {(quote.completionNote || quote.completionPhotos.length > 0) && (
+            <section className="card p-5">
+              <h2 className="text-[16px]">Completed job record</h2>
+              <p className="mt-1 text-[13px] text-ink-faint">Added by {name}{quote.completedAt ? ` on ${shortDate(quote.completedAt)}` : ""}.</p>
+              {quote.completionNote && <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed">{quote.completionNote}</p>}
+              {quote.completionPhotos.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {quote.completionPhotos.map((photo, index) => (
+                    <a key={photo} href={photo} target="_blank" rel="noreferrer" className="group">
+                      <img src={photo} alt={`Completed job photo ${index + 1}`} className="aspect-[4/3] w-full rounded-[10px] border border-line object-cover transition group-hover:opacity-90" />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
           {reviewable && (
             <section className="card p-5">
               <h2 className="text-[18px]">Review {name}</h2>

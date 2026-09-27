@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -327,6 +328,10 @@ export function ServiceAdvertForm({ values, maxAreas, canSubmit }: { values: Ser
       <FormSuccess message={state.ok ? state.message : undefined} />
 
       <Section title="The service">
+        <div className="sm:col-span-2 rounded-[12px] border border-brand/20 bg-pine-light/60 p-4 text-[13px] text-ink-soft">
+          <p className="font-semibold text-ink">A strong advert answers five questions</p>
+          <p className="mt-1">What you do, who you help, what is included, how quickly you can attend, and what the customer should expect next. Add real job photos and clear qualifications to build trust.</p>
+        </div>
         <div className="sm:col-span-2">
           <Field label="Advert title" name="title" required hint="Say what you do and where, e.g. 'Gas safety certificates for HMOs across the Black Country'" error={e.title}>
             <input id="title" name="title" defaultValue={values.title} required maxLength={100} className="field" />
@@ -349,7 +354,7 @@ export function ServiceAdvertForm({ values, maxAreas, canSubmit }: { values: Ser
         </Field>
         <div className="sm:col-span-2">
           <Field label="Description" name="description" required hint="What's included, how you work with supported housing, turnaround times. At least 60 characters." error={e.description}>
-            <textarea id="description" name="description" rows={7} maxLength={5000} defaultValue={values.description} required className="field" />
+            <textarea id="description" name="description" rows={9} maxLength={5000} defaultValue={values.description} required className="field" placeholder={"Describe the service and the problem it solves.\n\nWhat's included:\n• Survey or site visit\n• Labour, reports or certificates\n• Typical completion time\n\nWhy choose us:\n• Relevant experience and qualifications\n• Areas covered and response time"} />
           </Field>
         </div>
         <Field label="Qualifications for this service" name="qualifications" hint="e.g. Gas Safe registered engineers, NICEIC approved" error={e.qualifications}>
@@ -425,20 +430,25 @@ export function ServiceAdvertForm({ values, maxAreas, canSubmit }: { values: Ser
       </Section>
 
       <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
-        <p className="max-w-[60ch] text-[13px] text-ink-soft">
-          {isDraft
-            ? "Every advert is checked by our team before providers can see it."
-            : "Saving changes sends this advert back to our team for a quick check. It's hidden until it's approved again."}
-        </p>
+        <div className="max-w-[60ch] text-[13px] text-ink-soft">
+          <p>{isDraft ? "Every advert is checked by our team before providers can see it." : "Saving changes sends this advert back to our team for a quick check. It's hidden until it's approved again."}</p>
+          {!canSubmit && isDraft && (
+            <p className="mt-1 font-medium text-ink">You can save the full advert now. <Link href="/service-provider/plan" className="text-brand underline underline-offset-2">Review your plan and advert limits</Link> when you are ready to publish it.</p>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           {isDraft && (
-            <SubmitButton className="btn-secondary" name="intent" value="draft" pendingLabel="Saving…">
-              Save draft
+            <SubmitButton className={canSubmit ? "btn-secondary" : "btn-primary"} name="intent" value="draft" pendingLabel="Saving…">
+              {canSubmit ? "Save draft" : "Save advert"}
             </SubmitButton>
           )}
-          <SubmitButton name="intent" value="submit" pendingLabel="Sending…" disabled={!canSubmit && isDraft}>
-            {isDraft ? "Send for review" : "Save and send for review"}
-          </SubmitButton>
+          {canSubmit ? (
+            <SubmitButton name="intent" value="submit" pendingLabel="Sending…">
+              {isDraft ? "Send for review" : "Save and send for review"}
+            </SubmitButton>
+          ) : isDraft ? (
+            <Link href="/service-provider/plan" className="btn-secondary">Unlock publishing</Link>
+          ) : null}
         </div>
       </div>
     </form>
@@ -530,13 +540,22 @@ export function QuoteResponseForm({ quoteId, canQuote, canDecline, hasQuote }: {
   );
 }
 
-export function CompleteQuoteButton({ quoteId }: { quoteId: string }) {
-  const [pending, start] = useTransition();
-  const router = useRouter();
+export function CompleteQuoteForm({ quoteId }: { quoteId: string }) {
+  const [state, action] = useActionState(completeServiceQuoteAsBusinessAction, initial);
+  const e = state.errors ?? {};
   return (
-    <button type="button" disabled={pending} className="btn-secondary" onClick={() => start(async () => { await completeServiceQuoteAsBusinessAction(quoteId); router.refresh(); })}>
-      {pending ? "Saving…" : "Mark job complete"}
-    </button>
+    <form action={action} className="space-y-3">
+      <input type="hidden" name="quoteId" value={quoteId} />
+      <FormError message={e.form} />
+      <FormSuccess message={state.ok ? state.message : undefined} />
+      <Field label="Completion note" name="completionNote" hint="Record what was completed, certificates supplied and any follow-up required." error={e.completionNote}>
+        <textarea id="completionNote" name="completionNote" rows={4} maxLength={1200} className="field" placeholder="Work completed, outcome, certificates issued and any recommendations…" />
+      </Field>
+      <Field label="Completed job photos" name="completionPhotos" hint="Optional. Add up to 6 photos. Do not include residents, personal details or identifiable documents." error={e.completionPhotos}>
+        <input id="completionPhotos" name="completionPhotos" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" className="field" />
+      </Field>
+      <SubmitButton className="btn-secondary" pendingLabel="Saving job record…">Mark job complete</SubmitButton>
+    </form>
   );
 }
 

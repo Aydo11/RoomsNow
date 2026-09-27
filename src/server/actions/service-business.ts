@@ -486,15 +486,39 @@ export async function respondToServiceQuoteAction(_prev: FormState, formData: Fo
   return { ok: true, message: to === "QUOTED" ? "Quote sent." : "Request declined." };
 }
 
-export async function completeServiceQuoteAsBusinessAction(quoteId: string) {
+export async function completeServiceQuoteAsBusinessAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const { user, business } = await requireServiceBusiness();
+  const throttle = await rateLimit(`upload:${user.id}`, LIMITS.upload);
+  if (!throttle.ok) return { ok: false, errors: { form: "You've uploaded several files recently. Try again in a few minutes." } };
+  const quoteId = text(formData, "quoteId");
   const quote = await db.serviceQuoteRequest.findFirst({ where: { id: quoteId, businessId: business.id } });
-  if (!quote || !quoteTransitionAllowed(quote.status, "COMPLETED", "business")) return;
-  await db.serviceQuoteRequest.update({ where: { id: quote.id }, data: { status: "COMPLETED", completedAt: new Date() } });
+  if (!quote) return { ok: false, errors: { form: "Quote request not found." } };
+  if (!quoteTransitionAllowed(quote.status, "COMPLETED", "business")) {
+    return { ok: false, errors: { form: "This job must be accepted before it can be marked complete." } };
+  }
+
+  const note = text(formData, "completionNote").trim();
+  if (note.length > 1200) return { ok: false, errors: { completionNote: "Keep the completion note under 1,200 characters." } };
+  const uploads = files(formData, "completionPhotos");
+  if (uploads.length > 6) return { ok: false, errors: { completionPhotos: "Add up to 6 completion photos." } };
+
+  const completionPhotos: string[] = [];
+  for (const file of uploads) {
+    const stored = await storeImage(file, `services/${business.id}/completed-jobs`);
+    if (!stored.ok) return { ok: false, errors: { completionPhotos: stored.error } };
+    completionPhotos.push(stored.url);
+  }
+
+  await db.serviceQuoteRequest.update({
+    where: { id: quote.id },
+    data: { status: "COMPLETED", completedAt: new Date(), completionNote: note || null, completionPhotos },
+  });
   await postToConversation(quote.conversationId, user.id, `We've marked “${quote.service}” as complete. Thanks for choosing us — a quick review helps other providers.`);
   await notify({ userId: quote.requesterId, type: "REVIEW", title: "Job marked complete", body: `How did ${business.tradingName || business.name} do? Leave a review.`, href: `/services/quotes/${quote.id}` });
   await audit({ actorId: user.id, action: "service_quote.completed", targetType: "ServiceQuoteRequest", targetId: quote.id });
   revalidatePath(`/service-provider/quotes/${quote.id}`);
+  revalidatePath("/service-provider/quotes");
+  return { ok: true, message: "Job marked complete and added to your job history." };
 }
 
 export async function replyToServiceReviewAction(_prev: FormState, formData: FormData): Promise<FormState> {

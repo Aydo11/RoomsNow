@@ -10,11 +10,12 @@ import {
   COUNTED_ADVERT_STATUSES,
   insuranceState,
   readyForReview,
+  responseLabel,
   SERVICE_PLANS,
   servicePlanFor,
   type EvidenceLike,
 } from "@/lib/service-marketplace";
-import { shortDate, timeAgo } from "@/lib/format";
+import { money, shortDate, timeAgo } from "@/lib/format";
 
 export const metadata = { title: "Service provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -31,7 +32,7 @@ export default async function ServiceProviderDashboard() {
     db.serviceEvidence.findMany({ where: { businessId: business.id }, select: { type: true, status: true, label: true, issuer: true, expiresAt: true } }),
     db.serviceAdvert.findMany({ where: { businessId: business.id, status: { not: "ARCHIVED" } }, orderBy: { updatedAt: "desc" }, select: { id: true, title: true, status: true, views: true, enquiries: true, category: true } }),
     db.serviceQuoteRequest.count({ where: { businessId: business.id, createdAt: { gte: since } } }),
-    db.serviceQuoteRequest.groupBy({ by: ["status"], where: { businessId: business.id }, _count: true }),
+    db.serviceQuoteRequest.groupBy({ by: ["status"], where: { businessId: business.id }, _count: true, _sum: { quoteAmount: true } }),
     db.serviceQuoteRequest.findMany({ where: { businessId: business.id }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, service: true, location: true, status: true, createdAt: true, company: { select: { name: true } } } }),
     db.serviceEvent.groupBy({ by: ["type"], where: { businessId: business.id, createdAt: { gte: since } }, _count: true }),
     db.serviceFavourite.count({ where: { advert: { businessId: business.id } } }),
@@ -45,6 +46,15 @@ export default async function ServiceProviderDashboard() {
   const statusCount = (status: string) => quoteStatuses.find((s) => s.status === status)?._count ?? 0;
   const totalQuotes = quoteStatuses.reduce((sum, s) => sum + s._count, 0);
   const won = statusCount("ACCEPTED") + statusCount("COMPLETED");
+  const wonValue = quoteStatuses.filter((s) => s.status === "ACCEPTED" || s.status === "COMPLETED").reduce((sum, s) => sum + (s._sum.quoteAmount ?? 0), 0);
+  const openQuoteValue = quoteStatuses.filter((s) => s.status === "QUOTED").reduce((sum, s) => sum + (s._sum.quoteAmount ?? 0), 0);
+  const pipeline = [
+    { label: "New and viewed", value: statusCount("NEW") + statusCount("VIEWED") },
+    { label: "Quotes sent", value: statusCount("QUOTED") },
+    { label: "Accepted", value: statusCount("ACCEPTED") },
+    { label: "Completed", value: statusCount("COMPLETED") },
+  ];
+  const pipelineMax = Math.max(1, ...pipeline.map((stage) => stage.value));
   const live = adverts.filter((a) => COUNTED_ADVERT_STATUSES.includes(a.status)).length;
   const insurance = insuranceState(evidence as EvidenceLike[], now);
   const check = readyForReview(business, evidence as EvidenceLike[], now);
@@ -115,7 +125,21 @@ export default async function ServiceProviderDashboard() {
         <StatCard label="Saved by providers" value={favourites} />
         <StatCard label="Live adverts" value={`${live}/${plan?.maxAdverts ?? SERVICE_PLANS.STANDARD.maxAdverts}`} hint="Awaiting review and paused count too" />
         <StatCard label="Boost credits" value={business.subscription?.boostCredits ?? 0} hint={plan?.boostCreditsPerMonth ? `${plan.boostCreditsPerMonth} added each month` : "Included with Pro"} />
+        <StatCard label="Won job value" value={money(wonValue)} hint="Accepted and completed quoted value" />
+        <StatCard label="Open quote value" value={money(openQuoteValue)} hint="Quotes awaiting a decision" />
+        <StatCard label="Completed jobs" value={statusCount("COMPLETED")} hint="Recorded through RoomsNow" />
+        <StatCard label="Typical response" value={responseLabel(business.responseMinutes)?.replace("Usually replies ", "") ?? "Building data"} hint="Median first response over 90 days" />
       </div>
+
+      <section className="card mt-5 p-5">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div><h2 className="text-[18px]">Quote pipeline</h2><p className="mt-1 text-[13px] text-ink-soft">Track requests from first enquiry through to a completed job.</p></div>
+          <Link href="/service-provider/quotes" className="text-[14px] text-brand underline-offset-2 hover:underline">Manage quotes</Link>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {pipeline.map((stage) => <MetricBar key={stage.label} label={stage.label} value={stage.value} total={pipelineMax} tone="bg-brand" />)}
+        </div>
+      </section>
 
       <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
         <section className="card min-w-0 p-5">

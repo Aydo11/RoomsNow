@@ -37,7 +37,7 @@ export default async function ServiceAdvertsPage() {
       {adverts.length === 0 ? (
         <EmptyState title="No adverts yet" body="Create an advert for each service you offer. Our team checks every advert before providers can see it." actionHref="/service-provider/adverts/new" actionLabel="Create an advert" />
       ) : (
-        <DataTable head={["Advert", "Status", "Price", "Views", "Enquiries", "Updated"]}>
+        <DataTable head={["Advert", "Status", "Price", "Views", "Enquiries", "Conversion", "Updated"]}>
           {adverts.map((advert) => (
             <tr key={advert.id}>
               <td className="px-4 py-3">
@@ -51,6 +51,7 @@ export default async function ServiceAdvertsPage() {
               <td className="px-4 py-3 text-ink-soft">{priceLabel(advert)}</td>
               <td className="px-4 py-3 tabular-nums">{advert.views}</td>
               <td className="px-4 py-3 tabular-nums">{advert.enquiries}</td>
+              <td className="px-4 py-3 tabular-nums text-ink-soft">{advert.views > 0 ? `${Math.round((advert.enquiries / advert.views) * 100)}%` : "—"}</td>
               <td className="px-4 py-3 text-ink-soft">{shortDate(advert.updatedAt)}</td>
             </tr>
           ))}
