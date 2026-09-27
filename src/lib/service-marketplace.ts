@@ -181,6 +181,17 @@ export function canSubmitAnotherAdvert(subscription: ServiceSubscriptionLike, li
   return { ok: true as const };
 }
 
+/**
+ * Verification is optional. A business that hasn't been verified can still
+ * advertise (every advert is checked by our team first); verified businesses
+ * get the badge and rank higher. Only a business we've rejected or suspended
+ * is hidden.
+ */
+export const HIDDEN_BUSINESS_STATUSES = ["REJECTED", "SUSPENDED"] as const;
+export function businessCanAdvertise(business: { status: string }) {
+  return !(HIDDEN_BUSINESS_STATUSES as readonly string[]).includes(business.status);
+}
+
 /** Adverts are only ever shown to providers when every one of these is true. */
 export function isAdvertPublic(
   advert: { status: string },
@@ -188,7 +199,7 @@ export function isAdvertPublic(
   subscription: ServiceSubscriptionLike,
   now = new Date(),
 ) {
-  return advert.status === "ACTIVE" && business.status === "APPROVED" && serviceSubscriptionActive(subscription, now);
+  return advert.status === "ACTIVE" && businessCanAdvertise(business) && serviceSubscriptionActive(subscription, now);
 }
 
 // ------------------------------------------------------------------ boosts
@@ -548,8 +559,9 @@ export function rankAdverts<T extends RankableAdvert>(adverts: T[], filters: Ser
   const sort = filters.sort ?? "recommended";
   const rotate = (a: T, b: T) => rotationKey(a.id, seed) - rotationKey(b.id, seed);
   const byRecommended = (a: T, b: T) => {
+    // Verified businesses lead the organic results; Pro gets priority among equals.
     const tier = (x: T) => (x.business.tier === "PRO" ? 0 : 1);
-    return tier(a) - tier(b) || Number(b.business.verified) - Number(a.business.verified) || rotate(a, b);
+    return Number(b.business.verified) - Number(a.business.verified) || tier(a) - tier(b) || rotate(a, b);
   };
   const nullsLast = (a: number | null, b: number | null, dir: 1 | -1) => (a === null ? (b === null ? 0 : 1) : b === null ? -1 : (a - b) * dir);
   const comparators: Record<ServiceSort, (a: T, b: T) => number> = {
