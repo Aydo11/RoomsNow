@@ -138,12 +138,12 @@ export function ReferralForm({
           <input type="checkbox" name="dataSharingConfirmed" className="mt-1 h-4 w-4" />
           <span>I have authority to submit this referral, have given the person appropriate privacy information (or recorded why that is not possible), and have limited the details and documents to what is necessary for this housing referral.</span>
         </label>
-        {state.errors?.dataSharingConfirmed && <p className="text-[14px] text-clay-dark">{state.errors.dataSharingConfirmed}</p>}
+        {state.errors?.dataSharingConfirmed && <p className="text-[14px] text-clay">{state.errors.dataSharingConfirmed}</p>}
         <label className="flex items-start gap-3 text-[14px] leading-relaxed">
           <input type="checkbox" name="specialCategoryConditionConfirmed" className="mt-1 h-4 w-4" />
           <span>Where this referral includes health or other special-category data, or criminal-offence data, I have checked and documented the additional UK GDPR/DPA 2018 condition and safeguards that apply.</span>
         </label>
-        {state.errors?.specialCategoryConditionConfirmed && <p className="text-[14px] text-clay-dark">{state.errors.specialCategoryConditionConfirmed}</p>}
+        {state.errors?.specialCategoryConditionConfirmed && <p className="text-[14px] text-clay">{state.errors.specialCategoryConditionConfirmed}</p>}
         <p className="text-[13px] leading-relaxed text-ink-faint">
           The receiving provider and authorised RoomsNow reviewers can access the referral. See the <a href="/privacy" className="text-pine-dark underline">privacy notice</a>. Do not include information that is not needed.
         </p>
