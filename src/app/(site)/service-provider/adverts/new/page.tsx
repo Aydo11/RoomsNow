@@ -14,7 +14,7 @@ export default async function NewServiceAdvertPage() {
     serviceProviderNav(user.id),
     db.serviceAdvert.count({ where: { businessId: business.id, status: { in: COUNTED_ADVERT_STATUSES } } }),
   ]);
-  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.STANDARD;
+  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.FREE;
   const allowed = canSubmitAnotherAdvert(business.subscription, live);
   return (
     <DashboardShell title="New advert" subtitle={allowed.ok ? "Our team checks every advert before providers can see it." : `${allowed.reason} You can still save a draft.`} nav={nav} active="/service-provider/adverts">
