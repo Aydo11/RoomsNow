@@ -13,6 +13,7 @@ import {
   type ServicePlanTierValue,
 } from "./service-marketplace";
 import type { SubscriptionStatus } from "@prisma/client";
+import { cataloguePriceId, type CataloguePlan } from "./stripe-catalogue";
 
 /**
  * Billing for service businesses. Kept apart from the accommodation membership
@@ -73,6 +74,17 @@ export async function applyServicePlan(params: {
   });
 }
 
+/** The Stripe catalogue entry for a trades and suppliers (Provider Services) plan. */
+export function servicePlanCatalogue(tier: ServicePlanTierValue): CataloguePlan {
+  const plan = SERVICE_PLANS[tier];
+  return {
+    key: `services_${tier.toLowerCase()}`,
+    name: `RoomsNow ${plan.name}`,
+    description: "Provider Services membership for trades and suppliers, billed monthly.",
+    unitAmount: plan.monthly,
+  };
+}
+
 export async function startServicePlanCheckout(params: { businessId: string; tier: ServicePlanTierValue; successUrl: string; cancelUrl: string }) {
   const plan = SERVICE_PLANS[params.tier];
   const trial = await trialAvailable(params.businessId);
@@ -88,15 +100,7 @@ export async function startServicePlanCheckout(params: { businessId: string; tie
     const session = await stripe().checkout.sessions.create({
       mode: "subscription",
       customer,
-      line_items: [{
-        quantity: 1,
-        price_data: {
-          currency: "gbp",
-          unit_amount: plan.monthly,
-          recurring: { interval: "month" },
-          product_data: { name: `RoomsNow ${plan.name}`, description: "Advertise your services to paying RoomsNow accommodation providers." },
-        },
-      }],
+      line_items: [{ quantity: 1, price: await cataloguePriceId(stripe(), servicePlanCatalogue(params.tier)) }],
       success_url: withParam(params.successUrl, "plan=complete&session_id={CHECKOUT_SESSION_ID}"),
       cancel_url: withParam(params.cancelUrl, "plan=cancelled"),
       allow_promotion_codes: true,
