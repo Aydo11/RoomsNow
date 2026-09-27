@@ -17,6 +17,7 @@ import { SERVICE_CATEGORIES, EVIDENCE_LABELS, type ServiceAdvertStatusValue } fr
 import type { FormState } from "@/lib/validation";
 import { Field, FormError, FormSuccess, SubmitButton } from "./ui";
 import { SocialLinksField, type SocialLink } from "./social-links-field";
+import { ImageDropzone } from "./image-dropzone";
 import { clsx } from "@/lib/clsx";
 
 const initial: FormState = { ok: false };
@@ -184,19 +185,20 @@ export function ServiceProfileForm({ values, maxAreas, portfolioLimit }: { value
 
       <Section title="Images" hint={`Logo and cover are shown on your profile. Your plan includes up to ${portfolioLimit} portfolio photos. JPG, PNG or WebP up to 8MB.`}>
         <Field label="Logo" name="logo" error={e.logo}>
-          {values.logoUrl && <img src={values.logoUrl} alt="Current logo" className="mb-2 h-14 w-14 rounded-[10px] border border-line object-cover" />}
-          <input id="logo" name="logo" type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="field" />
+          <ImageDropzone name="logo" shape="square" label="Logo" currentUrl={values.logoUrl} hint="Square works best, at least 400 × 400px." />
         </Field>
         <Field label="Cover image" name="cover" error={e.cover}>
-          {values.coverUrl && <img src={values.coverUrl} alt="Current cover" className="mb-2 h-14 w-full rounded-[10px] border border-line object-cover" />}
-          <input id="cover" name="cover" type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="field" />
+          <ImageDropzone name="cover" shape="wide" label="Cover image" currentUrl={values.coverUrl} hint="A wide landscape photo of your work, at least 1600 × 700px." />
         </Field>
         <div className="sm:col-span-2">
           <Field label="Add portfolio photos" name="portfolio" error={e.portfolio}>
-            <input id="portfolio" name="portfolio" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" className="field" />
+            <ImageDropzone name="portfolio" label="Portfolio photos" maxFiles={portfolioLimit} hint={`Drag several photos at once. Up to ${portfolioLimit} in total, JPG, PNG or WebP up to 8MB each.`} />
           </Field>
           {values.portfolio.length > 0 && (
-            <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
+            <p className="mt-4 text-[13px] font-medium text-ink-soft">Current portfolio ({values.portfolio.length}/{portfolioLimit}) — tick any to remove when you save</p>
+          )}
+          {values.portfolio.length > 0 && (
+            <ul className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
               {values.portfolio.map((image) => (
                 <li key={image} className="space-y-1">
                   <img src={image} alt="" className="aspect-square w-full rounded-[8px] object-cover" />
@@ -406,7 +408,7 @@ export function ServiceAdvertForm({ values, maxAreas, canSubmit }: { values: Ser
       <Section title="Photos" hint="Up to 6. JPG, PNG or WebP. Don't include residents or anything that identifies an address.">
         <div className="sm:col-span-2">
           <Field label="Add photos" name="images" error={e.images}>
-            <input id="images" name="images" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" className="field" />
+            <ImageDropzone name="images" label="Photos" maxFiles={6} hint="Drag several photos at once. Up to 6, JPG, PNG or WebP up to 8MB each." />
           </Field>
           {values.images.length > 0 && (
             <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
