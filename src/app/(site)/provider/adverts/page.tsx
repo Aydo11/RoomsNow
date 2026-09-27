@@ -151,14 +151,12 @@ export default async function ProviderAdvertsPage({
                 )}
                 {listing.status === "ACTIVE" && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {sponsorChoice && (
-                      <Link
-                        href={`/provider/adverts/${listing.id}?duration=${sponsorChoice}#sponsored`}
-                        className="btn-secondary inline-flex"
-                      >
-                        Sponsor this advert
-                      </Link>
-                    )}
+                    <Link
+                      href={`/provider/adverts/${listing.id}${sponsorChoice ? `?duration=${sponsorChoice}` : ""}#sponsored`}
+                      className={sponsorChoice ? "btn-primary inline-flex" : "btn-secondary inline-flex"}
+                    >
+                      Sponsor this advert
+                    </Link>
                     <ProviderAdvertBoost
                       listingId={listing.id}
                       boostedUntil={listing.boostedUntil?.toISOString() ?? null}
