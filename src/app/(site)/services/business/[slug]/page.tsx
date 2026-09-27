@@ -8,7 +8,7 @@ import { BusinessLogo, InsuranceStatus, PaymentsNote, ServiceVerifiedBadge } fro
 import { ServicesTabs } from "@/components/service-cards";
 import { ReportForm } from "@/components/report-form";
 import { Stars } from "@/components/star-rating";
-import { categoryLabel, EVIDENCE_LABELS, priceLabel, responseLabel, serviceSubscriptionActive } from "@/lib/service-marketplace";
+import { businessCanAdvertise, categoryLabel, EVIDENCE_LABELS, priceLabel, responseLabel, serviceSubscriptionActive } from "@/lib/service-marketplace";
 import { monthYear, shortDate } from "@/lib/format";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -28,7 +28,7 @@ export default async function ServiceBusinessProfile({ params }: { params: Promi
     where: { slug },
     include: { subscription: true, adverts: { where: { status: "ACTIVE" }, orderBy: { publishedAt: "desc" } } },
   });
-  if (!business || business.status !== "APPROVED" || !serviceSubscriptionActive(business.subscription)) notFound();
+  if (!business || !businessCanAdvertise(business) || !serviceSubscriptionActive(business.subscription)) notFound();
 
   const counted = await rateLimit(`view:service-business:${business.id}:${user.id}`, LIMITS.view);
   const [trust] = await Promise.all([
