@@ -86,7 +86,7 @@ export function ListingRowActions({ id, status }: { id: string; status: string }
         </button>
       )}
       {status !== "ARCHIVED" && (
-        <button className="btn-ghost text-clay-dark" disabled={pending} onClick={() => changeStatus("ARCHIVED")}>
+        <button className="btn-ghost text-clay" disabled={pending} onClick={() => changeStatus("ARCHIVED")}>
           Archive
         </button>
       )}
@@ -99,7 +99,7 @@ export function ListingRowActions({ id, status }: { id: string; status: string }
       {canDelete && (
         <>
           <button
-            className="btn-ghost text-clay-dark"
+            className="btn-ghost text-clay"
             disabled={pending}
             onClick={() => setConfirmingDelete(true)}
           >
