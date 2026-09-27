@@ -7,6 +7,7 @@ type Facets = {
   types: { value: string; count: number }[];
   cities: { city: string; count: number }[];
   verified: number;
+  vetted?: number;
   wheelchair: number;
   petsAllowed: number;
 };
@@ -34,6 +35,7 @@ export function RefineBar({ facets, total }: { facets: Facets; total: number }) 
   if (params.get("where")) add("where", params.get("where")!);
   if (params.get("bbox")) add("bbox", "This map area");
   if (params.get("verified")) add("verified", "Verified providers");
+  if (params.get("vetted")) add("vetted", "Vetted providers");
   if (params.get("wheelchair")) add("wheelchair", "Wheelchair accessible");
   if (params.get("petsAllowed")) add("petsAllowed", "Pets allowed");
   if (params.get("ensuite")) add("ensuite", "En-suite");
@@ -91,6 +93,11 @@ export function RefineBar({ facets, total }: { facets: Facets; total: number }) 
               <span className="ml-1 text-ink-faint">{type.count}</span>
             </button>
           ))}
+          {(facets.vetted ?? 0) > 0 && !params.get("vetted") && (
+            <button onClick={() => set("vetted", "1")} className="chip">
+              Vetted providers only <span className="ml-1 text-ink-faint">{facets.vetted}</span>
+            </button>
+          )}
           {facets.verified > 0 && !params.get("verified") && (
             <button onClick={() => set("verified", "1")} className="chip">
               Verified only <span className="ml-1 text-ink-faint">{facets.verified}</span>
