@@ -8,7 +8,8 @@
 export type ServiceBusinessStatusValue = "ONBOARDING" | "PENDING_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "REJECTED" | "SUSPENDED";
 export type ServiceAdvertStatusValue = "DRAFT" | "PENDING_REVIEW" | "ACTIVE" | "PAUSED" | "REJECTED" | "ARCHIVED";
 export type ServiceQuoteStatusValue = "NEW" | "VIEWED" | "QUOTED" | "ACCEPTED" | "DECLINED" | "COMPLETED" | "CANCELLED";
-export type ServicePlanTierValue = "STANDARD" | "PRO";
+export type ServicePlanTierValue = "FREE" | "STANDARD" | "PRO";
+export type PaidServicePlanTier = Exclude<ServicePlanTierValue, "FREE">;
 export type ServicePriceTypeValue = "FIXED" | "FROM" | "RANGE" | "HOURLY" | "QUOTE";
 export type ServiceEvidenceTypeValue = "PUBLIC_LIABILITY" | "EMPLOYERS_LIABILITY" | "INCORPORATION" | "QUALIFICATION" | "LICENCE" | "ACCREDITATION" | "OTHER";
 export type ServiceUrgencyValue = "FLEXIBLE" | "WITHIN_A_MONTH" | "WITHIN_A_WEEK" | "URGENT" | "EMERGENCY";
@@ -55,7 +56,9 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
   monthly: number;
   maxAdverts: number;
   maxServiceAreas: number;
+  portfolioPhotos: number;
   boostCreditsPerMonth: number;
+  basicAnalytics: boolean;
   enhancedProfile: boolean;
   advancedAnalytics: boolean;
   leadTracking: boolean;
@@ -64,13 +67,39 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
   priorityPlacement: boolean;
   features: string[];
 }> = {
+  FREE: {
+    tier: "FREE",
+    name: "Marketplace Free",
+    monthly: 0,
+    maxAdverts: 2,
+    maxServiceAreas: 1,
+    portfolioPhotos: 1,
+    boostCreditsPerMonth: 0,
+    basicAnalytics: false,
+    enhancedProfile: false,
+    advancedAnalytics: false,
+    leadTracking: false,
+    enquiryReports: false,
+    teamAccess: false,
+    priorityPlacement: false,
+    features: [
+      "1 basic business profile",
+      "Up to 2 live adverts",
+      "1 service area",
+      "1 portfolio photo",
+      "Messages and quote requests from paying providers",
+      "No analytics or insights",
+    ],
+  },
   STANDARD: {
     tier: "STANDARD",
     name: "Marketplace Standard",
     monthly: 7500,
     maxAdverts: 5,
     maxServiceAreas: 3,
+    portfolioPhotos: 3,
     boostCreditsPerMonth: 0,
+    basicAnalytics: true,
     enhancedProfile: false,
     advancedAnalytics: false,
     leadTracking: false,
@@ -92,7 +121,9 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
     monthly: 12900,
     maxAdverts: 20,
     maxServiceAreas: 25,
+    portfolioPhotos: 12,
     boostCreditsPerMonth: 3,
+    basicAnalytics: true,
     enhancedProfile: true,
     advancedAnalytics: true,
     leadTracking: true,
@@ -112,6 +143,10 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
 };
 
 export function isServicePlanTier(value: unknown): value is ServicePlanTierValue {
+  return value === "FREE" || value === "STANDARD" || value === "PRO";
+}
+
+export function isPaidServicePlanTier(value: unknown): value is PaidServicePlanTier {
   return value === "STANDARD" || value === "PRO";
 }
 
