@@ -37,6 +37,7 @@ import {
   splitPostcodes,
 } from "@/lib/service-validation";
 import {
+  activateFreeServicePlan,
   cancelServicePlan,
   servicePortalUrl,
   spendServiceBoostCredit,
@@ -110,7 +111,7 @@ export async function saveServiceProfileAction(_prev: FormState, formData: FormD
   const data = parsed.data;
 
   // Area limits follow the plan; before choosing one, the Standard limit applies.
-  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.STANDARD;
+  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.FREE;
   if (data.areas.length > plan.maxServiceAreas) {
     return { ok: false, errors: { areas: `${plan.name} covers up to ${plan.maxServiceAreas} named areas. Tick nationwide or upgrade to Pro for more.` } };
   }
@@ -129,7 +130,7 @@ export async function saveServiceProfileAction(_prev: FormState, formData: FormD
 
   const removed = new Set(list(formData, "removePortfolio"));
   const portfolio = business.portfolio.filter((image) => !removed.has(image));
-  const portfolioLimit = plan.enhancedProfile ? 12 : 3;
+  const portfolioLimit = plan.portfolioPhotos;
   const uploads = files(formData, "portfolio");
   if (portfolio.length + uploads.length > portfolioLimit) {
     return { ok: false, errors: { portfolio: `Your plan includes up to ${portfolioLimit} portfolio photos.` } };
@@ -299,7 +300,7 @@ export async function saveServiceAdvertAction(_prev: FormState, formData: FormDa
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
   const data = parsed.data;
 
-  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.STANDARD;
+  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.FREE;
   if (data.locations.length > plan.maxServiceAreas) {
     return { ok: false, errors: { locations: `${plan.name} covers up to ${plan.maxServiceAreas} areas per advert. Tick nationwide or upgrade to Pro.` } };
   }
@@ -386,6 +387,14 @@ export async function startServicePlanAction(formData: FormData) {
   const { user, business } = await requireServiceBusiness();
   const tier = text(formData, "tier");
   if (!isServicePlanTier(tier)) return;
+  if (tier === "FREE") {
+    const live = await db.serviceAdvert.count({ where: { businessId: business.id, status: { in: COUNTED_ADVERT_STATUSES } } });
+    const result = await activateFreeServicePlan(business.id, live);
+    if (!result.ok) redirect(`/service-provider/plan?plan=${result.reason === "paid_active" ? "cancel-first" : "too-many"}`);
+    await audit({ actorId: user.id, action: "service_billing.free_plan", targetType: "ServiceBusiness", targetId: business.id });
+    revalidatePath("/service-provider", "layout");
+    redirect("/service-provider/plan?plan=free");
+  }
   const base = await appUrl();
   const url = await startServicePlanCheckout({ businessId: business.id, tier, successUrl: `${base}/service-provider/plan`, cancelUrl: `${base}/service-provider/plan` });
   await audit({ actorId: user.id, action: "service_billing.checkout_started", targetType: "ServiceBusiness", targetId: business.id, metadata: { tier } });
