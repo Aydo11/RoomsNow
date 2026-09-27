@@ -14,10 +14,11 @@ const NOTES: Record<SponsorPackage, string> = {
 
 const ORDER: SponsorPackage[] = ["WEEK", "MONTH", "QUARTER"];
 
-export function SponsorDurationPicker({ provider, livePayments }: { provider: boolean; livePayments: boolean }) {
+export function SponsorDurationPicker({ provider, signedIn = false, livePayments }: { provider: boolean; signedIn?: boolean; livePayments: boolean }) {
   const [choice, setChoice] = useState<SponsorPackage>("MONTH");
 
-  const continueHref = provider ? `/provider/adverts?sponsor=${choice}` : "/register?type=PROVIDER";
+  const advertsHref = `/provider/adverts?sponsor=${choice}`;
+  const continueHref = provider ? advertsHref : signedIn ? "/provider/create" : `/login?next=${encodeURIComponent(advertsHref)}`;
 
   return (
     <div>
@@ -72,9 +73,12 @@ export function SponsorDurationPicker({ provider, livePayments }: { provider: bo
         <p className="max-w-[60ch] text-[13px] text-ink-faint">
           {livePayments ? "Payment is taken securely through Stripe Checkout." : "Online payments are being configured."} Select the advert first, then choose its duration.
         </p>
-        <Link href={continueHref} className="btn-primary">
-          {provider ? `Choose an advert for ${SPONSOR_PACKAGES[choice].label}` : "Create a provider account"}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={continueHref} className="btn-primary">
+            {provider ? `Choose an advert for ${SPONSOR_PACKAGES[choice].label}` : signedIn ? "Set up your provider company" : "Sign in to sponsor an advert"}
+          </Link>
+          {!provider && !signedIn && <Link href="/register?type=PROVIDER" className="btn-secondary">Create a provider account</Link>}
+        </div>
       </div>
     </div>
   );
