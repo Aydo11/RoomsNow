@@ -9,6 +9,7 @@ import {
   creditsPeriodKey,
   isAdvertPublic,
   isVerifiedServiceBusiness,
+  HIDDEN_BUSINESS_STATUSES,
   marketplaceAccess,
   publicAccreditations,
   SERVICE_PLANS,
@@ -108,7 +109,7 @@ export async function loadPublicAdverts(now = new Date()): Promise<MarketAdvert[
   const rows = await db.serviceAdvert.findMany({
     where: {
       status: "ACTIVE",
-      business: { status: "APPROVED", subscription: { is: { status: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] } } } },
+      business: { status: { notIn: [...HIDDEN_BUSINESS_STATUSES] }, subscription: { is: { status: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] } } } },
     },
     orderBy: { publishedAt: "desc" },
     take: 2000,
