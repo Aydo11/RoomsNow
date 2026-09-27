@@ -64,12 +64,14 @@ export default async function ServiceProviderDashboard() {
 
   const steps = [
     { label: "Complete your business profile", done: Boolean(business.description && business.categories.length && (business.areas.length || business.nationalCoverage)), href: "/service-provider/profile" },
-    { label: "Upload insurance and incorporation documents", done: !check.missing.some((m) => m.includes("insurance") || m.includes("incorporation")), href: "/service-provider/verification" },
-    { label: "Send your business for verification", done: !["ONBOARDING", "CHANGES_REQUESTED", "REJECTED"].includes(business.status), href: "/service-provider/verification" },
     { label: "Choose a plan (Free, or try paid for 14 days)", done: Boolean(plan), href: "/service-provider/plan" },
     { label: "Create your first advert", done: adverts.length > 0, href: "/service-provider/adverts/new" },
-    { label: "Get approved and go live", done: business.status === "APPROVED" && adverts.some((a) => a.status === "ACTIVE"), href: "/service-provider/adverts" },
+    { label: "Advert checked by our team and live", done: adverts.some((a) => a.status === "ACTIVE"), href: "/service-provider/adverts" },
   ];
+  // Verification is optional: it earns the badge and a higher position, it doesn't gate listing.
+  const verified = business.status === "APPROVED";
+  const verificationSent = !["ONBOARDING", "CHANGES_REQUESTED", "REJECTED"].includes(business.status);
+  const docsUploaded = !check.missing.some((m) => m.includes("insurance") || m.includes("incorporation"));
   const setupDone = steps.every((step) => step.done);
 
   return (
@@ -114,6 +116,25 @@ export default async function ServiceProviderDashboard() {
               </li>
             ))}
           </ol>
+        </section>
+      )}
+
+      {!verified && (
+        <section className="card mb-6 flex flex-wrap items-center justify-between gap-4 p-5" aria-labelledby="verify-heading">
+          <div className="min-w-0 flex-1 basis-[18rem]">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-faint">Optional</p>
+            <h2 id="verify-heading" className="mt-0.5 text-[18px]">Get verified to rank higher</h2>
+            <p className="mt-1 text-[14px] text-ink-soft">
+              {verificationSent
+                ? "Thanks — our team is checking your documents, usually within two working days."
+                : "Your adverts can go live without it. Verified businesses get a Verified badge and appear above unverified ones in Provider Services."}
+            </p>
+          </div>
+          {!verificationSent && (
+            <Link href="/service-provider/verification" className="btn-secondary">
+              {docsUploaded ? "Send for verification" : "Upload insurance and documents"}
+            </Link>
+          )}
         </section>
       )}
 
