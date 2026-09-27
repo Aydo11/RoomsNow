@@ -27,7 +27,9 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
     getCurrentUser(),
   ]);
   const livePayments = billingIsLive();
-  const provider = user?.role === "PROVIDER";
+  // Anyone who runs a provider company (including an admin who also owns one) buys boosts and sponsorship.
+  const provider = user?.role === "PROVIDER" || Boolean(user?.staffOf?.length);
+  const signedIn = Boolean(user);
   const referrer = user?.role === "REFERRER";
   const serviceBusiness = user?.role === "SERVICE_PROVIDER";
 
@@ -220,7 +222,16 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
           </div>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
             <p className="text-[13px] text-ink-faint">One-off payment. Credits can be used on any live advert and do not expire.</p>
-            <Link href={provider ? "/provider/adverts" : "/register?type=PROVIDER"} className="btn-primary">Choose an advert to boost</Link>
+            {provider ? (
+              <Link href="/provider/adverts" className="btn-primary">Choose an advert to boost</Link>
+            ) : signedIn ? (
+              <Link href="/provider/create" className="btn-primary">Set up your provider company</Link>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                <Link href="/login?next=/provider/adverts" className="btn-primary">Sign in to boost an advert</Link>
+                <Link href="/register?type=PROVIDER" className="btn-secondary">Create a provider account</Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -243,7 +254,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
           </ul>
         </div>
         <div className="p-6 lg:p-8">
-          <SponsorDurationPicker provider={provider} livePayments={livePayments} />
+          <SponsorDurationPicker provider={provider} signedIn={signedIn} livePayments={livePayments} />
         </div>
       </section>
     </div>
