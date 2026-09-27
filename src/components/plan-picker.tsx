@@ -96,7 +96,7 @@ export function PlanPicker({
           {!cancelling && (
             <div className="flex flex-wrap gap-2">
               {billingLive && <button className="btn-secondary" disabled={pending} onClick={() => startTransition(() => openBillingPortalAction())}>Payment details</button>}
-              <button className="btn-ghost text-clay-dark" disabled={pending} onClick={() => startTransition(async () => { await cancelMembershipAction(true); router.refresh(); })}>Cancel membership</button>
+              <button className="btn-ghost text-clay" disabled={pending} onClick={() => startTransition(async () => { await cancelMembershipAction(true); router.refresh(); })}>Cancel membership</button>
             </div>
           )}
         </div>
