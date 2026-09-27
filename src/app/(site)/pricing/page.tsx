@@ -4,19 +4,22 @@ import { money } from "@/lib/format";
 import { brand } from "@/brand.config";
 import { billingIsLive, ensureProviderMembershipCatalogue } from "@/lib/billing";
 import { getCurrentUser } from "@/lib/session";
-import { PricingTabs } from "@/components/pricing-tabs";
+import { PricingTabs, type PricingTab } from "@/components/pricing-tabs";
+import { SERVICE_PLANS, SERVICE_TRIAL_DAYS } from "@/lib/service-marketplace";
 import { SponsorDurationPicker } from "@/components/sponsor-duration-picker";
 import { BOOST_PACKAGES } from "@/lib/boost-packages";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: "Membership & Pricing for Accommodation Providers | RoomsNow",
-  description: "Membership plans for advertising HMO rooms, supported and transitional accommodation, plus boosts and sponsored placements. Free for people looking for a room.",
+  description: "Membership plans for accommodation providers, referral agencies and trades advertising on Provider Services, plus boosts and sponsored placements. Free for people looking for a room.",
   path: "/pricing",
 });
 export const dynamic = "force-dynamic";
 
-export default async function PricingPage() {
+export default async function PricingPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams;
+  const initialTab: PricingTab = tab === "referrer" || tab === "services" ? tab : "provider";
   await ensureProviderMembershipCatalogue();
   const [plans, referrerPlans, user] = await Promise.all([
     db.membership.findMany({ where: { active: true, audience: "PROVIDER" }, orderBy: { priceMonthly: "asc" } }),
@@ -26,18 +29,64 @@ export default async function PricingPage() {
   const livePayments = billingIsLive();
   const provider = user?.role === "PROVIDER";
   const referrer = user?.role === "REFERRER";
+  const serviceBusiness = user?.role === "SERVICE_PROVIDER";
 
   return (
     <div className="shell py-14">
       <h1 className="max-w-[22ch] text-[38px] leading-tight">Membership and pricing</h1>
       <p className="mt-3 max-w-[62ch] text-[17px] leading-relaxed text-ink-soft">
         People looking for accommodation always use {brand.name} free. Providers pay to advertise,
-        and professional referrers can upgrade for a bigger caseload and unlimited sharing.{" "}
+        professional referrers can upgrade for a bigger caseload and unlimited sharing, and trades
+        and suppliers can advertise their services to providers.{" "}
         {livePayments ? "Payments are handled securely by Stripe." : "Online payments are being configured."}
       </p>
 
       <div className="mt-8">
         <PricingTabs
+          initialTab={initialTab}
+          servicesPanel={
+            <div>
+              <div className="grid gap-5 lg:grid-cols-2">
+                {Object.values(SERVICE_PLANS).map((plan) => (
+                  <div
+                    key={plan.tier}
+                    className={plan.tier === "PRO" ? "rounded-card border-2 border-pine bg-white p-7" : "card p-7"}
+                  >
+                    {plan.tier === "PRO" && <span className="chip chip-active mb-3">Priority placement</span>}
+                    <h2 className="text-[24px]">{plan.name}</h2>
+                    <p className="mt-2 flex items-baseline gap-1.5">
+                      <span className="font-display text-[34px]">{money(plan.monthly)}</span>
+                      <span className="text-[15px] text-ink-soft">per month</span>
+                    </p>
+                    <p className="mt-1 text-[14px] text-pine-dark">{SERVICE_TRIAL_DAYS}-day free trial for new businesses</p>
+
+                    <ul className="mt-5 space-y-2.5 text-[15px]">
+                      {plan.features.map((feature) => <Feature key={feature}>{feature}</Feature>)}
+                      <Feature>Secure subscription checkout, invoices and cancellation</Feature>
+                    </ul>
+
+                    <Link
+                      href={serviceBusiness ? "/service-provider/plan" : "/register?type=SERVICE_PROVIDER"}
+                      className={plan.tier === "PRO" ? "btn-primary mt-7 w-full" : "btn-secondary mt-7 w-full"}
+                    >
+                      {serviceBusiness ? `Choose ${plan.name}` : `Start ${SERVICE_TRIAL_DAYS}-day free trial`}
+                    </Link>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-card border border-line bg-white p-6">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-pine-dark">Provider Services</p>
+                <h2 className="mt-1 text-[20px]">Advertise to the providers who need your trade</h2>
+                <p className="mt-2 max-w-[68ch] text-[15px] leading-relaxed text-ink-soft">
+                  Gas and electrical safety, void cleans, repairs, furniture packs and more. Your adverts appear in
+                  Provider Services, where paying accommodation providers message you and send quote requests.
+                  Every business is checked before its adverts go live.
+                </p>
+                <Link href="/advertise-services" className="btn-ghost mt-3 px-0">How Provider Services works →</Link>
+              </div>
+            </div>
+          }
           providerPanel={
             <div className="grid gap-5 lg:grid-cols-3">
               {plans.map((plan) => (
