@@ -100,7 +100,7 @@ export function ConversationMenu({
           <button
             role="menuitem"
             disabled={pending}
-            className="block w-full rounded-[8px] px-3 py-2 text-left text-[14px] text-clay-dark hover:bg-clay-light disabled:opacity-60"
+            className="block w-full rounded-[8px] px-3 py-2 text-left text-[14px] text-clay hover:bg-clay-light disabled:opacity-60"
             onClick={() => {
               setOpen(false);
               if (blocked) toggleBlock();
