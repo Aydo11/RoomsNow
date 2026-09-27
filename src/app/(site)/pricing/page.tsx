@@ -46,7 +46,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
           initialTab={initialTab}
           servicesPanel={
             <div>
-              <div className="grid gap-5 lg:grid-cols-2">
+              <div className="grid gap-5 lg:grid-cols-3">
                 {Object.values(SERVICE_PLANS).map((plan) => (
                   <div
                     key={plan.tier}
@@ -55,21 +55,23 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                     {plan.tier === "PRO" && <span className="chip chip-active mb-3">Priority placement</span>}
                     <h2 className="text-[24px]">{plan.name}</h2>
                     <p className="mt-2 flex items-baseline gap-1.5">
-                      <span className="font-display text-[34px]">{money(plan.monthly)}</span>
-                      <span className="text-[15px] text-ink-soft">per month</span>
+                      <span className="font-display text-[34px]">{plan.monthly === 0 ? "Free" : money(plan.monthly)}</span>
+                      {plan.monthly > 0 && <span className="text-[15px] text-ink-soft">per month</span>}
                     </p>
-                    <p className="mt-1 text-[14px] text-pine-dark">{SERVICE_TRIAL_DAYS}-day free trial for new businesses</p>
+                    <p className="mt-1 text-[14px] text-pine-dark">
+                      {plan.monthly === 0 ? "No card needed. Upgrade any time." : `${SERVICE_TRIAL_DAYS}-day free trial for new businesses`}
+                    </p>
 
                     <ul className="mt-5 space-y-2.5 text-[15px]">
-                      {plan.features.map((feature) => <Feature key={feature}>{feature}</Feature>)}
-                      <Feature>Secure subscription checkout, invoices and cancellation</Feature>
+                      {plan.features.map((feature) => <Feature key={feature} enabled={!feature.startsWith("No ")}>{feature}</Feature>)}
+                      {plan.monthly > 0 && <Feature>Secure subscription checkout, invoices and cancellation</Feature>}
                     </ul>
 
                     <Link
                       href={serviceBusiness ? "/service-provider/plan" : "/register?type=SERVICE_PROVIDER"}
                       className={plan.tier === "PRO" ? "btn-primary mt-7 w-full" : "btn-secondary mt-7 w-full"}
                     >
-                      {serviceBusiness ? `Choose ${plan.name}` : `Start ${SERVICE_TRIAL_DAYS}-day free trial`}
+                      {serviceBusiness ? `Choose ${plan.name}` : plan.monthly === 0 ? "Start free" : `Start ${SERVICE_TRIAL_DAYS}-day free trial`}
                     </Link>
                   </div>
                 ))}
