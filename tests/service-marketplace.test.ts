@@ -106,11 +106,14 @@ test("service subscriptions: trials end, cancelled plans stop, limits are enforc
   assert.equal(canSubmitAnotherAdvert(null, 0, now).ok, false);
 });
 
-test("an advert is public only when active, approved and paid for", () => {
+test("an advert is public when active and on a plan; verification is optional", () => {
   const paid = { tier: "STANDARD" as const, status: "ACTIVE", trialEndsAt: null };
   assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "APPROVED" }, paid, now), true);
-  assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "PENDING_REVIEW" }, paid, now), false);
+  assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "ONBOARDING" }, paid, now), true);
+  assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "PENDING_REVIEW" }, paid, now), true);
+  assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "ONBOARDING" }, { tier: "FREE" as const, status: "ACTIVE", trialEndsAt: null }, now), true);
   assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "SUSPENDED" }, paid, now), false);
+  assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "REJECTED" }, paid, now), false);
   assert.equal(isAdvertPublic({ status: "PENDING_REVIEW" }, { status: "APPROVED" }, paid, now), false);
   assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "APPROVED" }, { ...paid, status: "CANCELLED" }, now), false);
   assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "APPROVED" }, { ...paid, status: "TRIALING", trialEndsAt: days(-1) }, now), false);
@@ -212,6 +215,12 @@ test("ranking: boosts and sponsored placements lead only relevant filtered resul
   assert.equal(filtered[1].sponsored, true);
   assert.equal(filtered[2].id, "pro");
   assert.equal(filtered.filter((row) => row.promoted).length, 1);
+
+  // Verified businesses lead organic results, even ahead of an unverified Pro.
+  const unverifiedPro = advert("upro", {}, { tier: "PRO", verified: false });
+  const verifiedStandard = advert("vstd");
+  const organic = rankAdverts([unverifiedPro, verifiedStandard], {}, "2026-10-05", now);
+  assert.deepEqual(organic.map((row) => row.id), ["vstd", "upro"]);
 
   const unfiltered = rankAdverts(all, {}, "2026-10-05", now);
   assert.equal(unfiltered.some((row) => row.promoted), false);
