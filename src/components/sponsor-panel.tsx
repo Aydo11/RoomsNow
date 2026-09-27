@@ -70,7 +70,7 @@ export function SponsorPanel({
               </p>
             </div>
             <button
-              className="btn-ghost text-clay-dark"
+              className="btn-ghost text-clay"
               disabled={pending}
               onClick={() =>
                 startTransition(async () => {
