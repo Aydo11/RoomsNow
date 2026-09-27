@@ -100,7 +100,7 @@ export function SaveListingIcon({ listingId, title, saved: initial, canSave }: L
   );
 }
 
-const iconButtonBase = "grid h-10 w-10 shrink-0 place-items-center rounded-full border shadow-card transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60";
+const iconButtonBase = "grid h-10 w-10 shrink-0 place-items-center rounded-full border shadow-raise transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60";
 const iconButtonResting = "border-white/80 bg-white/95 text-ink hover:bg-blue-50 hover:text-brand";
 
 function HeartIcon({ filled }: { filled: boolean }) {
