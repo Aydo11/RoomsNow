@@ -16,8 +16,8 @@ const gbp = (pence: number) => `£${(pence / 100).toLocaleString("en-GB", { maxi
 
 const STEPS = [
   ["Create your business profile", "Tell providers what you do, where you work and how you price. It takes about ten minutes."],
-  ["Get verified", "Upload your public liability insurance and proof of incorporation. Our team checks them, usually within two working days."],
-  ["Publish your adverts", "Each advert is reviewed before it goes live, so providers only see checked businesses."],
+  ["Publish your adverts", "Each advert is reviewed by our team before it goes live, usually within a working day."],
+  ["Get verified (optional)", "Upload your public liability insurance and proof of incorporation. Verified businesses get a badge and show higher in results."],
   ["Receive quote requests", "Paying providers message you and send structured quote requests. You reply, quote and agree the job directly."],
 ] as const;
 
