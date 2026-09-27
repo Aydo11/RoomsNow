@@ -50,6 +50,12 @@ export function ListingCard({
       : `/listings/${listing.id}`;
   const available = listing.rooms.filter((r) => r.status === "AVAILABLE").length;
   const verified = listing.company.verification === "APPROVED";
+  const now = Date.now();
+  const vettedSchemes = [...new Set(
+    (listing.company.accreditations ?? [])
+      .filter((item) => !item.expiresAt || new Date(item.expiresAt).getTime() >= now)
+      .map((item) => item.scheme),
+  )];
 
   return (
     <article
@@ -101,6 +107,15 @@ export function ListingCard({
               <span className="inline-flex items-center gap-1 rounded-pill bg-pine/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-white"><LightningIcon /> Boosted now</span>
             ) : activelySponsored ? <FeaturedBadge /> : null}
             {verified && <VerifiedBadge compact />}
+            {vettedSchemes.length > 0 && (
+              <span
+                className="inline-flex items-center gap-1 rounded-pill bg-white/95 px-2.5 py-1 text-[12px] font-semibold text-pine-dark"
+                title={`${vettedSchemes.join(" and ")} accreditation checked by RoomsNow`}
+              >
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true"><path d="M8 1 2.5 3.2v4.2c0 3.3 2.3 6.2 5.5 7.1 3.2-.9 5.5-3.8 5.5-7.1V3.2L8 1Zm-1 9.6L4.6 8.2l1-1L7 8.6l3.4-3.4 1 1L7 10.6Z" /></svg>
+                Vetted · {vettedSchemes.join("/")}
+              </span>
+            )}
             {available > 0 && (
               <span className="rounded-pill bg-white/95 px-2.5 py-1 text-[12px] font-medium text-pine-dark">
                 {available} room{available === 1 ? "" : "s"} available
