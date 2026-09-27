@@ -9,6 +9,8 @@ import {
   SERVICE_BOOSTS,
   SERVICE_PLANS,
   SERVICE_TRIAL_DAYS,
+  serviceSubscriptionActive,
+  type PaidServicePlanTier,
   type ServiceBoostKey,
   type ServicePlanTierValue,
 } from "./service-marketplace";
@@ -38,9 +40,35 @@ async function serviceCustomer(businessId: string) {
 
 /** One free trial per business, ever. */
 export async function trialAvailable(businessId: string) {
-  const row = await db.serviceSubscription.findUnique({ where: { businessId }, select: { status: true, externalSubscriptionId: true, trialEndsAt: true } });
-  // An abandoned first checkout leaves an INCOMPLETE placeholder; that doesn't use the trial up.
-  return !row || (row.status === "INCOMPLETE" && !row.externalSubscriptionId && !row.trialEndsAt);
+  const row = await db.serviceSubscription.findUnique({ where: { businessId }, select: { tier: true, status: true, externalSubscriptionId: true, trialEndsAt: true } });
+  // An abandoned first checkout leaves an INCOMPLETE placeholder, and the Free
+  // plan never touches Stripe; neither uses the paid trial up.
+  return !row || ((row.status === "INCOMPLETE" || row.tier === "FREE") && !row.externalSubscriptionId && !row.trialEndsAt);
+}
+
+export type FreePlanResult = { ok: true } | { ok: false; reason: "paid_active" | "too_many_adverts" };
+
+/**
+ * Moves a business onto Marketplace Free. No payment and no Stripe involved.
+ * Refused while a paid plan is still running (cancel it first, it ends at the
+ * period end), and when more adverts are live than Free allows.
+ */
+export async function activateFreeServicePlan(businessId: string, liveAdverts: number): Promise<FreePlanResult> {
+  const row = await db.serviceSubscription.findUnique({ where: { businessId } });
+  if (row && row.tier !== "FREE" && serviceSubscriptionActive(row)) return { ok: false, reason: "paid_active" };
+  if (liveAdverts > SERVICE_PLANS.FREE.maxAdverts) return { ok: false, reason: "too_many_adverts" };
+  const data = {
+    tier: "FREE" as const,
+    status: "ACTIVE" as const,
+    billingProvider: "free",
+    trialEndsAt: row?.trialEndsAt ?? null,
+    currentPeriodEnd: null,
+    cancelAtPeriodEnd: false,
+    externalSubscriptionId: null,
+    boostCredits: 0,
+  };
+  await db.serviceSubscription.upsert({ where: { businessId }, create: { businessId, ...data }, update: data });
+  return { ok: true };
 }
 
 export async function applyServicePlan(params: {
@@ -77,7 +105,7 @@ export async function applyServicePlan(params: {
 }
 
 /** The Stripe catalogue entry for a trades and suppliers (Provider Services) plan. */
-export function servicePlanCatalogue(tier: ServicePlanTierValue): CataloguePlan {
+export function servicePlanCatalogue(tier: PaidServicePlanTier): CataloguePlan {
   const plan = SERVICE_PLANS[tier];
   return {
     key: `services_${tier.toLowerCase()}`,
@@ -87,7 +115,7 @@ export function servicePlanCatalogue(tier: ServicePlanTierValue): CataloguePlan 
   };
 }
 
-export async function startServicePlanCheckout(params: { businessId: string; tier: ServicePlanTierValue; successUrl: string; cancelUrl: string }) {
+export async function startServicePlanCheckout(params: { businessId: string; tier: PaidServicePlanTier; successUrl: string; cancelUrl: string }) {
   const plan = SERVICE_PLANS[params.tier];
   const trial = await trialAvailable(params.businessId);
 
