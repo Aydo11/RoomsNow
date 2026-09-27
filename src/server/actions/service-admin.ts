@@ -16,7 +16,7 @@ import { advertTransitionAllowed } from "@/lib/service-marketplace";
  */
 
 const BUSINESS_DECISIONS = {
-  approve: { status: "APPROVED", title: "You're approved", body: "Your business has passed our checks. Approved adverts are now visible to paying providers." },
+  approve: { status: "APPROVED", title: "You're approved", body: "Your business has passed our checks. Your adverts now carry the Verified badge and show higher in results." },
   changes: { status: "CHANGES_REQUESTED", title: "We need a little more", body: "Please update your documents or profile and send them again." },
   reject: { status: "REJECTED", title: "We couldn't approve your business", body: "Please read the note from our team." },
   suspend: { status: "SUSPENDED", title: "Your business is suspended", body: "Your adverts are hidden while our team looks into this." },
@@ -97,7 +97,7 @@ export async function reviewServiceAdvertAction(_prev: FormState, formData: Form
       to === "ACTIVE"
         ? advert.business.status === "APPROVED"
           ? `${advert.title} is live for paying providers.`
-          : `${advert.title} will go live as soon as your business checks are complete.`
+          : `${advert.title} is live for paying providers. Get your business verified to show higher in results and earn the Verified badge.`
         : `${advert.title}: ${note}`,
     href: `/service-provider/adverts/${advert.id}`,
     email: true,
