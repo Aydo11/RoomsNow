@@ -26,7 +26,7 @@ export default async function ServicePlanPage({ searchParams }: { searchParams: 
   return (
     <DashboardShell
       title="Plan and boosts"
-      subtitle="Your plan decides how many adverts you can run. Adverts only show once your business is verified — you're never charged for visibility you can't get."
+      subtitle="Your plan decides how many adverts you can run. Every advert is checked by our team before it goes live, and verified businesses show higher in results."
       nav={nav}
       active="/service-provider/plan"
     >
@@ -34,7 +34,7 @@ export default async function ServicePlanPage({ searchParams }: { searchParams: 
       {result === "cancelled" && <p className="mb-5 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft" role="status">Checkout cancelled. Nothing was charged.</p>}
       {boostResult === "complete" && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">Boost credits added to your account.</p>}
       {boostResult === "cancelled" && <p className="mb-5 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft" role="status">Boost checkout cancelled. Nothing was charged.</p>}
-      {result === "free" && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">You&apos;re on Marketplace Free. You can run up to {SERVICE_PLANS.FREE.maxAdverts} adverts once your business is verified.</p>}
+      {result === "free" && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">You&apos;re on Marketplace Free. You can run up to {SERVICE_PLANS.FREE.maxAdverts} live adverts.</p>}
       {result === "cancel-first" && <p className="mb-5 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay" role="alert">You&apos;re still on a paid plan. Cancel it below first — you keep it until the end of the period you&apos;ve paid for, then you can choose Free.</p>}
       {result === "too-many" && <p className="mb-5 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay" role="alert">Free allows {SERVICE_PLANS.FREE.maxAdverts} live adverts. Pause or archive some adverts first, then choose Free.</p>}
 
