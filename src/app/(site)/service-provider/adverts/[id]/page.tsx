@@ -44,7 +44,7 @@ export default async function ServiceAdvertPage({ params, searchParams }: { para
     db.serviceQuoteRequest.count({ where: { advertId: advert.id } }),
     db.serviceFavourite.count({ where: { advertId: advert.id } }),
   ]);
-  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.STANDARD;
+  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.FREE;
   const isPublic = isAdvertPublic(advert, business, business.subscription, now);
   const currentBoost = advert.boosts.find((b) => b.endsAt > now);
   const currentlySponsored = advert.sponsoredUntil && advert.sponsoredUntil > now;
