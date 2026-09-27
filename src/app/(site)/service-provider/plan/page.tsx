@@ -1,10 +1,12 @@
 import { DashboardShell } from "@/components/dashboard-shell";
 import { SubmitButton } from "@/components/ui";
 import { requireServiceBusiness } from "@/server/service-marketplace";
-import { cancelServicePlanAction, openServiceBillingPortalAction, startServicePlanAction } from "@/server/actions/service-business";
+import { buyServiceBoostPackAction, cancelServicePlanAction, openServiceBillingPortalAction, startServicePlanAction } from "@/server/actions/service-business";
 import { trialAvailable } from "@/lib/service-billing";
 import { billingAvailable, billingIsLive } from "@/lib/billing";
-import { SERVICE_BOOSTS, SERVICE_PLANS, SERVICE_TRIAL_DAYS, servicePlanFor } from "@/lib/service-marketplace";
+import { SERVICE_PLANS, SERVICE_TRIAL_DAYS, servicePlanFor } from "@/lib/service-marketplace";
+import { BOOST_PACKAGES } from "@/lib/boost-packages";
+import { SPONSOR_PACKAGES } from "@/lib/sponsor-packages";
 import { money, shortDate } from "@/lib/format";
 import { clsx } from "@/lib/clsx";
 import { serviceProviderNav } from "../nav";
@@ -12,8 +14,8 @@ import { serviceProviderNav } from "../nav";
 export const metadata = { title: "Plan and boosts" };
 export const dynamic = "force-dynamic";
 
-export default async function ServicePlanPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
-  const { plan: result } = await searchParams;
+export default async function ServicePlanPage({ searchParams }: { searchParams: Promise<{ plan?: string; boost_pack?: string }> }) {
+  const { plan: result, boost_pack: boostResult } = await searchParams;
   const { user, business } = await requireServiceBusiness();
   const [nav, trial] = await Promise.all([serviceProviderNav(user.id), trialAvailable(business.id)]);
   const current = servicePlanFor(business.subscription);
@@ -29,6 +31,8 @@ export default async function ServicePlanPage({ searchParams }: { searchParams: 
     >
       {result === "complete" && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">Thanks — your plan is set up.</p>}
       {result === "cancelled" && <p className="mb-5 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft" role="status">Checkout cancelled. Nothing was charged.</p>}
+      {boostResult === "complete" && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">Boost credits added to your account.</p>}
+      {boostResult === "cancelled" && <p className="mb-5 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft" role="status">Boost checkout cancelled. Nothing was charged.</p>}
 
       {current && subscription && (
         <section className="card mb-6 flex flex-wrap items-center justify-between gap-4 p-5">
@@ -76,15 +80,23 @@ export default async function ServicePlanPage({ searchParams }: { searchParams: 
       </div>
       {!payments && <p className="mt-4 text-[14px] text-clay">Payments aren&apos;t switched on yet. Please check back soon.</p>}
 
-      <section className="card mt-6 p-5">
+      <section id="boosts" className="card mt-6 scroll-mt-24 p-5">
         <h2 className="text-[18px]">Boosts</h2>
         <p className="mt-1 max-w-[65ch] text-[14px] text-ink-soft">
-          Put a live advert above matching results, clearly labelled as boosted. Boosts only show when a provider searches your category or area. Buy them from any live
-          advert.
+          Each credit gives one live advert a 24-hour clearly labelled boost. Supplier prices now match accommodation adverts, and purchased credits do not expire.
         </p>
-        <ul className="mt-3 flex flex-wrap gap-2 text-[14px]">
-          {Object.values(SERVICE_BOOSTS).map((pack) => <li key={pack.key} className="chip">{pack.days} days · {money(pack.amount)}</li>)}
-        </ul>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {Object.entries(BOOST_PACKAGES).map(([key, pack]) => (
+            <form key={key} action={buyServiceBoostPackAction} className="rounded-card border border-line p-4">
+              <input type="hidden" name="pack" value={key} />
+              <p className="font-semibold">{pack.label}</p><p className="mt-1 text-[20px] font-bold">{money(pack.amount)}</p>
+              <SubmitButton className="btn-secondary mt-3 w-full" disabled={!payments} pendingLabel="Opening…">Buy credits</SubmitButton>
+            </form>
+          ))}
+        </div>
+        <h3 className="mt-6 text-[17px]">Longer sponsored placements</h3>
+        <p className="mt-1 text-[14px] text-ink-soft">Choose a sponsored period from a live advert. Sponsored adverts are always labelled and only appear for relevant searches.</p>
+        <ul className="mt-3 flex flex-wrap gap-2 text-[14px]">{Object.values(SPONSOR_PACKAGES).map((pack) => <li key={pack.label} className="chip">{pack.label} · {money(pack.amount)}</li>)}</ul>
       </section>
     </DashboardShell>
   );

@@ -1761,6 +1761,7 @@ model ServiceBusiness {
   quotes        ServiceQuoteRequest[]
   reviews       ServiceReview[]
   boosts        ServiceBoost[]
+  promotionPurchases ServicePromotionPurchase[]
   events        ServiceEvent[]
   conversations Conversation[]
 
@@ -1842,16 +1843,23 @@ model ServiceAdvert {
   reviewedById   String?
   views          Int                 @default(0)
   enquiries      Int                 @default(0)
+  /// Labelled paid placement in matching Provider Services results.
+  sponsoredUntil DateTime?
+  sponsoredBid   Int                 @default(0)
+  sponsoredImpressions Int           @default(0)
+  sponsoredClicks Int                @default(0)
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
 
-  boosts        ServiceBoost[]
-  quotes        ServiceQuoteRequest[]
-  favourites    ServiceFavourite[]
-  conversations Conversation[]
+  boosts             ServiceBoost[]
+  promotionPurchases ServicePromotionPurchase[]
+  quotes             ServiceQuoteRequest[]
+  favourites         ServiceFavourite[]
+  conversations      Conversation[]
 
   @@index([status, category])
   @@index([businessId, status])
+  @@index([status, sponsoredUntil, sponsoredBid])
 }
 
 model ServiceBoost {
@@ -1873,6 +1881,26 @@ model ServiceBoost {
 
   @@index([advertId, endsAt])
   @@index([endsAt])
+}
+
+/// Idempotent ledger for supplier boost-pack and sponsored-placement purchases.
+model ServicePromotionPurchase {
+  id                String          @id @default(cuid())
+  businessId        String
+  business          ServiceBusiness @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  advertId          String?
+  advert            ServiceAdvert?  @relation(fields: [advertId], references: [id], onDelete: SetNull)
+  /// BOOST_PACK | SPONSORED
+  kind              String
+  pack              String
+  credits           Int             @default(0)
+  days              Int             @default(0)
+  amount            Int
+  externalPaymentId String          @unique
+  createdAt         DateTime        @default(now())
+
+  @@index([businessId, kind, createdAt])
+  @@index([advertId, kind, createdAt])
 }
 
 model ServiceQuoteRequest {

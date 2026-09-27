@@ -4,10 +4,10 @@ import { activateSponsorship, applyReferrerSubscriptionChange, applySubscription
 import { db } from "@/lib/db";
 import { notify, notifyCompany } from "@/lib/notify";
 import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
-import type { SponsorPackage } from "@/lib/sponsor-packages";
+import { isSponsorPackage, SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import { BOOST_PACKAGES, isBoostPack } from "@/lib/boost-packages";
 import { audit } from "@/lib/audit";
-import { activateServiceBoost, applyServicePlan } from "@/lib/service-billing";
+import { activateServiceBoost, activateServiceSponsorship, applyServicePlan, grantServiceBoostPack } from "@/lib/service-billing";
 import { isServiceBoostKey, isServicePlanTier, SERVICE_BOOSTS } from "@/lib/service-marketplace";
 
 export const runtime = "nodejs";
@@ -91,6 +91,23 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
       source: "PURCHASE",
       externalPaymentId: `checkout:${session.id}`,
     });
+    return;
+  }
+
+  if (kind === "service_boost_pack") {
+    const businessId = session.metadata?.businessId;
+    const pack = session.metadata?.pack;
+    if (!businessId || !isBoostPack(pack)) return;
+    await grantServiceBoostPack({ businessId, pack, amount: session.amount_total ?? BOOST_PACKAGES[pack].amount, externalPaymentId: `checkout:${session.id}` });
+    return;
+  }
+
+  if (kind === "service_sponsorship") {
+    const businessId = session.metadata?.businessId;
+    const advertId = session.metadata?.advertId;
+    const pack = session.metadata?.pack;
+    if (!businessId || !advertId || !isSponsorPackage(pack)) return;
+    await activateServiceSponsorship({ businessId, advertId, pack, amount: session.amount_total ?? SPONSOR_PACKAGES[pack].amount, externalPaymentId: `checkout:${session.id}` });
     return;
   }
 

@@ -45,6 +45,8 @@ function advert(id: string, overrides: Partial<RankableAdvert> = {}, business: P
     sameDay: false,
     publishedAt: now,
     boostedUntil: null,
+    sponsoredUntil: null,
+    sponsoredBid: 0,
     ...overrides,
     business: {
       id: `b-${id}`,
@@ -195,21 +197,25 @@ test("filters: category, verified, emergency, rating, price and keywords", () =>
   assert.ok(!matchesFilters(a, { q: "pest" }));
 });
 
-test("ranking: boosts go first only when filters are set, then Pro, then fair rotation", () => {
+test("ranking: boosts and sponsored placements lead only relevant filtered results", () => {
   const boosted = advert("boost", { boostedUntil: days(3) });
+  const sponsored = advert("sponsored", { sponsoredUntil: days(30), sponsoredBid: 2 });
   const expired = advert("expired", { boostedUntil: days(-1) });
   const pro = advert("pro", {}, { tier: "PRO" });
   const plain = [advert("s1"), advert("s2"), advert("s3")];
-  const all = [...plain, expired, pro, boosted];
+  const all = [...plain, expired, pro, sponsored, boosted];
 
   const filtered = rankAdverts(all, { category: "gas-heating" }, "2026-10-05", now);
   assert.equal(filtered[0].id, "boost");
   assert.equal(filtered[0].promoted, true);
-  assert.equal(filtered[1].id, "pro");
+  assert.equal(filtered[1].id, "sponsored");
+  assert.equal(filtered[1].sponsored, true);
+  assert.equal(filtered[2].id, "pro");
   assert.equal(filtered.filter((row) => row.promoted).length, 1);
 
   const unfiltered = rankAdverts(all, {}, "2026-10-05", now);
   assert.equal(unfiltered.some((row) => row.promoted), false);
+  assert.equal(unfiltered.some((row) => row.sponsored), false);
   assert.equal(unfiltered[0].id, "pro");
 
   // Same seed, same order; different seed, organic order can change but every advert stays.

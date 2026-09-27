@@ -145,6 +145,8 @@ export async function loadPublicAdverts(now = new Date()): Promise<MarketAdvert[
         sameDay: row.sameDay,
         publishedAt: row.publishedAt,
         boostedUntil: row.boosts[0]?.endsAt ?? null,
+        sponsoredUntil: row.sponsoredUntil,
+        sponsoredBid: row.sponsoredBid,
         business: {
           id: row.business.id,
           slug: row.business.slug,

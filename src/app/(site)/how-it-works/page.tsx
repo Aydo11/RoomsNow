@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: "How It Works | Finding & Advertising HMO Rooms and Supported Accommodation",
-  description: "How RoomsNow works for people looking for a room, HMO or supported accommodation, for providers advertising vacancies, and for professionals making referrals.",
+  description: "How RoomsNow works for people looking for housing, accommodation providers, professional referrers, and verified trades and service suppliers.",
   path: "/how-it-works",
 });
 
@@ -39,6 +39,16 @@ const AUDIENCES = [
     ],
     cta: ["Make a referral", "/register?type=REFERRER"],
   },
+  {
+    who: "If you supply services to accommodation providers",
+    steps: [
+      ["Create a supplier account", "Set up your business profile with your service categories, coverage areas, contact details, website, logo and examples of completed work."],
+      ["Complete our business checks", "Upload incorporation or sole-trader evidence, public liability insurance and relevant qualifications. Checks are completed manually before your business is marked verified."],
+      ["Advertise your services", "Create detailed adverts for cleaning, maintenance, compliance, fire safety, waste removal and other services, with pricing, availability, photos and qualifications."],
+      ["Quote, message and track jobs", "Paid accommodation providers can request quotes and message you. Track enquiries through to completion, upload completed-job photos and build reviews from verified work."],
+    ],
+    cta: ["Advertise your services", "/advertise-services"],
+  },
 ];
 
 export default function HowItWorksPage() {
@@ -48,7 +58,7 @@ export default function HowItWorksPage() {
       <p className="mt-3 max-w-[62ch] text-[17px] leading-relaxed text-ink-soft">
         One marketplace for a broad range of housing: HMOs, supported and transitional
         accommodation, adult social care housing, shared homes and self-contained properties.
-        People can find accommodation, providers can advertise vacancies, and professionals can refer clients.
+        People can find accommodation, providers can advertise vacancies, professionals can refer clients, and verified suppliers can offer services to housing organisations.
       </p>
 
       <div className="mt-12 space-y-12">

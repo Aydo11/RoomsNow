@@ -4,10 +4,12 @@ import { db } from "@/lib/db";
 import { DashboardShell, StatCard } from "@/components/dashboard-shell";
 import { ServiceAdvertForm, ServiceAdvertStatusButtons } from "@/components/service-forms";
 import { AdvertStatusPill, BoostedLabel } from "@/components/service-ui";
+import { FeaturedBadge } from "@/components/badges";
 import { SubmitButton } from "@/components/ui";
 import { requireServiceBusiness } from "@/server/service-marketplace";
-import { boostServiceAdvertAction } from "@/server/actions/service-business";
-import { canSubmitAnotherAdvert, COUNTED_ADVERT_STATUSES, isAdvertPublic, SERVICE_BOOSTS, SERVICE_PLANS, servicePlanFor } from "@/lib/service-marketplace";
+import { boostServiceAdvertAction, sponsorServiceAdvertAction } from "@/server/actions/service-business";
+import { canSubmitAnotherAdvert, COUNTED_ADVERT_STATUSES, isAdvertPublic, SERVICE_PLANS, servicePlanFor } from "@/lib/service-marketplace";
+import { SPONSOR_PACKAGES } from "@/lib/sponsor-packages";
 import { money, shortDate } from "@/lib/format";
 import { serviceProviderNav } from "../../nav";
 
@@ -21,8 +23,14 @@ const BOOST_MESSAGES: Record<string, string> = {
   unavailable: "Only live adverts can be boosted.",
 };
 
-export default async function ServiceAdvertPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ boost?: string }> }) {
-  const [{ id }, { boost }] = await Promise.all([params, searchParams]);
+const SPONSOR_MESSAGES: Record<string, string> = {
+  complete: "Sponsored placement active. Your advert can now appear in the sponsored section of matching results.",
+  cancelled: "Checkout cancelled — nothing was charged.",
+  unavailable: "Only live adverts can be sponsored.",
+};
+
+export default async function ServiceAdvertPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ boost?: string; sponsored?: string }> }) {
+  const [{ id }, { boost, sponsored }] = await Promise.all([params, searchParams]);
   const { user, business } = await requireServiceBusiness();
   const now = new Date();
   const advert = await db.serviceAdvert.findFirst({
@@ -39,6 +47,7 @@ export default async function ServiceAdvertPage({ params, searchParams }: { para
   const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.STANDARD;
   const isPublic = isAdvertPublic(advert, business, business.subscription, now);
   const currentBoost = advert.boosts.find((b) => b.endsAt > now);
+  const currentlySponsored = advert.sponsoredUntil && advert.sponsoredUntil > now;
   const credits = business.subscription?.boostCredits ?? 0;
 
   return (
@@ -51,6 +60,7 @@ export default async function ServiceAdvertPage({ params, searchParams }: { para
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <AdvertStatusPill status={advert.status} />
         {currentBoost && <BoostedLabel />}
+        {currentlySponsored && <FeaturedBadge />}
         {advert.status === "ACTIVE" && !isPublic && <span className="text-[13px] text-clay">Approved, but hidden until your business is approved and your plan is active.</span>}
         {advert.status === "ACTIVE" && isPublic && <span className="text-[13px] text-pine-dark">Visible to paying providers</span>}
       </div>
@@ -61,6 +71,7 @@ export default async function ServiceAdvertPage({ params, searchParams }: { para
         </div>
       )}
       {boost && BOOST_MESSAGES[boost] && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">{BOOST_MESSAGES[boost]}</p>}
+      {sponsored && SPONSOR_MESSAGES[sponsored] && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">{SPONSOR_MESSAGES[sponsored]}</p>}
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard compact label="Views" value={advert.views} />
@@ -75,8 +86,7 @@ export default async function ServiceAdvertPage({ params, searchParams }: { para
         <section className="card mb-6 p-5" aria-labelledby="boost-heading">
           <h2 id="boost-heading" className="text-[18px]">Boost this advert</h2>
           <p className="mt-1 max-w-[65ch] text-[14px] text-ink-soft">
-            Boosted adverts appear above organic results — clearly labelled — when a provider searches for your category or one of your areas. A new boost starts
-            when any current one ends.
+            Boosted adverts appear above matching results for 24 hours and are clearly labelled. A new boost starts when any current one ends.
             {currentBoost && ` Currently boosted until ${shortDate(currentBoost.endsAt)} (${currentBoost.impressions} top-slot views, ${currentBoost.clicks} clicks).`}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -84,14 +94,27 @@ export default async function ServiceAdvertPage({ params, searchParams }: { para
               <form action={boostServiceAdvertAction}>
                 <input type="hidden" name="advertId" value={advert.id} />
                 <input type="hidden" name="pack" value="CREDIT" />
-                <SubmitButton className="btn-primary" pendingLabel="Boosting…">Use a credit — 7 days ({credits} left)</SubmitButton>
+                <SubmitButton className="btn-primary" pendingLabel="Boosting…">Use 1 credit — 24 hours ({credits} left)</SubmitButton>
               </form>
             )}
-            {Object.values(SERVICE_BOOSTS).map((pack) => (
-              <form key={pack.key} action={boostServiceAdvertAction}>
+            <Link href="/service-provider/plan#boosts" className="btn-secondary">Buy boost credits</Link>
+          </div>
+        </section>
+      )}
+
+      {isPublic && advert.status === "ACTIVE" && (
+        <section className="card mb-6 p-5" aria-labelledby="sponsor-heading">
+          <h2 id="sponsor-heading" className="text-[18px]">Sponsor this advert</h2>
+          <p className="mt-1 max-w-[65ch] text-[14px] text-ink-soft">
+            Secure a longer clearly labelled sponsored placement in relevant category and area searches.
+            {currentlySponsored && ` Active until ${shortDate(advert.sponsoredUntil)} (${advert.sponsoredImpressions} views, ${advert.sponsoredClicks} clicks).`}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {Object.entries(SPONSOR_PACKAGES).map(([key, pack]) => (
+              <form key={key} action={sponsorServiceAdvertAction}>
                 <input type="hidden" name="advertId" value={advert.id} />
-                <input type="hidden" name="pack" value={pack.key} />
-                <SubmitButton className="btn-secondary" pendingLabel="Opening checkout…">{pack.days} days · {money(pack.amount)}</SubmitButton>
+                <input type="hidden" name="pack" value={key} />
+                <SubmitButton className="btn-secondary" pendingLabel="Opening checkout…">{pack.label} · {money(pack.amount)}</SubmitButton>
               </form>
             ))}
           </div>

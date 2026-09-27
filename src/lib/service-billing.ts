@@ -14,6 +14,8 @@ import {
 } from "./service-marketplace";
 import type { SubscriptionStatus } from "@prisma/client";
 import { cataloguePriceId, type CataloguePlan } from "./stripe-catalogue";
+import { BOOST_PACKAGES, type BoostPack } from "./boost-packages";
+import { SPONSOR_PACKAGES, type SponsorPackage } from "./sponsor-packages";
 
 /**
  * Billing for service businesses. Kept apart from the accommodation membership
@@ -204,7 +206,76 @@ export async function startServiceBoostCheckout(params: { businessId: string; ad
   return withParam(params.successUrl, "boost=complete");
 }
 
-/** Spend one included credit on a 7-day boost. The credit is taken atomically first. */
+/** Add prepaid 24-hour boost credits. Idempotent for webhook replays. */
+export async function grantServiceBoostPack(params: { businessId: string; pack: BoostPack; amount: number; externalPaymentId: string }) {
+  const pack = BOOST_PACKAGES[params.pack];
+  if (await db.servicePromotionPurchase.findUnique({ where: { externalPaymentId: params.externalPaymentId }, select: { id: true } })) return null;
+  return db.$transaction(async (tx) => {
+    const purchase = await tx.servicePromotionPurchase.create({
+      data: { businessId: params.businessId, kind: "BOOST_PACK", pack: params.pack, credits: pack.credits, amount: params.amount, externalPaymentId: params.externalPaymentId },
+    });
+    await tx.serviceSubscription.update({ where: { businessId: params.businessId }, data: { boostCredits: { increment: pack.credits } } });
+    return purchase;
+  });
+}
+
+export async function startServiceBoostPackCheckout(params: { businessId: string; pack: BoostPack; successUrl: string; cancelUrl: string }) {
+  const pack = BOOST_PACKAGES[params.pack];
+  if (billingIsLive()) {
+    const customer = await serviceCustomer(params.businessId);
+    const metadata = { kind: "service_boost_pack", businessId: params.businessId, pack: params.pack };
+    const session = await stripe().checkout.sessions.create({
+      mode: "payment", customer,
+      line_items: [{ quantity: 1, price_data: { currency: "gbp", unit_amount: pack.amount, product_data: { name: `RoomsNow ${pack.label}`, description: "Prepaid 24-hour advert boost credits for Provider Services." } } }],
+      success_url: withParam(params.successUrl, "boost_pack=complete&session_id={CHECKOUT_SESSION_ID}"),
+      cancel_url: withParam(params.cancelUrl, "boost_pack=cancelled"),
+      client_reference_id: params.businessId, metadata, payment_intent_data: { metadata },
+    });
+    if (!session.url) throw new Error("Stripe did not return a checkout page.");
+    return session.url;
+  }
+  if (!billingAvailable()) throw new Error("Payments are not configured yet.");
+  await grantServiceBoostPack({ businessId: params.businessId, pack: params.pack, amount: pack.amount, externalPaymentId: `mock-service-boost-pack-${Date.now()}` });
+  return withParam(params.successUrl, "boost_pack=complete");
+}
+
+/** Apply a labelled sponsored placement to a supplier advert. */
+export async function activateServiceSponsorship(params: { businessId: string; advertId: string; pack: SponsorPackage; amount: number; externalPaymentId: string }) {
+  const pack = SPONSOR_PACKAGES[params.pack];
+  if (await db.servicePromotionPurchase.findUnique({ where: { externalPaymentId: params.externalPaymentId }, select: { id: true } })) return null;
+  const advert = await db.serviceAdvert.findFirst({ where: { id: params.advertId, businessId: params.businessId }, select: { sponsoredUntil: true, sponsoredBid: true } });
+  if (!advert) throw new Error("Advert not found.");
+  const now = new Date();
+  const startsAt = advert.sponsoredUntil && advert.sponsoredUntil > now ? advert.sponsoredUntil : now;
+  const sponsoredUntil = new Date(startsAt.getTime() + pack.days * 24 * 60 * 60 * 1000);
+  return db.$transaction(async (tx) => {
+    const purchase = await tx.servicePromotionPurchase.create({ data: { businessId: params.businessId, advertId: params.advertId, kind: "SPONSORED", pack: params.pack, days: pack.days, amount: params.amount, externalPaymentId: params.externalPaymentId } });
+    await tx.serviceAdvert.update({ where: { id: params.advertId }, data: { sponsoredUntil, sponsoredBid: Math.max(advert.sponsoredBid, pack.bid) } });
+    return purchase;
+  });
+}
+
+export async function startServiceSponsorCheckout(params: { businessId: string; advertId: string; pack: SponsorPackage; successUrl: string; cancelUrl: string }) {
+  const pack = SPONSOR_PACKAGES[params.pack];
+  if (billingIsLive()) {
+    const customer = await serviceCustomer(params.businessId);
+    const metadata = { kind: "service_sponsorship", businessId: params.businessId, advertId: params.advertId, pack: params.pack };
+    const session = await stripe().checkout.sessions.create({
+      mode: "payment", customer,
+      line_items: [{ quantity: 1, price_data: { currency: "gbp", unit_amount: pack.amount, product_data: { name: `RoomsNow sponsored supplier advert — ${pack.label}`, description: "Clearly labelled sponsored placement in matching Provider Services results." } } }],
+      success_url: withParam(params.successUrl, "sponsored=complete&session_id={CHECKOUT_SESSION_ID}"),
+      cancel_url: withParam(params.cancelUrl, "sponsored=cancelled"),
+      client_reference_id: params.businessId, metadata, payment_intent_data: { metadata },
+    });
+    if (!session.url) throw new Error("Stripe did not return a checkout page.");
+    return session.url;
+  }
+  if (!billingAvailable()) throw new Error("Payments are not configured yet.");
+  await activateServiceSponsorship({ businessId: params.businessId, advertId: params.advertId, pack: params.pack, amount: pack.amount, externalPaymentId: `mock-service-sponsor-${Date.now()}` });
+  return withParam(params.successUrl, "sponsored=complete");
+}
+
+/** Spend one included credit on a 24-hour boost. The credit is taken atomically first. */
 export async function spendServiceBoostCredit(businessId: string, advertId: string) {
   const taken = await db.serviceSubscription.updateMany({ where: { businessId, boostCredits: { gt: 0 } }, data: { boostCredits: { decrement: 1 } } });
   if (!taken.count) return false;

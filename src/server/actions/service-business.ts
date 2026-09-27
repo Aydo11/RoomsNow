@@ -17,7 +17,6 @@ import {
   canSubmitAnotherAdvert,
   COUNTED_ADVERT_STATUSES,
   isAdvertPublic,
-  isServiceBoostKey,
   isServicePlanTier,
   medianMinutes,
   quoteTransitionAllowed,
@@ -41,9 +40,12 @@ import {
   cancelServicePlan,
   servicePortalUrl,
   spendServiceBoostCredit,
-  startServiceBoostCheckout,
+  startServiceBoostPackCheckout,
+  startServiceSponsorCheckout,
   startServicePlanCheckout,
 } from "@/lib/service-billing";
+import { isBoostPack } from "@/lib/boost-packages";
+import { isSponsorPackage } from "@/lib/sponsor-packages";
 
 // ------------------------------------------------------------------ helpers
 
@@ -409,14 +411,30 @@ export async function boostServiceAdvertAction(formData: FormData) {
   const pack = text(formData, "pack");
   const advert = await db.serviceAdvert.findFirst({ where: { id: advertId, businessId: business.id } });
   if (!advert || !isAdvertPublic(advert, business, business.subscription)) redirect(`/service-provider/adverts/${advertId}?boost=unavailable`);
-  if (pack === "CREDIT") {
-    const spent = await spendServiceBoostCredit(business.id, advert.id);
-    await audit({ actorId: user.id, action: "service_boost.credit_used", targetType: "ServiceAdvert", targetId: advert.id, metadata: { spent } });
-    redirect(`/service-provider/adverts/${advert.id}?boost=${spent ? "complete" : "no-credits"}`);
-  }
-  if (!isServiceBoostKey(pack)) return;
+  if (pack !== "CREDIT") return;
+  const spent = await spendServiceBoostCredit(business.id, advert.id);
+  await audit({ actorId: user.id, action: "service_boost.credit_used", targetType: "ServiceAdvert", targetId: advert.id, metadata: { spent } });
+  redirect(`/service-provider/adverts/${advert.id}?boost=${spent ? "complete" : "no-credits"}`);
+}
+
+export async function buyServiceBoostPackAction(formData: FormData) {
+  const { business } = await requireServiceBusiness();
+  const pack = text(formData, "pack");
+  if (!isBoostPack(pack)) return;
   const base = await appUrl();
-  const url = await startServiceBoostCheckout({ businessId: business.id, advertId: advert.id, pack, successUrl: `${base}/service-provider/adverts/${advert.id}`, cancelUrl: `${base}/service-provider/adverts/${advert.id}` });
+  const url = await startServiceBoostPackCheckout({ businessId: business.id, pack, successUrl: `${base}/service-provider/plan`, cancelUrl: `${base}/service-provider/plan` });
+  redirect(url);
+}
+
+export async function sponsorServiceAdvertAction(formData: FormData) {
+  const { business } = await requireServiceBusiness();
+  const advertId = text(formData, "advertId");
+  const pack = text(formData, "pack");
+  if (!isSponsorPackage(pack)) return;
+  const advert = await db.serviceAdvert.findFirst({ where: { id: advertId, businessId: business.id } });
+  if (!advert || !isAdvertPublic(advert, business, business.subscription)) redirect(`/service-provider/adverts/${advertId}?sponsored=unavailable`);
+  const base = await appUrl();
+  const url = await startServiceSponsorCheckout({ businessId: business.id, advertId: advert.id, pack, successUrl: `${base}/service-provider/adverts/${advert.id}`, cancelUrl: `${base}/service-provider/adverts/${advert.id}` });
   redirect(url);
 }
 

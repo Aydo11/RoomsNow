@@ -113,6 +113,9 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
     shown.some((a) => a.promoted)
       ? db.serviceBoost.updateMany({ where: { advertId: { in: shown.filter((a) => a.promoted).map((a) => a.id) }, startsAt: { lte: new Date() }, endsAt: { gt: new Date() } }, data: { impressions: { increment: 1 } } })
       : null,
+    shown.some((a) => a.sponsored)
+      ? db.serviceAdvert.updateMany({ where: { id: { in: shown.filter((a) => a.sponsored).map((a) => a.id) }, sponsoredUntil: { gt: new Date() } }, data: { sponsoredImpressions: { increment: 1 } } })
+      : null,
     filters.category || filters.location ? recordServiceEvent({ type: "SEARCH", category: filters.category, location: filters.location }) : null,
   ]);
   const saved = new Set(favourites.map((f) => f.advertId));
@@ -214,7 +217,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {shown.map((advert) => (
-                <li key={advert.id}><ServiceAdvertCard advert={advert} promoted={advert.promoted} saved={saved.has(advert.id)} canSave={canAct} /></li>
+                <li key={advert.id}><ServiceAdvertCard advert={advert} promoted={advert.promoted} sponsored={advert.sponsored} saved={saved.has(advert.id)} canSave={canAct} /></li>
               ))}
             </ul>
           )}
@@ -225,7 +228,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
               {page < pages && <Link href={query({ page: String(page + 1) })} className="btn-secondary">Next</Link>}
             </nav>
           )}
-          <p className="mt-6 text-[12.5px] text-ink-faint">Boosted adverts are paid placements and are always labelled. Other results rotate fairly each day.</p>
+          <p className="mt-6 text-[12.5px] text-ink-faint">Boosted and sponsored adverts are paid placements and are always labelled. Other results rotate fairly each day.</p>
           <PaymentsNote className="mt-3" />
         </section>
       </div>

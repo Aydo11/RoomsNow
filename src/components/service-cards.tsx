@@ -5,6 +5,7 @@ import { ServiceFavouriteButton } from "./service-buyer-forms";
 import { categoryLabel, priceLabel, responseLabel, type ServicePreviewCard } from "@/lib/service-marketplace";
 import type { MarketAdvert } from "@/server/service-marketplace";
 import { clsx } from "@/lib/clsx";
+import { FeaturedBadge } from "./badges";
 
 export function ServicesTabs({ active }: { active: "browse" | "saved" | "quotes" }) {
   const tabs = [
@@ -24,13 +25,14 @@ export function ServicesTabs({ active }: { active: "browse" | "saved" | "quotes"
 }
 
 /** Full card — only ever rendered for viewers with full marketplace access. */
-export function ServiceAdvertCard({ advert, promoted, saved, canSave = true }: { advert: MarketAdvert; promoted: boolean; saved: boolean; canSave?: boolean }) {
+export function ServiceAdvertCard({ advert, promoted, sponsored = false, saved, canSave = true }: { advert: MarketAdvert; promoted: boolean; sponsored?: boolean; saved: boolean; canSave?: boolean }) {
   const area = advert.nationwide || advert.business.nationalCoverage ? "Nationwide" : [...new Set([...advert.locations, ...advert.business.areas].map((place) => place.trim()))].slice(0, 3).join(", ");
   const response = responseLabel(advert.business.responseMinutes);
+  const href = `/services/ad/${advert.id}${promoted ? "?from=boost" : sponsored ? "?from=sponsor" : ""}`;
   return (
-    <article className={clsx("card flex flex-col overflow-hidden", promoted && "border-brand/50 shadow-raise")}>
+    <article className={clsx("card flex flex-col overflow-hidden", (promoted || sponsored) && "border-brand/50 shadow-raise")}>
       {advert.image && (
-        <Link href={`/services/ad/${advert.id}${promoted ? "?from=boost" : ""}`} tabIndex={-1} aria-hidden="true">
+        <Link href={href} tabIndex={-1} aria-hidden="true">
           <img src={advert.image} alt="" className="aspect-[16/9] w-full object-cover" loading="lazy" />
         </Link>
       )}
@@ -40,13 +42,14 @@ export function ServiceAdvertCard({ advert, promoted, saved, canSave = true }: {
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] text-ink-soft">{advert.business.displayName}</p>
             <h3 className="text-[16px] leading-snug">
-              <Link href={`/services/ad/${advert.id}${promoted ? "?from=boost" : ""}`} className="hover:underline">{advert.title}</Link>
+              <Link href={href} className="hover:underline">{advert.title}</Link>
             </h3>
           </div>
           {canSave && <ServiceFavouriteButton advertId={advert.id} saved={saved} compact />}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           {promoted && <BoostedLabel />}
+          {sponsored && <FeaturedBadge />}
           {advert.business.verified && <ServiceVerifiedBadge compact />}
           {(advert.emergency || advert.sameDay) && <span className="rounded-pill bg-clay-light px-2 py-0.5 text-[11.5px] font-medium text-clay">{advert.emergency ? "Emergency call-outs" : "Same day"}</span>}
         </div>

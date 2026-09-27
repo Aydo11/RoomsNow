@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/session";
 import { pageMetadata } from "@/lib/seo";
-import { SERVICE_BOOSTS, SERVICE_CATEGORIES, SERVICE_PLANS, SERVICE_TRIAL_DAYS } from "@/lib/service-marketplace";
+import { SERVICE_CATEGORIES, SERVICE_PLANS, SERVICE_TRIAL_DAYS } from "@/lib/service-marketplace";
+import { BOOST_PACKAGES } from "@/lib/boost-packages";
+import { SPONSOR_PACKAGES } from "@/lib/sponsor-packages";
 
 export const metadata = pageMetadata({
   title: "Advertise Your Services to Supported Housing Providers",
@@ -100,18 +102,21 @@ export default async function AdvertiseServicesPage() {
             })}
           </div>
 
-          <h3 className="mt-10 text-[20px]">Boost an advert</h3>
+          <h3 className="mt-10 text-[20px]">Boost or sponsor an advert</h3>
           <p className="mt-1 max-w-[60ch] text-[14.5px] text-ink-soft">
-            Boosted adverts appear above matching results when a provider searches your category or area. They&apos;re always labelled as boosted.
+            Boosts use the same prices as accommodation adverts: every credit gives you 24 hours above matching results. For longer campaigns, sponsor an advert for 7, 30 or 90 days. Every paid placement is clearly labelled.
           </p>
-          <dl className="mt-4 grid max-w-xl grid-cols-3 gap-3">
-            {Object.values(SERVICE_BOOSTS).map((boost) => (
-              <div key={boost.key} className="rounded-card border border-line bg-paper p-4 text-center">
-                <dt className="text-[13px] text-ink-soft">{boost.days} days</dt>
+          <h4 className="mt-4 text-[14px] font-semibold">24-hour boost credits</h4>
+          <dl className="mt-2 grid max-w-xl grid-cols-3 gap-3">
+            {Object.values(BOOST_PACKAGES).map((boost) => (
+              <div key={boost.label} className="rounded-card border border-line bg-paper p-4 text-center">
+                <dt className="text-[13px] text-ink-soft">{boost.label}</dt>
                 <dd className="mt-1 font-display text-[22px] font-bold tabular-nums text-ink">{gbp(boost.amount)}</dd>
               </div>
             ))}
           </dl>
+          <h4 className="mt-5 text-[14px] font-semibold">Sponsored placements</h4>
+          <ul className="mt-2 flex flex-wrap gap-2 text-[14px]">{Object.values(SPONSOR_PACKAGES).map((pack) => <li key={pack.label} className="chip">{pack.label} · {gbp(pack.amount)}</li>)}</ul>
         </div>
       </section>
 

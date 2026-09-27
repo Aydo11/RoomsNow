@@ -168,8 +168,9 @@ export function isServiceBoostKey(value: unknown): value is ServiceBoostKey {
   return value === "WEEK" || value === "MONTH" || value === "QUARTER";
 }
 /** A plan credit buys a 7-day boost. */
-export const CREDIT_BOOST_DAYS = 7;
+export const CREDIT_BOOST_DAYS = 1;
 export const MAX_BOOSTED_SLOTS = 3;
+export const MAX_SPONSORED_SLOTS = 3;
 
 /** A new boost on an advert that's already boosted extends it rather than overlapping. */
 export function boostWindow(currentEnd: Date | null, days: number, now = new Date()) {
@@ -411,6 +412,8 @@ export type RankableAdvert = {
     tier: ServicePlanTierValue;
   };
   boostedUntil: Date | null;
+  sponsoredUntil: Date | null;
+  sponsoredBid: number;
 };
 
 const normalise = (value: string) => value.trim().toLowerCase().replace(/\s+/g, " ");
@@ -490,6 +493,10 @@ export function isBoosted(advert: { boostedUntil: Date | null }, now = new Date(
   return Boolean(advert.boostedUntil && advert.boostedUntil.getTime() > now.getTime());
 }
 
+export function isSponsored(advert: { sponsoredUntil: Date | null }, now = new Date()) {
+  return Boolean(advert.sponsoredUntil && advert.sponsoredUntil.getTime() > now.getTime());
+}
+
 /**
  * Boosts only earn the top slots when the viewer has narrowed to a category
  * or a place, and the advert matches every filter they chose (it already
@@ -500,7 +507,7 @@ export function boostPlacementApplies(filters: ServiceFilters) {
   return Boolean(filters.category || filters.location?.trim());
 }
 
-export type RankedAdvert<T extends RankableAdvert> = T & { promoted: boolean };
+export type RankedAdvert<T extends RankableAdvert> = T & { promoted: boolean; sponsored: boolean };
 
 export function rankAdverts<T extends RankableAdvert>(adverts: T[], filters: ServiceFilters, seed: string, now = new Date()): RankedAdvert<T>[] {
   const sort = filters.sort ?? "recommended";
@@ -523,10 +530,18 @@ export function rankAdverts<T extends RankableAdvert>(adverts: T[], filters: Ser
     ? adverts.filter((advert) => isBoosted(advert, now)).sort(rotate).slice(0, MAX_BOOSTED_SLOTS)
     : [];
   const promotedIds = new Set(promoted.map((advert) => advert.id));
-  const organic = adverts.filter((advert) => !promotedIds.has(advert.id)).sort(comparators[sort]);
+  const sponsored = boostPlacementApplies(filters)
+    ? adverts
+        .filter((advert) => !promotedIds.has(advert.id) && isSponsored(advert, now))
+        .sort((a, b) => b.sponsoredBid - a.sponsoredBid || rotate(a, b))
+        .slice(0, MAX_SPONSORED_SLOTS)
+    : [];
+  const sponsoredIds = new Set(sponsored.map((advert) => advert.id));
+  const organic = adverts.filter((advert) => !promotedIds.has(advert.id) && !sponsoredIds.has(advert.id)).sort(comparators[sort]);
   return [
-    ...promoted.map((advert) => ({ ...advert, promoted: true })),
-    ...organic.map((advert) => ({ ...advert, promoted: false })),
+    ...promoted.map((advert) => ({ ...advert, promoted: true, sponsored: false })),
+    ...sponsored.map((advert) => ({ ...advert, promoted: false, sponsored: true })),
+    ...organic.map((advert) => ({ ...advert, promoted: false, sponsored: false })),
   ];
 }
 

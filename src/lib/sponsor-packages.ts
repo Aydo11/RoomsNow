@@ -9,3 +9,7 @@ export const SPONSOR_PACKAGES = {
 } as const;
 
 export type SponsorPackage = keyof typeof SPONSOR_PACKAGES;
+
+export function isSponsorPackage(value: string | undefined): value is SponsorPackage {
+  return !!value && value in SPONSOR_PACKAGES;
+}

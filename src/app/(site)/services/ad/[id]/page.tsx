@@ -39,6 +39,9 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
     counted.ok && from === "boost"
       ? db.serviceBoost.updateMany({ where: { advertId: advert.id, startsAt: { lte: now }, endsAt: { gt: now } }, data: { clicks: { increment: 1 } } })
       : null,
+    counted.ok && from === "sponsor"
+      ? db.serviceAdvert.update({ where: { id: advert.id }, data: { sponsoredClicks: { increment: 1 } } })
+      : null,
   ]);
   const canContact = canContactServiceBusiness(marketplaceViewer(user));
   const name = business.tradingName || business.name;
