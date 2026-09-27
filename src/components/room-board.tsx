@@ -21,7 +21,7 @@ export function RoomBoard({ listingId, rooms }: { listingId: string; rooms: Room
     <div className="card divide-y divide-line">
       {rooms.map((room) => (
         <div key={room.id} className="flex flex-wrap items-center gap-4 px-4 py-3">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 basis-[15rem]">
             <p className="text-[15px]">{room.name}</p>
             <p className="text-[13px] text-ink-faint">
               {room.weeklyRent ? `${money(room.weeklyRent)} per week` : "No rent set"}
