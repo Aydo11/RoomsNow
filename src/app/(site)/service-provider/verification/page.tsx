@@ -27,7 +27,7 @@ export default async function ServiceVerificationPage() {
   return (
     <DashboardShell
       title="Verification"
-      subtitle="Every business is checked by our team before providers can see it. The Verified badge needs approved incorporation details and in-date public liability insurance."
+      subtitle="Optional, but worth it: verified businesses get the Verified badge and show above unverified ones. The badge needs approved incorporation details and in-date public liability insurance."
       nav={nav}
       active="/service-provider/verification"
     >
