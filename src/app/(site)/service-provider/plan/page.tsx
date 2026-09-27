@@ -21,6 +21,7 @@ export default async function ServicePlanPage({ searchParams }: { searchParams: 
   const current = servicePlanFor(business.subscription);
   const subscription = business.subscription;
   const payments = billingAvailable();
+  const onFree = current?.tier === "FREE";
 
   return (
     <DashboardShell
@@ -33,6 +34,9 @@ export default async function ServicePlanPage({ searchParams }: { searchParams: 
       {result === "cancelled" && <p className="mb-5 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft" role="status">Checkout cancelled. Nothing was charged.</p>}
       {boostResult === "complete" && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">Boost credits added to your account.</p>}
       {boostResult === "cancelled" && <p className="mb-5 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft" role="status">Boost checkout cancelled. Nothing was charged.</p>}
+      {result === "free" && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">You&apos;re on Marketplace Free. You can run up to {SERVICE_PLANS.FREE.maxAdverts} adverts once your business is verified.</p>}
+      {result === "cancel-first" && <p className="mb-5 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay" role="alert">You&apos;re still on a paid plan. Cancel it below first — you keep it until the end of the period you&apos;ve paid for, then you can choose Free.</p>}
+      {result === "too-many" && <p className="mb-5 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay" role="alert">Free allows {SERVICE_PLANS.FREE.maxAdverts} live adverts. Pause or archive some adverts first, then choose Free.</p>}
 
       {current && subscription && (
         <section className="card mb-6 flex flex-wrap items-center justify-between gap-4 p-5">
@@ -49,29 +53,48 @@ export default async function ServicePlanPage({ searchParams }: { searchParams: 
             {billingIsLive() && subscription.externalCustomerId && (
               <form action={openServiceBillingPortalAction}><SubmitButton className="btn-secondary" pendingLabel="Opening…">Billing and invoices</SubmitButton></form>
             )}
-            {!subscription.cancelAtPeriodEnd && (
+            {!onFree && !subscription.cancelAtPeriodEnd && (
               <form action={cancelServicePlanAction}><SubmitButton className="btn-ghost text-clay" pendingLabel="Cancelling…">Cancel plan</SubmitButton></form>
             )}
           </div>
         </section>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         {Object.values(SERVICE_PLANS).map((plan) => {
           const isCurrent = current?.tier === plan.tier && !subscription?.cancelAtPeriodEnd;
+          const free = plan.tier === "FREE";
           return (
             <section key={plan.tier} className={clsx("card flex flex-col p-6", plan.tier === "PRO" && "border-brand/40 shadow-raise")}>
               <h2 className="text-[20px]">{plan.name}</h2>
-              <p className="mt-2"><span className="font-display text-[34px]">{money(plan.monthly)}</span><span className="text-[14px] text-ink-soft"> / month</span></p>
+              <p className="mt-2">
+                <span className="font-display text-[34px]">{free ? "Free" : money(plan.monthly)}</span>
+                {!free && <span className="text-[14px] text-ink-soft"> / month</span>}
+              </p>
               <ul className="mt-4 flex-1 space-y-2 text-[14px] text-ink-soft">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex gap-2"><span aria-hidden="true" className="text-pine">✓</span>{feature}</li>
+                  <li key={feature} className={clsx("flex gap-2", feature.startsWith("No ") && "text-ink-faint")}>
+                    <span aria-hidden="true" className={feature.startsWith("No ") ? "text-ink-faint" : "text-pine"}>{feature.startsWith("No ") ? "–" : "✓"}</span>
+                    {feature}
+                  </li>
                 ))}
               </ul>
               <form action={startServicePlanAction} className="mt-5">
                 <input type="hidden" name="tier" value={plan.tier} />
-                <SubmitButton className={plan.tier === "PRO" ? "btn-primary w-full" : "btn-secondary w-full"} disabled={isCurrent || !payments} pendingLabel="Opening checkout…">
-                  {isCurrent ? "Your plan" : current ? `Switch to ${plan.tier === "PRO" ? "Pro" : "Standard"}` : trial ? `Start ${SERVICE_TRIAL_DAYS}-day free trial` : "Choose plan"}
+                <SubmitButton
+                  className={plan.tier === "PRO" ? "btn-primary w-full" : "btn-secondary w-full"}
+                  disabled={isCurrent || (!free && !payments)}
+                  pendingLabel={free ? "Switching…" : "Opening checkout…"}
+                >
+                  {isCurrent
+                    ? "Your plan"
+                    : free
+                      ? current ? "Switch to Free" : "Start free"
+                      : current && !onFree
+                        ? `Switch to ${plan.tier === "PRO" ? "Pro" : "Standard"}`
+                        : trial
+                          ? `Start ${SERVICE_TRIAL_DAYS}-day free trial`
+                          : `Upgrade to ${plan.tier === "PRO" ? "Pro" : "Standard"}`}
                 </SubmitButton>
               </form>
             </section>
