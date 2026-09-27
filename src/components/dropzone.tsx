@@ -117,7 +117,7 @@ export function Dropzone({
               <button
                 type="button"
                 onClick={() => removeFile(index)}
-                className="shrink-0 text-ink-faint hover:text-clay-dark"
+                className="shrink-0 text-ink-faint hover:text-clay"
                 aria-label={`Remove ${file.name}`}
               >
                 Remove
