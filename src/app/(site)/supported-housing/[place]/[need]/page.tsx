@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: areaPath(data.place, data.need),
   });
   // Pages with nothing live stay out of Google until they have something to show.
-  return stats.adverts ? meta : { ...meta, robots: { index: false, follow: true } };
+  return stats.roomsFree > 0 ? meta : { ...meta, robots: { index: false, follow: true } };
 }
 
 export default async function SupportedHousingNeedPage({ params }: Props) {

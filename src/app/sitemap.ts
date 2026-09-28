@@ -63,7 +63,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         distinct: ["city"],
       }),
       db.listing.findMany({
-        where: { status: "ACTIVE", company: { status: "ACTIVE" } },
+        // Only publish area/support landing pages when the area has at least
+        // one genuinely available room. Empty-inventory pages are still
+        // reachable for alerts, but should not crowd the XML sitemap.
+        where: {
+          status: "ACTIVE",
+          company: { status: "ACTIVE" },
+          rooms: { some: { status: "AVAILABLE" } },
+        },
         select: { supportTypes: true, updatedAt: true, property: { select: { city: true, area: true } } },
       }),
     ]);
