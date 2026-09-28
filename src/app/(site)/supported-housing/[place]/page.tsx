@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: `${stats.roomsFree} rooms free now in ${data.place.name} across ${stats.adverts} live supported housing adverts. Compare rent, Housing Benefit, support and referral routes, and contact providers.`,
     path: areaPath(data.place),
   });
-  return stats.adverts ? meta : { ...meta, robots: { index: false, follow: true } };
+  return stats.roomsFree > 0 ? meta : { ...meta, robots: { index: false, follow: true } };
 }
 
 export default async function SupportedHousingPlacePage({ params }: Props) {
