@@ -13,6 +13,7 @@ import { Gallery } from "@/components/gallery";
 import { ServiceAreaMap } from "@/components/service-area-map";
 import { canContactServiceBusiness, categoryLabel, EVIDENCE_LABELS, isAdvertPublic, priceLabel, responseLabel } from "@/lib/service-marketplace";
 import { monthYear, shortDate } from "@/lib/format";
+import { resolveArea } from "@/lib/geo";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -53,6 +54,8 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
   const coverage = advert.nationwide || business.nationalCoverage
     ? "Nationwide"
     : [...new Set([...advert.locations, ...business.areas])].filter(Boolean).join(", ") || "Ask the supplier";
+  const businessPoint = business.latitude !== null && business.longitude !== null ? { latitude: business.latitude, longitude: business.longitude } : null;
+  const mapPoint = businessPoint ?? await resolveArea(advert.locations[0] ?? business.areas[0]);
 
   return (
     <div className="shell py-6 sm:py-8">
@@ -117,10 +120,10 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
                 {business.nationalCoverage && <span className="chip chip-active">Nationwide coverage</span>}
               </div>
             </div>
-            {business.latitude !== null && business.longitude !== null ? (
+            {mapPoint ? (
               <>
-                <ServiceAreaMap latitude={business.latitude} longitude={business.longitude} name={name} radiusMiles={business.radiusMiles} />
-                <p className="border-t border-line px-5 py-3 text-[12px] text-ink-faint">The pin is approximate and shows the supplier&apos;s service base, not a customer or job address.</p>
+                <ServiceAreaMap latitude={mapPoint.latitude} longitude={mapPoint.longitude} name={name} radiusMiles={businessPoint ? business.radiusMiles : null} />
+                <p className="border-t border-line px-5 py-3 text-[12px] text-ink-faint">{businessPoint ? "The pin is approximate and shows the supplier's service base, not a customer or job address." : "The map is centred on the first area named in this advert. Ask the supplier to confirm coverage for your property's postcode."}</p>
               </>
             ) : (
               <p className="border-t border-line bg-paper-sunk px-5 py-4 text-[13px] text-ink-soft">This supplier has listed their coverage above. Ask them to confirm availability for your property&apos;s postcode.</p>
