@@ -184,12 +184,12 @@ export function ServiceProfileForm({ values, maxAreas, portfolioLimit }: { value
         </Field>
       </Section>
 
-      <Section title="Images" hint={`Logo and cover are shown on your profile. Your plan includes up to ${portfolioLimit} portfolio photos. JPG, PNG or WebP up to 8MB.`}>
-        <Field label="Logo" name="logo" error={e.logo}>
-          <ImageDropzone name="logo" shape="square" label="Logo" currentUrl={values.logoUrl} hint="Square works best, at least 400 × 400px." />
+      <Section title="Branding and work gallery" hint={`Your logo and banner appear prominently on your company profile and every service advert. Your plan includes up to ${portfolioLimit} portfolio photos. JPG, PNG or WebP up to 8MB.`}>
+        <Field label="Company logo" name="logo" hint="Shown beside your company name on cards, adverts and your profile." error={e.logo}>
+          <ImageDropzone name="logo" shape="square" label="Company logo" currentUrl={values.logoUrl} hint="Square works best, at least 400 × 400px. Use a clear PNG or WebP logo." />
         </Field>
-        <Field label="Cover image" name="cover" error={e.cover}>
-          <ImageDropzone name="cover" shape="wide" label="Cover image" currentUrl={values.coverUrl} hint="A wide landscape photo of your work, at least 1600 × 700px." />
+        <Field label="Company banner" name="cover" hint="Creates the large branded header across your company and service pages." error={e.cover}>
+          <ImageDropzone name="cover" shape="wide" label="Company banner" currentUrl={values.coverUrl} hint="Use a wide landscape photo of your team or work, ideally 1600 × 700px or larger." />
         </Field>
         <div className="sm:col-span-2">
           <Field label="Add portfolio photos" name="portfolio" error={e.portfolio}>

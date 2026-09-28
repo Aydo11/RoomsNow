@@ -56,6 +56,11 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
     : [...new Set([...advert.locations, ...business.areas])].filter(Boolean).join(", ") || "Ask the supplier";
   const businessPoint = business.latitude !== null && business.longitude !== null ? { latitude: business.latitude, longitude: business.longitude } : null;
   const mapPoint = businessPoint ?? await resolveArea(advert.locations[0] ?? business.areas[0]);
+  const descriptionBlocks = advert.description
+    .replace(/([^\s\d])(\d+\.\s*)/g, "$1\n$2")
+    .split(/\n+/)
+    .map((block) => block.trim())
+    .filter(Boolean);
 
   return (
     <div className="shell py-6 sm:py-8">
@@ -68,28 +73,43 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <article className="min-w-0 space-y-5">
-          <header className="card p-5">
-            <div className="flex items-start gap-4">
-              <BusinessLogo src={business.logoUrl} name={name} size={64} />
-              <div className="min-w-0 flex-1">
-                <Link href={`/services/business/${business.slug}`} className="text-[14px] font-medium text-brand hover:underline">{name}</Link>
-                <h1 className="mt-0.5 text-[24px] leading-tight sm:text-[28px]">{advert.title}</h1>
-                <p className="mt-1 text-[14px] text-ink-soft">{categoryLabel(advert.category)}{advert.subcategory ? ` · ${advert.subcategory}` : ""} · {area}</p>
+          <header className="card overflow-hidden">
+            {business.coverUrl ? (
+              <div className="relative h-32 overflow-hidden sm:h-44">
+                <img src={business.coverUrl} alt={`${name} cover`} className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" aria-hidden="true" />
               </div>
-              {canContact && <ServiceFavouriteButton advertId={advert.id} saved={Boolean(favourite)} />}
+            ) : (
+              <div className="relative h-24 overflow-hidden bg-gradient-to-br from-brand/25 via-sky-light to-pine-light sm:h-32" aria-hidden="true">
+                <span className="absolute -right-10 -top-16 h-48 w-48 rounded-full border-[28px] border-white/20" />
+                <span className="absolute bottom-[-55px] left-[18%] h-36 w-36 rounded-full bg-white/15" />
+              </div>
+            )}
+            <div className="p-5">
+              <div className="flex flex-wrap items-start gap-4">
+                <div className="-mt-12 shrink-0 rounded-[16px] border-4 border-paper bg-paper shadow-raise sm:-mt-14">
+                  <BusinessLogo src={business.logoUrl} name={name} size={80} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <Link href={`/services/business/${business.slug}`} className="text-[14px] font-semibold text-brand hover:underline">{name}</Link>
+                  <h1 className="mt-0.5 text-[24px] leading-tight sm:text-[30px]">{advert.title}</h1>
+                  <p className="mt-1 text-[14px] text-ink-soft">{categoryLabel(advert.category)}{advert.subcategory ? ` · ${advert.subcategory}` : ""} · {area}</p>
+                </div>
+                {canContact && <div className="flex gap-2"><a href="#quote" className="btn-primary">Request a quote</a><ServiceFavouriteButton advertId={advert.id} saved={Boolean(favourite)} /></div>}
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {trust.verified && <ServiceVerifiedBadge />}
+                <InsuranceStatus state={trust.insurance.state} expiresAt={trust.insurance.expiresAt} />
+                {advert.emergency && <span className="rounded-pill bg-clay-light px-2.5 py-1 text-[12px] font-medium text-clay">Emergency call-outs</span>}
+                {advert.sameDay && <span className="rounded-pill bg-clay-light px-2.5 py-1 text-[12px] font-medium text-clay">Same-day service</span>}
+              </div>
+              <dl className="mt-5 grid gap-3 border-t border-line pt-4 text-[14px] sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-[10px] bg-paper-sunk px-3 py-2.5"><dt className="text-ink-faint">Pricing</dt><dd className="mt-0.5 font-semibold text-ink">{priceLabel(advert)}</dd></div>
+                <div className="rounded-[10px] bg-paper-sunk px-3 py-2.5"><dt className="text-ink-faint">Coverage</dt><dd className="mt-0.5 font-medium text-ink">{coverage}</dd></div>
+                <div className="rounded-[10px] bg-paper-sunk px-3 py-2.5"><dt className="text-ink-faint">Availability</dt><dd className="mt-0.5 font-medium text-ink">{advert.availability || (advert.sameDay ? "Same-day available" : "Contact for availability")}</dd></div>
+                <div className="rounded-[10px] bg-paper-sunk px-3 py-2.5"><dt className="text-ink-faint">Response</dt><dd className="mt-0.5 font-medium text-ink">{response || business.responseTarget || "Ask the supplier"}</dd></div>
+              </dl>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {trust.verified && <ServiceVerifiedBadge />}
-              <InsuranceStatus state={trust.insurance.state} expiresAt={trust.insurance.expiresAt} />
-              {advert.emergency && <span className="rounded-pill bg-clay-light px-2.5 py-1 text-[12px] font-medium text-clay">Emergency call-outs</span>}
-              {advert.sameDay && <span className="rounded-pill bg-clay-light px-2.5 py-1 text-[12px] font-medium text-clay">Same-day service</span>}
-            </div>
-            <dl className="mt-5 grid gap-3 border-t border-line pt-4 text-[14px] sm:grid-cols-2 lg:grid-cols-4">
-              <div><dt className="text-ink-faint">Pricing</dt><dd className="mt-0.5 font-semibold text-ink">{priceLabel(advert)}</dd></div>
-              <div><dt className="text-ink-faint">Coverage</dt><dd className="mt-0.5 font-medium text-ink">{coverage}</dd></div>
-              <div><dt className="text-ink-faint">Availability</dt><dd className="mt-0.5 font-medium text-ink">{advert.availability || (advert.sameDay ? "Same-day available" : "Contact for availability")}</dd></div>
-              <div><dt className="text-ink-faint">Response</dt><dd className="mt-0.5 font-medium text-ink">{response || business.responseTarget || "Ask the supplier"}</dd></div>
-            </dl>
           </header>
 
           {galleryImages.length > 0 && (
@@ -102,7 +122,9 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
 
           <section className="card p-5">
             <h2 className="text-[18px]">About this service</h2>
-            <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-ink">{advert.description}</p>
+            <div className="mt-3 space-y-3 text-[15px] leading-7 text-ink">
+              {descriptionBlocks.map((block, index) => <p key={`${index}-${block.slice(0, 20)}`}>{block}</p>)}
+            </div>
             <dl className="mt-5 grid gap-4 text-[14px] sm:grid-cols-2">
               <div><dt className="text-ink-faint">Price</dt><dd className="font-semibold text-ink">{priceLabel(advert)}</dd></div>
               {advert.availability && <div><dt className="text-ink-faint">Availability</dt><dd className="text-ink">{advert.availability}</dd></div>}
@@ -176,6 +198,18 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
           ) : (
             <p className="card p-5 text-[14px] text-ink-soft">You&apos;re viewing as an admin. Contact tools are for accommodation providers.</p>
           )}
+          <section className="card p-5 text-[14px]">
+            <h2 className="text-[16px]">Supplier at a glance</h2>
+            <dl className="mt-3 grid grid-cols-2 gap-3">
+              <div><dt className="text-ink-faint">Services</dt><dd className="mt-0.5 font-medium">{business.categories.map(categoryLabel).join(", ")}</dd></div>
+              <div><dt className="text-ink-faint">Coverage</dt><dd className="mt-0.5 font-medium">{coverage}</dd></div>
+              {business.yearsExperience !== null && <div><dt className="text-ink-faint">Experience</dt><dd className="mt-0.5 font-medium">{business.yearsExperience} years</dd></div>}
+              <div><dt className="text-ink-faint">Call-outs</dt><dd className="mt-0.5 font-medium">{business.emergencyAvailable || advert.emergency ? "Emergency available" : "Planned work"}</dd></div>
+              {business.openingHours && <div className="col-span-2"><dt className="text-ink-faint">Opening hours</dt><dd className="mt-0.5 font-medium">{business.openingHours}</dd></div>}
+              {business.pricingSummary && <div className="col-span-2"><dt className="text-ink-faint">Typical pricing</dt><dd className="mt-0.5 font-medium">{business.pricingSummary}</dd></div>}
+            </dl>
+            <Link href={`/services/business/${business.slug}`} className="mt-4 inline-flex items-center gap-1 font-semibold text-brand hover:underline">View full company profile <span aria-hidden="true">→</span></Link>
+          </section>
           <section className="card space-y-1.5 p-5 text-[14px]">
             <h2 className="text-[16px]">Contact details</h2>
             {business.phone && <p><a className="text-brand hover:underline" href={`tel:${business.phone.replace(/\s/g, "")}`}>{business.phone}</a></p>}
