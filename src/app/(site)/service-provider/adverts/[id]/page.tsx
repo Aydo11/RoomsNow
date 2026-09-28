@@ -21,12 +21,14 @@ const BOOST_MESSAGES: Record<string, string> = {
   cancelled: "Checkout cancelled — nothing was charged.",
   "no-credits": "You don't have any boost credits left this month.",
   unavailable: "Only live adverts can be boosted.",
+  upgrade: "Boosts are available on Marketplace Standard and Pro. Upgrade to add paid exposure.",
 };
 
 const SPONSOR_MESSAGES: Record<string, string> = {
   complete: "Sponsored placement active. Your advert can now appear in the sponsored section of matching results.",
   cancelled: "Checkout cancelled — nothing was charged.",
   unavailable: "Only live adverts can be sponsored.",
+  upgrade: "Sponsored placements are available on Marketplace Standard and Pro.",
 };
 
 export default async function ServiceAdvertPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ boost?: string; sponsored?: string }> }) {
@@ -44,11 +46,12 @@ export default async function ServiceAdvertPage({ params, searchParams }: { para
     db.serviceQuoteRequest.count({ where: { advertId: advert.id } }),
     db.serviceFavourite.count({ where: { advertId: advert.id } }),
   ]);
-  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.STANDARD;
+  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.FREE;
   const isPublic = isAdvertPublic(advert, business, business.subscription, now);
   const currentBoost = advert.boosts.find((b) => b.endsAt > now);
   const currentlySponsored = advert.sponsoredUntil && advert.sponsoredUntil > now;
   const credits = business.subscription?.boostCredits ?? 0;
+  const paidPromotions = plan.tier !== "FREE";
 
   return (
     <DashboardShell
@@ -82,7 +85,7 @@ export default async function ServiceAdvertPage({ params, searchParams }: { para
 
       <div className="mb-6"><ServiceAdvertStatusButtons id={advert.id} status={advert.status} /></div>
 
-      {isPublic && advert.status === "ACTIVE" && (
+      {isPublic && advert.status === "ACTIVE" && paidPromotions && (
         <section className="card mb-6 p-5" aria-labelledby="boost-heading">
           <h2 id="boost-heading" className="text-[18px]">Boost this advert</h2>
           <p className="mt-1 max-w-[65ch] text-[14px] text-ink-soft">
@@ -102,7 +105,7 @@ export default async function ServiceAdvertPage({ params, searchParams }: { para
         </section>
       )}
 
-      {isPublic && advert.status === "ACTIVE" && (
+      {isPublic && advert.status === "ACTIVE" && paidPromotions && (
         <section className="card mb-6 p-5" aria-labelledby="sponsor-heading">
           <h2 id="sponsor-heading" className="text-[18px]">Sponsor this advert</h2>
           <p className="mt-1 max-w-[65ch] text-[14px] text-ink-soft">
@@ -118,6 +121,14 @@ export default async function ServiceAdvertPage({ params, searchParams }: { para
               </form>
             ))}
           </div>
+        </section>
+      )}
+
+      {isPublic && advert.status === "ACTIVE" && !paidPromotions && (
+        <section className="card mb-6 p-5">
+          <h2 className="text-[18px]">Increase this advert&apos;s exposure</h2>
+          <p className="mt-1 text-[14px] text-ink-soft">Free adverts rotate below paid supplier listings and cannot be boosted or sponsored. Upgrade to Standard or Pro for the Verified badge and promotion options.</p>
+          <Link href="/service-provider/plan" className="btn-secondary mt-4">Compare paid plans</Link>
         </section>
       )}
 

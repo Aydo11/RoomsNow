@@ -67,16 +67,20 @@ export async function requireServiceBusiness() {
         contactName: `${user.firstName} ${user.lastName}`,
         email: user.email,
         phone: user.phone,
+        subscription: { create: { tier: "FREE", status: "ACTIVE", billingProvider: "free" } },
       },
       include: { subscription: true },
     });
+  }
+  if (!business.subscription) {
+    business.subscription = await db.serviceSubscription.create({ data: { businessId: business.id, tier: "FREE", status: "ACTIVE", billingProvider: "free" } });
   }
   if (business.subscription) business.subscription = await refreshServiceCredits(business.subscription);
   return { user, business };
 }
 
 /** Pro plans get their monthly boost credits the first time they're looked at in a new month. */
-export async function refreshServiceCredits<T extends { id: string; tier: "STANDARD" | "PRO"; status: string; trialEndsAt: Date | null; creditsPeriod: string | null; boostCredits: number }>(subscription: T): Promise<T> {
+export async function refreshServiceCredits<T extends { id: string; tier: "FREE" | "STANDARD" | "PRO"; status: string; trialEndsAt: Date | null; creditsPeriod: string | null; boostCredits: number }>(subscription: T): Promise<T> {
   const period = creditsPeriodKey();
   const perMonth = SERVICE_PLANS[subscription.tier].boostCreditsPerMonth;
   if (!perMonth || subscription.creditsPeriod === period || !serviceSubscriptionActive(subscription)) return subscription;
@@ -160,7 +164,7 @@ export async function loadPublicAdverts(now = new Date()): Promise<MarketAdvert[
           latitude: row.business.latitude,
           longitude: row.business.longitude,
           radiusMiles: row.business.radiusMiles,
-          verified: isVerifiedServiceBusiness(row.business, row.business.evidence as EvidenceLike[], now),
+          verified: row.business.subscription!.tier !== "FREE" && isVerifiedServiceBusiness(row.business, row.business.evidence as EvidenceLike[], now),
           rating: summary.rating,
           reviewCount: summary.count,
           responseMinutes: row.business.responseMinutes,
@@ -173,7 +177,7 @@ export async function loadPublicAdverts(now = new Date()): Promise<MarketAdvert[
 /** Trust facts shown on a profile: all outcomes, nothing from the private evidence files. */
 export async function businessTrust(businessId: string, now = new Date()) {
   const [business, evidence, reviews, completedJobs] = await Promise.all([
-    db.serviceBusiness.findUniqueOrThrow({ where: { id: businessId }, select: { status: true, createdAt: true, responseMinutes: true, verifiedAt: true } }),
+    db.serviceBusiness.findUniqueOrThrow({ where: { id: businessId }, select: { status: true, createdAt: true, responseMinutes: true, verifiedAt: true, subscription: { select: { tier: true } } } }),
     db.serviceEvidence.findMany({ where: { businessId, status: "ACCEPTED" }, select: EVIDENCE_SELECT }),
     db.serviceReview.findMany({
       where: { businessId, hiddenAt: null },
@@ -184,10 +188,11 @@ export async function businessTrust(businessId: string, now = new Date()) {
     db.serviceQuoteRequest.count({ where: { businessId, status: "COMPLETED" } }),
   ]);
   const typed = evidence as EvidenceLike[];
+  const paidPlan = business.subscription?.tier !== "FREE";
   return {
-    verified: isVerifiedServiceBusiness(business, typed, now),
+    verified: paidPlan && isVerifiedServiceBusiness(business, typed, now),
     insurance: insuranceState(typed, now),
-    accreditations: publicAccreditations(typed, now),
+    accreditations: paidPlan ? publicAccreditations(typed, now) : [],
     summary: summariseServiceReviews(reviews),
     reviews,
     completedJobs,

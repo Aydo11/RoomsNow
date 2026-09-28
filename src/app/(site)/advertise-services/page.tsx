@@ -25,7 +25,7 @@ export default async function AdvertiseServicesPage() {
   const user = await getCurrentUser();
   const isServiceBusiness = user?.role === "SERVICE_PROVIDER";
   const startHref = isServiceBusiness ? "/service-provider/plan" : "/register?type=SERVICE_PROVIDER";
-  const startLabel = isServiceBusiness ? "Choose your plan" : `Start your ${SERVICE_TRIAL_DAYS}-day free trial`;
+  const startLabel = isServiceBusiness ? "Manage your plan" : "Start free — no card needed";
 
   return (
     <>
@@ -43,7 +43,7 @@ export default async function AdvertiseServicesPage() {
             <Link href={startHref} className="btn-primary">{startLabel}</Link>
             <a href="#plans" className="btn-secondary">See plans</a>
           </div>
-          <p className="mt-3 text-[13px] text-ink-faint">No card charged during the trial. Cancel any time.</p>
+          <p className="mt-3 text-[13px] text-ink-faint">The Free plan has no time limit. Upgrade later for verification, more adverts and greater exposure.</p>
         </div>
       </section>
 
@@ -73,9 +73,9 @@ export default async function AdvertiseServicesPage() {
         <div className="shell py-12 sm:py-14">
           <h2 id="plans-heading" className="text-[28px]">Plans</h2>
           <p className="mt-2 max-w-[60ch] text-[15px] text-ink-soft">
-            Both plans start with a {SERVICE_TRIAL_DAYS}-day free trial. RoomsNow doesn&apos;t take a cut of the work you win.
+            Start with one free advert and no card. Standard and Pro include a {SERVICE_TRIAL_DAYS}-day trial for new businesses. RoomsNow doesn&apos;t take a cut of the work you win.
           </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
             {Object.values(SERVICE_PLANS).map((plan) => {
               const pro = plan.tier === "PRO";
               return (
@@ -96,7 +96,7 @@ export default async function AdvertiseServicesPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link href={startHref} className={`${pro ? "btn-primary" : "btn-secondary"} mt-6 justify-center`}>{startLabel}</Link>
+                  <Link href={startHref} className={`${pro ? "btn-primary" : "btn-secondary"} mt-6 justify-center`}>{plan.tier === "FREE" ? "Start free" : startLabel}</Link>
                 </article>
               );
             })}

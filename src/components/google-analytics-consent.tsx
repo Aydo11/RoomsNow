@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const MEASUREMENT_ID = "G-V2RLYZNG3S";
+const TIKTOK_PIXEL_ID = "DAT2MPBC77U3L597UVV0";
 const CONSENT_KEY = "roomsnow-analytics-consent";
 type ConsentChoice = "accepted" | "rejected" | null;
 
@@ -11,6 +12,20 @@ declare global {
   interface Window {
     dataLayer?: unknown[][];
     gtag?: (...args: unknown[]) => void;
+    TiktokAnalyticsObject?: string;
+    ttq?: Array<unknown> & {
+      page?: (...args: unknown[]) => void;
+      track?: (...args: unknown[]) => void;
+      holdConsent?: () => void;
+      grantConsent?: () => void;
+      revokeConsent?: () => void;
+      load?: (id: string, options?: Record<string, unknown>) => void;
+      _i?: Record<string, unknown>;
+      _t?: Record<string, number>;
+      _o?: Record<string, unknown>;
+      setAndDefer?: (target: Record<string, unknown>, method: string) => void;
+      instance?: (id: string) => unknown;
+    };
   }
 }
 
@@ -20,10 +35,10 @@ function isPublicPage(pathname: string) {
   return !/^\/(admin|api|dashboard|messages|people|provider|referrals|login|register|forgot-password|reset-password)(\/|$)/.test(pathname);
 }
 
-function eraseAnalyticsCookies() {
+function eraseOptionalCookies() {
   const names = document.cookie.split(";").map((cookie) => cookie.split("=")[0]?.trim()).filter(Boolean);
   for (const name of names) {
-    if (!name.startsWith("_ga")) continue;
+    if (!name.startsWith("_ga") && name !== "_ttp" && name !== "_tt_enable_cookie" && !name.startsWith("ttcsid")) continue;
     document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
     document.cookie = `${name}=; Max-Age=0; path=/; domain=${location.hostname}; SameSite=Lax`;
     if (location.hostname.endsWith(".roomsnow.co.uk")) {
@@ -32,11 +47,49 @@ function eraseAnalyticsCookies() {
   }
 }
 
+function initialiseTikTokPixel() {
+  if (window.ttq?.load) {
+    window.ttq.grantConsent?.();
+    return;
+  }
+  const methodNames = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie", "holdConsent", "revokeConsent", "grantConsent"];
+  window.TiktokAnalyticsObject = "ttq";
+  const queue = (window.ttq = (window.ttq || []) as NonNullable<Window["ttq"]>);
+  const defer = (target: Record<string, unknown>, method: string) => {
+    target[method] = (...args: unknown[]) => queue.push([method, ...args]);
+  };
+  queue.setAndDefer = defer;
+  for (const method of methodNames) defer(queue as unknown as Record<string, unknown>, method);
+  queue.instance = (id: string) => {
+    queue._i = queue._i || {};
+    const instance = (queue._i[id] || []) as Record<string, unknown>;
+    for (const method of methodNames) defer(instance, method);
+    return instance;
+  };
+  queue.load = (id: string, options: Record<string, unknown> = {}) => {
+    const url = "https://analytics.tiktok.com/i18n/pixel/events.js";
+    queue._i = queue._i || {};
+    queue._i[id] = [];
+    queue._t = queue._t || {};
+    queue._t[id] = Date.now();
+    queue._o = queue._o || {};
+    queue._o[id] = options;
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.async = true;
+    script.src = `${url}?sdkid=${encodeURIComponent(id)}&lib=ttq`;
+    document.head.appendChild(script);
+  };
+  queue.grantConsent?.();
+  queue.load(TIKTOK_PIXEL_ID);
+}
+
 export function GoogleAnalyticsConsent() {
   const pathname = usePathname();
   const [choice, setChoice] = useState<ConsentChoice>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [ready, setReady] = useState(false);
+  const [tiktokReady, setTikTokReady] = useState(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(CONSENT_KEY);
@@ -48,6 +101,9 @@ export function GoogleAnalyticsConsent() {
 
   useEffect(() => {
     if (choice !== "accepted") return;
+
+    initialiseTikTokPixel();
+    setTikTokReady(true);
 
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || ((...args: unknown[]) => window.dataLayer?.push(args));
@@ -77,14 +133,20 @@ export function GoogleAnalyticsConsent() {
     }
   }, [choice, pathname, ready]);
 
+  useEffect(() => {
+    if (choice === "accepted" && tiktokReady && isPublicPage(pathname)) window.ttq?.page?.();
+  }, [choice, pathname, tiktokReady]);
+
   function choose(next: Exclude<ConsentChoice, null>) {
     window.localStorage.setItem(CONSENT_KEY, next);
     setChoice(next);
     setShowSettings(false);
     if (next === "rejected") {
       window.gtag?.("consent", "update", { analytics_storage: "denied", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
-      eraseAnalyticsCookies();
+      window.ttq?.revokeConsent?.();
+      eraseOptionalCookies();
       setReady(false);
+      setTikTokReady(false);
     }
   }
 
@@ -96,12 +158,12 @@ export function GoogleAnalyticsConsent() {
         <div className="max-w-2xl">
           <h2 className="text-[16px]">Your privacy choices</h2>
           <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
-            RoomsNow uses essential cookies for the service. With your permission, Google Analytics measures visits to public pages to help us improve the site. Search terms and account, message, referral, provider, applicant-profile and dashboard pages are not tracked.
+            RoomsNow uses essential cookies for the service. With your permission, Google Analytics and the TikTok Pixel measure visits to public pages, improve RoomsNow and measure campaigns. Search terms and account, message, referral, provider, applicant-profile and dashboard pages are not tracked.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           <button type="button" className="btn-secondary" onClick={() => choose("rejected")}>Reject optional</button>
-          <button type="button" className="btn-primary" onClick={() => choose("accepted")}>Accept analytics</button>
+          <button type="button" className="btn-primary" onClick={() => choose("accepted")}>Accept optional cookies</button>
         </div>
       </div>
     </aside>

@@ -91,6 +91,7 @@ test("preview cards for free providers carry no identity or contact details", ()
 });
 
 test("service subscriptions: trials end, cancelled plans stop, limits are enforced", () => {
+  assert.equal(serviceSubscriptionActive({ tier: "FREE", status: "ACTIVE", trialEndsAt: null }, now), true);
   assert.equal(serviceSubscriptionActive({ tier: "STANDARD", status: "TRIALING", trialEndsAt: days(3) }, now), true);
   assert.equal(serviceSubscriptionActive({ tier: "STANDARD", status: "TRIALING", trialEndsAt: days(-1) }, now), false);
   assert.equal(serviceSubscriptionActive({ tier: "PRO", status: "ACTIVE", trialEndsAt: null }, now), true);
@@ -99,6 +100,9 @@ test("service subscriptions: trials end, cancelled plans stop, limits are enforc
   assert.equal(serviceSubscriptionActive(null, now), false);
 
   const standard = { tier: "STANDARD" as const, status: "ACTIVE", trialEndsAt: null };
+  const free = { tier: "FREE" as const, status: "ACTIVE", trialEndsAt: null };
+  assert.equal(canSubmitAnotherAdvert(free, 0, now).ok, true);
+  assert.equal(canSubmitAnotherAdvert(free, 1, now).ok, false);
   assert.equal(canSubmitAnotherAdvert(standard, 4, now).ok, true);
   assert.equal(canSubmitAnotherAdvert(standard, 5, now).ok, false);
   assert.equal(canSubmitAnotherAdvert({ ...standard, tier: "PRO" }, 19, now).ok, true);
@@ -106,9 +110,10 @@ test("service subscriptions: trials end, cancelled plans stop, limits are enforc
   assert.equal(canSubmitAnotherAdvert(null, 0, now).ok, false);
 });
 
-test("an advert is public only when active, approved and paid for", () => {
+test("an advert is public only when active, approved and on an active marketplace plan", () => {
   const paid = { tier: "STANDARD" as const, status: "ACTIVE", trialEndsAt: null };
   assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "APPROVED" }, paid, now), true);
+  assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "APPROVED" }, { tier: "FREE", status: "ACTIVE", trialEndsAt: null }, now), true);
   assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "PENDING_REVIEW" }, paid, now), false);
   assert.equal(isAdvertPublic({ status: "ACTIVE" }, { status: "SUSPENDED" }, paid, now), false);
   assert.equal(isAdvertPublic({ status: "PENDING_REVIEW" }, { status: "APPROVED" }, paid, now), false);
@@ -202,8 +207,9 @@ test("ranking: boosts and sponsored placements lead only relevant filtered resul
   const sponsored = advert("sponsored", { sponsoredUntil: days(30), sponsoredBid: 2 });
   const expired = advert("expired", { boostedUntil: days(-1) });
   const pro = advert("pro", {}, { tier: "PRO" });
+  const free = advert("free", {}, { tier: "FREE" });
   const plain = [advert("s1"), advert("s2"), advert("s3")];
-  const all = [...plain, expired, pro, sponsored, boosted];
+  const all = [...plain, expired, free, pro, sponsored, boosted];
 
   const filtered = rankAdverts(all, { category: "gas-heating" }, "2026-10-05", now);
   assert.equal(filtered[0].id, "boost");
@@ -217,6 +223,7 @@ test("ranking: boosts and sponsored placements lead only relevant filtered resul
   assert.equal(unfiltered.some((row) => row.promoted), false);
   assert.equal(unfiltered.some((row) => row.sponsored), false);
   assert.equal(unfiltered[0].id, "pro");
+  assert.ok(unfiltered.findIndex((row) => row.id === "free") > unfiltered.findIndex((row) => row.id === "s1"));
 
   // Same seed, same order; different seed, organic order can change but every advert stays.
   assert.deepEqual(rankAdverts(all, {}, "d1", now).map((r) => r.id), rankAdverts(all, {}, "d1", now).map((r) => r.id));

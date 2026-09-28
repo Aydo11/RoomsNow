@@ -8,7 +8,8 @@
 export type ServiceBusinessStatusValue = "ONBOARDING" | "PENDING_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "REJECTED" | "SUSPENDED";
 export type ServiceAdvertStatusValue = "DRAFT" | "PENDING_REVIEW" | "ACTIVE" | "PAUSED" | "REJECTED" | "ARCHIVED";
 export type ServiceQuoteStatusValue = "NEW" | "VIEWED" | "QUOTED" | "ACCEPTED" | "DECLINED" | "COMPLETED" | "CANCELLED";
-export type ServicePlanTierValue = "STANDARD" | "PRO";
+export type ServicePlanTierValue = "FREE" | "STANDARD" | "PRO";
+export type PaidServicePlanTierValue = Exclude<ServicePlanTierValue, "FREE">;
 export type ServicePriceTypeValue = "FIXED" | "FROM" | "RANGE" | "HOURLY" | "QUOTE";
 export type ServiceEvidenceTypeValue = "PUBLIC_LIABILITY" | "EMPLOYERS_LIABILITY" | "INCORPORATION" | "QUALIFICATION" | "LICENCE" | "ACCREDITATION" | "OTHER";
 export type ServiceUrgencyValue = "FLEXIBLE" | "WITHIN_A_MONTH" | "WITHIN_A_WEEK" | "URGENT" | "EMERGENCY";
@@ -64,6 +65,28 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
   priorityPlacement: boolean;
   features: string[];
 }> = {
+  FREE: {
+    tier: "FREE",
+    name: "Marketplace Free",
+    monthly: 0,
+    maxAdverts: 1,
+    maxServiceAreas: 1,
+    boostCreditsPerMonth: 0,
+    enhancedProfile: false,
+    advancedAnalytics: false,
+    leadTracking: false,
+    enquiryReports: false,
+    teamAccess: false,
+    priorityPlacement: false,
+    features: [
+      "1 basic business profile",
+      "1 live service advert",
+      "1 service area",
+      "Messages and quote requests",
+      "Basic advert views",
+      "No verified badge or priority placement",
+    ],
+  },
   STANDARD: {
     tier: "STANDARD",
     name: "Marketplace Standard",
@@ -112,6 +135,10 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
 };
 
 export function isServicePlanTier(value: unknown): value is ServicePlanTierValue {
+  return value === "FREE" || value === "STANDARD" || value === "PRO";
+}
+
+export function isPaidServicePlanTier(value: unknown): value is PaidServicePlanTierValue {
   return value === "STANDARD" || value === "PRO";
 }
 
@@ -167,7 +194,7 @@ export type ServiceBoostKey = keyof typeof SERVICE_BOOSTS;
 export function isServiceBoostKey(value: unknown): value is ServiceBoostKey {
   return value === "WEEK" || value === "MONTH" || value === "QUARTER";
 }
-/** A plan credit buys a 7-day boost. */
+/** A plan credit buys a 24-hour boost. */
 export const CREDIT_BOOST_DAYS = 1;
 export const MAX_BOOSTED_SLOTS = 3;
 export const MAX_SPONSORED_SLOTS = 3;
@@ -513,7 +540,7 @@ export function rankAdverts<T extends RankableAdvert>(adverts: T[], filters: Ser
   const sort = filters.sort ?? "recommended";
   const rotate = (a: T, b: T) => rotationKey(a.id, seed) - rotationKey(b.id, seed);
   const byRecommended = (a: T, b: T) => {
-    const tier = (x: T) => (x.business.tier === "PRO" ? 0 : 1);
+    const tier = (x: T) => (x.business.tier === "PRO" ? 0 : x.business.tier === "STANDARD" ? 1 : 2);
     return tier(a) - tier(b) || Number(b.business.verified) - Number(a.business.verified) || rotate(a, b);
   };
   const nullsLast = (a: number | null, b: number | null, dir: 1 | -1) => (a === null ? (b === null ? 0 : 1) : b === null ? -1 : (a - b) * dir);

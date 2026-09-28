@@ -1,7 +1,7 @@
 import { DashboardShell } from "@/components/dashboard-shell";
 import { SubmitButton } from "@/components/ui";
 import { requireServiceBusiness } from "@/server/service-marketplace";
-import { buyServiceBoostPackAction, cancelServicePlanAction, openServiceBillingPortalAction, startServicePlanAction } from "@/server/actions/service-business";
+import { buyServiceBoostPackAction, cancelServicePlanAction, chooseFreeServicePlanAction, openServiceBillingPortalAction, startServicePlanAction } from "@/server/actions/service-business";
 import { trialAvailable } from "@/lib/service-billing";
 import { billingAvailable, billingIsLive } from "@/lib/billing";
 import { SERVICE_PLANS, SERVICE_TRIAL_DAYS, servicePlanFor } from "@/lib/service-marketplace";
@@ -31,8 +31,11 @@ export default async function ServicePlanPage({ searchParams }: { searchParams: 
     >
       {result === "complete" && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">Thanks — your plan is set up.</p>}
       {result === "cancelled" && <p className="mb-5 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft" role="status">Checkout cancelled. Nothing was charged.</p>}
+      {result === "free" && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">Marketplace Free is active. You can publish one basic advert.</p>}
+      {result === "cancel-paid-first" && <p className="mb-5 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay" role="status">Cancel your paid subscription first. It will remain active until the paid period ends, then your account can continue on Free.</p>}
       {boostResult === "complete" && <p className="mb-5 rounded-[10px] bg-pine-light px-4 py-3 text-[14px] text-pine-dark" role="status">Boost credits added to your account.</p>}
       {boostResult === "cancelled" && <p className="mb-5 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft" role="status">Boost checkout cancelled. Nothing was charged.</p>}
+      {boostResult === "upgrade" && <p className="mb-5 rounded-[10px] bg-clay-light px-4 py-3 text-[14px] text-clay" role="status">Upgrade to Marketplace Standard or Pro before buying boost credits.</p>}
 
       {current && subscription && (
         <section className="card mb-6 flex flex-wrap items-center justify-between gap-4 p-5">
@@ -49,31 +52,37 @@ export default async function ServicePlanPage({ searchParams }: { searchParams: 
             {billingIsLive() && subscription.externalCustomerId && (
               <form action={openServiceBillingPortalAction}><SubmitButton className="btn-secondary" pendingLabel="Opening…">Billing and invoices</SubmitButton></form>
             )}
-            {!subscription.cancelAtPeriodEnd && (
+            {current.tier !== "FREE" && !subscription.cancelAtPeriodEnd && (
               <form action={cancelServicePlanAction}><SubmitButton className="btn-ghost text-clay" pendingLabel="Cancelling…">Cancel plan</SubmitButton></form>
             )}
           </div>
         </section>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         {Object.values(SERVICE_PLANS).map((plan) => {
           const isCurrent = current?.tier === plan.tier && !subscription?.cancelAtPeriodEnd;
           return (
             <section key={plan.tier} className={clsx("card flex flex-col p-6", plan.tier === "PRO" && "border-brand/40 shadow-raise")}>
               <h2 className="text-[20px]">{plan.name}</h2>
-              <p className="mt-2"><span className="font-display text-[34px]">{money(plan.monthly)}</span><span className="text-[14px] text-ink-soft"> / month</span></p>
+              <p className="mt-2"><span className="font-display text-[34px]">{plan.monthly === 0 ? "Free" : money(plan.monthly)}</span>{plan.monthly > 0 && <span className="text-[14px] text-ink-soft"> / month</span>}</p>
               <ul className="mt-4 flex-1 space-y-2 text-[14px] text-ink-soft">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex gap-2"><span aria-hidden="true" className="text-pine">✓</span>{feature}</li>
                 ))}
               </ul>
-              <form action={startServicePlanAction} className="mt-5">
-                <input type="hidden" name="tier" value={plan.tier} />
-                <SubmitButton className={plan.tier === "PRO" ? "btn-primary w-full" : "btn-secondary w-full"} disabled={isCurrent || !payments} pendingLabel="Opening checkout…">
-                  {isCurrent ? "Your plan" : current ? `Switch to ${plan.tier === "PRO" ? "Pro" : "Standard"}` : trial ? `Start ${SERVICE_TRIAL_DAYS}-day free trial` : "Choose plan"}
-                </SubmitButton>
-              </form>
+              {plan.tier === "FREE" ? (
+                <form action={chooseFreeServicePlanAction} className="mt-5">
+                  <SubmitButton className="btn-secondary w-full" disabled={isCurrent} pendingLabel="Activating…">{isCurrent ? "Your plan" : "Choose Free"}</SubmitButton>
+                </form>
+              ) : (
+                <form action={startServicePlanAction} className="mt-5">
+                  <input type="hidden" name="tier" value={plan.tier} />
+                  <SubmitButton className={plan.tier === "PRO" ? "btn-primary w-full" : "btn-secondary w-full"} disabled={isCurrent || !payments} pendingLabel="Opening checkout…">
+                    {isCurrent ? "Your plan" : current?.tier !== "FREE" ? `Switch to ${plan.tier === "PRO" ? "Pro" : "Standard"}` : trial ? `Try ${plan.name} free for ${SERVICE_TRIAL_DAYS} days` : `Choose ${plan.name}`}
+                  </SubmitButton>
+                </form>
+              )}
             </section>
           );
         })}
@@ -85,12 +94,13 @@ export default async function ServicePlanPage({ searchParams }: { searchParams: 
         <p className="mt-1 max-w-[65ch] text-[14px] text-ink-soft">
           Each credit gives one live advert a 24-hour clearly labelled boost. Supplier prices now match accommodation adverts, and purchased credits do not expire.
         </p>
+        {current?.tier === "FREE" && <p className="mt-3 rounded-[10px] bg-paper-sunk px-3 py-2 text-[13px] text-ink-soft">Promotions are not available on Free. Upgrade first to keep free listings genuinely lower exposure.</p>}
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {Object.entries(BOOST_PACKAGES).map(([key, pack]) => (
             <form key={key} action={buyServiceBoostPackAction} className="rounded-card border border-line p-4">
               <input type="hidden" name="pack" value={key} />
               <p className="font-semibold">{pack.label}</p><p className="mt-1 text-[20px] font-bold">{money(pack.amount)}</p>
-              <SubmitButton className="btn-secondary mt-3 w-full" disabled={!payments} pendingLabel="Opening…">Buy credits</SubmitButton>
+              <SubmitButton className="btn-secondary mt-3 w-full" disabled={!payments || current?.tier === "FREE"} pendingLabel="Opening…">Buy credits</SubmitButton>
             </form>
           ))}
         </div>

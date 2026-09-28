@@ -27,14 +27,14 @@ export default async function ServiceVerificationPage() {
   return (
     <DashboardShell
       title="Verification"
-      subtitle="Every business is checked by our team before providers can see it. The Verified badge needs approved incorporation details and in-date public liability insurance."
+      subtitle="Every business is checked by our team before providers can see it. Standard and Pro suppliers can earn the Verified badge with approved incorporation details and in-date public liability insurance."
       nav={nav}
       active="/service-provider/verification"
     >
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <BusinessStatusPill status={business.status} />
         <InsuranceStatus state={insurance.state} expiresAt={insurance.expiresAt} />
-        {isVerifiedServiceBusiness(business, typed) && <ServiceVerifiedBadge />}
+        {business.subscription?.tier !== "FREE" && isVerifiedServiceBusiness(business, typed) && <ServiceVerifiedBadge />}
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">

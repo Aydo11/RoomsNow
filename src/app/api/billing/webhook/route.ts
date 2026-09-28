@@ -7,8 +7,8 @@ import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 import { isSponsorPackage, SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import { BOOST_PACKAGES, isBoostPack } from "@/lib/boost-packages";
 import { audit } from "@/lib/audit";
-import { activateServiceBoost, activateServiceSponsorship, applyServicePlan, grantServiceBoostPack } from "@/lib/service-billing";
-import { isServiceBoostKey, isServicePlanTier, SERVICE_BOOSTS } from "@/lib/service-marketplace";
+import { activateFreeServicePlan, activateServiceBoost, activateServiceSponsorship, applyServicePlan, grantServiceBoostPack } from "@/lib/service-billing";
+import { isPaidServicePlanTier, isServiceBoostKey, SERVICE_BOOSTS } from "@/lib/service-marketplace";
 
 export const runtime = "nodejs";
 
@@ -55,7 +55,7 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
     const businessId = session.metadata?.businessId ?? session.client_reference_id;
     const tier = session.metadata?.tier;
     const subscriptionId = stringId(session.subscription);
-    if (!businessId || !isServicePlanTier(tier) || !subscriptionId) return;
+    if (!businessId || !isPaidServicePlanTier(tier) || !subscriptionId) return;
     const remote = await stripe().subscriptions.retrieve(subscriptionId);
     const existing = await db.serviceSubscription.findUnique({ where: { businessId }, select: { externalSubscriptionId: true } });
     await applyServicePlan({
@@ -204,14 +204,19 @@ async function subscriptionChanged(subscription: Stripe.Subscription) {
   if (subscription.metadata.kind === "service_plan") {
     const businessId = subscription.metadata.businessId;
     const serviceTier = subscription.metadata.tier;
-    if (!businessId || !isServicePlanTier(serviceTier)) return;
+    if (!businessId || !isPaidServicePlanTier(serviceTier)) return;
     const current = await db.serviceSubscription.findUnique({ where: { businessId }, select: { externalSubscriptionId: true } });
     if (current?.externalSubscriptionId && current.externalSubscriptionId !== subscription.id) return;
+    const status = stripeStatus(subscription.status);
+    if (status === "CANCELLED") {
+      await activateFreeServicePlan(businessId);
+      return;
+    }
     await applyServicePlan({
       businessId,
       tier: serviceTier,
       provider: "stripe",
-      status: stripeStatus(subscription.status),
+      status,
       trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
       periodEnd: periodEnd(subscription) ?? null,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,

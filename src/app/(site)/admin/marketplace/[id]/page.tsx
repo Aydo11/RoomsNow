@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/rbac";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { AdvertStatusPill, BusinessLogo, BusinessStatusPill, InsuranceStatus, QuoteStatusPill } from "@/components/service-ui";
 import { AdvertDecisionForm, BusinessDecisionForm, EvidenceDecisionForm } from "@/components/service-admin-forms";
-import { categoryLabel, EVIDENCE_LABELS, evidenceChecklist, insuranceState, isVerifiedServiceBusiness, priceLabel, type EvidenceLike } from "@/lib/service-marketplace";
+import { categoryLabel, EVIDENCE_LABELS, evidenceChecklist, insuranceState, isVerifiedServiceBusiness, priceLabel, SERVICE_PLANS, type EvidenceLike } from "@/lib/service-marketplace";
 import { dateTime, money, shortDate } from "@/lib/format";
 import { adminNav } from "../../nav";
 
@@ -45,7 +45,7 @@ export default async function AdminServiceBusinessPage({ params }: { params: Pro
         <BusinessLogo src={business.logoUrl} name={business.name} size={40} />
         <BusinessStatusPill status={business.status} />
         <InsuranceStatus state={insurance.state} expiresAt={insurance.expiresAt} />
-        {isVerifiedServiceBusiness(business, evidence) && <span className="text-[13px] font-medium text-pine-dark">Shows Verified badge</span>}
+        {business.subscription?.tier !== "FREE" && isVerifiedServiceBusiness(business, evidence) && <span className="text-[13px] font-medium text-pine-dark">Shows Verified badge</span>}
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -59,7 +59,7 @@ export default async function AdminServiceBusinessPage({ params }: { params: Pro
               <div><dt className="text-ink-faint">Website</dt><dd>{business.website ? <a className="break-all text-brand hover:underline" href={business.website} target="_blank" rel="noopener noreferrer nofollow">{business.website}</a> : "—"}</dd></div>
               <div><dt className="text-ink-faint">Categories</dt><dd>{business.categories.map(categoryLabel).join(", ") || "—"}</dd></div>
               <div><dt className="text-ink-faint">Coverage</dt><dd>{business.nationalCoverage ? "Nationwide" : [...business.areas, ...business.postcodes].join(", ") || "—"}{business.radiusMiles ? ` · ${business.radiusMiles} miles from ${business.basePostcode ?? "base"}` : ""}</dd></div>
-              <div><dt className="text-ink-faint">Plan</dt><dd>{business.subscription ? `${business.subscription.tier === "PRO" ? "Pro" : "Standard"} · ${business.subscription.status.toLowerCase()}${business.subscription.trialEndsAt ? ` · trial to ${shortDate(business.subscription.trialEndsAt)}` : ""}` : "None"}</dd></div>
+              <div><dt className="text-ink-faint">Plan</dt><dd>{business.subscription ? `${SERVICE_PLANS[business.subscription.tier].name.replace("Marketplace ", "")} · ${business.subscription.status.toLowerCase()}${business.subscription.trialEndsAt ? ` · trial to ${shortDate(business.subscription.trialEndsAt)}` : ""}` : "None"}</dd></div>
               <div><dt className="text-ink-faint">Submitted</dt><dd>{business.submittedAt ? dateTime(business.submittedAt) : "Not yet"}</dd></div>
             </dl>
             {business.description && <p className="mt-4 whitespace-pre-line text-[14px] text-ink-soft">{business.description}</p>}

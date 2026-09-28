@@ -9,8 +9,8 @@ import {
   SERVICE_BOOSTS,
   SERVICE_PLANS,
   SERVICE_TRIAL_DAYS,
+  type PaidServicePlanTierValue,
   type ServiceBoostKey,
-  type ServicePlanTierValue,
 } from "./service-marketplace";
 import type { SubscriptionStatus } from "@prisma/client";
 import { cataloguePriceId, type CataloguePlan } from "./stripe-catalogue";
@@ -38,14 +38,14 @@ async function serviceCustomer(businessId: string) {
 
 /** One free trial per business, ever. */
 export async function trialAvailable(businessId: string) {
-  const row = await db.serviceSubscription.findUnique({ where: { businessId }, select: { status: true, externalSubscriptionId: true, trialEndsAt: true } });
+  const row = await db.serviceSubscription.findUnique({ where: { businessId }, select: { tier: true, status: true, externalSubscriptionId: true, trialEndsAt: true } });
   // An abandoned first checkout leaves an INCOMPLETE placeholder; that doesn't use the trial up.
-  return !row || (row.status === "INCOMPLETE" && !row.externalSubscriptionId && !row.trialEndsAt);
+  return !row || (!row.externalSubscriptionId && !row.trialEndsAt && (row.tier === "FREE" || row.status === "INCOMPLETE"));
 }
 
 export async function applyServicePlan(params: {
   businessId: string;
-  tier: ServicePlanTierValue;
+  tier: PaidServicePlanTierValue;
   status: SubscriptionStatus;
   provider: string;
   trialEndsAt?: Date | null;
@@ -77,7 +77,7 @@ export async function applyServicePlan(params: {
 }
 
 /** The Stripe catalogue entry for a trades and suppliers (Provider Services) plan. */
-export function servicePlanCatalogue(tier: ServicePlanTierValue): CataloguePlan {
+export function servicePlanCatalogue(tier: PaidServicePlanTierValue): CataloguePlan {
   const plan = SERVICE_PLANS[tier];
   return {
     key: `services_${tier.toLowerCase()}`,
@@ -87,7 +87,7 @@ export function servicePlanCatalogue(tier: ServicePlanTierValue): CataloguePlan 
   };
 }
 
-export async function startServicePlanCheckout(params: { businessId: string; tier: ServicePlanTierValue; successUrl: string; cancelUrl: string }) {
+export async function startServicePlanCheckout(params: { businessId: string; tier: PaidServicePlanTierValue; successUrl: string; cancelUrl: string }) {
   const plan = SERVICE_PLANS[params.tier];
   const trial = await trialAvailable(params.businessId);
 
@@ -137,9 +137,13 @@ export async function cancelServicePlan(businessId: string) {
     return;
   }
   // Mock: a trial stops straight away, a paid month runs to its end.
+  if (subscription.status === "TRIALING") {
+    await activateFreeServicePlan(businessId);
+    return;
+  }
   await db.serviceSubscription.update({
     where: { businessId },
-    data: subscription.status === "TRIALING" ? { status: "CANCELLED", cancelAtPeriodEnd: true } : { cancelAtPeriodEnd: true },
+    data: { cancelAtPeriodEnd: true },
   });
 }
 
@@ -204,6 +208,26 @@ export async function startServiceBoostCheckout(params: { businessId: string; ad
   if (!billingAvailable()) throw new Error("Payments are not configured yet.");
   await activateServiceBoost({ businessId: params.businessId, advertId: params.advertId, days: pack.days, amount: pack.amount, source: "PURCHASE", externalPaymentId: `mock-service-boost-${Date.now()}` });
   return withParam(params.successUrl, "boost=complete");
+}
+
+/** Free is a permanent entitlement, not a Stripe trial or subscription. */
+export async function activateFreeServicePlan(businessId: string) {
+  return db.serviceSubscription.upsert({
+    where: { businessId },
+    create: { businessId, tier: "FREE", status: "ACTIVE", billingProvider: "free" },
+    update: {
+      tier: "FREE",
+      status: "ACTIVE",
+      billingProvider: "free",
+      trialEndsAt: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
+      externalCustomerId: null,
+      externalSubscriptionId: null,
+      boostCredits: 0,
+      creditsPeriod: null,
+    },
+  });
 }
 
 /** Add prepaid 24-hour boost credits. Idempotent for webhook replays. */

@@ -148,6 +148,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
         email: data.email,
         phone: data.phone || null,
         areas: data.companyCity ? [data.companyCity] : [],
+        subscription: { create: { tier: "FREE", status: "ACTIVE", billingProvider: "free" } },
       },
     });
     destination = "/service-provider";

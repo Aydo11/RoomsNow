@@ -88,7 +88,7 @@ export default function PrivacyPage() {
       </Section>
 
       <Section heading="14. Cookies and changes to this notice">
-        <p>Strictly necessary cookies support login, security and core service operation. If you accept optional analytics, RoomsNow loads Google Analytics 4 to measure visits to public pages and improve the site. Analytics is not loaded before you choose to accept it; search query strings and account, message, referral, provider, applicant-profile and dashboard pages are excluded from page-view tracking. You can change or withdraw your choice at any time using Cookie settings in the footer.</p>
+        <p>Strictly necessary cookies support login, security and core service operation. If you accept optional cookies, RoomsNow loads Google Analytics 4 and the TikTok Pixel to measure visits to public pages, improve the service and understand campaign performance. These tools are not loaded before you choose to accept them; search query strings and account, message, referral, provider, applicant-profile and dashboard pages are excluded from page-view tracking. TikTok may receive device and browser information when its pixel is enabled. You can change or withdraw your choice at any time using Cookie settings in the footer.</p>
         <p>RoomsNow may update this notice when its services, suppliers or legal duties change and will highlight material changes to account holders.</p>
         <p>Related information appears in the <Link href="/terms" className="text-pine-dark hover:underline">terms of use</Link> and <Link href="/verification" className="text-pine-dark hover:underline">verification policy</Link>.</p>
       </Section>

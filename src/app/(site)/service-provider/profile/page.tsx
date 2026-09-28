@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function ServiceProfilePage() {
   const { user, business } = await requireServiceBusiness();
   const nav = await serviceProviderNav(user.id);
-  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.STANDARD;
+  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.FREE;
   return (
     <DashboardShell
       title="Business profile"

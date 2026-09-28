@@ -64,7 +64,7 @@ export default async function ServiceProviderDashboard() {
     { label: "Complete your business profile", done: Boolean(business.description && business.categories.length && (business.areas.length || business.nationalCoverage)), href: "/service-provider/profile" },
     { label: "Upload insurance and incorporation documents", done: !check.missing.some((m) => m.includes("insurance") || m.includes("incorporation")), href: "/service-provider/verification" },
     { label: "Send your business for verification", done: !["ONBOARDING", "CHANGES_REQUESTED", "REJECTED"].includes(business.status), href: "/service-provider/verification" },
-    { label: "Choose a plan (14-day free trial)", done: Boolean(plan), href: "/service-provider/plan" },
+    { label: "Choose Free, Standard or Pro", done: Boolean(plan), href: "/service-provider/plan" },
     { label: "Create your first advert", done: adverts.length > 0, href: "/service-provider/adverts/new" },
     { label: "Get approved and go live", done: business.status === "APPROVED" && adverts.some((a) => a.status === "ACTIVE"), href: "/service-provider/adverts" },
   ];
@@ -123,7 +123,7 @@ export default async function ServiceProviderDashboard() {
         <StatCard label="Active conversations" value={conversations} />
         <StatCard label="Conversion rate" value={`${conversionRate(totalQuotes, won)}%`} hint={`${won} won of ${totalQuotes} requests, all time`} />
         <StatCard label="Saved by providers" value={favourites} />
-        <StatCard label="Live adverts" value={`${live}/${plan?.maxAdverts ?? SERVICE_PLANS.STANDARD.maxAdverts}`} hint="Awaiting review and paused count too" />
+        <StatCard label="Live adverts" value={`${live}/${plan?.maxAdverts ?? SERVICE_PLANS.FREE.maxAdverts}`} hint="Awaiting review and paused count too" />
         <StatCard label="Boost credits" value={business.subscription?.boostCredits ?? 0} hint={plan?.boostCreditsPerMonth ? `${plan.boostCreditsPerMonth} added each month` : "Included with Pro"} />
         <StatCard label="Won job value" value={money(wonValue)} hint="Accepted and completed quoted value" />
         <StatCard label="Open quote value" value={money(openQuoteValue)} hint="Quotes awaiting a decision" />

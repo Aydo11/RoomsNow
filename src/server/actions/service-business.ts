@@ -17,7 +17,7 @@ import {
   canSubmitAnotherAdvert,
   COUNTED_ADVERT_STATUSES,
   isAdvertPublic,
-  isServicePlanTier,
+  isPaidServicePlanTier,
   medianMinutes,
   quoteTransitionAllowed,
   readyForReview,
@@ -38,6 +38,7 @@ import {
 } from "@/lib/service-validation";
 import {
   cancelServicePlan,
+  activateFreeServicePlan,
   servicePortalUrl,
   spendServiceBoostCredit,
   startServiceBoostPackCheckout,
@@ -110,7 +111,7 @@ export async function saveServiceProfileAction(_prev: FormState, formData: FormD
   const data = parsed.data;
 
   // Area limits follow the plan; before choosing one, the Standard limit applies.
-  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.STANDARD;
+  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.FREE;
   if (data.areas.length > plan.maxServiceAreas) {
     return { ok: false, errors: { areas: `${plan.name} covers up to ${plan.maxServiceAreas} named areas. Tick nationwide or upgrade to Pro for more.` } };
   }
@@ -299,7 +300,7 @@ export async function saveServiceAdvertAction(_prev: FormState, formData: FormDa
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
   const data = parsed.data;
 
-  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.STANDARD;
+  const plan = servicePlanFor(business.subscription) ?? SERVICE_PLANS.FREE;
   if (data.locations.length > plan.maxServiceAreas) {
     return { ok: false, errors: { locations: `${plan.name} covers up to ${plan.maxServiceAreas} areas per advert. Tick nationwide or upgrade to Pro.` } };
   }
@@ -385,7 +386,7 @@ export async function setServiceAdvertStatusAction(advertId: string, next: Servi
 export async function startServicePlanAction(formData: FormData) {
   const { user, business } = await requireServiceBusiness();
   const tier = text(formData, "tier");
-  if (!isServicePlanTier(tier)) return;
+  if (!isPaidServicePlanTier(tier)) return;
   const base = await appUrl();
   const url = await startServicePlanCheckout({ businessId: business.id, tier, successUrl: `${base}/service-provider/plan`, cancelUrl: `${base}/service-provider/plan` });
   await audit({ actorId: user.id, action: "service_billing.checkout_started", targetType: "ServiceBusiness", targetId: business.id, metadata: { tier } });
@@ -410,6 +411,7 @@ export async function boostServiceAdvertAction(formData: FormData) {
   const advertId = text(formData, "advertId");
   const pack = text(formData, "pack");
   const advert = await db.serviceAdvert.findFirst({ where: { id: advertId, businessId: business.id } });
+  if (business.subscription?.tier === "FREE") redirect(`/service-provider/adverts/${advertId}?boost=upgrade`);
   if (!advert || !isAdvertPublic(advert, business, business.subscription)) redirect(`/service-provider/adverts/${advertId}?boost=unavailable`);
   if (pack !== "CREDIT") return;
   const spent = await spendServiceBoostCredit(business.id, advert.id);
@@ -417,8 +419,20 @@ export async function boostServiceAdvertAction(formData: FormData) {
   redirect(`/service-provider/adverts/${advert.id}?boost=${spent ? "complete" : "no-credits"}`);
 }
 
+export async function chooseFreeServicePlanAction() {
+  const { user, business } = await requireServiceBusiness();
+  const paid = business.subscription?.tier !== "FREE" && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(business.subscription?.status ?? "");
+  if (paid && business.subscription?.externalSubscriptionId) redirect("/service-provider/plan?plan=cancel-paid-first");
+  await activateFreeServicePlan(business.id);
+  await audit({ actorId: user.id, action: "service_billing.free_plan_activated", targetType: "ServiceBusiness", targetId: business.id });
+  revalidatePath("/service-provider");
+  revalidatePath("/service-provider/plan");
+  redirect("/service-provider/plan?plan=free");
+}
+
 export async function buyServiceBoostPackAction(formData: FormData) {
   const { business } = await requireServiceBusiness();
+  if (business.subscription?.tier === "FREE") redirect("/service-provider/plan?boost_pack=upgrade");
   const pack = text(formData, "pack");
   if (!isBoostPack(pack)) return;
   const base = await appUrl();
@@ -430,6 +444,7 @@ export async function sponsorServiceAdvertAction(formData: FormData) {
   const { business } = await requireServiceBusiness();
   const advertId = text(formData, "advertId");
   const pack = text(formData, "pack");
+  if (business.subscription?.tier === "FREE") redirect(`/service-provider/adverts/${advertId}?sponsored=upgrade`);
   if (!isSponsorPackage(pack)) return;
   const advert = await db.serviceAdvert.findFirst({ where: { id: advertId, businessId: business.id } });
   if (!advert || !isAdvertPublic(advert, business, business.subscription)) redirect(`/service-provider/adverts/${advertId}?sponsored=unavailable`);
