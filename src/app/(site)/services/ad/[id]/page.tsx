@@ -9,6 +9,8 @@ import { BusinessLogo, InsuranceStatus, PaymentsNote, ServiceVerifiedBadge } fro
 import { ServicesTabs } from "@/components/service-cards";
 import { ReportForm } from "@/components/report-form";
 import { Stars } from "@/components/star-rating";
+import { Gallery } from "@/components/gallery";
+import { ServiceAreaMap } from "@/components/service-area-map";
 import { canContactServiceBusiness, categoryLabel, EVIDENCE_LABELS, isAdvertPublic, priceLabel, responseLabel } from "@/lib/service-marketplace";
 import { monthYear, shortDate } from "@/lib/format";
 
@@ -47,6 +49,10 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
   const name = business.tradingName || business.name;
   const area = advert.nationwide ? "Nationwide" : advert.locations.join(", ");
   const response = responseLabel(trust.responseMinutes);
+  const galleryImages = [...new Set([...advert.images, ...business.portfolio])].slice(0, 12);
+  const coverage = advert.nationwide || business.nationalCoverage
+    ? "Nationwide"
+    : [...new Set([...advert.locations, ...business.areas])].filter(Boolean).join(", ") || "Ask the supplier";
 
   return (
     <div className="shell py-6 sm:py-8">
@@ -75,16 +81,20 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
               {advert.emergency && <span className="rounded-pill bg-clay-light px-2.5 py-1 text-[12px] font-medium text-clay">Emergency call-outs</span>}
               {advert.sameDay && <span className="rounded-pill bg-clay-light px-2.5 py-1 text-[12px] font-medium text-clay">Same-day service</span>}
             </div>
+            <dl className="mt-5 grid gap-3 border-t border-line pt-4 text-[14px] sm:grid-cols-2 lg:grid-cols-4">
+              <div><dt className="text-ink-faint">Pricing</dt><dd className="mt-0.5 font-semibold text-ink">{priceLabel(advert)}</dd></div>
+              <div><dt className="text-ink-faint">Coverage</dt><dd className="mt-0.5 font-medium text-ink">{coverage}</dd></div>
+              <div><dt className="text-ink-faint">Availability</dt><dd className="mt-0.5 font-medium text-ink">{advert.availability || (advert.sameDay ? "Same-day available" : "Contact for availability")}</dd></div>
+              <div><dt className="text-ink-faint">Response</dt><dd className="mt-0.5 font-medium text-ink">{response || business.responseTarget || "Ask the supplier"}</dd></div>
+            </dl>
           </header>
 
-          {advert.images.length > 0 && (
-            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {advert.images.map((image, index) => (
-                <li key={image} className={index === 0 ? "col-span-2 row-span-2" : ""}>
-                  <a href={image} target="_blank" rel="noreferrer"><img src={image} alt={`${advert.title} — photo ${index + 1}`} className="h-full w-full rounded-card object-cover" loading={index ? "lazy" : "eager"} /></a>
-                </li>
-              ))}
-            </ul>
+          {galleryImages.length > 0 && (
+            <Gallery
+              listingId={`service-${advert.id}`}
+              title={advert.title}
+              media={galleryImages.map((url, index) => ({ id: `${advert.id}-${index}`, type: "IMAGE", url, caption: index < advert.images.length ? `Service photo ${index + 1}` : `Recent work by ${name}`, illustrative: false }))}
+            />
           )}
 
           <section className="card p-5">
@@ -95,6 +105,26 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
               {advert.availability && <div><dt className="text-ink-faint">Availability</dt><dd className="text-ink">{advert.availability}</dd></div>}
               {advert.qualifications && <div className="sm:col-span-2"><dt className="text-ink-faint">Qualifications</dt><dd className="whitespace-pre-line text-ink">{advert.qualifications}</dd></div>}
             </dl>
+          </section>
+
+          <section className="card overflow-hidden" aria-labelledby="coverage-heading">
+            <div className="p-5">
+              <h2 id="coverage-heading" className="text-[18px]">Locations and service area</h2>
+              <p className="mt-1 text-[14px] text-ink-soft">{coverage}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[...new Set([...advert.locations, ...business.areas])].map((location) => <span key={location} className="chip">{location}</span>)}
+                {business.radiusMiles && <span className="chip">Up to {business.radiusMiles} miles from their base</span>}
+                {business.nationalCoverage && <span className="chip chip-active">Nationwide coverage</span>}
+              </div>
+            </div>
+            {business.latitude !== null && business.longitude !== null ? (
+              <>
+                <ServiceAreaMap latitude={business.latitude} longitude={business.longitude} name={name} radiusMiles={business.radiusMiles} />
+                <p className="border-t border-line px-5 py-3 text-[12px] text-ink-faint">The pin is approximate and shows the supplier&apos;s service base, not a customer or job address.</p>
+              </>
+            ) : (
+              <p className="border-t border-line bg-paper-sunk px-5 py-4 text-[13px] text-ink-soft">This supplier has listed their coverage above. Ask them to confirm availability for your property&apos;s postcode.</p>
+            )}
           </section>
 
           <section className="card p-5">

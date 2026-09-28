@@ -26,6 +26,8 @@ export default async function ServiceProviderDashboard() {
   const now = new Date();
   const plan = servicePlanFor(business.subscription);
   const advanced = Boolean(plan?.advancedAnalytics);
+  // Marketplace Free (and no plan) gets no analytics, just what it needs to run adverts.
+  const analytics = Boolean(plan?.basicAnalytics);
 
   const [nav, evidence, adverts, quotes30, quoteStatuses, recentQuotes, events, favourites, conversations, activeBoosts, topServices, demand] = await Promise.all([
     serviceProviderNav(user.id),
@@ -62,12 +64,14 @@ export default async function ServiceProviderDashboard() {
 
   const steps = [
     { label: "Complete your business profile", done: Boolean(business.description && business.categories.length && (business.areas.length || business.nationalCoverage)), href: "/service-provider/profile" },
-    { label: "Upload insurance and incorporation documents", done: !check.missing.some((m) => m.includes("insurance") || m.includes("incorporation")), href: "/service-provider/verification" },
-    { label: "Send your business for verification", done: !["ONBOARDING", "CHANGES_REQUESTED", "REJECTED"].includes(business.status), href: "/service-provider/verification" },
-    { label: "Choose Free, Standard or Pro", done: Boolean(plan), href: "/service-provider/plan" },
+    { label: "Choose a plan (Free, or try paid for 14 days)", done: Boolean(plan), href: "/service-provider/plan" },
     { label: "Create your first advert", done: adverts.length > 0, href: "/service-provider/adverts/new" },
-    { label: "Get approved and go live", done: business.status === "APPROVED" && adverts.some((a) => a.status === "ACTIVE"), href: "/service-provider/adverts" },
+    { label: "Advert checked by our team and live", done: adverts.some((a) => a.status === "ACTIVE"), href: "/service-provider/adverts" },
   ];
+  // Verification is optional: it earns the badge and a higher position, it doesn't gate listing.
+  const verified = business.status === "APPROVED";
+  const verificationSent = !["ONBOARDING", "CHANGES_REQUESTED", "REJECTED"].includes(business.status);
+  const docsUploaded = !check.missing.some((m) => m.includes("insurance") || m.includes("incorporation"));
   const setupDone = steps.every((step) => step.done);
 
   return (
@@ -115,6 +119,41 @@ export default async function ServiceProviderDashboard() {
         </section>
       )}
 
+      {!verified && (
+        <section className="card mb-6 flex flex-wrap items-center justify-between gap-4 p-5" aria-labelledby="verify-heading">
+          <div className="min-w-0 flex-1 basis-[18rem]">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-faint">Optional</p>
+            <h2 id="verify-heading" className="mt-0.5 text-[18px]">Get verified to rank higher</h2>
+            <p className="mt-1 text-[14px] text-ink-soft">
+              {verificationSent
+                ? "Thanks — our team is checking your documents, usually within two working days."
+                : "Your adverts can go live without it. Verified businesses get a Verified badge and appear above unverified ones in Provider Services."}
+            </p>
+          </div>
+          {!verificationSent && (
+            <Link href="/service-provider/verification" className="btn-secondary">
+              {docsUploaded ? "Send for verification" : "Upload insurance and documents"}
+            </Link>
+          )}
+        </section>
+      )}
+
+      {!analytics && (
+        <>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <StatCard label="Live adverts" value={`${live}/${plan?.maxAdverts ?? SERVICE_PLANS.FREE.maxAdverts}`} hint="Awaiting review and paused count too" />
+            <StatCard label="Quote requests" value={quotes30} hint="Last 30 days" />
+          </div>
+          <section className="card mt-3 flex flex-wrap items-center justify-between gap-3 p-5">
+            <div className="min-w-0 flex-1 basis-[16rem]">
+              <h2 className="text-[17px]">Analytics are on paid plans</h2>
+              <p className="mt-1 text-[14px] text-ink-soft">See profile and advert views, conversion rate, saves, won job value and response times with Marketplace Standard or Pro.</p>
+            </div>
+            <Link href="/service-provider/plan" className="btn-primary">Compare plans</Link>
+          </section>
+        </>
+      )}
+      {analytics && (<>
       <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-ink-faint">Last 30 days</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Profile views" value={eventCount("PROFILE_VIEW")} />
@@ -130,6 +169,7 @@ export default async function ServiceProviderDashboard() {
         <StatCard label="Completed jobs" value={statusCount("COMPLETED")} hint="Recorded through RoomsNow" />
         <StatCard label="Typical response" value={responseLabel(business.responseMinutes)?.replace("Usually replies ", "") ?? "Building data"} hint="Median first response over 90 days" />
       </div>
+      </>)}
 
       <section className="card mt-5 p-5">
         <div className="flex flex-wrap items-end justify-between gap-2">
@@ -179,7 +219,7 @@ export default async function ServiceProviderDashboard() {
                 <li key={advert.id} className="flex items-center justify-between gap-3 py-2.5">
                   <Link href={`/service-provider/adverts/${advert.id}`} className="min-w-0 flex-1">
                     <span className="block truncate text-[14px] font-medium text-ink">{advert.title}</span>
-                    <span className="block text-[13px] text-ink-faint">{categoryLabel(advert.category)} · {advert.views} views · {advert.enquiries} enquiries</span>
+                    <span className="block text-[13px] text-ink-faint">{categoryLabel(advert.category)}{analytics ? ` · ${advert.views} views · ${advert.enquiries} enquiries` : ""}</span>
                   </Link>
                   <AdvertStatusPill status={advert.status} />
                 </li>
@@ -189,6 +229,7 @@ export default async function ServiceProviderDashboard() {
         </section>
       </div>
 
+      {analytics && (
       <section className="card mt-5 p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-[18px]">Insights</h2>
@@ -235,6 +276,7 @@ export default async function ServiceProviderDashboard() {
           </div>
         )}
       </section>
+      )}
     </DashboardShell>
   );
 }

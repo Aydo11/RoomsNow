@@ -21,7 +21,7 @@ export default async function ServiceProfilePage() {
     >
       <ServiceProfileForm
         maxAreas={plan.maxServiceAreas}
-        portfolioLimit={plan.enhancedProfile ? 12 : 3}
+        portfolioLimit={plan.portfolioPhotos}
         values={{
           name: business.name,
           tradingName: business.tradingName,

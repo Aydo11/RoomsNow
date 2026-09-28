@@ -32,7 +32,7 @@ declare global {
 function isPublicPage(pathname: string) {
   // Avoid account, referral, message and applicant-profile pages. Query strings
   // are never sent because they may contain a searcher's free-text location.
-  return !/^\/(admin|api|dashboard|messages|people|provider|referrals|login|register|forgot-password|reset-password)(\/|$)/.test(pathname);
+  return !/^\/(admin|api|dashboard|messages|people|provider|service-provider|services\/(quotes|saved)|referrals|login|register|forgot-password|reset-password)(\/|$)/.test(pathname);
 }
 
 function eraseOptionalCookies() {

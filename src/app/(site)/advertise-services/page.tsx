@@ -16,8 +16,8 @@ const gbp = (pence: number) => `£${(pence / 100).toLocaleString("en-GB", { maxi
 
 const STEPS = [
   ["Create your business profile", "Tell providers what you do, where you work and how you price. It takes about ten minutes."],
-  ["Get verified", "Upload your public liability insurance and proof of incorporation. Our team checks them, usually within two working days."],
-  ["Publish your adverts", "Each advert is reviewed before it goes live, so providers only see checked businesses."],
+  ["Publish your adverts", "Each advert is reviewed by our team before it goes live, usually within a working day."],
+  ["Get verified (optional)", "Upload your public liability insurance and proof of incorporation. Verified businesses get a badge and show higher in results."],
   ["Receive quote requests", "Paying providers message you and send structured quote requests. You reply, quote and agree the job directly."],
 ] as const;
 
@@ -25,7 +25,7 @@ export default async function AdvertiseServicesPage() {
   const user = await getCurrentUser();
   const isServiceBusiness = user?.role === "SERVICE_PROVIDER";
   const startHref = isServiceBusiness ? "/service-provider/plan" : "/register?type=SERVICE_PROVIDER";
-  const startLabel = isServiceBusiness ? "Manage your plan" : "Start free — no card needed";
+  const startLabel = isServiceBusiness ? "Choose your plan" : `Start your ${SERVICE_TRIAL_DAYS}-day free trial`;
 
   return (
     <>
@@ -43,7 +43,7 @@ export default async function AdvertiseServicesPage() {
             <Link href={startHref} className="btn-primary">{startLabel}</Link>
             <a href="#plans" className="btn-secondary">See plans</a>
           </div>
-          <p className="mt-3 text-[13px] text-ink-faint">The Free plan has no time limit. Upgrade later for verification, more adverts and greater exposure.</p>
+          <p className="mt-3 text-[13px] text-ink-faint">No card charged during the trial. Cancel any time.</p>
         </div>
       </section>
 
@@ -73,11 +73,12 @@ export default async function AdvertiseServicesPage() {
         <div className="shell py-12 sm:py-14">
           <h2 id="plans-heading" className="text-[28px]">Plans</h2>
           <p className="mt-2 max-w-[60ch] text-[15px] text-ink-soft">
-            Start with one free advert and no card. Standard and Pro include a {SERVICE_TRIAL_DAYS}-day trial for new businesses. RoomsNow doesn&apos;t take a cut of the work you win.
+            Start on Free with up to {SERVICE_PLANS.FREE.maxAdverts} adverts, or try a paid plan free for {SERVICE_TRIAL_DAYS} days. RoomsNow doesn&apos;t take a cut of the work you win.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {Object.values(SERVICE_PLANS).map((plan) => {
               const pro = plan.tier === "PRO";
+              const free = plan.monthly === 0;
               return (
                 <article key={plan.tier} className={`flex flex-col rounded-card border p-6 ${pro ? "border-pine bg-pine-light/40 shadow-raise" : "border-line bg-paper"}`}>
                   <div className="flex items-center justify-between gap-3">
@@ -85,18 +86,22 @@ export default async function AdvertiseServicesPage() {
                     {pro && <span className="rounded-pill bg-pine px-2.5 py-1 text-[11.5px] font-semibold text-white">Most reach</span>}
                   </div>
                   <p className="mt-3">
-                    <span className="font-display text-[34px] font-bold tabular-nums text-ink">{gbp(plan.monthly)}</span>
-                    <span className="text-[14px] text-ink-soft"> a month</span>
+                    <span className="font-display text-[34px] font-bold tabular-nums text-ink">{free ? "Free" : gbp(plan.monthly)}</span>
+                    {!free && <span className="text-[14px] text-ink-soft"> a month</span>}
                   </p>
                   <ul className="mt-4 space-y-2 text-[14.5px] text-ink-soft">
                     {plan.features.map((feature) => (
-                      <li key={feature} className="flex gap-2">
-                        <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 text-pine" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      <li key={feature} className={`flex gap-2 ${feature.startsWith("No ") ? "text-ink-faint" : ""}`}>
+                        {feature.startsWith("No ") ? (
+                          <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 text-ink-faint" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M5 10h10" strokeLinecap="round" /></svg>
+                        ) : (
+                          <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 text-pine" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        )}
                         {feature}
                       </li>
                     ))}
                   </ul>
-                  <Link href={startHref} className={`${pro ? "btn-primary" : "btn-secondary"} mt-6 justify-center`}>{plan.tier === "FREE" ? "Start free" : startLabel}</Link>
+                  <Link href={startHref} className={`${pro ? "btn-primary" : "btn-secondary"} mt-6 justify-center`}>{free ? (isServiceBusiness ? "Choose Free" : "Start free") : startLabel}</Link>
                 </article>
               );
             })}

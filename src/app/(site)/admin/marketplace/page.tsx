@@ -46,6 +46,7 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
   ]);
   const [approved, pendingBusinesses, liveAdverts, pendingAdverts, quotes30, liveBoosts] = counts;
   const paying = subscriptions.filter((s) => s.tier !== "FREE" && (s.status === "ACTIVE" || s.status === "PAST_DUE"));
+  const onFree = subscriptions.filter((s) => s.tier === "FREE" && s.status === "ACTIVE").length;
   const mrr = paying.reduce((sum, s) => sum + SERVICE_PLANS[s.tier].monthly, 0);
   const trials = subscriptions.filter((s) => s.status === "TRIALING" && serviceSubscriptionActive(s, now)).length;
 
@@ -60,7 +61,7 @@ export default async function AdminMarketplacePage({ searchParams }: { searchPar
         <StatCard compact label="Approved businesses" value={approved} hint={`${pendingBusinesses} waiting`} />
         <StatCard compact label="Live adverts" value={liveAdverts} hint={`${pendingAdverts} waiting`} />
         <StatCard compact label="Quote requests (30 days)" value={quotes30} />
-        {full ? <StatCard compact label="Plan revenue / month" value={money(mrr)} hint={`${paying.length} paying · ${trials} on trial · ${liveBoosts} boosts running`} /> : <StatCard compact label="Boosts running" value={liveBoosts} />}
+        {full ? <StatCard compact label="Plan revenue / month" value={money(mrr)} hint={`${paying.length} paying · ${trials} on trial · ${onFree} on Free · ${liveBoosts} boosts running`} /> : <StatCard compact label="Boosts running" value={liveBoosts} />}
       </div>
 
       <nav aria-label="Marketplace sections" className="mt-6 flex flex-wrap gap-1.5">
@@ -155,7 +156,7 @@ async function Businesses({ q }: { q: string }) {
           <tr key={b.id}>
             <td><Link href={`/admin/marketplace/${b.id}`} className="font-medium hover:underline">{b.name}</Link><span className="block text-ink-faint">{b.email}</span></td>
             <td><BusinessStatusPill status={b.status} /></td>
-            <td>{b.subscription ? `${SERVICE_PLANS[b.subscription.tier].name.replace("Marketplace ", "")} · ${b.subscription.status.toLowerCase()}` : "—"}</td>
+            <td>{b.subscription ? `${b.subscription.tier === "PRO" ? "Pro" : "Standard"} · ${b.subscription.status.toLowerCase()}` : "—"}</td>
             <td className="tabular-nums">{b._count.adverts}</td>
             <td className="tabular-nums">{b._count.quotes}</td>
             <td>{shortDate(b.createdAt)}</td>

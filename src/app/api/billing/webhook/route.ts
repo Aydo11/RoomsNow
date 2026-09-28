@@ -7,7 +7,7 @@ import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 import { isSponsorPackage, SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import { BOOST_PACKAGES, isBoostPack } from "@/lib/boost-packages";
 import { audit } from "@/lib/audit";
-import { activateFreeServicePlan, activateServiceBoost, activateServiceSponsorship, applyServicePlan, grantServiceBoostPack } from "@/lib/service-billing";
+import { activateServiceBoost, activateServiceSponsorship, applyServicePlan, grantServiceBoostPack } from "@/lib/service-billing";
 import { isPaidServicePlanTier, isServiceBoostKey, SERVICE_BOOSTS } from "@/lib/service-marketplace";
 
 export const runtime = "nodejs";
@@ -207,16 +207,11 @@ async function subscriptionChanged(subscription: Stripe.Subscription) {
     if (!businessId || !isPaidServicePlanTier(serviceTier)) return;
     const current = await db.serviceSubscription.findUnique({ where: { businessId }, select: { externalSubscriptionId: true } });
     if (current?.externalSubscriptionId && current.externalSubscriptionId !== subscription.id) return;
-    const status = stripeStatus(subscription.status);
-    if (status === "CANCELLED") {
-      await activateFreeServicePlan(businessId);
-      return;
-    }
     await applyServicePlan({
       businessId,
       tier: serviceTier,
       provider: "stripe",
-      status,
+      status: stripeStatus(subscription.status),
       trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
       periodEnd: periodEnd(subscription) ?? null,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,

@@ -9,6 +9,7 @@ import {
   creditsPeriodKey,
   isAdvertPublic,
   isVerifiedServiceBusiness,
+  HIDDEN_BUSINESS_STATUSES,
   marketplaceAccess,
   publicAccreditations,
   SERVICE_PLANS,
@@ -19,6 +20,7 @@ import {
   type EvidenceLike,
   type MarketplaceViewer,
   type RankableAdvert,
+  type ServicePlanTierValue,
 } from "@/lib/service-marketplace";
 
 /** Is this accommodation provider on a paid RoomsNow membership? See isPaidProviderCompany. */
@@ -67,20 +69,16 @@ export async function requireServiceBusiness() {
         contactName: `${user.firstName} ${user.lastName}`,
         email: user.email,
         phone: user.phone,
-        subscription: { create: { tier: "FREE", status: "ACTIVE", billingProvider: "free" } },
       },
       include: { subscription: true },
     });
-  }
-  if (!business.subscription) {
-    business.subscription = await db.serviceSubscription.create({ data: { businessId: business.id, tier: "FREE", status: "ACTIVE", billingProvider: "free" } });
   }
   if (business.subscription) business.subscription = await refreshServiceCredits(business.subscription);
   return { user, business };
 }
 
 /** Pro plans get their monthly boost credits the first time they're looked at in a new month. */
-export async function refreshServiceCredits<T extends { id: string; tier: "FREE" | "STANDARD" | "PRO"; status: string; trialEndsAt: Date | null; creditsPeriod: string | null; boostCredits: number }>(subscription: T): Promise<T> {
+export async function refreshServiceCredits<T extends { id: string; tier: ServicePlanTierValue; status: string; trialEndsAt: Date | null; creditsPeriod: string | null; boostCredits: number }>(subscription: T): Promise<T> {
   const period = creditsPeriodKey();
   const perMonth = SERVICE_PLANS[subscription.tier].boostCreditsPerMonth;
   if (!perMonth || subscription.creditsPeriod === period || !serviceSubscriptionActive(subscription)) return subscription;
@@ -111,7 +109,7 @@ export async function loadPublicAdverts(now = new Date()): Promise<MarketAdvert[
   const rows = await db.serviceAdvert.findMany({
     where: {
       status: "ACTIVE",
-      business: { status: "APPROVED", subscription: { is: { status: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] } } } },
+      business: { status: { notIn: [...HIDDEN_BUSINESS_STATUSES] }, subscription: { is: { status: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] } } } },
     },
     orderBy: { publishedAt: "desc" },
     take: 2000,
@@ -188,11 +186,10 @@ export async function businessTrust(businessId: string, now = new Date()) {
     db.serviceQuoteRequest.count({ where: { businessId, status: "COMPLETED" } }),
   ]);
   const typed = evidence as EvidenceLike[];
-  const paidPlan = business.subscription?.tier !== "FREE";
   return {
-    verified: paidPlan && isVerifiedServiceBusiness(business, typed, now),
+    verified: business.subscription?.tier !== "FREE" && isVerifiedServiceBusiness(business, typed, now),
     insurance: insuranceState(typed, now),
-    accreditations: paidPlan ? publicAccreditations(typed, now) : [],
+    accreditations: business.subscription?.tier === "FREE" ? [] : publicAccreditations(typed, now),
     summary: summariseServiceReviews(reviews),
     reviews,
     completedJobs,

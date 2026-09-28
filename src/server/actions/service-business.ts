@@ -17,7 +17,7 @@ import {
   canSubmitAnotherAdvert,
   COUNTED_ADVERT_STATUSES,
   isAdvertPublic,
-  isPaidServicePlanTier,
+  isServicePlanTier,
   medianMinutes,
   quoteTransitionAllowed,
   readyForReview,
@@ -37,8 +37,8 @@ import {
   splitPostcodes,
 } from "@/lib/service-validation";
 import {
-  cancelServicePlan,
   activateFreeServicePlan,
+  cancelServicePlan,
   servicePortalUrl,
   spendServiceBoostCredit,
   startServiceBoostPackCheckout,
@@ -130,7 +130,7 @@ export async function saveServiceProfileAction(_prev: FormState, formData: FormD
 
   const removed = new Set(list(formData, "removePortfolio"));
   const portfolio = business.portfolio.filter((image) => !removed.has(image));
-  const portfolioLimit = plan.enhancedProfile ? 12 : 3;
+  const portfolioLimit = plan.portfolioPhotos;
   const uploads = files(formData, "portfolio");
   if (portfolio.length + uploads.length > portfolioLimit) {
     return { ok: false, errors: { portfolio: `Your plan includes up to ${portfolioLimit} portfolio photos.` } };
@@ -386,7 +386,15 @@ export async function setServiceAdvertStatusAction(advertId: string, next: Servi
 export async function startServicePlanAction(formData: FormData) {
   const { user, business } = await requireServiceBusiness();
   const tier = text(formData, "tier");
-  if (!isPaidServicePlanTier(tier)) return;
+  if (!isServicePlanTier(tier)) return;
+  if (tier === "FREE") {
+    const live = await db.serviceAdvert.count({ where: { businessId: business.id, status: { in: COUNTED_ADVERT_STATUSES } } });
+    const result = await activateFreeServicePlan(business.id, live);
+    if (!result.ok) redirect(`/service-provider/plan?plan=${result.reason === "paid_active" ? "cancel-first" : "too-many"}`);
+    await audit({ actorId: user.id, action: "service_billing.free_plan", targetType: "ServiceBusiness", targetId: business.id });
+    revalidatePath("/service-provider", "layout");
+    redirect("/service-provider/plan?plan=free");
+  }
   const base = await appUrl();
   const url = await startServicePlanCheckout({ businessId: business.id, tier, successUrl: `${base}/service-provider/plan`, cancelUrl: `${base}/service-provider/plan` });
   await audit({ actorId: user.id, action: "service_billing.checkout_started", targetType: "ServiceBusiness", targetId: business.id, metadata: { tier } });
@@ -410,24 +418,13 @@ export async function boostServiceAdvertAction(formData: FormData) {
   const { user, business } = await requireServiceBusiness();
   const advertId = text(formData, "advertId");
   const pack = text(formData, "pack");
-  const advert = await db.serviceAdvert.findFirst({ where: { id: advertId, businessId: business.id } });
   if (business.subscription?.tier === "FREE") redirect(`/service-provider/adverts/${advertId}?boost=upgrade`);
+  const advert = await db.serviceAdvert.findFirst({ where: { id: advertId, businessId: business.id } });
   if (!advert || !isAdvertPublic(advert, business, business.subscription)) redirect(`/service-provider/adverts/${advertId}?boost=unavailable`);
   if (pack !== "CREDIT") return;
   const spent = await spendServiceBoostCredit(business.id, advert.id);
   await audit({ actorId: user.id, action: "service_boost.credit_used", targetType: "ServiceAdvert", targetId: advert.id, metadata: { spent } });
   redirect(`/service-provider/adverts/${advert.id}?boost=${spent ? "complete" : "no-credits"}`);
-}
-
-export async function chooseFreeServicePlanAction() {
-  const { user, business } = await requireServiceBusiness();
-  const paid = business.subscription?.tier !== "FREE" && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(business.subscription?.status ?? "");
-  if (paid && business.subscription?.externalSubscriptionId) redirect("/service-provider/plan?plan=cancel-paid-first");
-  await activateFreeServicePlan(business.id);
-  await audit({ actorId: user.id, action: "service_billing.free_plan_activated", targetType: "ServiceBusiness", targetId: business.id });
-  revalidatePath("/service-provider");
-  revalidatePath("/service-provider/plan");
-  redirect("/service-provider/plan?plan=free");
 }
 
 export async function buyServiceBoostPackAction(formData: FormData) {

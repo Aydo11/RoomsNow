@@ -27,7 +27,9 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
     getCurrentUser(),
   ]);
   const livePayments = billingIsLive();
-  const provider = user?.role === "PROVIDER";
+  // Anyone who runs a provider company (including an admin who also owns one) buys boosts and sponsorship.
+  const provider = user?.role === "PROVIDER" || Boolean(user?.staffOf?.length);
+  const signedIn = Boolean(user);
   const referrer = user?.role === "REFERRER";
   const serviceBusiness = user?.role === "SERVICE_PROVIDER";
 
@@ -58,18 +60,20 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                       <span className="font-display text-[34px]">{plan.monthly === 0 ? "Free" : money(plan.monthly)}</span>
                       {plan.monthly > 0 && <span className="text-[15px] text-ink-soft">per month</span>}
                     </p>
-                    <p className="mt-1 text-[14px] text-pine-dark">{plan.tier === "FREE" ? "No card and no time limit" : `${SERVICE_TRIAL_DAYS}-day free trial for new businesses`}</p>
+                    <p className="mt-1 text-[14px] text-pine-dark">
+                      {plan.monthly === 0 ? "No card needed. Upgrade any time." : `${SERVICE_TRIAL_DAYS}-day free trial for new businesses`}
+                    </p>
 
                     <ul className="mt-5 space-y-2.5 text-[15px]">
-                      {plan.features.map((feature) => <Feature key={feature}>{feature}</Feature>)}
-                      {plan.tier !== "FREE" && <Feature>Secure subscription checkout, invoices and cancellation</Feature>}
+                      {plan.features.map((feature) => <Feature key={feature} enabled={!feature.startsWith("No ")}>{feature}</Feature>)}
+                      {plan.monthly > 0 && <Feature>Secure subscription checkout, invoices and cancellation</Feature>}
                     </ul>
 
                     <Link
                       href={serviceBusiness ? "/service-provider/plan" : "/register?type=SERVICE_PROVIDER"}
                       className={plan.tier === "PRO" ? "btn-primary mt-7 w-full" : "btn-secondary mt-7 w-full"}
                     >
-                      {serviceBusiness ? `Choose ${plan.name}` : plan.tier === "FREE" ? "Start free" : `Start ${SERVICE_TRIAL_DAYS}-day free trial`}
+                      {serviceBusiness ? `Choose ${plan.name}` : plan.monthly === 0 ? "Start free" : `Start ${SERVICE_TRIAL_DAYS}-day free trial`}
                     </Link>
                   </div>
                 ))}
@@ -218,7 +222,16 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
           </div>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
             <p className="text-[13px] text-ink-faint">One-off payment. Credits can be used on any live advert and do not expire.</p>
-            <Link href={provider ? "/provider/adverts" : "/register?type=PROVIDER"} className="btn-primary">Choose an advert to boost</Link>
+            {provider ? (
+              <Link href="/provider/adverts" className="btn-primary">Choose an advert to boost</Link>
+            ) : signedIn ? (
+              <Link href="/provider/create" className="btn-primary">Set up your provider company</Link>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                <Link href="/login?next=/provider/adverts" className="btn-primary">Sign in to boost an advert</Link>
+                <Link href="/register?type=PROVIDER" className="btn-secondary">Create a provider account</Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -241,7 +254,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
           </ul>
         </div>
         <div className="p-6 lg:p-8">
-          <SponsorDurationPicker provider={provider} livePayments={livePayments} />
+          <SponsorDurationPicker provider={provider} signedIn={signedIn} livePayments={livePayments} />
         </div>
       </section>
     </div>

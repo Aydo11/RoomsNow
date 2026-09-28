@@ -9,7 +9,7 @@ export type ServiceBusinessStatusValue = "ONBOARDING" | "PENDING_REVIEW" | "CHAN
 export type ServiceAdvertStatusValue = "DRAFT" | "PENDING_REVIEW" | "ACTIVE" | "PAUSED" | "REJECTED" | "ARCHIVED";
 export type ServiceQuoteStatusValue = "NEW" | "VIEWED" | "QUOTED" | "ACCEPTED" | "DECLINED" | "COMPLETED" | "CANCELLED";
 export type ServicePlanTierValue = "FREE" | "STANDARD" | "PRO";
-export type PaidServicePlanTierValue = Exclude<ServicePlanTierValue, "FREE">;
+export type PaidServicePlanTier = Exclude<ServicePlanTierValue, "FREE">;
 export type ServicePriceTypeValue = "FIXED" | "FROM" | "RANGE" | "HOURLY" | "QUOTE";
 export type ServiceEvidenceTypeValue = "PUBLIC_LIABILITY" | "EMPLOYERS_LIABILITY" | "INCORPORATION" | "QUALIFICATION" | "LICENCE" | "ACCREDITATION" | "OTHER";
 export type ServiceUrgencyValue = "FLEXIBLE" | "WITHIN_A_MONTH" | "WITHIN_A_WEEK" | "URGENT" | "EMERGENCY";
@@ -56,7 +56,9 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
   monthly: number;
   maxAdverts: number;
   maxServiceAreas: number;
+  portfolioPhotos: number;
   boostCreditsPerMonth: number;
+  basicAnalytics: boolean;
   enhancedProfile: boolean;
   advancedAnalytics: boolean;
   leadTracking: boolean;
@@ -71,7 +73,9 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
     monthly: 0,
     maxAdverts: 1,
     maxServiceAreas: 1,
+    portfolioPhotos: 1,
     boostCreditsPerMonth: 0,
+    basicAnalytics: false,
     enhancedProfile: false,
     advancedAnalytics: false,
     leadTracking: false,
@@ -82,9 +86,9 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
       "1 basic business profile",
       "1 live service advert",
       "1 service area",
-      "Messages and quote requests",
-      "Basic advert views",
-      "No verified badge or priority placement",
+      "1 portfolio photo",
+      "Messages and quote requests from paying providers",
+      "No analytics, verified badge or priority placement",
     ],
   },
   STANDARD: {
@@ -93,7 +97,9 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
     monthly: 7500,
     maxAdverts: 5,
     maxServiceAreas: 3,
+    portfolioPhotos: 3,
     boostCreditsPerMonth: 0,
+    basicAnalytics: true,
     enhancedProfile: false,
     advancedAnalytics: false,
     leadTracking: false,
@@ -115,7 +121,9 @@ export const SERVICE_PLANS: Record<ServicePlanTierValue, {
     monthly: 12900,
     maxAdverts: 20,
     maxServiceAreas: 25,
+    portfolioPhotos: 12,
     boostCreditsPerMonth: 3,
+    basicAnalytics: true,
     enhancedProfile: true,
     advancedAnalytics: true,
     leadTracking: true,
@@ -138,7 +146,7 @@ export function isServicePlanTier(value: unknown): value is ServicePlanTierValue
   return value === "FREE" || value === "STANDARD" || value === "PRO";
 }
 
-export function isPaidServicePlanTier(value: unknown): value is PaidServicePlanTierValue {
+export function isPaidServicePlanTier(value: unknown): value is PaidServicePlanTier {
   return value === "STANDARD" || value === "PRO";
 }
 
@@ -173,6 +181,17 @@ export function canSubmitAnotherAdvert(subscription: ServiceSubscriptionLike, li
   return { ok: true as const };
 }
 
+/**
+ * Verification is optional. A business that hasn't been verified can still
+ * advertise (every advert is checked by our team first); verified businesses
+ * get the badge and rank higher. Only a business we've rejected or suspended
+ * is hidden.
+ */
+export const HIDDEN_BUSINESS_STATUSES = ["REJECTED", "SUSPENDED"] as const;
+export function businessCanAdvertise(business: { status: string }) {
+  return !(HIDDEN_BUSINESS_STATUSES as readonly string[]).includes(business.status);
+}
+
 /** Adverts are only ever shown to providers when every one of these is true. */
 export function isAdvertPublic(
   advert: { status: string },
@@ -180,7 +199,7 @@ export function isAdvertPublic(
   subscription: ServiceSubscriptionLike,
   now = new Date(),
 ) {
-  return advert.status === "ACTIVE" && business.status === "APPROVED" && serviceSubscriptionActive(subscription, now);
+  return advert.status === "ACTIVE" && businessCanAdvertise(business) && serviceSubscriptionActive(subscription, now);
 }
 
 // ------------------------------------------------------------------ boosts
@@ -194,7 +213,7 @@ export type ServiceBoostKey = keyof typeof SERVICE_BOOSTS;
 export function isServiceBoostKey(value: unknown): value is ServiceBoostKey {
   return value === "WEEK" || value === "MONTH" || value === "QUARTER";
 }
-/** A plan credit buys a 24-hour boost. */
+/** A plan credit buys a 7-day boost. */
 export const CREDIT_BOOST_DAYS = 1;
 export const MAX_BOOSTED_SLOTS = 3;
 export const MAX_SPONSORED_SLOTS = 3;
@@ -540,8 +559,9 @@ export function rankAdverts<T extends RankableAdvert>(adverts: T[], filters: Ser
   const sort = filters.sort ?? "recommended";
   const rotate = (a: T, b: T) => rotationKey(a.id, seed) - rotationKey(b.id, seed);
   const byRecommended = (a: T, b: T) => {
+    // Verified businesses lead the organic results; paid plans outrank Free among equals.
     const tier = (x: T) => (x.business.tier === "PRO" ? 0 : x.business.tier === "STANDARD" ? 1 : 2);
-    return tier(a) - tier(b) || Number(b.business.verified) - Number(a.business.verified) || rotate(a, b);
+    return Number(b.business.verified) - Number(a.business.verified) || tier(a) - tier(b) || rotate(a, b);
   };
   const nullsLast = (a: number | null, b: number | null, dir: 1 | -1) => (a === null ? (b === null ? 0 : 1) : b === null ? -1 : (a - b) * dir);
   const comparators: Record<ServiceSort, (a: T, b: T) => number> = {

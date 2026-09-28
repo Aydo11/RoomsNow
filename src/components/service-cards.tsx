@@ -30,7 +30,7 @@ export function ServiceAdvertCard({ advert, promoted, sponsored = false, saved, 
   const response = responseLabel(advert.business.responseMinutes);
   const href = `/services/ad/${advert.id}${promoted ? "?from=boost" : sponsored ? "?from=sponsor" : ""}`;
   return (
-    <article className={clsx("card flex flex-col overflow-hidden", (promoted || sponsored) && "border-brand/50 shadow-raise")}>
+    <article className={clsx("card group flex flex-col overflow-hidden transition duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-raise", (promoted || sponsored) && "border-brand/50 shadow-raise")}>
       {advert.image && (
         <Link href={href} tabIndex={-1} aria-hidden="true">
           <img src={advert.image} alt="" className="aspect-[16/9] w-full object-cover" loading="lazy" />
@@ -69,6 +69,9 @@ export function ServiceAdvertCard({ advert, promoted, sponsored = false, saved, 
             <span className="text-[12px] text-ink-faint">No reviews yet</span>
           )}
         </div>
+        <Link href={href} className="inline-flex items-center gap-1 text-[13px] font-semibold text-brand hover:underline" aria-label={`View full details for ${advert.title}`}>
+          View full details <span aria-hidden="true">→</span>
+        </Link>
       </div>
     </article>
   );
