@@ -8,6 +8,7 @@ import { QuickReplies } from "./quick-replies";
 import { parseClientCard, type ClientCard } from "@/lib/client-card";
 import { ClientAvatar } from "./client-avatar";
 import { SubmitButton } from "./ui";
+import { mentionsPhone } from "@/lib/contact-number";
 import { clsx } from "@/lib/clsx";
 import { suggestedReplies, type ReplyViewer } from "@/lib/suggested-replies";
 
@@ -42,6 +43,7 @@ export function Thread({
   shareProfileUrl,
   quickReplies,
   replyViewer = "seeker",
+  phoneNudge = null,
 }: {
   conversationId: string;
   currentUserId: string;
@@ -57,6 +59,8 @@ export function Thread({
   quickReplies?: QuickReplyItem[];
   /** Who is writing, so the suggested messages fit (a provider answers, a seeker asks). */
   replyViewer?: ReplyViewer;
+  /** Nudge someone messaging a provider to share a number (their saved one, if any). */
+  phoneNudge?: { savedPhone: string | null } | null;
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [state, action] = useActionState(sendMessageAction, { ok: false });
@@ -77,6 +81,15 @@ export function Thread({
   const [selectedMediaPreview, setSelectedMediaPreview] = useState<string | null>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [hasText, setHasText] = useState(false);
+  const [phoneTipDismissed, setPhoneTipDismissed] = useState(true);
+
+  useEffect(() => {
+    try {
+      setPhoneTipDismissed(localStorage.getItem(`rn-phone-tip-${conversationId}`) === "1");
+    } catch {
+      setPhoneTipDismissed(false);
+    }
+  }, [conversationId]);
 
   const refreshMessages = useCallback(async () => {
     try {
@@ -147,6 +160,16 @@ export function Thread({
   const suggestions = useMemo(() => suggestedReplies(replyViewer, lastFromOther), [replyViewer, lastFromOther]);
 
   const canAttach = Boolean(attachableClients && attachableClients.length > 0);
+  const sharedNumber = messages.some((message) => message.senderId === currentUserId && !message.isDeleted && mentionsPhone(message.body));
+  const showPhoneTip = Boolean(phoneNudge) && !sharedNumber && !phoneTipDismissed;
+  function dismissPhoneTip() {
+    setPhoneTipDismissed(true);
+    try {
+      localStorage.setItem(`rn-phone-tip-${conversationId}`, "1");
+    } catch {
+      /* private mode: it just comes back next visit */
+    }
+  }
   const pinnedMessages = messages.filter((message) => message.isPinned && !message.isDeleted);
 
   async function togglePin(messageId: string) {
@@ -307,6 +330,26 @@ export function Thread({
           <div className="mb-2 flex items-center justify-between gap-2 rounded-[10px] bg-red-50 px-3 py-1.5 text-[13px] text-red-700" role="status">
             <span className="flex items-center gap-2"><span className="h-2 w-2 animate-pulse rounded-full bg-red-600" aria-hidden="true" />Recording a voice note…</span>
             <button type="button" onClick={() => void toggleRecording()} className="rounded-pill bg-white px-3 py-1 text-[12px] font-semibold">Stop</button>
+          </div>
+        )}
+
+        {showPhoneTip && (
+          <div className="mb-2 flex items-start gap-2.5 rounded-[12px] border border-pine/25 bg-pine-light/50 px-3 py-2">
+            <span aria-hidden="true" className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-pine text-white">
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 4h3.5l1.5 4-2 1.5a11 11 0 0 0 6.5 6.5l1.5-2 4 1.5V19a1.5 1.5 0 0 1-1.6 1.5A16 16 0 0 1 3.5 5.6 1.5 1.5 0 0 1 5 4Z" /></svg>
+            </span>
+            <div className="min-w-0 flex-1 text-[12.5px] leading-snug">
+              <p className="font-semibold text-pine-dark">Share your number for a better chance</p>
+              <p className="text-ink-soft">Providers often ring round when a room comes up. Leave a number and follow up with a call.</p>
+              <button
+                type="button"
+                className="mt-1.5 rounded-pill bg-pine px-3 py-1 text-[12px] font-semibold text-white hover:bg-pine-dark"
+                onClick={() => insertIntoMessage(phoneNudge?.savedPhone ? `My number is ${phoneNudge.savedPhone}, feel free to call or text. ` : "My number is ")}
+              >
+                {phoneNudge?.savedPhone ? `Add ${phoneNudge.savedPhone}` : "Add my number"}
+              </button>
+            </div>
+            <button type="button" onClick={dismissPhoneTip} className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-ink-faint hover:bg-white hover:text-ink" aria-label="Hide this tip">×</button>
           </div>
         )}
 
