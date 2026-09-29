@@ -177,4 +177,5 @@ export const LIMITS = {
   feedback: { limit: 6, windowMs: 60 * 60_000 },
   upload: { limit: 40, windowMs: 60 * 60_000 },
   view: { limit: 1, windowMs: 30 * 60_000 },
+  advertWriter: { limit: 25, windowMs: 60 * 60_000 },
 } as const;
