@@ -181,6 +181,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         withProvider={Boolean(providerCompanyId) && !viewerIsProvider}
         shareProfileUrl={shareProfileUrl}
         quickReplies={quickReplies}
+        phoneNudge={!service && !viewerIsProvider && Boolean(providerCompanyId) && (user.role === "USER" || user.role === "REFERRER") ? { savedPhone: user.phone ?? null } : null}
         replyViewer={service ? (viewerIsServiceBusiness ? "service-business" : "service-buyer") : viewerIsProvider ? "provider" : user.role === "REFERRER" ? "referrer" : "seeker"}
         initialMessages={conversation.messages.map((m) => ({
           id: m.id,
