@@ -67,7 +67,7 @@ export default async function ProviderSettingsPage() {
         }}
       />
 
-      <section className="card mt-6 p-6">
+      <section id="verification" className="card mt-6 scroll-mt-24 p-6">
         <h2 className="text-[20px]">Provider due diligence and verification</h2>
         <p className="mt-2 max-w-[62ch] text-[15px] leading-relaxed text-ink-soft">
           Submit evidence of your legal identity, insurance, governance and safeguarding arrangements.
