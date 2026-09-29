@@ -99,7 +99,7 @@ export default async function ProviderAdvertsPage({
       ) : (
         <ul className="space-y-4">
           {listings.map((listing) => (
-            <li key={listing.id} data-advert-card className="card relative flex flex-wrap gap-5 overflow-hidden p-4">
+            <li key={listing.id} data-advert-card className="card relative flex flex-wrap gap-x-5 gap-y-4 overflow-hidden p-4">
               <div className="h-24 w-32 shrink-0 overflow-hidden rounded-[10px] bg-paper-sunk">
                 {coverImage(listing.media)?.isVideoFile ? (
                   <video src={videoPosterSrc(coverImage(listing.media)!.url)} preload="metadata" muted playsInline className="h-full w-full bg-black object-contain" />
@@ -111,7 +111,7 @@ export default async function ProviderAdvertsPage({
                 )}
               </div>
 
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[min(100%,16rem)] flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link href={`/provider/adverts/${listing.id}`} className="text-[17px] hover:text-pine-dark">
                     {listing.title}
@@ -167,7 +167,10 @@ export default async function ProviderAdvertsPage({
                 )}
               </div>
 
-              <ListingRowActions id={listing.id} status={listing.status} />
+              {/* Its own full-width row, so the buttons never squeeze the details into a sliver. */}
+              <div className="w-full border-t border-line pt-3">
+                <ListingRowActions id={listing.id} status={listing.status} />
+              </div>
             </li>
           ))}
         </ul>
