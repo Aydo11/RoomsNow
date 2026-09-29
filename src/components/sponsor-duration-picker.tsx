@@ -27,7 +27,7 @@ export function SponsorDurationPicker({ provider, signedIn = false, livePayments
           <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-faint">Choose a duration</p>
           <h3 className="mt-1 text-[20px]">One-off payment, no subscription</h3>
         </div>
-        <p className="text-[13px] text-ink-faint">Every package uses the same fair hourly rotation; the duration only changes how long the advert stays sponsored.</p>
+        <p className="text-[13px] text-ink-faint">Every package gets the same placement; the duration only changes how long the advert stays sponsored.</p>
       </div>
 
       <fieldset className="mt-5">
