@@ -6,6 +6,7 @@ import { categoryLabel, priceLabel, responseLabel, type ServicePreviewCard } fro
 import type { MarketAdvert } from "@/server/service-marketplace";
 import { clsx } from "@/lib/clsx";
 import { FeaturedBadge } from "./badges";
+import { ServiceCategoryIcon } from "./service-marketplace-ui";
 
 export function ServicesTabs({ active }: { active: "browse" | "saved" | "quotes" }) {
   const tabs = [
@@ -30,12 +31,17 @@ export function ServiceAdvertCard({ advert, promoted, sponsored = false, saved, 
   const response = responseLabel(advert.business.responseMinutes);
   const href = `/services/ad/${advert.id}${promoted ? "?from=boost" : sponsored ? "?from=sponsor" : ""}`;
   return (
-    <article className={clsx("card group flex flex-col overflow-hidden transition duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-raise", (promoted || sponsored) && "border-brand/50 shadow-raise")}>
-      {advert.image && (
-        <Link href={href} tabIndex={-1} aria-hidden="true">
-          <img src={advert.image} alt="" className="aspect-[16/9] w-full object-cover" loading="lazy" />
-        </Link>
-      )}
+    <article className={clsx("card group flex h-full flex-col overflow-hidden transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-raise", (promoted || sponsored) && "border-brand/50 shadow-raise")}>
+      <Link href={href} tabIndex={-1} aria-hidden="true" className="relative block overflow-hidden">
+        {advert.image ? (
+          <img src={advert.image} alt="" className="aspect-[16/9] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
+        ) : (
+          <span className="grid aspect-[16/9] w-full place-items-center bg-gradient-to-br from-brand/15 via-brand/5 to-pine-light/60 text-brand">
+            <ServiceCategoryIcon slug={advert.category} className="h-12 w-12 opacity-80" />
+          </span>
+        )}
+        <span className="absolute left-2.5 top-2.5 rounded-pill bg-paper-card/95 px-2.5 py-1 text-[11.5px] font-medium text-ink shadow-sm">{categoryLabel(advert.category)}</span>
+      </Link>
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex items-start gap-3">
           <BusinessLogo src={advert.business.logoUrl} name={advert.business.displayName} size={44} />
@@ -54,8 +60,7 @@ export function ServiceAdvertCard({ advert, promoted, sponsored = false, saved, 
           {(advert.emergency || advert.sameDay) && <span className="rounded-pill bg-clay-light px-2 py-0.5 text-[11.5px] font-medium text-clay">{advert.emergency ? "Emergency call-outs" : "Same day"}</span>}
         </div>
         <p className="text-[13px] text-ink-soft">
-          {categoryLabel(advert.category)}
-          {advert.subcategory ? ` · ${advert.subcategory}` : ""}
+          {advert.subcategory ?? categoryLabel(advert.category)}
           {area ? ` · ${area}` : ""}
         </p>
         <div className="mt-auto flex flex-wrap items-end justify-between gap-2 border-t border-line pt-3">
@@ -69,9 +74,12 @@ export function ServiceAdvertCard({ advert, promoted, sponsored = false, saved, 
             <span className="text-[12px] text-ink-faint">No reviews yet</span>
           )}
         </div>
-        <Link href={href} className="inline-flex items-center gap-1 text-[13px] font-semibold text-brand hover:underline" aria-label={`View full details for ${advert.title}`}>
-          View full details <span aria-hidden="true">→</span>
-        </Link>
+        {canSave && (
+          <div className="grid grid-cols-2 gap-2">
+            <Link href={`${href}#quote`} className="btn-primary min-h-10 justify-center px-3 text-[14px]">Request quote</Link>
+            <Link href={href} className="btn-secondary min-h-10 justify-center px-3 text-[14px]">View details</Link>
+          </div>
+        )}
       </div>
     </article>
   );
