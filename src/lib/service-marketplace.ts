@@ -215,7 +215,6 @@ export function isServiceBoostKey(value: unknown): value is ServiceBoostKey {
 }
 /** A plan credit buys a 7-day boost. */
 export const CREDIT_BOOST_DAYS = 1;
-export const MAX_BOOSTED_SLOTS = 3;
 
 /** A new boost on an advert that's already boosted extends it rather than overlapping. */
 export function boostWindow(currentEnd: Date | null, days: number, now = new Date()) {
@@ -573,7 +572,7 @@ export function rankAdverts<T extends RankableAdvert>(adverts: T[], filters: Ser
   };
 
   const promoted = boostPlacementApplies(filters)
-    ? adverts.filter((advert) => isBoosted(advert, now)).sort(rotate).slice(0, MAX_BOOSTED_SLOTS)
+    ? adverts.filter((advert) => isBoosted(advert, now)).sort(rotate)
     : [];
   const promotedIds = new Set(promoted.map((advert) => advert.id));
   const sponsored = boostPlacementApplies(filters)
