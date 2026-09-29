@@ -62,6 +62,7 @@ export function ShareListingButton({ listingId, title, compact = false }: { list
 export function SaveListingIcon({ listingId, title, saved: initial, canSave }: ListingActionProps) {
   const router = useRouter();
   const [saved, setSaved] = useState(Boolean(initial));
+  const [pops, setPops] = useState(0);
   const [pending, startTransition] = useTransition();
 
   function toggle() {
@@ -73,6 +74,7 @@ export function SaveListingIcon({ listingId, title, saved: initial, canSave }: L
       try {
         const result = await toggleSaveAction(listingId);
         setSaved(result.saved);
+        if (result.saved) setPops((n) => n + 1);
         toast.success(result.saved ? "Advert saved." : "Advert removed from saved.");
       } catch {
         toast.error("Your saved adverts could not be updated.");
@@ -95,7 +97,7 @@ export function SaveListingIcon({ listingId, title, saved: initial, canSave }: L
       disabled={pending}
       onClick={toggle}
     >
-      <HeartIcon filled={saved} />
+      <HeartIcon key={pops} filled={saved} pop={pops > 0} />
     </button>
   );
 }
@@ -103,9 +105,9 @@ export function SaveListingIcon({ listingId, title, saved: initial, canSave }: L
 const iconButtonBase = "grid h-10 w-10 shrink-0 place-items-center rounded-full border shadow-raise transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-60";
 const iconButtonResting = "border-white/80 bg-white/95 text-ink hover:bg-blue-50 hover:text-brand";
 
-function HeartIcon({ filled }: { filled: boolean }) {
+function HeartIcon({ filled, pop = false }: { filled: boolean; pop?: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={pop ? "heart-pop h-5 w-5" : "h-5 w-5"} fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
       <path d="M12 20s-7-4.4-7-9.4A3.9 3.9 0 0 1 12 7a3.9 3.9 0 0 1 7 3.6c0 5-7 9.4-7 9.4Z" />
     </svg>
   );
