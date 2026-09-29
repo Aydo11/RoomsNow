@@ -7,6 +7,7 @@ import { logoutAction } from "@/server/actions/auth";
 import { LanguageSelector } from "./language-selector";
 import { ThemeToggle } from "./theme-toggle";
 import { CookieSettingsButton } from "@/components/cookie-settings-button";
+import { NotificationBell } from "./notification-bell";
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
@@ -54,14 +55,13 @@ export async function SiteHeader() {
           <ThemeToggle compact />
           {user ? (
             <>
+              <NotificationBell
+                initialUnread={unread}
+                settingsHref={user.role === "PROVIDER" ? "/provider/settings" : "/dashboard/settings"}
+              />
               <Link href="/messages" className="btn-ghost hidden whitespace-nowrap 2xl:inline-flex">Messages</Link>
               <Link href={`${home}`} className="btn-secondary hidden whitespace-nowrap xl:inline-flex">
                 Dashboard
-                {unread > 0 && (
-                  <span className="ml-1 rounded-pill bg-pine px-1.5 py-0.5 text-[11px] font-semibold text-white">
-                    {unread}
-                  </span>
-                )}
               </Link>
             </>
           ) : (
@@ -76,7 +76,6 @@ export async function SiteHeader() {
               <div className="mb-3 grid grid-cols-2 gap-2">
                 <Link href={home} className="btn-primary justify-center">
                   Dashboard
-                  {unread > 0 && <span className="ml-1 rounded-pill bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">{unread}</span>}
                 </Link>
                 <Link href="/messages" className="btn-secondary justify-center">Messages</Link>
               </div>
