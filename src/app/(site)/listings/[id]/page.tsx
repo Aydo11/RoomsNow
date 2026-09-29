@@ -31,6 +31,7 @@ import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
 import { PropertyMap } from "@/components/property-map";
 import { hasProviderMapAccess } from "@/lib/entitlements";
 import { coverImage } from "@/lib/cover-image";
+import { RecordRecentlyViewed } from "@/components/recently-viewed";
 import { checkHundredViews } from "@/lib/milestones";
 import { ResidentRatingLine, ResidentReviews } from "@/components/resident-reviews";
 import { residentReviewsFor } from "@/server/resident-reviews";
@@ -215,6 +216,18 @@ export default async function ListingPage({
       <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
         <div className="min-w-0">
           <Gallery media={listing.media} title={listing.title} listingId={listing.id} />
+          {listing.status === "ACTIVE" && (() => {
+            const cover = coverImage(listing.media);
+            return (
+              <RecordRecentlyViewed
+                id={listing.id}
+                title={listing.title}
+                place={publicLocation(listing.property)}
+                rent={rentRange(listing.weeklyRentFrom, listing.weeklyRentTo)}
+                image={cover && !cover.isVideoFile ? cover.url : null}
+              />
+            );
+          })()}
 
           <header className="mt-7">
             <div className="flex flex-wrap items-start justify-between gap-3">
