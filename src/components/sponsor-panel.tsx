@@ -179,7 +179,7 @@ export function SponsorPanel({
       )}
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
-      <p className="max-w-md text-[13px] text-ink-faint">One-off payment. Sponsorship ends automatically; this does not start another subscription.</p>
+      <p className="max-w-md text-[13px] text-ink-faint">One-off payment. Sponsorship ends automatically; this does not start another subscription. You can sponsor up to 3 of your adverts at a time.</p>
       <button
         className="btn-primary"
         disabled={pending || (!hasFreeWeek && !paymentsEnabled)}
