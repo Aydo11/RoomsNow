@@ -3,13 +3,14 @@ import { useActionState } from "react";
 
 import { createRequestAction } from "@/server/actions/engagement";
 import { Field, FormError, SubmitButton } from "./ui";
+import { ContactTip } from "./contact-tip";
 
 export function RequestForm({
   listingId,
   defaults,
 }: {
   listingId: string;
-  defaults: { accommodationNeeds: string; supportNeeds: string; moveInDate: string };
+  defaults: { accommodationNeeds: string; supportNeeds: string; moveInDate: string; phone?: string };
 }) {
   const [state, action] = useActionState(createRequestAction, { ok: false });
 
@@ -39,6 +40,18 @@ export function RequestForm({
       >
         <textarea id="supportNeeds" name="supportNeeds" rows={4} className="field" defaultValue={defaults.supportNeeds} />
       </Field>
+
+      <div className="space-y-3">
+        <ContactTip />
+        <Field
+          label="Best phone number to reach you (recommended)"
+          name="phone"
+          hint="Shared with this provider only, so they can call you about the room."
+          error={state.errors?.phone}
+        >
+          <input id="phone" pattern="\+?[\d\s\(\)\.\-]{7,20}" title="Numbers only, for example 07700 900123" name="phone" type="tel" inputMode="tel" autoComplete="tel" className="field" placeholder="07700 900123" defaultValue={defaults.phone ?? ""} />
+        </Field>
+      </div>
 
       <Field label="Anything else the provider should know?" name="additionalInfo" error={state.errors?.additionalInfo}>
         <textarea id="additionalInfo" name="additionalInfo" rows={3} className="field" />
