@@ -262,6 +262,22 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="border-b border-line bg-white">
+        <div data-reveal className="shell py-8">
+          <Link href="/support-services" className="group flex flex-wrap items-center gap-4 rounded-card border border-line bg-gradient-to-r from-pine-light/60 via-paper-card to-paper-card p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-pine/40 hover:shadow-raise sm:p-6">
+            <span aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-[14px] bg-pine text-white">
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20s-7-4.4-7-9.4A3.9 3.9 0 0 1 12 7a3.9 3.9 0 0 1 7 3.6c0 5-7 9.4-7 9.4Z" /></svg>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12px] font-semibold tracking-[0.08em] text-pine-dark">FREE SUPPORT DIRECTORY</span>
+              <span className="mt-0.5 block text-[20px] font-semibold text-ink">Need help beyond housing?</span>
+              <span className="mt-1 block text-[14.5px] text-ink-soft">Mental health and crisis lines, drug and alcohol services, homelessness help and free training, with numbers, addresses and maps.</span>
+            </span>
+            <span className="btn-secondary shrink-0">Find support <span aria-hidden="true" className="nudge-arrow">→</span></span>
+          </Link>
+        </div>
+      </section>
+
       <section className="border-b border-line bg-paper">
         <div className="shell grid gap-8 py-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:py-16">
           <div data-reveal>
