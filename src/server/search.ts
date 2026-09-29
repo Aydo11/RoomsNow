@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { boundingBox, distanceMiles, resolveArea, type Point } from "@/lib/geo";
-import { BOOST_SLOTS, rankBoosted, rotateHourly } from "@/lib/boost-packages";
+import { rankBoosted, rotateHourly } from "@/lib/boost-packages";
 import type { Prisma } from "@prisma/client";
 import { COVER_MEDIA } from "@/lib/cover-image";
 
@@ -39,9 +39,7 @@ export type SearchParams = {
 };
 
 export const PAGE_SIZE = 24;
-/** Sponsored slots are capped and only ever shown on the first page. */
-export const SPONSORED_SLOTS = 3;
-const PROMOTED_POOL_LIMIT = 200;
+/** Paid placements are listed in full on the first results page. */
 /** Deep paging is pointless and expensive; past this we ask people to refine. */
 export const MAX_PAGES = 40;
 /** How many pins the map will draw before it asks for a tighter area. */
@@ -287,17 +285,17 @@ export async function searchListings(params: SearchParams) {
 
   const [boostedPool, sponsoredPool, paidCount, freeCount, total] = await Promise.all([
     page === 1
-      ? db.listing.findMany({ where: boostedWhere, orderBy: { boostStartsAt: "desc" }, take: PROMOTED_POOL_LIMIT, include: LISTING_CARD_SELECT })
+      ? db.listing.findMany({ where: boostedWhere, orderBy: { boostStartsAt: "desc" }, include: LISTING_CARD_SELECT })
       : Promise.resolve([]),
     page === 1
-      ? db.listing.findMany({ where: sponsoredWhere, orderBy: { publishedAt: "desc" }, take: PROMOTED_POOL_LIMIT, include: LISTING_CARD_SELECT })
+      ? db.listing.findMany({ where: sponsoredWhere, orderBy: { publishedAt: "desc" }, include: LISTING_CARD_SELECT })
       : Promise.resolve([]),
     db.listing.count({ where: paidWhere }),
     db.listing.count({ where: freeWhere }),
     db.listing.count({ where }),
   ]);
-  const boosted = rankBoosted(boostedPool, now).slice(0, BOOST_SLOTS);
-  const sponsored = rankSponsored(sponsoredPool, now).slice(0, SPONSORED_SLOTS);
+  const boosted = rankBoosted(boostedPool, now);
+  const sponsored = rankSponsored(sponsoredPool, now);
 
   const offset = (page - 1) * PAGE_SIZE;
   const paidSkip = Math.min(offset, paidCount);

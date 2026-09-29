@@ -68,8 +68,8 @@ export default async function HomePage() {
   const homepageListings = [
     ...featured.boosted.map((listing) => ({ listing, placement: "boosted" as const })),
     ...featured.sponsored.map((listing) => ({ listing, placement: "sponsored" as const })),
-    ...featured.items.map((listing) => ({ listing, placement: listing.memberListing ? "member" as const : "free" as const })),
-  ].slice(0, 3);
+    ...featured.items.slice(0, 6).map((listing) => ({ listing, placement: listing.memberListing ? "member" as const : "free" as const })),
+  ];
   const homepageListingIds = homepageListings.map(({ listing }) => listing.id);
   const savedListingIds = new Set(
     user && homepageListingIds.length

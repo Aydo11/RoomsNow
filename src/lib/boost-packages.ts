@@ -9,7 +9,6 @@ export type BoostPack = keyof typeof BOOST_PACKAGES;
 
 export const BOOST_DURATION_MS = 24 * 60 * 60 * 1000;
 export const BOOST_PRIORITY_MS = 3 * 60 * 60 * 1000;
-export const BOOST_SLOTS = 3;
 
 type BoostedItem = {
   id: string;

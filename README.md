@@ -118,8 +118,8 @@ Built for a catalogue in the thousands rather than the dozens:
 
 - Search uses four explicit lanes: active boosts, active sponsored placements, other paid-member
   adverts, then free adverts. An active promoted advert is never mixed into the free lane.
-- Sponsored adverts fill up to three labelled slots at the top of **page one only**. The eligible
-  pool rotates hourly, so every active sponsor shares the visible positions regardless of package length.
+- All active matching sponsored adverts appear in the labelled sponsored lane on **page one only**.
+  Their order rotates hourly so active sponsors share the higher positions regardless of package length.
 - They still have to match the query. Paying can't put an advert in front of someone it doesn't fit.
 - Buying again extends the end date rather than replacing it. Expiry is enforced in the query,
   not by a cron job.

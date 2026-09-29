@@ -180,7 +180,7 @@ export default async function PricingPage() {
             <span className="chip border-clay/30 bg-clay-light text-clay">Optional paid promotion</span>
             <h2 className="mt-3 text-[26px]">Sponsored adverts</h2>
             <p className="mt-2 max-w-[62ch] text-[15px] leading-relaxed text-ink-soft">
-              Put a live vacancy in up to three clearly labelled positions at the top of relevant first-page searches, with a highlighted map pin.
+              Show your live vacancy in the clearly labelled sponsored lane on the first page of matching searches, with a highlighted map pin. All active matching sponsored adverts can appear; their order rotates fairly.
             </p>
           </div>
           <ul className="flex flex-col gap-2.5 text-[14px] text-ink-soft">
