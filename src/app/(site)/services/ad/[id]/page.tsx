@@ -2,16 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { LIMITS, rateLimit } from "@/lib/rate-limit";
-import { businessTrust, marketplaceViewer, recordServiceEvent, requireFullMarketplace, viewerAccess } from "@/server/service-marketplace";
+import { businessTrust, loadPublicAdverts, marketplaceViewer, recordServiceEvent, requireFullMarketplace, viewerAccess } from "@/server/service-marketplace";
 import { getCurrentUser } from "@/lib/session";
 import { MessageServiceBusinessForm, ServiceFavouriteButton, ServiceQuoteRequestForm } from "@/components/service-buyer-forms";
 import { BusinessLogo, InsuranceStatus, PaymentsNote, ServiceVerifiedBadge } from "@/components/service-ui";
-import { ServicesTabs } from "@/components/service-cards";
+import { ServiceAdvertCard, ServicesTabs } from "@/components/service-cards";
+import { ServiceCategoryIcon } from "@/components/service-marketplace-ui";
 import { ReportForm } from "@/components/report-form";
 import { Stars } from "@/components/star-rating";
 import { Gallery } from "@/components/gallery";
 import { ServiceAreaMap } from "@/components/service-area-map";
-import { canContactServiceBusiness, categoryLabel, EVIDENCE_LABELS, isAdvertPublic, priceLabel, responseLabel } from "@/lib/service-marketplace";
+import { canContactServiceBusiness, categoryLabel, EVIDENCE_LABELS, isAdvertPublic, priceLabel, rankAdverts, responseLabel } from "@/lib/service-marketplace";
 import { monthYear, shortDate } from "@/lib/format";
 import { resolveArea } from "@/lib/geo";
 
@@ -33,10 +34,11 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
 
   const counted = await rateLimit(`view:service-advert:${advert.id}:${user.id}`, LIMITS.view);
   const now = new Date();
-  const [trust, favourite, others] = await Promise.all([
+  const [trust, favourite, others, market] = await Promise.all([
     businessTrust(business.id),
     db.serviceFavourite.findUnique({ where: { userId_advertId: { userId: user.id, advertId: advert.id } }, select: { id: true } }),
     db.serviceAdvert.findMany({ where: { businessId: business.id, status: "ACTIVE", id: { not: advert.id } }, select: { id: true, title: true }, take: 6 }),
+    loadPublicAdverts(now),
     counted.ok ? db.serviceAdvert.update({ where: { id: advert.id }, data: { views: { increment: 1 } } }) : null,
     counted.ok ? recordServiceEvent({ businessId: business.id, advertId: advert.id, type: "ADVERT_VIEW", category: advert.category }) : null,
     counted.ok && from === "boost"
@@ -61,6 +63,17 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
     .split(/\n+/)
     .map((block) => block.trim())
     .filter(Boolean);
+  // Similar services: same category, other businesses, ordered the same way as search.
+  const similar = rankAdverts(market.filter((a) => a.category === advert.category && a.business.id !== business.id), {}, `${now.toISOString().slice(0, 10)}:${user.id}`).slice(0, 3);
+  const similarSaved = similar.length
+    ? new Set((await db.serviceFavourite.findMany({ where: { userId: user.id, advertId: { in: similar.map((a) => a.id) } }, select: { advertId: true } })).map((f) => f.advertId))
+    : new Set<string>();
+  const scoreRows = [
+    ["Quality", trust.summary.quality],
+    ["Communication", trust.summary.communication],
+    ["Timeliness", trust.summary.timeliness],
+    ["Value", trust.summary.value],
+  ] as const;
 
   return (
     <div className="shell py-6 sm:py-8">
@@ -110,6 +123,13 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
                 <div className="rounded-[10px] bg-paper-sunk px-3 py-2.5"><dt className="text-ink-faint">Response</dt><dd className="mt-0.5 font-medium text-ink">{response || business.responseTarget || "Ask the supplier"}</dd></div>
               </dl>
             </div>
+            <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-4 sm:grid-cols-4">
+              <div><dt className="text-[12px] text-ink-faint">Price</dt><dd className="text-[15px] font-semibold text-ink">{priceLabel(advert)}</dd></div>
+              <div><dt className="text-[12px] text-ink-faint">Rating</dt><dd className="text-[15px] font-semibold text-ink">{trust.summary.rating !== null ? `${trust.summary.rating.toFixed(1)} ★ (${trust.summary.count})` : "New"}</dd></div>
+              <div><dt className="text-[12px] text-ink-faint">Jobs via RoomsNow</dt><dd className="text-[15px] font-semibold tabular-nums text-ink">{trust.completedJobs}</dd></div>
+              <div><dt className="text-[12px] text-ink-faint">Replies</dt><dd className="text-[15px] font-semibold text-ink">{response ? response.replace("Usually replies ", "") : "—"}</dd></div>
+            </dl>
+            {canContact && <a href="#quote" className="btn-primary mt-4 w-full justify-center lg:hidden">Request a quote</a>}
           </header>
 
           {galleryImages.length > 0 && (
@@ -118,6 +138,11 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
               title={advert.title}
               media={galleryImages.map((url, index) => ({ id: `${advert.id}-${index}`, type: "IMAGE", url, caption: index < advert.images.length ? `Service photo ${index + 1}` : `Recent work by ${name}`, illustrative: false }))}
             />
+          )}
+          {galleryImages.length === 0 && (
+            <div className="grid aspect-[21/8] place-items-center rounded-card bg-gradient-to-br from-brand/15 via-brand/5 to-pine-light/60 text-brand">
+              <ServiceCategoryIcon slug={advert.category} className="h-14 w-14 opacity-80" />
+            </div>
           )}
 
           <section className="card p-5">
@@ -174,6 +199,44 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
             <p className="mt-4 text-[12.5px] text-ink-faint">RoomsNow checks documents when they&apos;re uploaded. Always confirm certificates and insurance directly before work starts.</p>
           </section>
 
+          <section className="card p-5" id="reviews">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <h2 className="text-[18px]">Reviews from providers</h2>
+              {trust.summary.count > 3 && <Link href={`/services/business/${business.slug}#reviews`} className="text-[14px] text-brand hover:underline">All {trust.summary.count} reviews →</Link>}
+            </div>
+            {trust.summary.rating === null ? (
+              <p className="mt-2 text-[14px] text-ink-soft">No reviews yet. Only providers who complete a job through RoomsNow can leave one, so every review is from real work.</p>
+            ) : (
+              <>
+                <div className="mt-4 grid gap-5 sm:grid-cols-[160px_minmax(0,1fr)]">
+                  <div>
+                    <p className="font-display text-[40px] font-bold leading-none tabular-nums">{trust.summary.rating.toFixed(1)}</p>
+                    <div className="mt-1.5"><Stars rating={trust.summary.rating} /></div>
+                    <p className="mt-1 text-[13px] text-ink-faint">{trust.summary.count} verified {trust.summary.count === 1 ? "job" : "jobs"}</p>
+                  </div>
+                  <dl className="space-y-2">
+                    {scoreRows.map(([label, value]) => (
+                      <div key={label} className="grid grid-cols-[110px_minmax(0,1fr)_32px] items-center gap-2 text-[13px]">
+                        <dt className="text-ink-soft">{label}</dt>
+                        <dd className="h-2 overflow-hidden rounded-full bg-paper-sunk"><span className="block h-full rounded-full bg-brand" style={{ width: `${((value ?? 0) / 5) * 100}%` }} /></dd>
+                        <dd className="text-right tabular-nums text-ink">{value?.toFixed(1)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+                <ul className="mt-5 space-y-4">
+                  {trust.reviews.slice(0, 3).map((review) => (
+                    <li key={review.id} className="border-t border-line pt-4">
+                      <div className="flex flex-wrap items-center gap-2"><Stars rating={review.rating} /><span className="text-[13px] text-ink-faint">{review.quote.service} · {monthYear(review.createdAt)} · Verified job</span></div>
+                      {review.comment && <p className="mt-1.5 text-[15px]">{review.comment}</p>}
+                      {review.reply && <p className="mt-2 rounded-[10px] bg-paper-sunk px-3 py-2 text-[13.5px] text-ink-soft"><span className="font-medium text-ink">Reply from {name}:</span> {review.reply}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+
           {others.length > 0 && (
             <section className="card p-5">
               <h2 className="text-[16px]">More from {name}</h2>
@@ -219,6 +282,18 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
           <PaymentsNote />
         </aside>
       </div>
+
+      {similar.length > 0 && (
+        <section className="mt-10" aria-labelledby="similar-heading">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+            <h2 id="similar-heading" className="text-[20px] font-bold">Similar {categoryLabel(advert.category).toLowerCase()} services</h2>
+            <Link href={`/services?category=${advert.category}`} className="text-[14px] font-medium text-brand hover:underline">See all →</Link>
+          </div>
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {similar.map((item) => <li key={item.id}><ServiceAdvertCard advert={item} promoted={false} saved={similarSaved.has(item.id)} canSave={canContact} /></li>)}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
