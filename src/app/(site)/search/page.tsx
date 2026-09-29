@@ -226,7 +226,7 @@ export default async function SearchPage({
                     </div>
                     <p className="text-[13px] text-ink-soft">Priority placements rotate fairly</p>
                   </div>
-                  <div data-reveal="stagger" className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {results.boosted.map((listing) => (
                       <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} boosted showActions saved={savedListingIds.has(listing.id)} canSave={Boolean(user)} />
                     ))}
@@ -242,7 +242,7 @@ export default async function SearchPage({
                       Why am I seeing these?
                     </Link>
                   </div>
-                  <div data-reveal="stagger" className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {results.sponsored.map((listing) => (
                       <ListingCard
                         key={listing.id}
@@ -266,7 +266,7 @@ export default async function SearchPage({
                     <h2 className="text-[16px] font-bold text-ink">Provider member listings</h2>
                     <span className="text-[12px] text-ink-faint">Paid members · ordered by your chosen sort</span>
                   </div>
-                  <div data-reveal="stagger" className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {memberListings.map((listing) => (
                       <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} memberListing showActions saved={savedListingIds.has(listing.id)} canSave={Boolean(user)} />
                     ))}
@@ -277,7 +277,7 @@ export default async function SearchPage({
               {freeListings.length > 0 && (
                 <section className="mt-8 border-t border-line pt-6" aria-label="Free adverts">
                   <h2 className="text-[15px] font-medium text-ink-soft">More accommodation</h2>
-                  <div data-reveal="stagger" className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                     {freeListings.map((listing) => (
                       <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} showActions saved={savedListingIds.has(listing.id)} canSave={Boolean(user)} />
                     ))}

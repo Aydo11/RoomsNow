@@ -59,7 +59,9 @@ export function MotionEffects() {
           }
         }
       },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
+      // A long grid can be many screens tall on mobile. A percentage-based
+      // threshold may never be reached even while its cards are on screen.
+      { rootMargin: "0px 0px -8% 0px", threshold: 0 },
     );
 
     const watched = new Set<Element>();
