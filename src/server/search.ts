@@ -42,8 +42,7 @@ export type SearchParams = {
 };
 
 export const PAGE_SIZE = 24;
-/** Sponsored slots are capped and only ever shown on the first page. */
-export const SPONSORED_SLOTS = 3;
+/** Every active sponsored advert is shown (up to the pool limit), on the first page only. */
 const PROMOTED_POOL_LIMIT = 200;
 /** Deep paging is pointless and expensive; past this we ask people to refine. */
 export const MAX_PAGES = 40;
@@ -307,7 +306,7 @@ export async function searchListings(params: SearchParams) {
     db.listing.count({ where }),
   ]);
   const boosted = rankBoosted(boostedPool, now).slice(0, BOOST_SLOTS);
-  const sponsored = rankSponsored(sponsoredPool, now).slice(0, SPONSORED_SLOTS);
+  const sponsored = rankSponsored(sponsoredPool, now);
 
   const offset = (page - 1) * PAGE_SIZE;
   const paidSkip = Math.min(offset, paidCount);
