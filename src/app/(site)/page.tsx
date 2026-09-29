@@ -9,6 +9,8 @@ import { searchListings } from "@/server/search";
 import { JsonLd, locationSlug, pageMetadata } from "@/lib/seo";
 import { guides } from "@/lib/guides";
 import { getCurrentUser } from "@/lib/session";
+import { CountUp } from "@/components/motion";
+import { RecentlyViewed } from "@/components/recently-viewed";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
@@ -90,8 +92,10 @@ export default async function HomePage() {
       }} />
 
       <section className="home-arrival surface-home relative overflow-hidden border-b border-line">
-        <span aria-hidden="true" className="absolute -left-24 top-8 h-64 w-64 rounded-full bg-pine-light/55 blur-3xl" />
-        <span aria-hidden="true" className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-[#d8ebfb]/65 blur-3xl" />
+        <span aria-hidden="true" className="hero-grid" />
+        <span aria-hidden="true" className="ambient-orb -left-24 top-8 h-64 w-64 bg-pine-light/70 blur-3xl" />
+        <span aria-hidden="true" className="ambient-orb ambient-orb-2 -right-20 bottom-0 h-72 w-72 bg-[#d8ebfb]/70 blur-3xl" />
+        <span aria-hidden="true" className="ambient-orb ambient-orb-3 left-1/3 -top-24 h-56 w-56 bg-[#70baff]/20 blur-3xl" />
         <div className="shell relative py-10 text-center sm:py-14 lg:py-16">
           <h1 className="home-headline mx-auto max-w-[19ch] [text-wrap:balance] text-[clamp(2rem,8vw,3.5rem)] font-bold leading-[1.12]">
             <span className="sr-only">Find an HMO room or accommodation that fits</span>
@@ -133,7 +137,7 @@ export default async function HomePage() {
           </div>
 
           <dl className="mt-7 flex flex-wrap justify-center gap-x-8 gap-y-3 text-[14px]">
-            <Stat value={roomsAvailable} label="rooms available" />
+            <Stat value={roomsAvailable} label="rooms available" live />
             <Stat value={cities.length} label="areas with vacancies" />
           </dl>
         </div>
@@ -141,8 +145,8 @@ export default async function HomePage() {
 
       <section className="border-b border-line bg-white">
         <div className="shell py-10 sm:py-12">
-          <h2 className="text-center text-[26px]">What would you like to do?</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <h2 data-reveal className="text-center text-[26px]">What would you like to do?</h2>
+          <div data-reveal="stagger" className="mt-6 grid gap-4 md:grid-cols-3">
             <AudienceCard
               icon="search"
               eyebrow="LOOKING FOR A HOME"
@@ -174,14 +178,14 @@ export default async function HomePage() {
 
       {homepageListings.length > 0 && (
         <section className="shell py-12 sm:py-16">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+          <div data-reveal className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">LIVE VACANCIES</span>
+              <span className="inline-flex items-center gap-2 text-[12px] font-semibold tracking-[0.08em] text-pine-dark"><span aria-hidden="true" className="live-dot" />LIVE VACANCIES</span>
               <h2 className="mt-2 text-[28px]">Accommodation available now</h2>
             </div>
             <Link href="/search" className="btn-secondary shrink-0">View all vacancies</Link>
           </div>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div data-reveal="stagger" className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {homepageListings.map(({ listing, placement }) => (
               <ListingCard
                 key={listing.id}
@@ -208,9 +212,13 @@ export default async function HomePage() {
         </section>
       )}
 
+      <div className="shell">
+        <RecentlyViewed className="pb-12" />
+      </div>
+
       <section className="border-y border-line bg-white">
         <div className="shell py-12 sm:py-16">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+          <div data-reveal className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">POPULAR UK LOCATIONS</span>
               <h2 className="mt-2 text-[30px]">Explore accommodation by city</h2>
@@ -221,7 +229,7 @@ export default async function HomePage() {
             <Link href="/search" className="btn-secondary shrink-0">View all locations</Link>
           </div>
 
-          <div className="mt-7 grid gap-5 sm:grid-cols-3">
+          <div data-reveal="stagger" className="mt-7 grid gap-5 sm:grid-cols-3">
             {FEATURED_CITIES.map((city) => {
               const hasLiveListings = cities.some(({ city: activeCity }) => activeCity.toLowerCase() === city.name.toLowerCase());
               const href = hasLiveListings
@@ -244,7 +252,7 @@ export default async function HomePage() {
                   />
                   <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#092d4d]/95 via-[#092d4d]/20 to-transparent" />
                   <span className="absolute inset-x-0 bottom-0 block p-5 text-left text-white">
-                    <span className="block text-[23px] font-bold leading-tight">{city.name}</span>
+                    <span className="flex items-center gap-2 text-[23px] font-bold leading-tight">{city.name}<span aria-hidden="true" className="nudge-arrow text-[18px] opacity-0 transition-opacity duration-300 group-hover:opacity-100">→</span></span>
                     <span className="mt-1 block max-w-[28ch] text-[13px] leading-snug text-white/85">{city.description}</span>
                   </span>
                 </Link>
@@ -256,7 +264,7 @@ export default async function HomePage() {
 
       <section className="border-b border-line bg-paper">
         <div className="shell grid gap-8 py-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:py-16">
-          <div>
+          <div data-reveal>
             <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">A SIMPLE PROCESS</span>
             <h2 className="mt-2 text-[30px]">From search to request</h2>
             <p className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-soft">
@@ -264,14 +272,14 @@ export default async function HomePage() {
             </p>
             <Link href="/how-it-works" className="btn-secondary mt-6">See how RoomsNow works</Link>
           </div>
-          <ol className="grid gap-4 sm:grid-cols-3">
+          <ol data-reveal="stagger" className="step-track grid gap-4 sm:grid-cols-3">
             {[
               ["1", "Search", "Choose an area and filter by housing or support need."],
               ["2", "Compare", "Review availability, rent, facilities and referral routes."],
               ["3", "Connect", "Message, request a room or send a professional referral."],
             ].map(([number, title, body]) => (
-              <li key={title} className="card p-5">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-pine text-[13px] font-semibold text-white">{number}</span>
+              <li key={title} className="card interactive-card p-5">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-pine text-[13px] font-semibold text-white ring-4 ring-pine-light">{number}</span>
                 <h3 className="mt-4 text-[18px]">{title}</h3>
                 <p className="mt-1.5 text-[14px] leading-relaxed text-ink-soft">{body}</p>
               </li>
@@ -281,21 +289,21 @@ export default async function HomePage() {
       </section>
 
       <section className="shell py-12 sm:py-16">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div data-reveal className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">EXPLORE HOUSING</span>
             <h2 className="mt-2 text-[28px]">Browse by accommodation type</h2>
           </div>
-          <Link href="/search" className="text-[14px] font-semibold text-pine-dark hover:underline">Search everything →</Link>
+          <Link href="/search" className="text-[14px] font-semibold text-pine-dark hover:underline">Search everything <span aria-hidden="true" className="nudge-arrow">→</span></Link>
         </div>
-        <div className="mt-6 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+        <div data-reveal="stagger" className="mt-6 grid gap-x-8 gap-y-3 sm:grid-cols-2">
           {ACCOMMODATION_LINKS.map(([title, body, href]) => (
             <Link key={href} href={href} className="group flex items-center justify-between gap-4 border-b border-line py-4">
               <span>
                 <span className="block text-[17px] font-semibold text-ink group-hover:text-pine-dark">{title}</span>
                 <span className="mt-0.5 block text-[14px] text-ink-soft">{body}</span>
               </span>
-              <span aria-hidden="true" className="text-pine-dark">→</span>
+              <span aria-hidden="true" className="nudge-arrow text-pine-dark">→</span>
             </Link>
           ))}
         </div>
@@ -315,20 +323,20 @@ export default async function HomePage() {
 
       <section className="border-t border-line bg-white">
         <div className="shell py-12 sm:py-16">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+          <div data-reveal className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">HELPFUL GUIDES</span>
               <h2 className="mt-2 text-[28px]">Feel more prepared before you choose</h2>
             </div>
-            <Link href="/guides" className="text-[14px] font-semibold text-pine-dark hover:underline">View all guides →</Link>
+            <Link href="/guides" className="text-[14px] font-semibold text-pine-dark hover:underline">View all guides <span aria-hidden="true" className="nudge-arrow">→</span></Link>
           </div>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div data-reveal="stagger" className="mt-6 grid gap-4 md:grid-cols-3">
             {guides.slice(0, 3).map((guide) => (
               <Link key={guide.slug} href={`/guides/${guide.slug}`} className="card interactive-card group flex min-h-[190px] flex-col p-5">
                 <span className="text-[11px] font-semibold tracking-[0.07em] text-pine-dark">{guide.eyebrow}</span>
                 <h3 className="mt-3 text-[20px] leading-snug group-hover:text-pine-dark">{guide.title}</h3>
                 <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-ink-soft">{guide.description}</p>
-                <span className="mt-auto pt-4 text-[14px] font-semibold text-pine-dark">Read guide →</span>
+                <span className="mt-auto pt-4 text-[14px] font-semibold text-pine-dark">Read guide <span aria-hidden="true" className="nudge-arrow">→</span></span>
               </Link>
             ))}
           </div>
@@ -338,10 +346,11 @@ export default async function HomePage() {
   );
 }
 
-function Stat({ value, label }: { value: number; label: string }) {
+function Stat({ value, label, live = false }: { value: number; label: string; live?: boolean }) {
   return (
     <div className="flex items-baseline gap-2">
-      <dt className="font-display text-[22px] font-bold text-pine-dark">{value.toLocaleString("en-GB")}</dt>
+      {live && <span aria-hidden="true" className="live-dot -translate-y-[3px] self-center" />}
+      <dt className="font-display text-[22px] font-bold text-pine-dark"><CountUp value={value} /></dt>
       <dd className="text-ink-soft">{label}</dd>
     </div>
   );
@@ -365,7 +374,7 @@ function AudienceCard({
   highlighted?: boolean;
 }) {
   return (
-    <article className={`home-audience ${highlighted ? "rounded-card bg-gradient-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card border-t-4 border-t-pine/30 bg-pine-light/25 p-6"}`}>
+    <article data-spotlight className={`home-audience ${highlighted ? "rounded-card bg-gradient-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card border-t-4 border-t-pine/30 bg-pine-light/25 p-6"}`}>
       <div className="flex items-center justify-between gap-4">
         <span className={highlighted ? "text-[11px] font-semibold tracking-[0.08em] text-white/80" : "text-[11px] font-semibold tracking-[0.08em] text-pine-dark"}>{eyebrow}</span>
         <AudienceIcon type={icon} highlighted={highlighted} />
