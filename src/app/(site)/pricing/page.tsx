@@ -242,14 +242,14 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
             <span className="chip border-clay/30 bg-clay-light text-clay">Optional paid promotion</span>
             <h2 className="mt-3 text-[26px]">Sponsored adverts</h2>
             <p className="mt-2 max-w-[62ch] text-[15px] leading-relaxed text-ink-soft">
-              Put a live vacancy in up to three clearly labelled positions at the top of relevant first-page searches, with a highlighted map pin.
+              Put a live vacancy in the clearly labelled sponsored section at the top of relevant first-page searches, with a highlighted map pin.
             </p>
           </div>
           <ul className="flex flex-col gap-2.5 text-[14px] text-ink-soft">
             <Feature>Only shown when the advert matches the person&apos;s filters</Feature>
             <Feature>Always labelled Sponsored, including on the map</Feature>
             <Feature>Reserved sponsored lane — active placements never drop into the free-advert section</Feature>
-            <Feature>Hourly rotation shares the visible sponsored positions fairly</Feature>
+            <Feature>Every active sponsored advert is shown, with no cap on how many appear</Feature>
             <Feature>Does not affect verification, moderation or organic ranking</Feature>
           </ul>
         </div>
