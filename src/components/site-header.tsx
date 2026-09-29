@@ -44,7 +44,8 @@ export async function SiteHeader() {
           ) : (
             <Link href="/services" className="font-medium text-pine-dark transition-colors hover:text-ink">Provider Services</Link>
           )}
-          <Link href="/people" className="transition-colors hover:text-ink">People looking</Link>
+          <Link href="/support-services" className="transition-colors hover:text-ink">Support services</Link>
+          <Link href="/people" className="hidden transition-colors hover:text-ink 2xl:inline">People looking</Link>
           <Link href="/advertise-accommodation" className="transition-colors hover:text-ink">Advertise</Link>
           <Link href="/pricing" className={user ? "hidden transition-colors hover:text-ink 2xl:inline" : "transition-colors hover:text-ink"}>Membership</Link>
         </nav>
@@ -89,6 +90,7 @@ export async function SiteHeader() {
             <MobileSection title="Find accommodation">
               <MobileLink href="/search" icon="search" hint="Rooms and supported housing near you">Search accommodation</MobileLink>
               <MobileLink href={vettedHref} icon="badge" hint="Rooms from CQC or BVSC-checked providers">Vetted providers</MobileLink>
+              <MobileLink href="/support-services" icon="heart" hint="Mental health, drugs and alcohol, housing help and crisis lines">Support services</MobileLink>
               <MobileLink href="/how-it-works" icon="info">How it works</MobileLink>
             </MobileSection>
 
@@ -147,6 +149,7 @@ const MENU_ICONS = {
   quote: <path d="M5 5h14v10H9l-4 4V5Zm4 4h6M9 12h4" />,
   spark: <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" />,
   tools: <path d="M14.5 5.5a4 4 0 0 0-5.3 5L4 15.7 8.3 20l5.2-5.2a4 4 0 0 0 5-5.3l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6Z" />,
+  heart: <path d="M12 20s-7-4.4-7-9.4A3.9 3.9 0 0 1 12 7a3.9 3.9 0 0 1 7 3.6c0 5-7 9.4-7 9.4Z" />,
   people: <><circle cx="9" cy="8" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.5a3 3 0 0 1 0 5.5M17.5 14a5 5 0 0 1 3 5" /></>,
 } as const;
 
@@ -203,6 +206,7 @@ export function SiteFooter() {
             ["What happens after you apply", "/next-steps"],
             ["Room and referral guides", "/guides"],
             ["Staying safe", "/safety"],
+            ["Support services and helplines", "/support-services"],
           ]}
         />
         <FooterColumn
@@ -214,6 +218,7 @@ export function SiteFooter() {
             ["Get verified", "/verification"],
             ["Provider Services", "/services"],
             ["Advertise your services (trades)", "/advertise-services"],
+            ["List a support service free", "/support-services/join"],
           ]}
         />
         <FooterColumn
