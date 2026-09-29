@@ -23,7 +23,7 @@ export async function SiteHeader() {
   const isServiceBusiness = user?.role === "SERVICE_PROVIDER";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line/90 bg-paper/90 backdrop-blur-lg">
+    <header className="site-header sticky top-0 z-40 border-b border-line/90 bg-paper/90 backdrop-blur-lg">
       <div className="shell flex h-16 items-center gap-4 xl:gap-6">
         <Link href="/" className="flex shrink-0 items-center" aria-label={`${brand.name} home`}>
           <Logo className="h-10 w-auto max-w-[158px] sm:h-11 sm:max-w-[180px]" />
