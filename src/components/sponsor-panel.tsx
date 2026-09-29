@@ -104,7 +104,7 @@ export function SponsorPanel({
         </>
       ) : (
         <p className="text-[15px] leading-relaxed text-ink-soft">
-          Sponsored adverts sit in up to three labelled slots at the top of the first page of
+          All sponsored adverts are shown in the labelled sponsored section at the top of the first page of
           matching searches, and get a highlighted pin on the map. They never appear on later pages,
           and paying doesn&apos;t change where your advert ranks organically, whether it gets
           verified, or how it&apos;s moderated.
