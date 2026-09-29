@@ -955,3 +955,14 @@ html[data-theme="dark"] .hero-grid { opacity: .6; }
 @keyframes writer-spin { to { --writer-angle: 360deg; } }
 @keyframes writer-pulse { 50% { transform: scale(1.12) rotate(8deg); } }
 @keyframes writer-blink { 50% { opacity: 0; } }
+
+/* Get-set-up checklist: the progress ring fills, ticks pop in one after
+   another, and the next step gently pulses. */
+@media (prefers-reduced-motion: no-preference) {
+  .setup-ring { animation: setup-ring 1.1s cubic-bezier(.16,1,.3,1) backwards; }
+  .setup-tick { animation: setup-tick 500ms cubic-bezier(.16,1,.3,1) backwards; }
+  .setup-next { animation: setup-next 2.2s ease-in-out infinite; }
+}
+@keyframes setup-ring { from { stroke-dashoffset: var(--ring-from); } }
+@keyframes setup-tick { from { transform: scale(0.4); opacity: 0; } }
+@keyframes setup-next { 0%, 100% { box-shadow: 0 0 0 0 rgb(var(--color-pine) / 35%); } 50% { box-shadow: 0 0 0 6px rgb(var(--color-pine) / 0%); } }
