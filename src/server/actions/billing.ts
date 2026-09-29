@@ -13,7 +13,7 @@ import {
   planLimits,
 } from "@/lib/billing";
 import { notifyCompany } from "@/lib/notify";
-import { SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
+import { MAX_SPONSORED_PER_COMPANY, SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import { BOOST_PACKAGES, isBoostPack, type BoostPack } from "@/lib/boost-packages";
 import type { MembershipTier } from "@prisma/client";
 
@@ -74,6 +74,15 @@ export async function cancelMembershipAction(atPeriodEnd = true) {
  * it has no effect on organic ranking, and sponsored adverts never appear on
  * later pages.
  */
+/** Sponsored adverts a company already has running, not counting the one being extended. */
+async function otherSponsoredCount(companyId: string, listingId: string) {
+  return db.listing.count({
+    where: { companyId, id: { not: listingId }, featured: true, OR: [{ featuredUntil: null }, { featuredUntil: { gt: new Date() } }] },
+  });
+}
+
+const SPONSOR_LIMIT_MESSAGE = `You can sponsor up to ${MAX_SPONSORED_PER_COMPANY} adverts at a time. Let one finish, or end one, to sponsor another.`;
+
 /** Buys a sponsored slot for one advert. Sponsored placement is always labelled. */
 export async function featureListingAction(listingId: string, pkg: SponsorPackage = "WEEK") {
   const { user, companyId } = await requireCompany();
@@ -87,6 +96,10 @@ export async function featureListingAction(listingId: string, pkg: SponsorPackag
   // Only a live advert can be sponsored — no paying to promote something unapproved.
   if (listing.status !== "ACTIVE") {
     return { ok: false, message: "Only live adverts can be sponsored." };
+  }
+
+  if ((await otherSponsoredCount(companyId, listingId)) >= MAX_SPONSORED_PER_COMPANY) {
+    return { ok: false, message: SPONSOR_LIMIT_MESSAGE };
   }
 
   const plan = SPONSOR_PACKAGES[pkg];
@@ -149,6 +162,9 @@ export async function spendFreeSponsorMonthAction(listingId: string) {
   if (!listing) return { ok: false, message: "Advert not found." };
   await assertCompanyAccess(user, listing.companyId);
   if (listing.status !== "ACTIVE") return { ok: false, message: "Only live adverts can be sponsored." };
+  if ((await otherSponsoredCount(listing.companyId, listingId)) >= MAX_SPONSORED_PER_COMPANY) {
+    return { ok: false, message: SPONSOR_LIMIT_MESSAGE };
+  }
 
   // Take the credit first, and only if one is left, so two clicks can't spend one credit twice.
   const taken = await db.company.updateMany({
