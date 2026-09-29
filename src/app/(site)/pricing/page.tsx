@@ -52,7 +52,8 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                 {Object.values(SERVICE_PLANS).map((plan) => (
                   <div
                     key={plan.tier}
-                    className={plan.tier === "PRO" ? "rounded-card border-2 border-pine bg-white p-7" : "card p-7"}
+                    data-spotlight
+                    className={plan.tier === "PRO" ? "rounded-card border-2 border-pine bg-white p-7 shadow-raise transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-float" : "card interactive-card p-7"}
                   >
                     {plan.tier === "PRO" && <span className="chip chip-active mb-3">Priority placement</span>}
                     <h2 className="text-[24px]">{plan.name}</h2>
@@ -96,7 +97,8 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
               {plans.map((plan) => (
           <div
             key={plan.id}
-            className={plan.tier === "PROFESSIONAL" ? "rounded-card border-2 border-pine bg-white p-7" : "card p-7"}
+            data-spotlight
+            className={plan.tier === "PROFESSIONAL" ? "rounded-card border-2 border-pine bg-white p-7 shadow-raise transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-float" : "card interactive-card p-7"}
           >
             {plan.tier === "PROFESSIONAL" && (
               <span className="chip chip-active mb-3">Most providers start here</span>
@@ -144,7 +146,8 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                 {referrerPlans.map((plan) => (
                   <div
                     key={plan.id}
-                    className={plan.tier === "REFERRER_PRO" ? "rounded-card border-2 border-pine bg-white p-7" : "card p-7"}
+                    data-spotlight
+                    className={plan.tier === "REFERRER_PRO" ? "rounded-card border-2 border-pine bg-white p-7 shadow-raise transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-float" : "card interactive-card p-7"}
                   >
                     {plan.tier === "REFERRER_PRO" && (
                       <span className="chip chip-active mb-3">For a real referral stream</span>
