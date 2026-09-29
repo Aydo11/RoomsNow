@@ -32,7 +32,8 @@ export default async function RequestPage({ params }: { params: Promise<{ id: st
         <h2 className="text-[17px]">What the provider will see</h2>
         <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">
           Your name, the answers below, and anything you&apos;ve made public on your profile. They
-          will not see your address, date of birth or contact details unless you write them here.
+          will not see your address, date of birth or contact details unless you add them here. Adding a
+          phone number makes it much easier for them to get back to you quickly.
         </p>
       </div>
 
@@ -42,6 +43,7 @@ export default async function RequestPage({ params }: { params: Promise<{ id: st
           accommodationNeeds: user.profile?.accommodationNeeds ?? "",
           supportNeeds: user.profile?.supportNeeds ?? "",
           moveInDate: user.profile?.availableFrom?.toISOString().slice(0, 10) ?? "",
+          phone: user.phone ?? "",
         }}
       />
     </div>
