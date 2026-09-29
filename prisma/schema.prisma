@@ -344,6 +344,7 @@ model User {
   referralOrgsOwned        ReferralOrganisation[]    @relation("ReferralOrgOwner")
   referralInvitesSent      ReferralOrgInvite[]       @relation("ReferralInviteSender")
   serviceBusiness          ServiceBusiness?          @relation("ServiceBusinessOwner")
+  supportOrganisation      SupportOrganisation?      @relation("SupportOrganisationOwner")
   serviceQuotes            ServiceQuoteRequest[]     @relation("ServiceQuoteRequester")
   serviceFavourites        ServiceFavourite[]
   serviceReviews           ServiceReview[]           @relation("ServiceReviewAuthor")
@@ -1997,4 +1998,111 @@ model ServiceEvent {
 
   @@index([businessId, type, createdAt])
   @@index([type, createdAt])
+}
+
+// ------------------------------------------------------------------ support services directory
+// External help anyone can look up: councils, drug and alcohol services,
+// mental health lines, homeless agencies. Organisations can sign up to run
+// their own listing and post events (e.g. free training); an admin approves
+// them first. National helplines and key local services are seeded.
+
+enum SupportOrgStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum SupportScope {
+  NATIONAL
+  LOCAL
+}
+
+enum SupportPostKind {
+  EVENT
+  TRAINING
+  ANNOUNCEMENT
+  SERVICE_UPDATE
+}
+
+model SupportOrganisation {
+  id           String           @id @default(cuid())
+  slug         String           @unique
+  name         String
+  /// One line shown on cards.
+  summary      String
+  description  String?
+  /// Slugs from SUPPORT_CATEGORIES in lib/support-directory.ts.
+  categories   String[]         @default([])
+  scope        SupportScope     @default(LOCAL)
+  /// Towns, cities or regions served, e.g. ["Birmingham"].
+  areas        String[]         @default([])
+  phone        String?
+  /// e.g. "Free, 24 hours a day"
+  phoneNote    String?
+  /// Extra numbers, one per line: "Out of hours (18+): 0121 303 2296".
+  otherPhones  String[]         @default([])
+  textNumber   String?
+  email        String?
+  website      String?
+  hours        String?
+  /// How to get help: self-referral, drop-in, GP referral...
+  howToAccess  String?
+  /// Crisis and emergency lines are pinned at the top.
+  crisis       Boolean          @default(false)
+  status       SupportOrgStatus @default(PENDING)
+  statusReason String?
+  ownerId      String?          @unique
+  owner        User?            @relation("SupportOrganisationOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  /// Set on seeded records so re-seeding updates rather than duplicates.
+  seedKey      String?          @unique
+  verifiedAt   DateTime?
+  views        Int              @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  locations SupportLocation[]
+  posts     SupportPost[]
+
+  @@index([status])
+}
+
+model SupportLocation {
+  id             String              @id @default(cuid())
+  organisationId String
+  organisation   SupportOrganisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  name           String
+  address        String
+  city           String
+  postcode       String
+  latitude       Float?
+  longitude      Float?
+  hours          String?
+  phone          String?
+  createdAt      DateTime            @default(now())
+
+  @@index([organisationId])
+}
+
+model SupportPost {
+  id             String              @id @default(cuid())
+  organisationId String
+  organisation   SupportOrganisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  kind           SupportPostKind     @default(ANNOUNCEMENT)
+  title          String
+  body           String
+  /// Who it's for: "everyone", "residents" or "providers" (staff and landlords).
+  audience       String              @default("everyone")
+  startsAt       DateTime?
+  endsAt         DateTime?
+  venue          String?
+  free           Boolean             @default(true)
+  bookingUrl     String?
+  removedAt      DateTime?
+  createdById    String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([organisationId])
+  @@index([startsAt])
 }
