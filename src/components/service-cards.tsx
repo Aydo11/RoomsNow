@@ -8,11 +8,12 @@ import { clsx } from "@/lib/clsx";
 import { FeaturedBadge } from "./badges";
 import { ServiceCategoryIcon } from "./service-marketplace-ui";
 
-export function ServicesTabs({ active }: { active: "browse" | "saved" | "quotes" }) {
+export function ServicesTabs({ active }: { active: "browse" | "saved" | "quotes" | "support" }) {
   const tabs = [
     { key: "browse", href: "/services", label: "Browse services" },
     { key: "saved", href: "/services/saved", label: "Saved" },
     { key: "quotes", href: "/services/quotes", label: "Quote requests" },
+    { key: "support", href: "/support-services", label: "Support services (free)" },
   ] as const;
   return (
     <nav aria-label="Provider Services" className="flex flex-wrap gap-1.5">
