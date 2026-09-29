@@ -238,7 +238,11 @@ test("ranking: boosts and sponsored placements lead only relevant filtered resul
   assert.equal(new Set(rankAdverts(all, {}, "d2", now).map((r) => r.id)).size, all.length);
 
   const manyBoosts = Array.from({ length: 6 }, (_, i) => advert(`b${i}`, { boostedUntil: days(2) }));
-  assert.equal(rankAdverts(manyBoosts, { location: "Birmingham" }, "x", now).filter((r) => r.promoted).length, 3);
+  assert.equal(rankAdverts(manyBoosts, { location: "Birmingham" }, "x", now).filter((r) => r.promoted).length, 6);
+
+  // Every sponsored advert is listed, however many companies have one.
+  const manySponsored = Array.from({ length: 7 }, (_, i) => advert(`sp${i}`, { sponsoredUntil: days(9), sponsoredBid: 1 }));
+  assert.equal(rankAdverts(manySponsored, { location: "Birmingham" }, "x", now).filter((r) => r.sponsored).length, 7);
 
   const byPrice = rankAdverts([advert("c", { priceFrom: 9000 }), advert("q", { priceType: "QUOTE", priceFrom: null }), advert("d", { priceFrom: 3000 })], { sort: "price_low" }, "x", now);
   assert.deepEqual(byPrice.map((r) => r.id), ["d", "c", "q"]);
