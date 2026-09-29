@@ -19,6 +19,7 @@ import { date, text } from "../form";
 import { Prisma, type RequestStatus } from "@prisma/client";
 import { clientAttachment, conversationCompanyId } from "@/lib/client-sharing";
 import { checkFirstEnquiry, checkFirstMoveIn } from "@/lib/milestones";
+import { contactNumberFromInput, withContactNumber } from "@/lib/contact-number";
 
 /**
  * Service businesses only ever reply inside threads a paying provider opened
@@ -58,8 +59,15 @@ export async function startConversationAction(_prev: FormState, formData: FormDa
   if (!throttle.ok) return { ok: false, errors: { body: "You're sending messages very quickly. Give it a minute." } };
   const listingId = text(formData, "listingId") || null;
   const lookingForAdId = text(formData, "lookingForAdId") || null;
-  const body = text(formData, "body").trim();
+  let body = text(formData, "body").trim();
   if (!body) return { ok: false, errors: { body: "Write a message to send." } };
+  // Optional, but strongly encouraged: a number the provider can ring.
+  const phone = contactNumberFromInput(text(formData, "phone"));
+  if (phone === "invalid") return { ok: false, errors: { phone: "That doesn't look like a phone number. Try something like 07700 900123." } };
+  if (phone) {
+    body = withContactNumber(body, phone);
+    if (!user.phone) await db.user.update({ where: { id: user.id }, data: { phone } });
+  }
 
   let companyId: string | null = null;
   let recipientIds: string[] = [];
@@ -494,6 +502,8 @@ export async function createRequestAction(_prev: FormState, formData: FormData):
     consent: formData.get("consent") === "on" ? "on" : "",
   });
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
+  const requestPhone = contactNumberFromInput(text(formData, "phone"));
+  if (requestPhone === "invalid") return { ok: false, errors: { phone: "That doesn't look like a phone number. Try something like 07700 900123." } };
 
   const listing = await db.listing.findUnique({
     where: { id: parsed.data.listingId },
@@ -513,9 +523,12 @@ export async function createRequestAction(_prev: FormState, formData: FormData):
       moveInDate: date(parsed.data.moveInDate),
       accommodationNeeds: parsed.data.accommodationNeeds || null,
       supportNeeds: parsed.data.supportNeeds || null,
-      additionalInfo: parsed.data.additionalInfo || null,
+      additionalInfo: requestPhone
+        ? `Best number to call: ${requestPhone}${parsed.data.additionalInfo ? `\n\n${parsed.data.additionalInfo}` : ""}`
+        : parsed.data.additionalInfo || null,
     },
   });
+  if (requestPhone && !user.phone) await db.user.update({ where: { id: user.id }, data: { phone: requestPhone } });
 
   await db.application.create({ data: { listingId: listing.id, requestId: request.id } });
 
