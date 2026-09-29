@@ -95,7 +95,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
           <section aria-labelledby="preview-heading">
             <SectionHeading title={filters.category ? categoryLabel(filters.category) : "A preview of what's on offer"} href={filters.category ? "/services" : undefined} linkLabel="All categories" />
             {sample.length > 0 ? (
-              <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <ul data-reveal="stagger" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {sample.map((card, index) => <li key={index}><ServicePreviewTile card={card} /></li>)}
               </ul>
             ) : (
@@ -209,7 +209,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
             {rails.map((rail) => (
               <section key={rail.key}>
                 <SectionHeading title={rail.title} subtitle={rail.subtitle} href={rail.href} />
-                <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <ul data-reveal="stagger" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   {rail.items.map((advert) => (
                     <li key={advert.id}><ServiceAdvertCard advert={advert} promoted={false} saved={railSaved.has(advert.id)} canSave={canAct} /></li>
                   ))}
@@ -304,7 +304,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
               </div>
             </div>
           ) : (
-            <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <ul data-reveal="stagger" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {shown.map((advert) => (
                 <li key={advert.id}><ServiceAdvertCard advert={advert} promoted={advert.promoted} sponsored={advert.sponsored} saved={saved.has(advert.id)} canSave={canAct} /></li>
               ))}
