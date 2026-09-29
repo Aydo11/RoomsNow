@@ -475,7 +475,7 @@ export default async function ListingPage({
           </div>
 
           <div id="message" className="scroll-mt-24">
-            <MessageProviderForm listingId={listing.id} signedIn={Boolean(user)} companyName={listing.company.name} />
+            <MessageProviderForm listingId={listing.id} signedIn={Boolean(user)} companyName={listing.company.name} defaultPhone={user?.phone ?? null} />
           </div>
         </aside>
       </div>
