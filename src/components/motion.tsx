@@ -42,54 +42,93 @@ export function MotionEffects() {
   }, []);
 
   useEffect(() => {
+    // Fail-open: content is only ever hidden while it carries `reveal-pending`,
+    // a class this effect adds and always takes away again. If React re-renders
+    // an element's className, the observer misses it, or the page is restored
+    // from the back/forward cache, the worst case is "no animation", never
+    // "missing content".
     const root = document.documentElement;
-    const reveal = (el: Element) => el.classList.add("is-revealed");
+    const pending = new Set<Element>();
+    const show = (el: Element, animate: boolean) => {
+      pending.delete(el);
+      el.classList.remove("reveal-pending");
+      el.classList.add("is-revealed");
+      if (!animate) el.classList.add("reveal-static");
+    };
+    const showAll = () => [...pending].forEach((el) => show(el, false));
+    const onScreen = (el: Element) => {
+      const rect = el.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    };
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
-      document.querySelectorAll("[data-reveal]").forEach(reveal);
+      document.querySelectorAll("[data-reveal]").forEach((el) => show(el, false));
       return;
     }
 
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            reveal(entry.target);
-            entry.target.removeAttribute("data-reveal-watched");
+          if (entry.isIntersecting && pending.has(entry.target)) {
+            show(entry.target, true);
             observer.unobserve(entry.target);
           }
         }
       },
-      // A long grid can be many screens tall on mobile. A percentage-based
-      // threshold may never be reached even while its cards are on screen.
-      { rootMargin: "0px 0px -8% 0px", threshold: 0 },
+      // Any pixel counts, so very tall sections can never get stuck.
+      { rootMargin: "0px 0px -24px 0px", threshold: 0 },
     );
 
-    const watched = new Set<Element>();
     const scan = () => {
       document.querySelectorAll("[data-reveal]:not(.is-revealed)").forEach((el) => {
-        if (watched.has(el)) return;
-        // Already on screen: show it now so nothing above the fold flickers.
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight && rect.bottom > 0) el.classList.add("is-revealed", "reveal-static");
-        else {
-          watched.add(el);
-          el.setAttribute("data-reveal-watched", "");
-          observer.observe(el);
+        if (pending.has(el) && el.classList.contains("reveal-pending")) return;
+        // Already on screen (or scrolled past): show it now, no flicker.
+        if (onScreen(el) || el.getBoundingClientRect().bottom <= 0) {
+          show(el, false);
+          observer.unobserve(el);
+          return;
         }
+        pending.add(el);
+        el.classList.add("reveal-pending");
+        observer.observe(el);
       });
     };
     scan();
     root.classList.add("motion-ready");
 
     // Pages stream in and client components mount later, so keep watching.
-    const mutations = new MutationObserver(() => scan());
+    let queued = 0;
+    const mutations = new MutationObserver(() => {
+      if (queued) return;
+      queued = requestAnimationFrame(() => {
+        queued = 0;
+        scan();
+      });
+    });
     mutations.observe(document.body, { childList: true, subtree: true });
+
+    // Belt and braces: anything on screen that is somehow still pending gets
+    // shown on scroll/resize, and a restored or re-shown tab shows everything.
+    const sweep = () => pending.forEach((el) => onScreen(el) && show(el, true));
+    const onPageShow = (event: PageTransitionEvent) => event.persisted && showAll();
+    const onVisible = () => document.visibilityState === "visible" && sweep();
+    const safety = window.setTimeout(sweep, 1500);
+    window.addEventListener("scroll", sweep, { passive: true });
+    window.addEventListener("resize", sweep);
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       observer.disconnect();
       mutations.disconnect();
-      // A client-side route change replaces the observer, but React can reuse
-      // elements. Never leave an element hidden with no observer watching it.
-      watched.forEach((el) => el.removeAttribute("data-reveal-watched"));
+      cancelAnimationFrame(queued);
+      window.clearTimeout(safety);
+      window.removeEventListener("scroll", sweep);
+      window.removeEventListener("resize", sweep);
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisible);
+      // Never leave anything hidden behind when the page changes.
+      showAll();
     };
   }, [pathname]);
 
