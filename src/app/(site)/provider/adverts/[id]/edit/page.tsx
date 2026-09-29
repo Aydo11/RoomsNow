@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { advertHtmlToPlainText } from "@/lib/advert-writer";
 import { db } from "@/lib/db";
 import { requireCompany } from "@/lib/rbac";
 import { AdvertForm } from "@/components/advert-form";
@@ -82,7 +83,7 @@ export default async function EditAdvertPage({
           eligibility: listing.eligibility ?? "",
           referralProcess: listing.referralProcess ?? "",
           houseRules: listing.houseRules ?? "",
-          description: listing.description ?? "",
+          description: advertHtmlToPlainText(listing.description ?? ""),
         }}
       />
     </DashboardShell>
