@@ -16,6 +16,8 @@ import {
   type EvidenceLike,
 } from "@/lib/service-marketplace";
 import { money, shortDate, timeAgo } from "@/lib/format";
+import { SetupChecklist, type SetupStep } from "@/components/setup-checklist";
+import { setupChecklistHidden } from "@/lib/setup-checklist";
 
 export const metadata = { title: "Service provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -62,17 +64,39 @@ export default async function ServiceProviderDashboard() {
   const check = readyForReview(business, evidence as EvidenceLike[], now);
   const topTitles = topServices.map((row) => ({ title: adverts.find((a) => a.id === row.advertId)?.title ?? "Archived advert", count: row._count }));
 
-  const steps = [
-    { label: "Complete your business profile", done: Boolean(business.description && business.categories.length && (business.areas.length || business.nationalCoverage)), href: "/service-provider/profile" },
-    { label: "Choose a plan (Free, or try paid for 14 days)", done: Boolean(plan), href: "/service-provider/plan" },
-    { label: "Create your first advert", done: adverts.length > 0, href: "/service-provider/adverts/new" },
-    { label: "Advert checked by our team and live", done: adverts.some((a) => a.status === "ACTIVE"), href: "/service-provider/adverts" },
+  const firstAdvert = adverts[adverts.length - 1];
+  const steps: SetupStep[] = [
+    {
+      key: "profile", label: "Complete your business profile", done: Boolean(business.description && business.categories.length && (business.areas.length || business.nationalCoverage)),
+      why: "Say what you do and where you work, so providers in your area can find you.", href: "/service-provider/profile", cta: "Edit profile",
+    },
+    {
+      key: "logo", label: "Add your logo and some photos of your work", done: Boolean(business.logoUrl && (business.coverUrl || business.portfolio.length)),
+      why: "A logo and real photos of past jobs make your adverts stand out and look trustworthy.", href: "/service-provider/profile", cta: "Add photos",
+    },
+    {
+      key: "plan", label: "Choose a plan", done: Boolean(plan),
+      why: "Start on Free, or try Standard or Pro free for 14 days for more adverts and a higher position.", href: "/service-provider/plan", cta: "Choose a plan",
+    },
+    {
+      key: "advert", label: "Create your first advert", done: adverts.length > 0,
+      why: "One advert per service you offer, such as EICRs or void cleans, works best.", href: "/service-provider/adverts/new", cta: "Create advert",
+    },
+    {
+      key: "live", label: "Get your advert live", done: adverts.some((a) => a.status === "ACTIVE"),
+      waiting: adverts.some((a) => a.status === "PENDING_REVIEW") ? "Waiting on our review — usually within a working day" : undefined,
+      why: "Submit your advert for a quick check by our team.", href: firstAdvert ? `/service-provider/adverts/${firstAdvert.id}` : "/service-provider/adverts/new", cta: "Finish advert",
+    },
+    {
+      key: "quote", label: "Get your first quote request", done: totalQuotes > 0,
+      why: "Reply quickly to messages and keep your areas up to date. Boosting puts you at the top of matching searches.", href: "/service-provider/adverts", cta: "Boost an advert",
+    },
   ];
   // Verification is optional: it earns the badge and a higher position, it doesn't gate listing.
   const verified = business.status === "APPROVED";
   const verificationSent = !["ONBOARDING", "CHANGES_REQUESTED", "REJECTED"].includes(business.status);
   const docsUploaded = !check.missing.some((m) => m.includes("insurance") || m.includes("incorporation"));
-  const setupDone = steps.every((step) => step.done);
+  const checklistHidden = await setupChecklistHidden("service");
 
   return (
     <DashboardShell
@@ -102,22 +126,7 @@ export default async function ServiceProviderDashboard() {
         </div>
       )}
 
-      {!setupDone && (
-        <section className="card mb-6 p-5" aria-labelledby="setup-heading">
-          <h2 id="setup-heading" className="text-[18px]">Get listed</h2>
-          <ol className="mt-3 space-y-2">
-            {steps.map((step) => (
-              <li key={step.label} className="flex items-center gap-3 text-[14px]">
-                <span aria-hidden="true" className={step.done ? "grid h-6 w-6 place-items-center rounded-full bg-pine text-[12px] text-white" : "grid h-6 w-6 place-items-center rounded-full border border-line-strong text-[12px] text-ink-faint"}>
-                  {step.done ? "✓" : ""}
-                </span>
-                {step.done ? <span className="text-ink-soft line-through decoration-ink-faint/40">{step.label}</span> : <Link href={step.href} className="font-medium text-brand underline-offset-2 hover:underline">{step.label}</Link>}
-                <span className="sr-only">{step.done ? "(done)" : "(to do)"}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
+      {!checklistHidden && <SetupChecklist steps={steps} audience="service" title="Get listed" />}
 
       {!verified && (
         <section className="card mb-6 flex flex-wrap items-center justify-between gap-4 p-5" aria-labelledby="verify-heading">
