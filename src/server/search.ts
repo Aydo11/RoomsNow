@@ -3,7 +3,7 @@ import { VETTED_SCHEMES, vettedAccreditationWhere } from "@/lib/vetted";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { boundingBox, distanceMiles, resolveArea, type Point } from "@/lib/geo";
-import { BOOST_SLOTS, rankBoosted, rotateHourly } from "@/lib/boost-packages";
+import { rankBoosted, rotateHourly } from "@/lib/boost-packages";
 import type { Prisma } from "@prisma/client";
 import { COVER_MEDIA } from "@/lib/cover-image";
 
@@ -305,7 +305,7 @@ export async function searchListings(params: SearchParams) {
     db.listing.count({ where: freeWhere }),
     db.listing.count({ where }),
   ]);
-  const boosted = rankBoosted(boostedPool, now).slice(0, BOOST_SLOTS);
+  const boosted = rankBoosted(boostedPool, now);
   const sponsored = rankSponsored(sponsoredPool, now);
 
   const offset = (page - 1) * PAGE_SIZE;
