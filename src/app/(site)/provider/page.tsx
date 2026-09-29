@@ -13,6 +13,8 @@ import { ProviderActivityChart, type ProviderActivityPoint } from "@/components/
 import { VoidCostPanel } from "@/components/void-cost-panel";
 import { companyVoidCost } from "@/server/void-cost";
 import { providerIsPaid } from "@/server/service-marketplace";
+import { SetupChecklist, type SetupStep } from "@/components/setup-checklist";
+import { setupChecklistHidden } from "@/lib/setup-checklist";
 
 export const metadata = { title: "Provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -69,6 +71,14 @@ export default async function ProviderDashboard() {
     }),
     companyVoidCost(companyId),
   ]);
+  const [setupListings, checklistHidden] = await Promise.all([
+    db.listing.findMany({
+      where: { companyId, status: { not: "ARCHIVED" } },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, status: true, _count: { select: { media: true } } },
+    }),
+    setupChecklistHidden("provider"),
+  ]);
 
   const outcomes = computeReferralOutcomes(resolvedReferrals);
   const weekStart = new Date(now);
@@ -85,6 +95,39 @@ export default async function ProviderDashboard() {
       referrals: referralActivity.filter((referral) => referral.createdAt >= from && referral.createdAt < to).length,
     };
   });
+
+  // "Get set up" steps for new providers.
+  const firstListing = setupListings[0];
+  const photosListing = setupListings.find((listing) => listing._count.media < 3) ?? firstListing;
+  const everEnquired = requestStatuses.reduce((sum, row) => sum + row._count, 0) + referralStatuses.reduce((sum, row) => sum + row._count, 0) + (views._sum.enquiries ?? 0) > 0;
+  const setupSteps: SetupStep[] = [
+    {
+      key: "profile", label: "Add your logo and a short company description", done: Boolean(company.logoUrl && company.about),
+      why: "People and referrers trust adverts more when they can see who's behind them.", href: "/provider/settings", cta: "Edit profile",
+    },
+    {
+      key: "advert", label: "Post your first advert", done: setupListings.length > 0,
+      why: "Takes about five minutes, and we can write the title and description for you.", href: "/provider/adverts/new", cta: "Post an advert",
+    },
+    {
+      key: "photos", label: "Add at least 3 photos", done: setupListings.length > 0 && setupListings.some((listing) => listing._count.media >= 3),
+      why: "Adverts with photos of the room, kitchen and bathroom get far more enquiries.", href: photosListing ? `/provider/adverts/${photosListing.id}/media` : "/provider/adverts/new", cta: "Add photos",
+    },
+    {
+      key: "live", label: "Get your advert live", done: setupListings.some((listing) => listing.status === "ACTIVE"),
+      waiting: setupListings.some((listing) => listing.status === "PENDING_REVIEW") ? "Waiting on our review — usually within a working day" : undefined,
+      why: "Finish and submit your advert. Our team checks every advert before it goes live.", href: firstListing ? `/provider/adverts/${firstListing.id}/edit` : "/provider/adverts/new", cta: "Finish advert",
+    },
+    {
+      key: "verify", label: "Get verified", optional: true, done: company.verification === "APPROVED",
+      waiting: company.verification === "PENDING" ? "Submitted — waiting on our review" : undefined,
+      why: "Verified providers get a badge and more trust from referrers.", href: "/provider/settings#verification", cta: "Start verification",
+    },
+    {
+      key: "enquiry", label: "Get your first enquiry", done: everEnquired,
+      why: "Share your advert link, or boost it to appear at the top of matching searches.", href: "/provider/adverts", cta: "Share or boost",
+    },
+  ];
 
   const available = rooms.find((r) => r.status === "AVAILABLE")?._count ?? 0;
   const totalRooms = rooms.reduce((sum, r) => sum + r._count, 0);
@@ -120,6 +163,8 @@ export default async function ProviderDashboard() {
           reviewNote={latestVerification?.reviewNote}
         />
       )}
+
+      {!checklistHidden && <SetupChecklist steps={setupSteps} audience="provider" />}
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Rooms available" value={available} hint={`of ${totalRooms} rooms`} />
