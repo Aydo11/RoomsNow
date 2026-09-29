@@ -18,20 +18,21 @@ const initial: FormState = { ok: false };
 
 export function ServiceFavouriteButton({ advertId, saved: initiallySaved, compact = false }: { advertId: string; saved: boolean; compact?: boolean }) {
   const [saved, setSaved] = useState(initiallySaved);
+  const [pops, setPops] = useState(0);
   const [pending, start] = useTransition();
   return (
     <button
       type="button"
       aria-pressed={saved}
       disabled={pending}
-      onClick={() => start(async () => { const result = await toggleServiceFavouriteAction(advertId); setSaved(result.saved); })}
+      onClick={() => start(async () => { const result = await toggleServiceFavouriteAction(advertId); setSaved(result.saved); if (result.saved) setPops((n) => n + 1); })}
       className={clsx(
         "inline-flex items-center gap-1.5 rounded-pill border px-3 py-1.5 text-[13px] font-medium transition-colors disabled:opacity-60",
         saved ? "border-brand bg-brand/10 text-brand" : "border-line text-ink-soft hover:border-brand/40 hover:text-brand",
         compact && "px-2 py-1",
       )}
     >
-      <svg viewBox="0 0 20 20" className="h-4 w-4" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+      <svg key={pops} viewBox="0 0 20 20" className={clsx("h-4 w-4", pops > 0 && "heart-pop")} fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
         <path d="M10 17s-6.5-3.9-6.5-8.6A3.6 3.6 0 0 1 10 6a3.6 3.6 0 0 1 6.5 2.4C16.5 13.1 10 17 10 17Z" strokeLinejoin="round" />
       </svg>
       <span className={compact ? "sr-only" : undefined}>{saved ? "Saved" : "Save"}</span>
