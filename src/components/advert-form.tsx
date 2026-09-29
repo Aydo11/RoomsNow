@@ -5,6 +5,7 @@ import Link from "next/link";
 import { saveListingAction, autosaveDraftListingAction } from "@/server/actions/listings";
 import { CheckGroup, Field, FormError, SubmitButton, Toggle } from "./ui";
 import { clsx } from "@/lib/clsx";
+import { AdvertWriter } from "./advert-writer";
 import {
   ACCOMMODATION_TYPES,
   GENDER_ARRANGEMENTS,
@@ -232,6 +233,11 @@ export function AdvertForm({
         <Field label="Advert title" name="title" error={state.errors?.title} required>
           <input id="title" name="title" defaultValue={defaults.title} className="field" />
         </Field>
+        <p className="-mt-2 flex flex-wrap items-center gap-1.5 text-[13px] text-ink-soft">
+          <svg viewBox="0 0 24 24" className="h-4 w-4 text-pine" fill="currentColor" aria-hidden="true"><path d="M12 2.5l1.9 5.1 5.1 1.9-5.1 1.9L12 16.5l-1.9-5.1L5 9.5l5.1-1.9L12 2.5Z" /></svg>
+          Not sure what to write? Fill in the rest and{" "}
+          <button type="button" onClick={() => goToStep(3)} className="font-semibold text-pine-dark hover:underline">we&apos;ll write your title and description for you</button>.
+        </p>
         <Field label="One-line summary" name="summary">
           <input id="summary" name="summary" defaultValue={defaults.summary} className="field" />
         </Field>
@@ -333,6 +339,10 @@ export function AdvertForm({
           <textarea id="referralProcess" name="referralProcess" rows={4} defaultValue={defaults.referralProcess} className="field" />
         </Field>
       </section>
+
+      <div className={clsx(step !== 3 && "hidden")}>
+        <AdvertWriter formRef={formRef} onDescriptionChange={setDescriptionLength} />
+      </div>
 
       <section className={clsx("card space-y-4 p-6", step !== 3 && "hidden")}>
         <h2 className="text-[20px]">Full description</h2>
