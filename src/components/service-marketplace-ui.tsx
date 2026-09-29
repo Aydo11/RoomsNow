@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { clsx } from "@/lib/clsx";
 import { SERVICE_CATEGORIES } from "@/lib/service-marketplace";
+import { CountUp } from "./motion";
 
 /**
  * Presentation pieces for the Provider Services marketplace: the search hero,
@@ -68,8 +69,15 @@ export function ServiceSearchHero({
   children?: React.ReactNode;
 }) {
   return (
-    <section className="surface-home border-b border-line">
-      <div className={clsx("shell", compact ? "py-6" : "py-8 sm:py-12")}>
+    <section className="surface-home relative overflow-hidden border-b border-line">
+      {!compact && (
+        <>
+          <span aria-hidden="true" className="hero-grid" />
+          <span aria-hidden="true" className="ambient-orb -right-16 -top-10 h-64 w-64 bg-pine-light/70 blur-3xl" />
+          <span aria-hidden="true" className="ambient-orb ambient-orb-2 -left-20 bottom-0 h-56 w-56 bg-[#70baff]/20 blur-3xl" />
+        </>
+      )}
+      <div className={clsx("shell relative", compact ? "py-6" : "py-8 sm:py-12")}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-[62ch]">
             <p className="text-[12.5px] font-semibold uppercase tracking-[0.08em] text-brand">Provider Services</p>
@@ -112,9 +120,9 @@ export function ServiceSearchHero({
 
         {!compact && stats && (
           <dl className="mt-7 grid max-w-3xl grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
-            <Stat label="Live services" value={stats.services.toLocaleString("en-GB")} />
-            <Stat label="Businesses" value={stats.businesses.toLocaleString("en-GB")} />
-            <Stat label="Verified" value={stats.verified.toLocaleString("en-GB")} />
+            <Stat label="Live services" value={<CountUp value={stats.services} />} />
+            <Stat label="Businesses" value={<CountUp value={stats.businesses} />} />
+            <Stat label="Verified" value={<CountUp value={stats.verified} />} />
             <Stat label="Average rating" value={stats.rating !== null ? `${stats.rating.toFixed(1)} ★` : "New"} />
           </dl>
         )}
@@ -123,7 +131,7 @@ export function ServiceSearchHero({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="border-l-2 border-brand/30 pl-3">
       <dt className="text-[12.5px] text-ink-faint">{label}</dt>
@@ -136,7 +144,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 export function ServiceCategoryTiles({ counts, active, hrefFor }: { counts: Record<string, number>; active?: string; hrefFor?: (slug: string) => string }) {
   const href = hrefFor ?? ((slug: string) => `/services?category=${slug}`);
   return (
-    <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7">
+    <ul data-reveal="stagger" className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7">
       {SERVICE_CATEGORIES.filter((c) => c.slug !== "other" || counts.other).map((category) => {
         const count = counts[category.slug] ?? 0;
         return (
@@ -164,12 +172,12 @@ export function ServiceCategoryTiles({ counts, active, hrefFor }: { counts: Reco
 
 export function SectionHeading({ title, subtitle, href, linkLabel = "See all" }: { title: string; subtitle?: string; href?: string; linkLabel?: string }) {
   return (
-    <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+    <div data-reveal className="mb-4 flex flex-wrap items-end justify-between gap-2">
       <div>
         <h2 className="text-[20px] font-bold sm:text-[22px]">{title}</h2>
         {subtitle && <p className="mt-0.5 text-[14px] text-ink-soft">{subtitle}</p>}
       </div>
-      {href && <Link href={href} className="text-[14px] font-medium text-brand underline-offset-2 hover:underline">{linkLabel} →</Link>}
+      {href && <Link href={href} className="text-[14px] font-medium text-brand underline-offset-2 hover:underline">{linkLabel} <span aria-hidden="true" className="nudge-arrow">→</span></Link>}
     </div>
   );
 }
