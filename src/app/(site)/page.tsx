@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { InstallHint } from "@/components/app-install";
 import Image from "next/image";
-import { Fragment, Suspense } from "react";
+import { cache, Fragment, Suspense } from "react";
 import { db } from "@/lib/db";
 import { SearchPanel } from "@/components/search-panel";
 import { ListingCard } from "@/components/listing-card";
@@ -56,32 +56,13 @@ const POPULAR_SEARCHES = [
   ["Professional accommodation referral platform", "/accommodation-referrals"],
 ] as const;
 
-export default async function HomePage() {
-  const [roomsAvailable, cities, featured, user] = await Promise.all([
-    db.room.count({ where: { status: "AVAILABLE", listing: { status: "ACTIVE" } } }),
-    db.property.findMany({
-      where: { listings: { some: { status: "ACTIVE" } } },
-      select: { city: true },
-      distinct: ["city"],
-    }),
-    searchListings({ sort: "featured" }),
-    getCurrentUser(),
-  ]);
-  const homepageListings = [
-    ...featured.boosted.map((listing) => ({ listing, placement: "boosted" as const })),
-    ...featured.sponsored.map((listing) => ({ listing, placement: "sponsored" as const })),
-    ...featured.items.map((listing) => ({ listing, placement: listing.memberListing ? "member" as const : "free" as const })),
-  ].slice(0, 3);
-  const homepageListingIds = homepageListings.map(({ listing }) => listing.id);
-  const savedListingIds = new Set(
-    user && homepageListingIds.length
-      ? (await db.savedListing.findMany({
-          where: { userId: user.id, listingId: { in: homepageListingIds } },
-          select: { listingId: true },
-        })).map((save) => save.listingId)
-      : [],
-  );
+const getActiveCities = cache(() => db.property.findMany({
+  where: { listings: { some: { status: "ACTIVE" } } },
+  select: { city: true },
+  distinct: ["city"],
+}));
 
+export default function HomePage() {
   return (
     <>
       <JsonLd data={{
@@ -137,8 +118,9 @@ export default async function HomePage() {
           </div>
 
           <dl className="mt-7 flex flex-wrap justify-center gap-x-8 gap-y-3 text-[14px]">
-            <Stat value={roomsAvailable} label="rooms available" live />
-            <Stat value={cities.length} label="areas with vacancies" />
+            <Suspense fallback={<span role="status" className="text-ink-soft">Checking live availability…</span>}>
+              <HomeStats />
+            </Suspense>
           </dl>
         </div>
       </section>
@@ -176,91 +158,17 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {homepageListings.length > 0 && (
-        <section className="shell py-12 sm:py-16">
-          <div data-reveal className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <span className="inline-flex items-center gap-2 text-[12px] font-semibold tracking-[0.08em] text-pine-dark"><span aria-hidden="true" className="live-dot" />LIVE VACANCIES</span>
-              <h2 className="mt-2 text-[28px]">Accommodation available now</h2>
-            </div>
-            <Link href="/search" className="btn-secondary shrink-0">View all vacancies</Link>
-          </div>
-          <div data-reveal="stagger" className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {homepageListings.map(({ listing, placement }) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                compact
-                boosted={placement === "boosted"}
-                sponsored={placement === "sponsored"}
-                memberListing={placement === "member"}
-                showActions
-                saved={savedListingIds.has(listing.id)}
-                canSave={Boolean(user)}
-              />
-            ))}
-          </div>
-
-          {cities.length > 0 && (
-            <div className="mt-7 flex flex-wrap items-center gap-2 border-t border-line pt-6 text-[14px]">
-              <span className="mr-1 font-semibold text-ink">Browse active areas</span>
-              {cities.map(({ city }) => (
-                <Link key={city} href={`/rooms/${locationSlug(city)}`} className="chip hover:border-pine hover:text-pine-dark">{city}</Link>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
+      <Suspense fallback={<div className="shell py-12 text-[14px] text-ink-soft" role="status">Loading current vacancies…</div>}>
+        <HomeListings />
+      </Suspense>
 
       <div className="shell">
         <RecentlyViewed className="pb-12" />
       </div>
 
-      <section className="border-y border-line bg-white">
-        <div className="shell py-12 sm:py-16">
-          <div data-reveal className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">POPULAR UK LOCATIONS</span>
-              <h2 className="mt-2 text-[30px]">Explore accommodation by city</h2>
-              <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
-                Start with popular cities, then narrow your search by accommodation type and support need.
-              </p>
-            </div>
-            <Link href="/search" className="btn-secondary shrink-0">View all locations</Link>
-          </div>
-
-          <div data-reveal="stagger" className="mt-7 grid gap-5 sm:grid-cols-3">
-            {FEATURED_CITIES.map((city) => {
-              const hasLiveListings = cities.some(({ city: activeCity }) => activeCity.toLowerCase() === city.name.toLowerCase());
-              const href = hasLiveListings
-                ? `/rooms/${locationSlug(city.name)}`
-                : `/search?where=${encodeURIComponent(city.name)}`;
-
-              return (
-                <Link
-                  key={city.name}
-                  href={href}
-                  className="group relative aspect-[4/3] overflow-hidden rounded-card bg-ink shadow-raise transition duration-300 hover:-translate-y-1 hover:shadow-float focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
-                  aria-label={`Explore accommodation in ${city.name}`}
-                >
-                  <Image
-                    src={city.image}
-                    alt={`${city.name} city view`}
-                    fill
-                    sizes="(min-width: 640px) 33vw, 100vw"
-                    className="object-cover transition duration-500 group-hover:scale-[1.04]"
-                  />
-                  <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#092d4d]/95 via-[#092d4d]/20 to-transparent" />
-                  <span className="absolute inset-x-0 bottom-0 block p-5 text-left text-white">
-                    <span className="flex items-center gap-2 text-[23px] font-bold leading-tight">{city.name}<span aria-hidden="true" className="nudge-arrow text-[18px] opacity-0 transition-opacity duration-300 group-hover:opacity-100">→</span></span>
-                    <span className="mt-1 block max-w-[28ch] text-[13px] leading-snug text-white/85">{city.description}</span>
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      <Suspense fallback={<section className="border-y border-line bg-white"><div className="shell py-12 text-[14px] text-ink-soft" role="status">Loading locations…</div></section>}>
+        <HomeCities />
+      </Suspense>
 
       <section className="border-b border-line bg-white">
         <div data-reveal className="shell py-8">
@@ -359,6 +267,125 @@ export default async function HomePage() {
         </div>
       </section>
     </>
+  );
+}
+
+async function HomeStats() {
+  const [roomsAvailable, areasWithVacancies] = await Promise.all([
+    db.room.count({ where: { status: "AVAILABLE", listing: { status: "ACTIVE" } } }),
+    getActiveCities(),
+  ]);
+  return <>
+    <Stat value={roomsAvailable} label="rooms available" live />
+    <Stat value={areasWithVacancies.length} label="areas with vacancies" />
+  </>;
+}
+
+async function HomeListings() {
+  const [featured, user, cities] = await Promise.all([
+    searchListings({ sort: "featured" }),
+    getCurrentUser(),
+    getActiveCities(),
+  ]);
+  const homepageListings = [
+    ...featured.boosted.map((listing) => ({ listing, placement: "boosted" as const })),
+    ...featured.sponsored.map((listing) => ({ listing, placement: "sponsored" as const })),
+    ...featured.items.map((listing) => ({ listing, placement: listing.memberListing ? "member" as const : "free" as const })),
+  ].slice(0, 3);
+  const homepageListingIds = homepageListings.map(({ listing }) => listing.id);
+  const savedListingIds = new Set(
+    user && homepageListingIds.length
+      ? (await db.savedListing.findMany({
+          where: { userId: user.id, listingId: { in: homepageListingIds } },
+          select: { listingId: true },
+        })).map((save) => save.listingId)
+      : [],
+  );
+  return homepageListings.length > 0 ? (
+        <section className="shell py-12 sm:py-16">
+          <div data-reveal className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <span className="inline-flex items-center gap-2 text-[12px] font-semibold tracking-[0.08em] text-pine-dark"><span aria-hidden="true" className="live-dot" />LIVE VACANCIES</span>
+              <h2 className="mt-2 text-[28px]">Accommodation available now</h2>
+            </div>
+            <Link href="/search" className="btn-secondary shrink-0">View all vacancies</Link>
+          </div>
+          <div data-reveal="stagger" className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {homepageListings.map(({ listing, placement }) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                compact
+                boosted={placement === "boosted"}
+                sponsored={placement === "sponsored"}
+                memberListing={placement === "member"}
+                showActions
+                saved={savedListingIds.has(listing.id)}
+                canSave={Boolean(user)}
+              />
+            ))}
+          </div>
+
+          {cities.length > 0 && (
+            <div className="mt-7 flex flex-wrap items-center gap-2 border-t border-line pt-6 text-[14px]">
+              <span className="mr-1 font-semibold text-ink">Browse active areas</span>
+              {cities.map(({ city }) => (
+                <Link key={city} href={`/rooms/${locationSlug(city)}`} className="chip hover:border-pine hover:text-pine-dark">{city}</Link>
+              ))}
+            </div>
+          )}
+        </section>
+  ) : null;
+}
+
+async function HomeCities() {
+  const cities = await getActiveCities();
+  return (
+      <section className="border-y border-line bg-white">
+        <div className="shell py-12 sm:py-16">
+          <div data-reveal className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">POPULAR UK LOCATIONS</span>
+              <h2 className="mt-2 text-[30px]">Explore accommodation by city</h2>
+              <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
+                Start with popular cities, then narrow your search by accommodation type and support need.
+              </p>
+            </div>
+            <Link href="/search" className="btn-secondary shrink-0">View all locations</Link>
+          </div>
+
+          <div data-reveal="stagger" className="mt-7 grid gap-5 sm:grid-cols-3">
+            {FEATURED_CITIES.map((city) => {
+              const hasLiveListings = cities.some(({ city: activeCity }) => activeCity.toLowerCase() === city.name.toLowerCase());
+              const href = hasLiveListings
+                ? `/rooms/${locationSlug(city.name)}`
+                : `/search?where=${encodeURIComponent(city.name)}`;
+
+              return (
+                <Link
+                  key={city.name}
+                  href={href}
+                  className="group relative aspect-[4/3] overflow-hidden rounded-card bg-ink shadow-raise transition duration-300 hover:-translate-y-1 hover:shadow-float focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
+                  aria-label={`Explore accommodation in ${city.name}`}
+                >
+                  <Image
+                    src={city.image}
+                    alt={`${city.name} city view`}
+                    fill
+                    sizes="(min-width: 640px) 33vw, 100vw"
+                    className="object-cover transition duration-500 group-hover:scale-[1.04]"
+                  />
+                  <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#092d4d]/95 via-[#092d4d]/20 to-transparent" />
+                  <span className="absolute inset-x-0 bottom-0 block p-5 text-left text-white">
+                    <span className="flex items-center gap-2 text-[23px] font-bold leading-tight">{city.name}<span aria-hidden="true" className="nudge-arrow text-[18px] opacity-0 transition-opacity duration-300 group-hover:opacity-100">→</span></span>
+                    <span className="mt-1 block max-w-[28ch] text-[13px] leading-snug text-white/85">{city.description}</span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
   );
 }
 

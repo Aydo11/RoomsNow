@@ -54,6 +54,7 @@ export function MotionEffects() {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             reveal(entry.target);
+            entry.target.removeAttribute("data-reveal-watched");
             observer.unobserve(entry.target);
           }
         }
@@ -61,13 +62,18 @@ export function MotionEffects() {
       { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
     );
 
+    const watched = new Set<Element>();
     const scan = () => {
-      document.querySelectorAll("[data-reveal]:not(.is-revealed):not([data-reveal-watched])").forEach((el) => {
-        el.setAttribute("data-reveal-watched", "");
+      document.querySelectorAll("[data-reveal]:not(.is-revealed)").forEach((el) => {
+        if (watched.has(el)) return;
         // Already on screen: show it now so nothing above the fold flickers.
         const rect = el.getBoundingClientRect();
         if (rect.top < window.innerHeight && rect.bottom > 0) el.classList.add("is-revealed", "reveal-static");
-        else observer.observe(el);
+        else {
+          watched.add(el);
+          el.setAttribute("data-reveal-watched", "");
+          observer.observe(el);
+        }
       });
     };
     scan();
@@ -79,6 +85,9 @@ export function MotionEffects() {
     return () => {
       observer.disconnect();
       mutations.disconnect();
+      // A client-side route change replaces the observer, but React can reuse
+      // elements. Never leave an element hidden with no observer watching it.
+      watched.forEach((el) => el.removeAttribute("data-reveal-watched"));
     };
   }, [pathname]);
 
