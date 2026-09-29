@@ -1,5 +1,6 @@
 "use server";
 
+import { plainTextToAdvertHtml } from "@/lib/advert-writer";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -87,7 +88,7 @@ export async function saveListingAction(_prev: FormState, formData: FormData): P
   const listingFields = {
     title: d.title,
     summary: d.summary || null,
-    description: d.description ? sanitiseHtml(d.description) : null,
+    description: d.description ? sanitiseHtml(plainTextToAdvertHtml(d.description)) : null,
     accommodationType: d.accommodationType,
     genderArrangement: d.genderArrangement,
     minAge: d.minAge ?? null,
