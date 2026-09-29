@@ -29,6 +29,7 @@ const SPONSOR_MESSAGES: Record<string, string> = {
   cancelled: "Checkout cancelled — nothing was charged.",
   unavailable: "Only live adverts can be sponsored.",
   upgrade: "Sponsored placements are available on Marketplace Standard and Pro.",
+  limit: "You can sponsor up to 3 adverts at a time. Let one finish before sponsoring another.",
 };
 
 export default async function ServiceAdvertPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ boost?: string; sponsored?: string }> }) {
