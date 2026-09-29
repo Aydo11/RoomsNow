@@ -23,6 +23,7 @@ const staticPages: Array<[string, MetadataRoute.Sitemap[number]["changeFrequency
   ["/advertise-accommodation", "monthly", 0.8],
   ["/advertise-services", "monthly", 0.7],
   ["/vetted-providers", "daily", 0.7],
+  ["/support-services", "weekly", 0.8],
   ["/accommodation-referrals", "monthly", 0.8],
   ["/how-it-works", "monthly", 0.6],
   ["/eligibility", "monthly", 0.7],
