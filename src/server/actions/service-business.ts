@@ -46,7 +46,7 @@ import {
   startServicePlanCheckout,
 } from "@/lib/service-billing";
 import { isBoostPack } from "@/lib/boost-packages";
-import { isSponsorPackage } from "@/lib/sponsor-packages";
+import { isSponsorPackage, MAX_SPONSORED_PER_COMPANY } from "@/lib/sponsor-packages";
 
 // ------------------------------------------------------------------ helpers
 
@@ -445,6 +445,8 @@ export async function sponsorServiceAdvertAction(formData: FormData) {
   if (!isSponsorPackage(pack)) return;
   const advert = await db.serviceAdvert.findFirst({ where: { id: advertId, businessId: business.id } });
   if (!advert || !isAdvertPublic(advert, business, business.subscription)) redirect(`/service-provider/adverts/${advertId}?sponsored=unavailable`);
+  const otherSponsored = await db.serviceAdvert.count({ where: { businessId: business.id, id: { not: advert.id }, sponsoredUntil: { gt: new Date() } } });
+  if (otherSponsored >= MAX_SPONSORED_PER_COMPANY) redirect(`/service-provider/adverts/${advert.id}?sponsored=limit`);
   const base = await appUrl();
   const url = await startServiceSponsorCheckout({ businessId: business.id, advertId: advert.id, pack, successUrl: `${base}/service-provider/adverts/${advert.id}`, cancelUrl: `${base}/service-provider/adverts/${advert.id}` });
   redirect(url);
