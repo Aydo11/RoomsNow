@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { sendProviderMailshot } from "@/server/actions/provider-mailshot";
 import { Field, FormError, SubmitButton } from "./ui";
+import { EmailPreview } from "./email-preview";
 import type { FormState } from "@/lib/validation";
 
 const initialState: FormState = { ok: false };
@@ -58,103 +59,119 @@ export function ProviderMailshotForm({
   };
 
   return (
-    <form action={action} className="card space-y-4 p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-xl">Prepare a provider campaign</h2>
-        <span className="rounded-pill bg-paper-sunk px-2.5 py-1 text-[12px] font-medium text-ink-soft">
-          {recipientCount} recipient{recipientCount === 1 ? "" : "s"} match the filter
-        </span>
-      </div>
-      <p className="text-sm text-ink-soft">
-        Reaches providers who already have a RoomsNow account. RoomsNow prepares a Resend Broadcast
-        first; nothing is sent until you confirm it. Resend then queues delivery, honours existing
-        opt-outs and tracks bounces, complaints and unsubscribes.
-      </p>
-
-      <div className="grid grid-cols-1 gap-1 rounded-[10px] border border-line bg-paper-sunk p-1 sm:grid-cols-3" role="tablist">
-        {TABS.map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            role="tab"
-            aria-selected={kind === tab.value}
-            onClick={() => setKind(tab.value)}
-            className={`flex-1 rounded-[8px] px-3 py-2 text-[13px] font-medium transition-colors ${
-              kind === tab.value ? "bg-white text-ink shadow-raise" : "text-ink-soft hover:text-ink"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      <input type="hidden" name="kind" value={kind} />
-      <input type="hidden" name="status" value={filters.status} />
-      <input type="hidden" name="verification" value={filters.verification ?? ""} />
-      <input type="hidden" name="source" value={filters.source ?? ""} />
-
-      <FormError message={state.errors?.form} />
-      {state.message && (
-        <p role="status" className={`rounded-[10px] border p-3 text-sm ${state.ok ? "border-pine/30 bg-pine/5 text-pine-dark" : "border-line bg-paper-sunk text-ink-soft"}`}>
-          {state.message}
-        </p>
-      )}
-
-      <label className="block text-sm">
-        Your name <span className="text-ink-faint">(shown as the sender)</span>
-        <input name="senderName" required maxLength={80} value={senderName} onChange={(event) => setSenderName(event.target.value)} className="field mt-1" />
-      </label>
-
-      <Field label="Subject" name="subject" required>
-        <input name="subject" required maxLength={150} value={active.subject} onChange={(event) => updateDraft("subject", event.target.value)} placeholder={kind === "CUSTOM" ? "Write the subject recipients will see" : undefined} className="field" />
-      </Field>
-
-      <Field label="Message" name="body" required>
-        <textarea name="body" required rows={9} value={active.body} onChange={(event) => updateDraft("body", event.target.value)} placeholder={kind === "CUSTOM" ? "Write your complete provider message here. Separate paragraphs with a blank line." : undefined} className="field" />
-      </Field>
-
-      {kind === "PROMO" && (
-        <>
-          <Field label="Promo code" name="promoCode" error={state.errors?.promoCode} required>
-            <input name="promoCode" required maxLength={40} value={active.promoCode} onChange={(event) => updateDraft("promoCode", event.target.value.toUpperCase())} placeholder="e.g. SPRING20" className="field font-mono uppercase" />
-          </Field>
-          <Field label="Offer description" name="promoBlurb" hint="Shown above the code in the email.">
-            <input name="promoBlurb" maxLength={200} value={active.promoBlurb} onChange={(event) => updateDraft("promoBlurb", event.target.value)} placeholder="e.g. 20% off your first month" className="field" />
-          </Field>
-        </>
-      )}
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Button label" name="ctaLabel" hint="Optional — defaults to “View in RoomsNow”.">
-          <input name="ctaLabel" maxLength={40} value={active.ctaLabel} onChange={(event) => updateDraft("ctaLabel", event.target.value)} className="field" />
-        </Field>
-        <Field label="Button link" name="ctaUrl" hint="Optional — defaults to the dashboard.">
-          <input name="ctaUrl" maxLength={300} value={active.ctaUrl} onChange={(event) => updateDraft("ctaUrl", event.target.value)} placeholder="/dashboard or https://…" className="field" />
-        </Field>
-      </div>
-
-      <p className="rounded-[10px] border border-line bg-paper-sunk/60 p-3 text-[12px] leading-relaxed text-ink-soft">
-        Your edits are kept if validation or Resend returns an error, and when you switch between templates. Preparing only creates a draft; it does not send anything.
-      </p>
-
-      <SubmitButton name="operation" value="prepare" pendingLabel="Preparing in Resend…" disabled={recipientCount === 0 || Boolean(state.broadcastId)}>
-        Prepare for {recipientCount} provider{recipientCount === 1 ? "" : "s"}
-      </SubmitButton>
-
-      {state.broadcastId && state.importId && (
-        <div className="rounded-[12px] border border-pine/30 bg-pine/5 p-4">
-          <p className="text-sm font-semibold text-ink">Final confirmation</p>
-          <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
-            Only press send after checking the subject, links and recipient filter. Resend will skip
-            globally unsubscribed or suppressed contacts automatically. The draft contains the
-            version shown when you pressed Prepare; reload this page to discard it and make changes.
-          </p>
-          <input type="hidden" name="broadcastId" value={state.broadcastId} />
-          <input type="hidden" name="importId" value={state.importId} />
-          <SubmitButton name="operation" value="send-prepared" pendingLabel="Checking import…" className="btn-primary mt-3">
-            Send prepared campaign
-          </SubmitButton>
+    <div className="space-y-4">
+      <form action={action} className="card space-y-4 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xl">Prepare a provider campaign</h2>
+          <span className="rounded-pill bg-paper-sunk px-2.5 py-1 text-[12px] font-medium text-ink-soft">
+            {recipientCount} recipient{recipientCount === 1 ? "" : "s"} match the filter
+          </span>
         </div>
-      )}
-    </form>
+        <p className="text-sm text-ink-soft">
+          Reaches providers who already have a RoomsNow account. RoomsNow prepares a Resend Broadcast
+          first; nothing is sent until you confirm it. Resend then queues delivery, honours existing
+          opt-outs and tracks bounces, complaints and unsubscribes.
+        </p>
+
+        <div className="grid grid-cols-1 gap-1 rounded-[10px] border border-line bg-paper-sunk p-1 sm:grid-cols-3" role="tablist">
+          {TABS.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              role="tab"
+              aria-selected={kind === tab.value}
+              onClick={() => setKind(tab.value)}
+              className={`flex-1 rounded-[8px] px-3 py-2 text-[13px] font-medium transition-colors ${
+                kind === tab.value ? "bg-white text-ink shadow-raise" : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <input type="hidden" name="kind" value={kind} />
+        <input type="hidden" name="status" value={filters.status} />
+        <input type="hidden" name="verification" value={filters.verification ?? ""} />
+        <input type="hidden" name="source" value={filters.source ?? ""} />
+
+        <FormError message={state.errors?.form} />
+        {state.message && (
+          <p role="status" className={`rounded-[10px] border p-3 text-sm ${state.ok ? "border-pine/30 bg-pine/5 text-pine-dark" : "border-line bg-paper-sunk text-ink-soft"}`}>
+            {state.message}
+          </p>
+        )}
+
+        <label className="block text-sm">
+          Your name <span className="text-ink-faint">(shown as the sender)</span>
+          <input name="senderName" required maxLength={80} value={senderName} onChange={(event) => setSenderName(event.target.value)} className="field mt-1" />
+        </label>
+
+        <Field label="Subject" name="subject" required>
+          <input name="subject" required maxLength={150} value={active.subject} onChange={(event) => updateDraft("subject", event.target.value)} placeholder={kind === "CUSTOM" ? "Write the subject recipients will see" : undefined} className="field" />
+        </Field>
+
+        <Field label="Message" name="body" required>
+          <textarea name="body" required rows={9} value={active.body} onChange={(event) => updateDraft("body", event.target.value)} placeholder={kind === "CUSTOM" ? "Write your complete provider message here. Separate paragraphs with a blank line." : undefined} className="field" />
+        </Field>
+
+        {kind === "PROMO" && (
+          <>
+            <Field label="Promo code" name="promoCode" error={state.errors?.promoCode} required>
+              <input name="promoCode" required maxLength={40} value={active.promoCode} onChange={(event) => updateDraft("promoCode", event.target.value.toUpperCase())} placeholder="e.g. SPRING20" className="field font-mono uppercase" />
+            </Field>
+            <Field label="Offer description" name="promoBlurb" hint="Shown above the code in the email.">
+              <input name="promoBlurb" maxLength={200} value={active.promoBlurb} onChange={(event) => updateDraft("promoBlurb", event.target.value)} placeholder="e.g. 20% off your first month" className="field" />
+            </Field>
+          </>
+        )}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Button label" name="ctaLabel" hint="Optional — defaults to “View in RoomsNow”.">
+            <input name="ctaLabel" maxLength={40} value={active.ctaLabel} onChange={(event) => updateDraft("ctaLabel", event.target.value)} className="field" />
+          </Field>
+          <Field label="Button link" name="ctaUrl" hint="Optional — defaults to the dashboard.">
+            <input name="ctaUrl" maxLength={300} value={active.ctaUrl} onChange={(event) => updateDraft("ctaUrl", event.target.value)} placeholder="/dashboard or https://…" className="field" />
+          </Field>
+        </div>
+
+        <p className="rounded-[10px] border border-line bg-paper-sunk/60 p-3 text-[12px] leading-relaxed text-ink-soft">
+          Your edits are kept if validation or Resend returns an error, and when you switch between templates. Preparing only creates a draft; it does not send anything.
+        </p>
+
+        <SubmitButton name="operation" value="prepare" pendingLabel="Preparing in Resend…" disabled={recipientCount === 0 || Boolean(state.broadcastId)}>
+          Prepare for {recipientCount} provider{recipientCount === 1 ? "" : "s"}
+        </SubmitButton>
+
+        {state.broadcastId && state.importId && (
+          <div className="rounded-[12px] border border-pine/30 bg-pine/5 p-4">
+            <p className="text-sm font-semibold text-ink">Final confirmation</p>
+            <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
+              Only press send after checking the subject, links and recipient filter. Resend will skip
+              globally unsubscribed or suppressed contacts automatically. The draft contains the
+              version shown when you pressed Prepare; reload this page to discard it and make changes.
+            </p>
+            <input type="hidden" name="broadcastId" value={state.broadcastId} />
+            <input type="hidden" name="importId" value={state.importId} />
+            <SubmitButton name="operation" value="send-prepared" pendingLabel="Checking import…" className="btn-primary mt-3">
+              Send prepared campaign
+            </SubmitButton>
+          </div>
+        )}
+      </form>
+      <EmailPreview
+        subject={active.subject}
+        values={{
+          type: "provider",
+          kind,
+          senderName,
+          subject: active.subject,
+          body: active.body,
+          promoCode: active.promoCode,
+          promoBlurb: active.promoBlurb,
+          ctaLabel: active.ctaLabel,
+          ctaUrl: active.ctaUrl,
+        }}
+      />
+    </div>
   );
 }
