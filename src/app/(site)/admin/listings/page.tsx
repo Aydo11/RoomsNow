@@ -10,6 +10,7 @@ import { LISTING_STATUSES } from "@/lib/taxonomy";
 import { rentRange, timeAgo } from "@/lib/format";
 import type { ListingStatus } from "@prisma/client";
 import { COVER_MEDIA, coverImage, videoPosterSrc } from "@/lib/cover-image";
+import { optimisedImage } from "@/lib/image-url";
 
 export const metadata = { title: "Adverts" };
 export const dynamic = "force-dynamic";
@@ -68,7 +69,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
                   <video src={videoPosterSrc(coverImage(listing.media)!.url)} preload="metadata" muted playsInline className="h-full w-full bg-black object-contain" />
                 ) : coverImage(listing.media) ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={coverImage(listing.media)!.url} alt="" className="h-full w-full object-contain" />
+                  <img src={optimisedImage(coverImage(listing.media)!.url, 128)} alt="" className="h-full w-full object-contain" />
                 ) : (
                   <span className="grid h-full place-items-center text-[12px] text-ink-faint">No photo</span>
                 )}
