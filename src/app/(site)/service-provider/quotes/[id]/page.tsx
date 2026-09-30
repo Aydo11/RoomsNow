@@ -8,6 +8,7 @@ import { requireServiceBusiness } from "@/server/service-marketplace";
 import { quoteTransitionAllowed, URGENCY_LABELS } from "@/lib/service-marketplace";
 import { dateTime, money, shortDate } from "@/lib/format";
 import { serviceProviderNav } from "../../nav";
+import { optimisedImage } from "@/lib/image-url";
 
 export const metadata = { title: "Quote request" };
 export const dynamic = "force-dynamic";
@@ -97,7 +98,7 @@ export default async function ServiceQuotePage({ params }: { params: Promise<{ i
               {quote.completionNote && <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-ink-soft">{quote.completionNote}</p>}
               {quote.completionPhotos.length > 0 && (
                 <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {quote.completionPhotos.map((photo, index) => <a key={photo} href={photo} target="_blank" rel="noreferrer"><img src={photo} alt={`Completed job photo ${index + 1}`} className="aspect-[4/3] w-full rounded-[10px] border border-line object-cover" /></a>)}
+                  {quote.completionPhotos.map((photo, index) => <a key={photo} href={photo} target="_blank" rel="noreferrer"><img src={optimisedImage(photo, 320)} alt={`Completed job photo ${index + 1}`} className="aspect-[4/3] w-full rounded-[10px] border border-line object-cover" /></a>)}
                 </div>
               )}
             </section>
