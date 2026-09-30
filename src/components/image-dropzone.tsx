@@ -1,5 +1,6 @@
 "use client";
 
+import { optimisedImage } from "@/lib/image-url";
 import { useEffect, useRef, useState } from "react";
 import { clsx } from "@/lib/clsx";
 
@@ -87,7 +88,7 @@ export function ImageDropzone({
   }
 
   const single = shape !== "grid";
-  const shown = single ? previews[0] ?? currentUrl ?? null : null;
+  const shown = single ? previews[0] ?? optimisedImage(currentUrl, 480) ?? null : null;
 
   return (
     <div>
