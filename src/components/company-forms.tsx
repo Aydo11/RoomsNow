@@ -3,6 +3,7 @@ import { useActionState, useEffect, useState, type DragEvent } from "react";
 
 import { requestVerificationAction, updateCompanyAction } from "@/server/actions/company";
 import { AvatarDropzone } from "./avatar-dropzone";
+import { BannerPicker } from "./banner-picker";
 import { SocialLinksField, type SocialLink } from "./social-links-field";
 import { CheckGroup, Field, FormError, FormSuccess, SubmitButton } from "./ui";
 import { ORG_TYPES, SUPPORT_TYPES } from "@/lib/taxonomy";
@@ -169,44 +170,18 @@ export function CompanyForm({
   };
 }) {
   const [state, action] = useActionState(updateCompanyAction, { ok: false });
-  const [bannerPreview, setBannerPreview] = useState(company.bannerUrl);
-
-  useEffect(() => {
-    return () => {
-      if (bannerPreview?.startsWith("blob:")) URL.revokeObjectURL(bannerPreview);
-    };
-  }, [bannerPreview]);
-
   return (
     <form action={action} className="card space-y-4 p-6">
       <FormError message={state.errors?.form} />
       <FormSuccess message={state.ok ? state.message : undefined} />
 
       <div>
-        <div className="relative h-40 overflow-hidden rounded-[14px] bg-gradient-to-br from-pine-dark to-pine-light">
-          {bannerPreview && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={bannerPreview} alt="Provider banner preview" className="h-full w-full object-cover" />
-          )}
-          <label htmlFor="banner" className="btn absolute bottom-3 right-3 cursor-pointer bg-white/95 text-pine-dark shadow-raise hover:bg-white">
-            Change banner
-          </label>
-          <input
-            id="banner"
-            name="banner"
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
-              if (file) setBannerPreview(URL.createObjectURL(file));
-            }}
-          />
-        </div>
+        <BannerPicker initialUrl={company.bannerUrl} alt="Provider banner preview" className="h-40 rounded-[14px] sm:h-44" />
         {state.errors?.banner && <p className="mt-1 text-[13px] text-clay" role="alert">{state.errors.banner}</p>}
 
         <div className="relative -mt-10 ml-5">
           <AvatarDropzone
+            overlapsBanner
             id="logo"
             name="logo"
             initialPreview={company.logoUrl}
