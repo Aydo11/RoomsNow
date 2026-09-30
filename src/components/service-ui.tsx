@@ -2,6 +2,7 @@ import Link from "next/link";
 import { clsx } from "@/lib/clsx";
 import { shortDate } from "@/lib/format";
 import { QUOTE_STATUS_LABELS, type InsuranceState, type ServiceQuoteStatusValue } from "@/lib/service-marketplace";
+import { optimisedImage } from "@/lib/image-url";
 
 const tones = {
   good: "bg-pine-light text-pine-dark",
@@ -77,7 +78,7 @@ export function BoostedLabel() {
 export function BusinessLogo({ src, name, size = 48 }: { src: string | null; name: string; size?: number }) {
   const letters = name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]!.toUpperCase()).join("");
   return src ? (
-    <img src={src} alt="" width={size} height={size} className="shrink-0 rounded-[10px] border border-line bg-white object-cover" style={{ width: size, height: size }} />
+    <img src={optimisedImage(src, size)} alt="" width={size} height={size} className="shrink-0 rounded-[10px] border border-line bg-white object-cover" style={{ width: size, height: size }} />
   ) : (
     <span aria-hidden="true" className="grid shrink-0 place-items-center rounded-[10px] bg-brand/10 font-display text-brand" style={{ width: size, height: size, fontSize: size * 0.36 }}>
       {letters || "RN"}
