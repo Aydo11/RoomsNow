@@ -1,0 +1,8 @@
+<%- include('partials/header') %>
+<section class="page-hero"><div class="wrap"><div class="hero-inner"><nav class="crumbs"><a href="/">Home</a><span>/</span>Downloads</nav><h1 data-split>Documents & downloads</h1><p class="lead">Forms, policies and information from Solace Housing.</p></div></div></section>
+<section class="section"><div class="wrap">
+<% const groups = {}; documents.forEach(d => (groups[d.section || 'General'] = groups[d.section || 'General'] || []).push(d)); Object.keys(groups).forEach(function(g){ %>
+  <h2 data-reveal style="font-size:1.6rem;margin:40px 0 20px"><%= g %></h2><%- include('partials/docs', { documents: groups[g] }) %>
+<% }) %>
+</div></section>
+<%- include('partials/footer') %>

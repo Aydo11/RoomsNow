@@ -1,0 +1,10 @@
+<section class="page-hero">
+  <div class="wrap">
+    <div class="hero-inner">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span>/</span><%= crumb || '' %></nav>
+      <h1 data-split><%- cms(key + '.hero.title') %></h1>
+      <p class="lead"><%- cms(key + '.hero.text') %></p>
+      <% if (typeof actions !== 'undefined' && actions) { %><div class="actions"><%- actions %></div><% } %>
+    </div>
+  </div>
+</section>

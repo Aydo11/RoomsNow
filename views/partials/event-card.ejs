@@ -1,0 +1,21 @@
+<% const d = parseDate(ev.date); %>
+<a class="card ev-card spot" href="/events/<%= ev.slug %>" data-reveal style="--i:<%= typeof i !== 'undefined' ? i % 3 : 0 %>">
+  <div class="thumb">
+    <div class="date-tile"><b><%= d ? d.getUTCDate() : '' %></b><span><%= d ? MONTHS[d.getUTCMonth()].slice(0,3) : '' %></span></div>
+    <% if (ev.sample) { %><span class="sample-tag">Sample</span><% } %>
+    <%- img(ev.image, ev.title) || '<img src="/img/placeholders/community.svg" alt="">' %>
+  </div>
+  <div class="body">
+    <% if (ev.category) { %><span class="badge"><%= ev.category %></span><% } %>
+    <h3><%= ev.title %></h3>
+    <div class="meta-row"><span><svg><use href="#i-clock"/></svg><%= fmtDate(ev.date, 'dow') %><%= ev.start_time ? ', ' + fmtTime(ev.start_time) : '' %></span><% if (ev.location) { %><span><svg><use href="#i-pin"/></svg><%= ev.location %></span><% } %></div>
+    <p><%= ev.summary %></p>
+    <div class="foot">
+      <% if (ev.capacity) { %>
+        <div class="spaces" data-reveal><% if (ev.full) { %><span style="color:var(--muted)">Fully booked</span><% } else { %><span class="pink"><%= ev.spacesLeft %> of <%= ev.capacity %> spaces left</span><% } %>
+          <div class="bar"><i style="--p:<%= Math.min(ev.taken / ev.capacity, 1) %>"></i></div></div>
+      <% } else { %><span class="spaces">Open to all</span><% } %>
+      <span class="link-arrow"><%= ev.full ? 'Details' : 'Book' %> <svg><use href="#i-arrow"/></svg></span>
+    </div>
+  </div>
+</a>

@@ -1,0 +1,17 @@
+<%- include('_head', { title: 'Staff logins' }) %>
+<div class="topbar"><div><h1>Staff logins</h1><p>Everyone listed here can log in and change the website.</p></div></div>
+<div class="two">
+<div class="card"><table class="t"><thead><tr><th>Name</th><th>Email</th><th></th></tr></thead><tbody>
+<% rows.forEach(function(u){ %><tr><td><b><%= u.name %></b><%= u.id === user.id ? ' (you)' : '' %></td><td><%= u.email %></td><td><% if (u.id !== user.id) { %><form method="post" action="/admin/users/<%= u.id %>/delete" data-confirm="Remove <%= u.name %>'s access?"><button class="btn sm danger">Remove</button></form><% } %></td></tr><% }) %></tbody></table></div>
+<div>
+<form class="card" method="post" action="/admin/users" style="display:grid;gap:10px"><h2>Add a staff member</h2>
+<div class="f"><label class="l">Name</label><input type="text" name="name" required></div>
+<div class="f"><label class="l">Email</label><input type="email" name="email" required></div>
+<div class="f"><label class="l">Temporary password</label><input type="password" name="password" required minlength="8" autocomplete="new-password"><div class="hint">At least 8 characters. Ask them to change it after logging in.</div></div>
+<button class="btn">Add staff member</button></form>
+<form class="card" method="post" action="/admin/password" style="display:grid;gap:10px"><h2>Change my password</h2>
+<div class="f"><label class="l">Current password</label><input type="password" name="current" required autocomplete="current-password"></div>
+<div class="f"><label class="l">New password</label><input type="password" name="password" required minlength="8" autocomplete="new-password"></div>
+<button class="btn navy">Change password</button></form>
+</div></div>
+<%- include('_foot') %>

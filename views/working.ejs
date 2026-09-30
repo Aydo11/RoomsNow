@@ -1,0 +1,51 @@
+<%- include('partials/header') %>
+<%- include('partials/page-hero', { key: 'working', crumb: 'Working together' }) %>
+<% function initials(n){ return String(n).split(/\s+/).filter(w => /^[A-Za-z]/.test(w)).slice(0,2).map(w => w[0]).join('').toUpperCase(); } %>
+<% if (community.length) { %>
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head"><div data-reveal><span class="eyebrow">Community & sport</span><h2><%- cms('working.community.title') %></h2><p class="lead"><%- cms('working.community.text') %></p></div></div>
+    <% community.forEach(function(p){ const ims = (p.images || []).slice(0,3); %>
+    <div class="team" data-reveal>
+      <div class="team-media" data-gallery><% if (ims.length) { ims.forEach(function(im, i){ %><%- img(im, p.name) %><% }) } else if (p.logo) { %><%- img(p.logo, p.name) %><% } %></div>
+      <div class="team-body"><% if (p.logo && ims.length) { %><div style="margin-bottom:18px"><%- img(p.logo, p.name + ' logo', '', 'style="max-height:60px;width:auto"') %></div><% } %><span class="eyebrow">Partnership</span><h3><%= p.name %></h3><div class="rich"><%- rich(p.description) %></div><% if (p.website) { %><a class="btn white sm" style="align-self:flex-start;margin-top:14px" href="<%= p.website %>" target="_blank" rel="noopener">Visit website <svg class="arrow"><use href="#i-arrow"/></svg></a><% } %></div>
+    </div>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+<% if (referral.length) { %>
+<section class="section bg-cream">
+  <div class="wrap">
+    <div class="sec-head"><div data-reveal><span class="eyebrow">Referral partners</span><h2><%- cms('working.referral.title') %></h2><p class="lead"><%- cms('working.referral.text') %></p></div></div>
+    <div class="grid g3">
+      <% referral.forEach(function(p, i){ %>
+      <div class="partner-card" data-reveal style="--i:<%= i % 3 %>">
+        <div class="lg"><% if (p.logo) { %><%- img(p.logo, p.name) %><% } else { %><span class="txt"><%= initials(p.name) %></span><% } %></div>
+        <h3><%= p.name %></h3><div class="rich"><%- rich(p.description) %></div>
+        <% if (p.website) { %><a class="link-arrow" href="<%= p.website %>" target="_blank" rel="noopener">Website <svg><use href="#i-arrow"/></svg></a><% } %>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+<% if (accredit.length) { %>
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head"><div data-reveal><span class="eyebrow">Standards</span><h2><%- cms('working.accredit.title') %></h2><p class="lead"><%- cms('working.accredit.text') %></p></div></div>
+    <div class="grid g4">
+      <% accredit.forEach(function(p, i){ %>
+      <div class="partner-card" data-reveal style="--i:<%= i % 4 %>;align-items:center;text-align:center">
+        <div class="lg"><% if (p.logo) { %><%- img(p.logo, p.name) %><% } else { %><span class="txt"><%= initials(p.name) %></span><% } %></div>
+        <h3 style="font-size:1.1rem"><%= p.name %></h3><div class="rich"><%- rich(p.description) %></div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+<section class="section tight">
+  <div class="wrap"><div class="cta-band" data-reveal="scale"><div><h2><%- cms('working.join.title') %></h2><p><%- cms('working.join.text') %></p></div><div class="actions"><a class="btn white" href="/contact">Get in touch <svg class="arrow"><use href="#i-arrow"/></svg></a></div></div></div>
+</section>
+<%- include('partials/footer') %>

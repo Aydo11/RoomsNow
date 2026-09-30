@@ -1,0 +1,5 @@
+<%- include('_head', { title: 'Page text & images' }) %>
+<div class="topbar"><div><h1>Page text & images</h1><p>Change any heading, paragraph or photo on the website. Pick a page below, or open the website and use <b>Edit this page</b> to click and type straight onto it.</p></div><a class="btn" href="/?edit=1" target="_blank"><svg><use href="#i-edit"/></svg>Edit on the page</a></div>
+<div class="pages"><% PAGES.forEach(function(p){ %><a href="/admin/content/<%= p.id %>"><b><%= p.label %></b><span><%= p.fields.length %> editable items<%= counts[p.id] ? ' · ' + counts[p.id] + ' changed' : '' %></span></a><% }) %></div>
+<div class="help" style="margin-top:24px">Rooms, events, stories, news, services, partners and documents each have their own section in the menu on the left.</div>
+<%- include('_foot') %>

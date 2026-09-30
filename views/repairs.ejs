@@ -1,0 +1,48 @@
+<%- include('partials/header') %>
+<%- include('partials/page-hero', { key: 'repairs', crumb: 'Report a repair' }) %>
+<section class="section" style="padding-top:60px">
+  <div class="wrap" style="display:grid;grid-template-columns:minmax(0,1fr);gap:0;max-width:1000px">
+    <div class="grid g2" style="margin-bottom:40px">
+      <div class="notice danger" data-reveal style="margin:0"><svg><use href="#i-alert"/></svg><div><h4><%- cms('repairs.emergency.title') %></h4><p><%- cms('repairs.emergency.text') %></p><p style="margin-top:10px"><a class="btn sm" href="<%= telHref %>"><svg><use href="#i-phone"/></svg>Call <%= settings.phone %></a></p></div></div>
+      <div class="notice info" data-reveal style="margin:0;--i:1"><svg><use href="#i-drop"/></svg><div><h4><%- cms('repairs.damp.title') %></h4><p><%- cms('repairs.damp.text') %></p></div></div>
+    </div>
+    <div class="form-card" id="form" data-reveal>
+      <% if (sent) { %>
+        <div class="success"><div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><h2>Repair reported</h2><p class="lead" style="margin:0 auto 12px"><%- cms('repairs.success') %></p><span class="refno">Repair reference #<%= sent %></span><p style="margin-top:26px"><a class="link-arrow" href="/repairs">Report another issue <svg><use href="#i-arrow"/></svg></a></p></div>
+      <% } else { %>
+      <% if (query.error) { %><div class="notice danger"><svg><use href="#i-alert"/></svg><div><h4>Please check the form</h4><p>Name, address, a phone number or email, the type of issue and a description are all needed.</p></div></div><% } %>
+      <form method="post" action="/repairs" enctype="multipart/form-data">
+        <label class="hp">Leave empty <input name="website" tabindex="-1" autocomplete="off"></label>
+        <h3 style="margin-bottom:18px">1. Your details</h3>
+        <div class="fgrid">
+          <div class="field"><label for="r-name">Your name <em>*</em></label><input id="r-name" name="name" required autocomplete="name"></div>
+          <div class="field"><label for="r-phone">Phone number <em>*</em></label><input id="r-phone" type="tel" name="phone" required autocomplete="tel"></div>
+          <div class="field"><label for="r-email">Email</label><input id="r-email" type="email" name="email" autocomplete="email"></div>
+          <div class="field"><label for="r-room">Room number</label><input id="r-room" name="room"></div>
+          <div class="field full"><label for="r-addr">Property address <em>*</em></label><input id="r-addr" name="address" required autocomplete="street-address"></div>
+        </div>
+        <h3 style="margin:36px 0 18px">2. What's the problem?</h3>
+        <div class="field"><label>Type of issue <em>*</em></label>
+          <div class="choice-grid">
+            <% [['Damp or mould','drop'],['Leak or water','drop'],['Heating or hot water','flame'],['Electrical','bolt'],['Doors, windows & locks','door'],['Kitchen or appliances','home'],['Bathroom or toilet','drop'],['Pests','bug'],['Furniture','bed'],['Other','dots']].forEach(function(c, i){ %>
+            <label class="choice"><input type="radio" name="issue_type" value="<%= c[0] %>" <%= i === 0 ? 'required' : '' %>><span><svg><use href="#i-<%= c[1] %>"/></svg><%= c[0] %></span></label>
+            <% }) %>
+          </div>
+        </div>
+        <div class="fgrid" style="margin-top:18px">
+          <div class="field"><label for="r-loc">Where in the property?</label><input id="r-loc" name="location" placeholder="e.g. Bedroom ceiling, shared kitchen"></div>
+          <div class="field"><label for="r-date">Date you noticed it <em>*</em></label><input id="r-date" type="date" name="date_identified" required max="<%= today() %>"></div>
+          <div class="field full"><label for="r-desc">Describe the problem <em>*</em></label><textarea id="r-desc" name="description" required placeholder="What is happening, how bad is it, has it got worse?"></textarea></div>
+          <div class="field full"><label>Photographs</label>
+            <div class="drop" data-drop><svg><use href="#i-upload"/></svg><b>Add photos</b><span class="muted" style="font-size:.85rem">Up to 6 photos · tap to use your camera on mobile</span><input type="file" name="photos" multiple accept="image/*"></div><div class="previews" data-previews></div></div>
+          <div class="field"><label for="r-access">Best time to visit / access</label><input id="r-access" name="access" placeholder="e.g. Weekday mornings"></div>
+          <div class="field"><label for="r-other">Anything else?</label><input id="r-other" name="other"></div>
+        </div>
+        <label class="check-line" style="margin:26px 0"><input type="checkbox" required> I understand this form is not for emergencies and Solace Housing may contact me to arrange access.</label>
+        <button class="btn" type="submit">Submit repair report <svg class="arrow"><use href="#i-arrow"/></svg></button>
+      </form>
+      <% } %>
+    </div>
+  </div>
+</section>
+<%- include('partials/footer') %>

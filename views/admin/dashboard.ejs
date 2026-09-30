@@ -1,0 +1,32 @@
+<%- include('_head', { title: 'Dashboard' }) %>
+<div class="topbar"><div><h1>Welcome back, <%= user.name.split(' ')[0] %></h1><p>Here's what's happening on the Solace Housing website.</p></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="/admin/c/rooms/new"><svg><use href="#i-bed"/></svg>Add a room</a><a class="btn navy" href="/admin/c/events/new"><svg><use href="#i-calendar"/></svg>Add an event</a><a class="btn ghost" href="/?edit=1" target="_blank"><svg><use href="#i-edit"/></svg>Edit on the page</a></div></div>
+<% if (samples) { %><div class="banner"><div><b>Sample content is still showing.</b> <span class="muted">There are <%= samples %> example rooms, events, stories and documents marked "Sample". Replace or remove them before launch.</span></div><form method="post" action="/admin/remove-samples" data-confirm="Remove all sample rooms, events, stories, news and documents? This cannot be undone."><button class="btn sm">Remove all sample content</button></form></div><% } %>
+<% if (!emailReady) { %><div class="banner" style="background:#EAF4F8;border-color:#C6E0EB"><div><b>Emails aren't switched on yet.</b> <span class="muted">Every form is still saved safely in your Inbox. Add your email details in Settings to get notified too.</span></div><a class="btn sm navy" href="/admin/settings#email">Set up email</a></div><% } %>
+<div class="stats">
+  <a class="stat" href="/admin/c/rooms"><b><%= stats.available %></b><span>rooms available now<%= stats.soon ? ` · ${stats.soon} coming/under offer` : '' %></span></a>
+  <a class="stat" href="/admin/inbox?status=new"><b><%= stats.newSubs %></b><span>new messages & reports</span></a>
+  <a class="stat" href="/admin/subscribers"><b><%= stats.subscribers %></b><span>newsletter subscribers</span></a>
+  <a class="stat" href="/admin/enquiries"><b><%= stats.clicks %></b><span>WhatsApp enquiries (30 days)</span></a>
+</div>
+<div class="two">
+  <div class="card"><h2>Latest in your inbox</h2>
+    <% if (recent.length) { %><table class="t"><% recent.forEach(function(s){ %><tr class="<%= s.status === 'new' ? 'new' : '' %>"><td><a class="ttl" href="/admin/inbox/<%= s.id %>"><%= s.subject || s.name || 'Message' %></a><div class="muted" style="font-size:.8rem"><%= s.name %> · <%= fmtDate(s.created_at.slice(0,10), 'short') %></div></td><td style="text-align:right"><span class="badge <%= s.type === 'repair' ? 'pink' : s.type === 'referral' ? 'navy' : '' %>"><%= s.type %></span></td></tr><% }) %></table>
+    <% } else { %><div class="empty">Nothing yet. Repair reports, referrals and messages will appear here.</div><% } %>
+    <p style="margin:12px 0 0"><a href="/admin/inbox">Open inbox →</a></p></div>
+  <div class="card"><h2>Upcoming events</h2>
+    <% if (events.length) { events.forEach(function(e){ const cap = Number(e.capacity) || 0; %>
+      <div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;gap:10px"><a class="ttl" style="font-weight:600;text-decoration:none" href="/admin/events/<%= e.id %>/registrations"><%= e.title %></a><span class="muted" style="font-size:.82rem;white-space:nowrap"><%= fmtDate(e.date, 'short') %></span></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px"><div style="flex:1;background:#F1ECE9;border-radius:8px;height:8px"><div class="bar-h" style="width:<%= cap ? Math.min(100, e.taken / cap * 100) : 0 %>%"></div></div><span style="font-size:.8rem;font-weight:600"><%= e.taken %><%= cap ? '/' + cap : '' %> booked</span></div></div>
+    <% }) } else { %><div class="empty">No upcoming events.</div><% } %>
+  </div>
+</div>
+<div class="card"><h2>Quick actions</h2><div class="quick">
+  <a href="/admin/c/rooms"><svg><use href="#i-bed"/></svg>Mark a room as let</a>
+  <a href="/admin/c/stories/new"><svg><use href="#i-star"/></svg>Share a tenant story</a>
+  <a href="/admin/c/news/new"><svg><use href="#i-book"/></svg>Post a newsletter</a>
+  <a href="/admin/c/partners/new"><svg><use href="#i-users"/></svg>Add a partner logo</a>
+  <a href="/admin/c/documents"><svg><use href="#i-file"/></svg>Replace the referral form</a>
+  <a href="/admin/content"><svg><use href="#i-edit"/></svg>Change page text & photos</a>
+</div></div>
+<%- include('_foot') %>

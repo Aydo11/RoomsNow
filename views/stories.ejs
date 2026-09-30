@@ -1,0 +1,15 @@
+<%- include('partials/header') %>
+<%- include('partials/page-hero', { key: 'stories', crumb: "Tenants' stories" }) %>
+<section class="section" style="padding-top:60px">
+  <div class="wrap">
+    <% if (stories.length) { const f = stories[0]; %>
+    <a class="story-feature" href="/stories/<%= f.slug %>" data-reveal>
+      <div class="thumb"><% if (f.sample) { %><span class="sample-tag">Sample</span><% } %><%- img((f.images || [])[0], f.title) %></div>
+      <div class="body"><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge navy">Featured story</span><% if (f.category) { %><span class="badge"><%= f.category %></span><% } %></div><h2><%= f.title %></h2><p class="lead"><%= f.summary %></p><% if (f.quote) { %><blockquote class="q"><%= f.quote %></blockquote><% } %><span class="link-arrow" style="margin-top:10px">Read <%= f.person ? f.person + "'s" : 'the' %> story <svg><use href="#i-arrow"/></svg></span></div>
+    </a>
+    <div class="grid g3"><% stories.slice(1).forEach(function(s, i){ %><%- include('partials/story-card', { s, i }) %><% }) %></div>
+    <% } else { %><div class="notice info"><svg><use href="#i-star"/></svg><div><p>Stories are coming soon.</p></div></div><% } %>
+    <div class="consent-note" data-reveal><svg><use href="#i-shield"/></svg><p style="margin:0"><%- cms('stories.consent') %></p></div>
+  </div>
+</section>
+<%- include('partials/footer') %>

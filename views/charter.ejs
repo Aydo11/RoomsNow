@@ -1,0 +1,26 @@
+<%- include('partials/header') %>
+<%- include('partials/page-hero', { key: 'charter', crumb: 'Charter of Rights', actions: '<a class="btn" href="#downloads"><svg><use href="#i-download"/></svg>Download the Charter</a>' }) %>
+<section class="section">
+  <div class="wrap grid g2" style="gap:clamp(30px,6vw,90px)">
+    <div data-reveal="left"><span class="eyebrow">The basics</span><h2><%- cms('charter.what.title') %></h2><%- cmsRich('charter.what.text', 'rich lead') %></div>
+    <div data-reveal="right"><span class="eyebrow">Why</span><h2><%- cms('charter.why.title') %></h2><%- cmsRich('charter.why.text', 'rich lead') %></div>
+  </div>
+</section>
+<section class="section bg-navy">
+  <div class="wrap">
+    <div class="center" data-reveal style="margin-bottom:56px"><span class="eyebrow">For tenants</span><h2>Your rights at Solace Housing</h2></div>
+    <div class="grid g2">
+      <% const ic = ['home','heart','lock','compass','chat','shield']; [1,2,3,4,5,6].forEach(function(n){ %>
+      <div class="right-card" data-reveal style="--i:<%= (n-1) % 2 %>"><span class="ic"><svg><use href="#i-<%= ic[n-1] %>"/></svg></span><div><h3><%- cms('charter.right'+n+'.title') %></h3><p><%- cms('charter.right'+n+'.text') %></p></div></div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<section class="section" id="downloads">
+  <div class="wrap">
+    <div class="sec-head"><div data-reveal><span class="eyebrow">Downloads</span><h2>Charter documents</h2><p class="lead">Ask your key worker if you'd like a printed copy, a different format or a translation.</p></div></div>
+    <% if (documents.length) { %><%- include('partials/docs', { documents }) %><% } else { %><p class="muted">Documents will be available here soon.</p><% } %>
+    <div class="notice info" style="margin-top:36px" data-reveal><svg><use href="#i-chat"/></svg><div><h4>Feel your rights haven't been respected?</h4><p>Talk to us, or see our <a href="/complaints" style="color:inherit;font-weight:700">complaints process</a>.</p></div></div>
+  </div>
+</section>
+<%- include('partials/footer') %>

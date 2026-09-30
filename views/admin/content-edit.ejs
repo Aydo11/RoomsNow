@@ -1,0 +1,22 @@
+<%- include('_head', { title: page.label }) %>
+<div class="topbar"><div><div class="crumb"><a href="/admin/content">Page text & images</a> /</div><h1><%= page.label %></h1></div><a class="btn ghost" href="<%= page.path %>?edit=1" target="_blank"><svg><use href="#i-arrow"/></svg>Open page</a></div>
+<form method="post" enctype="multipart/form-data" class="edit-layout" data-dirty>
+<div class="card">
+<% page.fields.forEach(function(f){ const name = f.key.replace(/\./g, '__'); const v = values[f.key]; const changed = edited[f.key] !== undefined; %>
+<div class="cfield f">
+  <div class="row"><label class="l" style="margin:0"><%= f.label %><% if (changed) { %><span class="edited">edited</span><% } %></label><% if (changed) { %><button type="button" class="reset" data-reset="<%= name %>">Reset to original</button><% } %></div>
+  <input type="hidden" name="<%= name %>__reset" value="0">
+  <% if (f.type === 'text') { %><input type="text" name="<%= name %>" value="<%= v %>">
+  <% } else if (f.type === 'textarea') { %><textarea name="<%= name %>" rows="3"><%= v %></textarea>
+  <% } else if (f.type === 'rich') { %><textarea name="<%= name %>" rows="8"><%= v %></textarea><div class="fmt">Blank line = new paragraph · <code>- </code> bullet · <code>**bold**</code> · <code>[text](https://link)</code></div>
+  <% } else if (f.type === 'image') { const im = parseImg(v); %>
+    <div class="imgfield" data-imgfield data-multi="0"><input type="hidden" name="<%= name %>__json" value="<%= JSON.stringify(im) %>" data-json><div class="imgs" data-list></div>
+    <label class="adder" data-adder style="margin-top:12px"><svg><use href="#i-upload"/></svg><span>Replace image</span><input type="file" name="<%= name %>__new" accept="image/*"></label>
+    <div class="hint">Click on the photo to choose the part that should always stay in view.</div></div>
+  <% } %>
+</div>
+<% }) %>
+</div>
+<div class="sticky"><div class="card savebar"><button class="btn" style="justify-content:center"><svg><use href="#i-check"/></svg>Save changes</button><a class="btn ghost" style="justify-content:center" href="<%= page.path %>" target="_blank">Preview page</a><p class="muted" style="font-size:.8rem;margin:0">Changes go live as soon as you save.</p></div></div>
+</form>
+<%- include('_foot') %>

@@ -1,0 +1,9 @@
+<div class="grid g2">
+<% documents.forEach(function(d, i){ const ext = (d.file.name || d.file.src).split('.').pop().toUpperCase(); %>
+  <a class="doc" href="<%= d.file.src %>" download="<%= d.file.name %>" data-reveal style="--i:<%= i %>">
+    <span class="ic"><svg><use href="#i-file"/></svg></span>
+    <div><h4><%= d.title %></h4><p><%= d.description || '' %> <span style="white-space:nowrap">· <%= ext %><%= d.file.size ? ', ' + Math.max(1, Math.round(d.file.size/1024)) + ' KB' : '' %></span></p></div>
+    <span class="dl"><svg><use href="#i-download"/></svg></span>
+  </a>
+<% }) %>
+</div>

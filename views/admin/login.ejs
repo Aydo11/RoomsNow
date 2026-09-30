@@ -1,0 +1,15 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Staff login · Solace Housing</title>
+<link rel="icon" href="/img/favicon.svg"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/admin.css"></head>
+<body><div class="login"><div class="box">
+  <div style="display:inline-flex;flex-direction:column;align-items:flex-end;background:#013F58;padding:6px 18px 8px;border-radius:0 18px 0 18px;margin-bottom:24px"><b style="font-family:Poppins;color:#F54C61;font-size:28px;line-height:1">solace</b><small style="font-family:Poppins;color:#F54C61;font-size:7px;letter-spacing:.6em;font-weight:600">HOUSING</small></div>
+  <h1><%= setup ? 'Create your admin account' : 'Staff login' %></h1>
+  <p class="muted" style="margin-top:0"><%= setup ? 'This is the first time the website has been opened. Create the main administrator account.' : 'Manage rooms, events, stories and everything on the website.' %></p>
+  <% if (error) { %><div class="flash err"><%= error %></div><% } %>
+  <form method="post">
+    <% if (setup) { %><div class="f"><label class="l">Your name</label><input type="text" name="name" required autocomplete="name"></div><% } %>
+    <div class="f"><label class="l">Email</label><input type="email" name="email" required autocomplete="username"></div>
+    <div class="f"><label class="l">Password</label><input type="password" name="password" required minlength="<%= setup ? 8 : 1 %>" autocomplete="<%= setup ? 'new-password' : 'current-password' %>"></div>
+    <button class="btn" style="width:100%;justify-content:center;padding:13px"><%= setup ? 'Create account' : 'Log in' %></button>
+  </form>
+  <p style="margin:20px 0 0;font-size:.85rem"><a href="/">← Back to website</a></p>
+</div></div></body></html>

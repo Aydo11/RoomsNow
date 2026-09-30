@@ -1,0 +1,27 @@
+<%- include('_head', { title: 'Settings' }) %>
+<div class="topbar"><div><h1>Settings</h1><p>Contact details, WhatsApp, social links and email notifications. These are used across the whole website.</p></div></div>
+<form method="post" class="edit-layout" data-dirty>
+<div>
+<% SETTINGS.forEach(function(g){ %>
+<div class="card" id="<%= g.group === 'Email notifications' ? 'email' : '' %>"><h2><%= g.group %></h2>
+<% if (g.group === 'Email notifications') { %><div class="help">Form submissions are always saved in the Inbox. Fill these in so you also get an email. For Microsoft 365 use <b>smtp.office365.com</b>, port <b>587</b>. For Gmail use <b>smtp.gmail.com</b>, port <b>587</b>, with an <a href="https://support.google.com/accounts/answer/185833" target="_blank">app password</a>.</div><% } %>
+<div class="form-grid">
+<% g.fields.forEach(function(f){ const v = values[f.key] ?? ''; %>
+<div class="f <%= f.type === 'textarea' ? 'full' : '' %>">
+  <% if (f.type === 'checkbox') { %><label class="chk"><input type="checkbox" name="<%= f.key %>" <%= v === '1' ? 'checked' : '' %>> <%= f.label %></label>
+  <% } else { %><label class="l"><%= f.label %></label>
+  <% if (f.type === 'textarea') { %><textarea name="<%= f.key %>" rows="4"><%= v %></textarea>
+  <% } else if (f.type === 'password') { %><input type="password" name="<%= f.key %>" placeholder="<%= v ? '•••••••• (saved, leave blank to keep)' : '' %>" autocomplete="new-password">
+  <% } else { %><input type="text" name="<%= f.key %>" value="<%= v %>"><% } } %>
+  <% if (f.help) { %><div class="hint"><%= f.help %></div><% } %>
+</div>
+<% }) %>
+</div>
+<% if (g.group === 'WhatsApp') { %><p style="margin:14px 0 0"><a class="btn wa sm" href="https://wa.me/<%= values.whatsapp %>" target="_blank"><svg><use href="#i-whatsapp"/></svg>Test WhatsApp link</a></p><% } %>
+</div>
+<% }) %>
+</div>
+<div class="sticky"><div class="card savebar"><button class="btn" style="justify-content:center"><svg><use href="#i-check"/></svg>Save settings</button>
+<button class="btn ghost" formaction="/admin/settings/test-email" formnovalidate style="justify-content:center">Send a test email</button><p class="muted" style="font-size:.8rem;margin:0">Save first, then send a test email.</p></div></div>
+</form>
+<%- include('_foot') %>

@@ -1,0 +1,14 @@
+<div class="newsletter" id="newsletter" data-reveal>
+  <div><span class="eyebrow">Newsletter</span><h2 style="margin-bottom:10px"><%- cms('global.newsletter.title') %></h2><p class="muted" style="margin:0"><%- cms('global.newsletter.text') %></p></div>
+  <div>
+    <% if (query.subscribed) { %><div class="notice ok" style="margin:0"><svg><use href="#i-check"/></svg><div><h4>You're subscribed</h4><p>Thank you. Look out for our next newsletter.</p></div></div>
+    <% } else { %>
+    <form class="nl-form" method="post" action="/subscribe">
+      <label class="hp">Leave empty <input name="website" tabindex="-1" autocomplete="off"></label>
+      <input type="email" name="email" required placeholder="Your email address" aria-label="Email address">
+      <button class="btn" type="submit">Subscribe <svg class="arrow"><use href="#i-arrow"/></svg></button>
+    </form>
+    <p class="muted" style="font-size:.82rem;margin:10px 0 0">We only use your email to send the newsletter. Unsubscribe any time.</p>
+    <% } %>
+  </div>
+</div>

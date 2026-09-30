@@ -1,0 +1,49 @@
+<%- include('partials/header') %>
+<% const ims = (room.images || []).map(parseImg).filter(Boolean); const stCls = room.status === 'Available now' ? 'green' : room.status === 'Under offer' ? 'amber' : room.status === 'Let / allocated' ? 'grey' : 'navy'; %>
+<section class="section" style="padding-top:40px">
+  <div class="wrap">
+    <nav class="crumbs" style="color:var(--muted)" aria-label="Breadcrumb"><a href="/" style="color:var(--navy)">Home</a><span>/</span><a href="/rooms" style="color:var(--navy)">Rooms</a><span>/</span><%= room.ref %></nav>
+    <div data-reveal style="display:flex;justify-content:space-between;gap:20px;align-items:end;flex-wrap:wrap;margin-bottom:28px">
+      <div><div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap"><span class="badge dot <%= stCls %>"><%= room.status %></span><% if (room.room_type) { %><span class="badge navy"><%= room.room_type %></span><% } %><% if (room.sample) { %><span class="badge grey">Sample listing</span><% } %></div>
+      <h1 style="font-size:clamp(2rem,4vw,3.2rem);max-width:820px"><%= room.title %></h1>
+      <div class="meta-row" style="font-size:1rem"><span><svg><use href="#i-pin"/></svg><%= [room.property, room.area, room.postcode].filter(Boolean).join(' · ') %></span></div></div>
+    </div>
+    <% if (ims.length) { %>
+    <div class="gallery <%= ims.length === 1 ? 'one' : ims.length === 2 ? 'two' : '' %>" data-reveal="mask" data-gallery>
+      <% ims.slice(0,3).forEach(function(im, i){ %><button type="button" data-lb="<%= i %>" aria-label="View photo <%= i+1 %>"><%- img(im, room.title + ' photo ' + (i+1), '', 'loading="eager"') %><% if (i === 2 && ims.length > 3) { %><span class="more"><svg><use href="#i-image"/></svg>+<%= ims.length - 3 %> photos</span><% } %></button><% }) %>
+      <script type="application/json" data-lb-list><%- JSON.stringify(ims.map(i => i.src)) %></script>
+    </div>
+    <% } %>
+    <div class="room-layout">
+      <div>
+        <div class="room-facts" data-reveal>
+          <div class="fact"><small>Rent</small><b><%= room.rent || 'Ask us' %></b></div>
+          <div class="fact"><small>Available</small><b><%= !room.available_from || room.available_from <= today() ? 'Now' : fmtDate(room.available_from, 'short') %></b></div>
+          <div class="fact"><small>Suitable for</small><b><%= room.suitable_for || 'Adults 18+' %></b></div>
+          <div class="fact"><small>Furnished</small><b><%= room.furnished ? 'Yes, fully' : 'No' %></b></div>
+          <div class="fact"><small>Bills</small><b><%= room.bills_included ? 'Included' : 'Not included' %></b></div>
+          <div class="fact"><small>Reference</small><b><%= room.ref %></b></div>
+        </div>
+        <% if ((room.features || []).length) { %><h3 data-reveal>Room features</h3><ul class="checks feature-list" data-reveal><% room.features.forEach(function(f){ %><li><svg><use href="#i-check"/></svg><span><%= f %></span></li><% }) %></ul><% } %>
+        <h3 data-reveal>About this room</h3>
+        <div class="rich lead" data-reveal style="max-width:none"><%- rich(room.description || room.summary) %></div>
+        <div class="notice info" style="margin-top:34px" data-reveal><svg><use href="#i-shield"/></svg><div><h4>Support included</h4><p>Every Solace tenancy comes with a named key worker, a personal support plan and access to our monthly community activities.</p></div></div>
+      </div>
+      <aside class="enquire" data-reveal="right">
+        <span class="ref">REF <%= room.ref %></span>
+        <h3>Interested in this room?</h3>
+        <p>Message us on WhatsApp. Your message will already include this room's reference, so we know exactly which one you mean.</p>
+        <% if (room.status === 'Let / allocated') { %><p style="color:#fff;font-weight:600">This room has now been allocated. Ask us about similar rooms.</p><% } %>
+        <a class="btn wa" href="<%= waRoom(room, src) %>" target="_blank" rel="noopener"><svg><use href="#i-whatsapp"/></svg>Enquire about this room on WhatsApp</a>
+        <div class="alt"><a href="<%= telHref %>"><svg><use href="#i-phone"/></svg>Call</a><a href="/contact?room=<%= encodeURIComponent(room.ref) %>#form"><svg><use href="#i-mail"/></svg>Email form</a></div>
+        <small>Referral agency? <a href="/referrals" style="color:#fff">Make a referral →</a></small>
+      </aside>
+    </div>
+  </div>
+</section>
+<div class="room-bar"><div><b><%= room.ref %></b><span><%= room.status %></span></div><a class="btn wa sm" href="<%= waRoom(room, src) %>" target="_blank" rel="noopener"><svg><use href="#i-whatsapp"/></svg>Enquire on WhatsApp</a></div>
+<% if (others.length) { %>
+<section class="section bg-cream"><div class="wrap"><div class="sec-head"><h2 data-reveal>Other rooms you might like</h2><a class="link-arrow" href="/rooms">All rooms <svg><use href="#i-arrow"/></svg></a></div>
+<div class="grid g3"><% others.forEach(function(r, i){ %><%- include('partials/room-card', { room: r, i, src }) %><% }) %></div></div></section>
+<% } %>
+<%- include('partials/footer') %>
