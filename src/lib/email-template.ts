@@ -1,5 +1,6 @@
 import "server-only";
 import { brand } from "@/brand.config";
+import { WELCOME_SERVICES, WELCOME_STEPS, WELCOME_TIP } from "./welcome-content";
 
 /**
  * Shared visual shell for every transactional email RoomsNow sends
@@ -187,8 +188,8 @@ function marketingDocument(params: {
   heroIntro?: string;
   /** Pre-built <tr> rows for the body of the card. */
   rows: string;
-  /** Why the recipient is getting this, shown with the unsubscribe link. */
-  footerReason: string;
+  /** Why the recipient is getting this, shown with the unsubscribe link. Omit for a one-to-one (non-marketing) email, which has no unsubscribe link. */
+  footerReason?: string;
 }) {
   const { preheader, badge, heroEyebrow, heroTitle, heroIntro, rows, footerReason } = params;
   return `<!doctype html>
@@ -249,7 +250,7 @@ function marketingDocument(params: {
                   ${brand.name} &middot; ${brand.tagline}<br />
                   Questions? Email <a href="mailto:${brand.supportEmail}" style="color:${COLORS.inkFaint};">${brand.supportEmail}</a>
                 </p>
-                ${marketingUnsubscribeHtml(footerReason)}
+                ${footerReason ? marketingUnsubscribeHtml(footerReason) : ""}
               </td>
             </tr>
           </table>
@@ -574,5 +575,180 @@ export function renderProviderMailshotText(params: {
     "You are receiving this because your organisation has a RoomsNow provider account.",
     `Unsubscribe from RoomsNow marketing emails: ${RESEND_UNSUBSCRIBE_URL}`,
   );
+  return lines.join("\n");
+}
+
+// ---------------------------------------------------------------- people looking
+
+
+const SEEKER_ICONS: Record<string, string> = {
+  search: "&#9906;",
+  check: "&#10003;",
+  listen: "&#9835;",
+  post: "&#9998;",
+  bell: "&#9993;",
+  badge: "&#9733;",
+  heart: "&#9829;",
+  phone: "&#9742;",
+};
+
+/** Numbered steps: how RoomsNow connects someone with the right room. */
+function mkSteps(steps: { title: string; text: string }[]) {
+  return steps
+    .map(
+      (step, index) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:${index === 0 ? 0 : 14}px;">
+                  <tr>
+                    <td valign="top" width="44" style="padding-right:14px;">
+                      <div style="width:34px; height:34px; border-radius:17px; background-color:${MKT.tint}; border:1px solid ${MKT.tintLine}; text-align:center; font-family:${MKT.serif}; font-size:17px; line-height:34px; color:${COLORS.pineDark};">${index + 1}</div>
+                    </td>
+                    <td valign="top">
+                      <p style="margin:4px 0 0; font-size:15px; font-weight:bold; color:${COLORS.ink};">${escapeHtml(step.title)}</p>
+                      <p style="margin:4px 0 0; font-size:14px; line-height:21px; color:${COLORS.inkSoft};">${escapeHtml(step.text)}</p>
+                    </td>
+                  </tr>
+                </table>`,
+    )
+    .join("");
+}
+
+/**
+ * "About RoomsNow" for people looking for a room. One design, two uses:
+ * - `welcome`: sent automatically when someone confirms their email address.
+ * - `broadcast`: the admin mailshot to everyone already registered (Resend
+ *   fills in {{{FIRST_NAME}}} and the unsubscribe link).
+ */
+export function renderSeekerAboutEmail(params: {
+  mode: "welcome" | "broadcast";
+  appUrl: string;
+  /** Used for the welcome email. Broadcasts use Resend's first-name merge tag. */
+  firstName?: string;
+  /** Optional personal note from the sender, shown under the greeting. Plain text. */
+  note?: string;
+  senderName?: string;
+}) {
+  const { mode, appUrl, firstName, note, senderName } = params;
+  const link = (path: string) => `${appUrl}${path}`;
+  const greeting =
+    mode === "broadcast" ? "Hi {{{FIRST_NAME|there}}}," : firstName ? `Hi ${escapeHtml(firstName)},` : "Hi,";
+  const opening =
+    mode === "welcome"
+      ? "Thank you for joining RoomsNow. Looking for somewhere to live can be stressful, and we're really glad you're here. This email explains who we are, what we offer and how we'll help you find the right room."
+      : "Thank you for being part of RoomsNow. We wanted to share who we are, everything RoomsNow offers and how we help people like you find the right room.";
+
+  const services = WELCOME_SERVICES.map((service) => ({
+    icon: SEEKER_ICONS[service.icon] ?? "&#8226;",
+    title: escapeHtml(service.title),
+    text: `${escapeHtml(service.body)}<br /><a href="${link(service.href)}" style="display:inline-block; margin-top:6px; font-weight:bold; color:${COLORS.pine}; text-decoration:none;">${escapeHtml(service.cta)} &rarr;</a>`,
+  }));
+
+  const rows = [
+    mkRow(
+      `<p style="margin:0; font-size:16px; line-height:26px; color:${COLORS.ink};">${greeting}</p>
+                ${mkParagraph(opening)}
+                ${note ? `<div style="margin-top:14px;">${paragraphsHtml(note, COLORS.inkSoft)}</div>` : ""}`,
+      34,
+    ),
+    mkRow(
+      `${mkSectionHeading("About us", "Who we are")}
+                ${mkParagraph("RoomsNow is a UK website for HMO rooms, supported accommodation and move-on housing. We bring together people looking for a room, the providers who have rooms, and the support workers, councils and agencies who help people find a home, so the right person finds the right room, faster.")}
+                ${mkParagraph("Every advert shows real availability, rent, the support on offer and who the room is for, in plain English. Providers can be checked and vetted, and you talk to them directly.")}`,
+    ),
+    mkRow(
+      mkOfferPanel({
+        figure: "&pound;0",
+        figureLabel: "Always free",
+        title: "Free for people looking for a room",
+        text: "You never pay to search, message providers, request a room or get alerts.",
+      }),
+      24,
+    ),
+    mkRow(`${mkSectionHeading("How it works", "How we connect you with the right room")}<div style="margin-top:18px;">${mkSteps(WELCOME_STEPS)}</div>`),
+    mkRow(`${mkSectionHeading("What we offer", "Everything RoomsNow can do for you")}<div style="margin-top:18px;">${mkFeatureGrid(services)}</div>`),
+    mkRow(
+      mkTintNote(
+        `<strong>Tip: ${escapeHtml(WELCOME_TIP.title.toLowerCase())}.</strong> ${WELCOME_TIP.points.map(escapeHtml).join(" ")}`,
+      ),
+      24,
+    ),
+    `<tr>
+              <td class="mk-px" align="center" style="padding:28px 40px 0;">
+                ${mkButton("Find a room", link("/search"))}
+                <p style="margin:12px 0 0; font-size:13px; line-height:20px; color:${COLORS.inkFaint};">
+                  or <a href="${link("/eligibility")}" style="color:${COLORS.pine};">check what fits you in two minutes</a>
+                </p>
+              </td>
+            </tr>`,
+    mkRow(
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FBEFE9; border-radius:12px;">
+                  <tr><td style="padding:16px 20px; font-size:13.5px; line-height:21px; color:${COLORS.inkSoft};">
+                    <strong style="color:#A45512;">Need help right now?</strong> Call <strong style="color:${COLORS.ink};">999</strong> in an emergency, <strong style="color:${COLORS.ink};">111</strong> for urgent mental health help, or Samaritans free on <strong style="color:${COLORS.ink};">116 123</strong>, day or night.
+                    <a href="${link("/support-services")}" style="color:#A45512; font-weight:bold;">More support services</a>
+                  </td></tr>
+                </table>`,
+      26,
+    ),
+    mkRow(
+      `<p style="margin:0; font-size:15px; line-height:23px; color:${COLORS.ink};">Thank you again for choosing RoomsNow. We're here to help you find a place to call home.</p>
+                <p style="margin:14px 0 0; font-size:15px; line-height:22px; color:${COLORS.ink};">Warm regards,<br /><strong>${senderName ? `${escapeHtml(senderName)} and the RoomsNow team` : "The RoomsNow team"}</strong></p>`,
+      26,
+    ),
+    `<tr><td style="padding:34px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr>`,
+  ].join("\n            ");
+
+  return marketingDocument({
+    preheader:
+      mode === "welcome"
+        ? "Thank you for joining. Here's who we are and how we'll help you find the right room."
+        : "Who we are, what we offer, and how we help you find the right room.",
+    badge: "For people looking",
+    heroEyebrow: mode === "welcome" ? "Welcome to RoomsNow" : "About RoomsNow",
+    heroTitle: "Find the right room, with the right support",
+    heroIntro:
+      mode === "welcome"
+        ? "Thank you for joining. RoomsNow is free for anyone looking for a room."
+        : "Thank you for being part of RoomsNow. Here's how we help you find a place to call home.",
+    rows,
+    footerReason: mode === "broadcast" ? "You are receiving this because you have a RoomsNow account." : undefined,
+  });
+}
+
+/** Plain-text version of renderSeekerAboutEmail. */
+export function renderSeekerAboutText(params: { mode: "welcome" | "broadcast"; appUrl: string; firstName?: string; note?: string; senderName?: string }) {
+  const { mode, appUrl, firstName, note, senderName } = params;
+  const lines = [
+    mode === "broadcast" ? "Hi {{{FIRST_NAME|there}}}," : `Hi ${firstName ?? ""},`.replace(" ,", ","),
+    "",
+    mode === "welcome" ? "Thank you for joining RoomsNow. We're really glad you're here." : "Thank you for being part of RoomsNow.",
+  ];
+  if (note) lines.push("", note.trim());
+  lines.push(
+    "",
+    "WHO WE ARE",
+    "RoomsNow is a UK website for HMO rooms, supported accommodation and move-on housing. We bring together people looking for a room, providers, and the support workers, councils and agencies who help, so the right person finds the right room, faster.",
+    "",
+    "It's free for people looking for a room. You never pay to search, message providers, request a room or get alerts.",
+    "",
+    "HOW WE CONNECT YOU WITH THE RIGHT ROOM",
+    ...WELCOME_STEPS.map((step, index) => `${index + 1}. ${step.title}: ${step.text}`),
+    "",
+    "WHAT WE OFFER",
+    ...WELCOME_SERVICES.map((service) => `- ${service.title}: ${service.body} ${appUrl}${service.href}`),
+    "",
+    `TIP: ${WELCOME_TIP.points.join(" ")}`,
+    "",
+    `Find a room: ${appUrl}/search`,
+    "",
+    "Need help right now? 999 in an emergency, 111 for urgent mental health help, Samaritans 116 123 (free, 24/7).",
+    "",
+    "Warm regards,",
+    senderName ? `${senderName} and the RoomsNow team` : "The RoomsNow team",
+    "",
+    "---",
+    `${brand.name} · ${brand.tagline}`,
+    `Questions? Email ${brand.supportEmail}`,
+  );
+  if (mode === "broadcast") {
+    lines.push("", "You are receiving this because you have a RoomsNow account.", `Unsubscribe from RoomsNow marketing emails: ${RESEND_UNSUBSCRIBE_URL}`);
+  }
   return lines.join("\n");
 }
