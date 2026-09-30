@@ -52,6 +52,11 @@ const securityHeaders = [
 const nextConfig = {
   turbopack: { root: fileURLToPath(new URL(".", import.meta.url)) },
   poweredByHeader: false,
+  // Tags each build with its commit. When a phone still has the previous
+  // version open, Next sees the mismatch and does a full page load on the
+  // next navigation, instead of asking for JavaScript that no longer exists
+  // (which looked like the site crashing after a deploy).
+  deploymentId: process.env.RENDER_GIT_COMMIT || undefined,
   images: {
     // Uploaded files get a new random name on every upload, so an optimised
     // copy never goes stale. Keep them a month instead of re-resizing big
