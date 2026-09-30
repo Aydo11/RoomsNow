@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/rbac";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { SeekerMailshotForm } from "@/components/seeker-mailshot-form";
 import { seekerAudienceWhere, type SeekerAudience } from "@/lib/seeker-audience";
+import { CampaignTabs } from "@/components/campaign-tabs";
 import { adminNav } from "../nav";
 
 export const metadata = { title: "People mailshot" };
@@ -40,6 +41,7 @@ export default async function SeekerMailshotPage({ searchParams }: { searchParam
       nav={nav}
       active="/admin/seeker-mailshot"
     >
+      <CampaignTabs active="/admin/seeker-mailshot" />
       <div className="grid items-start gap-6 lg:grid-cols-[.85fr_1.15fr]">
         <div className="space-y-4">
           <div className="card p-4">
