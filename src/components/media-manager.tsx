@@ -11,6 +11,7 @@ import {
 } from "@/server/actions/listings";
 import { Field, FormError, FormSuccess, SubmitButton } from "./ui";
 import { clsx } from "@/lib/clsx";
+import { compressInputImages } from "@/lib/compress-image";
 import { demoListingImage } from "@/lib/demo-listings";
 import { ResilientImage } from "./resilient-image";
 
@@ -47,6 +48,7 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
   const [savedId, setSavedId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [batchError, setBatchError] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => setItems(media), [media]);
@@ -112,6 +114,7 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
             hint="Up to 12 files. Photos: 8MB each. Video: 20MB. These upload as soon as you choose them — no extra button to press. Selecting a lot at once? Add them in a couple of smaller batches."
             error={batchError ?? state.errors?.files}
           >
+            {preparing && <p role="status" className="mb-2 text-[13px] text-pine-dark">Preparing your photos…</p>}
             <input
               id="files"
               name="files"
@@ -119,13 +122,19 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
               accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/quicktime,video/webm"
               multiple
               className="field file:mr-3 file:rounded-md file:border-0 file:bg-pine-light file:px-3 file:py-1.5 file:text-pine-dark"
-              onChange={(event) => {
-                const files = event.target.files;
-                if (!files || files.length === 0) return;
+              onChange={async (event) => {
+                const input = event.currentTarget;
+                if (!input.files || input.files.length === 0) return;
 
-                const totalBytes = Array.from(files).reduce((sum, file) => sum + file.size, 0);
+                // Shrink big phone photos first, so uploads on mobile data are quick.
+                setBatchError(null);
+                setPreparing(true);
+                const files = await compressInputImages(input);
+                setPreparing(false);
+
+                const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
                 if (totalBytes > MAX_BATCH_BYTES) {
-                  event.target.value = "";
+                  input.value = "";
                   setBatchError(
                     `That's ${formatMB(totalBytes)} in one go, which is too much for a single upload. ` +
                       `Please select fewer files at a time (try splitting them into a couple of smaller batches).`,
