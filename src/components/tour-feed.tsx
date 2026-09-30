@@ -8,6 +8,7 @@ import { toggleSaveAction } from "@/server/actions/engagement";
 import type { TourMedia, TourSlide } from "@/server/tour";
 import { toast } from "./toast";
 import { clsx } from "@/lib/clsx";
+import { optimisedImage } from "@/lib/image-url";
 
 type Props = {
   slides: TourSlide[];
@@ -465,8 +466,8 @@ function MediaView({ item, show, playing, muted, title }: { item: TourMedia; sho
     const thumb = `https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`;
     return (
       <button type="button" onClick={(event) => { event.stopPropagation(); setYoutubeStarted(true); }} className="relative block h-full w-full" aria-label={`Play video tour of ${title}`}>
-        <Backdrop src={thumb} />
-        <img src={thumb} alt="" className="relative h-full w-full object-contain" />
+        <Backdrop src={optimisedImage(thumb, 64)} />
+        <img src={optimisedImage(thumb, 540)} alt="" className="relative h-full w-full object-contain" />
         <span className="absolute left-1/2 top-1/2 grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black/55 backdrop-blur-md transition active:scale-90">
           <svg viewBox="0 0 24 24" className="ml-1 h-7 w-7" fill="currentColor" aria-hidden="true">
             <path d="M7 4.5v15l12.5-7.5L7 4.5Z" />
@@ -478,8 +479,8 @@ function MediaView({ item, show, playing, muted, title }: { item: TourMedia; sho
 
   return (
     <>
-      <Backdrop src={item.url} />
-      <img src={item.url} alt={item.caption ?? `Photo of ${title}`} className="relative h-full w-full object-cover sm:object-contain" draggable={false} />
+      <Backdrop src={optimisedImage(item.url, 64)} />
+      <img src={optimisedImage(item.url, 600)} alt={item.caption ?? `Photo of ${title}`} className="relative h-full w-full object-cover sm:object-contain" draggable={false} />
       {item.caption && (
         <span className="absolute left-4 top-[calc(max(0.75rem,env(safe-area-inset-top))+6rem)] max-w-[70%] rounded-full bg-black/45 px-2.5 py-1 text-[11px] text-white/85 backdrop-blur">
           {item.caption}
