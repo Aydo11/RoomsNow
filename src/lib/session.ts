@@ -45,6 +45,11 @@ export async function destroySession() {
   cookieStore.delete(COOKIE);
 }
 
+/** Just the signed-in user's id from the cookie, with no database lookup. */
+export async function sessionUserId(): Promise<string | null> {
+  return (await readToken())?.sub ?? null;
+}
+
 async function readToken(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE)?.value;
