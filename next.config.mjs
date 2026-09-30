@@ -53,6 +53,11 @@ const nextConfig = {
   turbopack: { root: fileURLToPath(new URL(".", import.meta.url)) },
   poweredByHeader: false,
   images: {
+    // Uploaded files get a new random name on every upload, so an optimised
+    // copy never goes stale. Keep them a month instead of re-resizing big
+    // phone photos every few hours.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    formats: ["image/webp"],
     // Deliberately narrow. Widen it to the hosts you actually serve images from.
     remotePatterns: [
       { protocol: "https", hostname: "**.amazonaws.com" },
