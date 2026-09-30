@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { sendSeekerMailshot } from "@/server/actions/seeker-mailshot";
 import { Field, FormError, SubmitButton } from "./ui";
+import { EmailPreview } from "./email-preview";
 import type { FormState } from "@/lib/validation";
 
 const initialState: FormState = { ok: false };
@@ -17,31 +18,6 @@ export function SeekerMailshotForm({ audience, recipientCount }: { audience: str
   const [senderName, setSenderName] = useState("Ayden");
   const [subject, setSubject] = useState(DEFAULT_SUBJECT);
   const [note, setNote] = useState("");
-  const [previewSrc, setPreviewSrc] = useState(previewUrl("", "Ayden"));
-  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
-
-  // Refresh the preview a moment after typing stops.
-  useEffect(() => {
-    const timer = window.setTimeout(() => setPreviewSrc(previewUrl(note, senderName)), 600);
-    return () => window.clearTimeout(timer);
-  }, [note, senderName]);
-
-  // The site can't be framed (anti-clickjacking headers), so the preview
-  // loads the HTML and shows it in a sandboxed srcdoc frame instead.
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(previewSrc, { signal: controller.signal, cache: "no-store" })
-      .then((response) => (response.ok ? response.text() : Promise.reject(new Error(String(response.status)))))
-      .then((html) => setPreviewHtml(html.replace("<head>", '<head><base target="_blank">')))
-      .catch((error) => {
-        if (!controller.signal.aborted) {
-          console.error("Preview failed", error);
-          setPreviewHtml("<p style=\"font-family:sans-serif;padding:24px\">The preview couldn't load. Try Open full size.</p>");
-        }
-      });
-    return () => controller.abort();
-  }, [previewSrc]);
-
   return (
     <div className="space-y-4">
       <form action={action} className="card space-y-4 p-5">
@@ -103,32 +79,8 @@ export function SeekerMailshotForm({ audience, recipientCount }: { audience: str
         )}
       </form>
 
-      <div className="card overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
-          <p className="text-sm font-semibold text-ink">Preview</p>
-          <a href={previewSrc} target="_blank" rel="noopener" className="text-[13px] font-medium text-pine hover:underline">
-            Open full size
-          </a>
-        </div>
-        {previewHtml === null ? (
-          <div className="grid h-[720px] place-items-center bg-paper-sunk text-sm text-ink-soft">Loading preview…</div>
-        ) : (
-          <iframe
-            title="Email preview"
-            srcDoc={previewHtml}
-            sandbox="allow-popups allow-popups-to-escape-sandbox"
-            className="block h-[720px] w-full bg-paper-sunk"
-          />
-        )}
-      </div>
+      <EmailPreview values={{ type: "seeker", senderName, note }} subject={subject} />
     </div>
   );
 }
 
-function previewUrl(note: string, senderName: string) {
-  const params = new URLSearchParams();
-  if (note.trim()) params.set("note", note.slice(0, 2000));
-  if (senderName.trim()) params.set("senderName", senderName.slice(0, 80));
-  const query = params.toString();
-  return `/api/admin/seeker-mailshot/preview${query ? `?${query}` : ""}`;
-}
