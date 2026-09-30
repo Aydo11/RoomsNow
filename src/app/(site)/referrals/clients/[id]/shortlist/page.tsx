@@ -10,6 +10,7 @@ import { coverImage } from "@/lib/cover-image";
 import { demoListingImage } from "@/lib/demo-listings";
 import { clsx } from "@/lib/clsx";
 import { referrerNav } from "../../../nav";
+import { optimisedImage } from "@/lib/image-url";
 
 export const metadata = { title: "Compare shortlist" };
 export const dynamic = "force-dynamic";
@@ -71,7 +72,7 @@ export default async function ShortlistPage({ params }: { params: Promise<{ id: 
                     <th key={listing.id} scope="col" className="min-w-[210px] border-l border-line p-4 font-normal">
                       <div className="relative h-28 overflow-hidden rounded-[10px] bg-paper-sunk">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cover && !cover.isVideoFile ? cover.url : demoListingImage(listing.id).url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={optimisedImage(cover && !cover.isVideoFile ? cover.url : demoListingImage(listing.id).url, 320)} alt="" className="absolute inset-0 h-full w-full object-cover" />
                       </div>
                       <span className={clsx("mt-3 inline-flex rounded-pill px-2.5 py-1 text-[12px] font-semibold tabular-nums", band.tone)}>
                         {match.score}% · {band.label}
