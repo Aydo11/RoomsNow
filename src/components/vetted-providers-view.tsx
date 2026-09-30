@@ -8,6 +8,7 @@ import { LISTING_CARD_SELECT } from "@/server/search";
 import { SUPPORT_TYPES } from "@/lib/taxonomy";
 import { vettedAccreditationWhere } from "@/lib/vetted";
 import { clsx } from "@/lib/clsx";
+import { optimisedImage } from "@/lib/image-url";
 
 const SCHEMES = {
   ALL: { label: "CQC or BVSC", schemes: ["CQC", "BVSC"] },
@@ -165,7 +166,7 @@ export async function VettedProvidersView({ params, basePath }: { params: Vetted
                 <div className="flex items-center gap-3">
                   {provider.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={provider.logoUrl} alt="" className="h-11 w-11 shrink-0 rounded-[10px] border border-line bg-white object-contain" />
+                    <img src={optimisedImage(provider.logoUrl, 44)} alt="" className="h-11 w-11 shrink-0 rounded-[10px] border border-line bg-white object-contain" />
                   ) : (
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[10px] bg-paper-sunk text-[13px] font-semibold text-ink-soft">
                       {provider.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase()}
