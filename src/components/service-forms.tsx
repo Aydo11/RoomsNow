@@ -20,6 +20,7 @@ import { Field, FormError, FormSuccess, SubmitButton } from "./ui";
 import { SocialLinksField, type SocialLink } from "./social-links-field";
 import { ImageDropzone } from "./image-dropzone";
 import { clsx } from "@/lib/clsx";
+import { optimisedImage } from "@/lib/image-url";
 
 const initial: FormState = { ok: false };
 
@@ -202,7 +203,7 @@ export function ServiceProfileForm({ values, maxAreas, portfolioLimit }: { value
             <ul className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
               {values.portfolio.map((image) => (
                 <li key={image} className="space-y-1">
-                  <img src={image} alt="" className="aspect-square w-full rounded-[8px] object-cover" />
+                  <img src={optimisedImage(image, 160)} alt="" className="aspect-square w-full rounded-[8px] object-cover" />
                   <label className="flex items-center gap-1.5 text-[12px] text-ink-soft">
                     <input type="checkbox" name="removePortfolio" value={image} className="h-3.5 w-3.5 rounded border-line-strong" />
                     Remove
@@ -419,7 +420,7 @@ export function ServiceAdvertForm({ values, maxAreas, canSubmit }: { values: Ser
             <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
               {values.images.map((image) => (
                 <li key={image} className="space-y-1">
-                  <img src={image} alt="" className="aspect-square w-full rounded-[8px] object-cover" />
+                  <img src={optimisedImage(image, 160)} alt="" className="aspect-square w-full rounded-[8px] object-cover" />
                   <label className="flex items-center gap-1.5 text-[12px] text-ink-soft">
                     <input type="checkbox" name="removeImages" value={image} className="h-3.5 w-3.5 rounded border-line-strong" />
                     Remove
