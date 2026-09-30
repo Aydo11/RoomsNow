@@ -1,5 +1,7 @@
 "use client";
 
+import { compressImage } from "@/lib/compress-image";
+import { optimisedImage } from "@/lib/image-url";
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { clsx } from "@/lib/clsx";
 
@@ -26,7 +28,7 @@ export function BannerPicker({
   className?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState(initialUrl);
+  const [preview, setPreview] = useState(optimisedImage(initialUrl, 960) ?? null);
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
@@ -44,6 +46,13 @@ export function BannerPicker({
       input.files = transfer.files;
     }
     setPreview(URL.createObjectURL(file));
+    // Swap in a lighter copy for the upload (a phone photo can be 10MB).
+    void compressImage(file).then((smaller) => {
+      if (smaller === file || !inputRef.current || typeof DataTransfer === "undefined") return;
+      const transfer = new DataTransfer();
+      transfer.items.add(smaller);
+      inputRef.current.files = transfer.files;
+    });
   }
 
   function onDrop(event: DragEvent<HTMLLabelElement>) {
