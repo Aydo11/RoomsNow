@@ -14,12 +14,19 @@ export function AvatarDropzone({
   initialPreview,
   fallback,
   error,
+  overlapsBanner = false,
 }: {
   id: string;
   name: string;
   initialPreview: string | null;
   fallback: React.ReactNode;
   error?: string;
+  /**
+   * Set when the picture overlaps the bottom of a banner above it. The help
+   * text then sits below the banner instead of on top of it, and only the
+   * picture itself catches clicks, so the banner stays clickable around it.
+   */
+  overlapsBanner?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState(initialPreview);
@@ -49,7 +56,7 @@ export function AvatarDropzone({
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className={overlapsBanner ? "pointer-events-none flex items-end gap-4" : "flex items-center gap-4"}>
       <label
         htmlFor={id}
         onDragEnter={(event) => { event.preventDefault(); setDragging(true); }}
@@ -58,7 +65,7 @@ export function AvatarDropzone({
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
         }}
         onDrop={drop}
-        className={`group relative block h-24 w-24 shrink-0 cursor-pointer rounded-full transition focus-within:ring-2 focus-within:ring-pine/30 ${
+        className={`group pointer-events-auto relative block h-24 w-24 shrink-0 cursor-pointer rounded-full transition focus-within:ring-2 focus-within:ring-pine/30 ${
           dragging ? "ring-4 ring-pine ring-offset-2" : ""
         }`}
       >
@@ -91,7 +98,7 @@ export function AvatarDropzone({
           {dragging ? "Drop it" : "Change"}
         </span>
       </label>
-      <div className="text-[13px] text-ink-faint">
+      <div className={overlapsBanner ? "pointer-events-auto pb-1 text-[13px] text-ink-faint" : "text-[13px] text-ink-faint"}>
         <p>Drag a photo here, or click to browse.</p>
         <p className="mt-0.5">JPG, PNG, WEBP or AVIF · up to 8MB.</p>
         {error && <p className="mt-1 text-clay" role="alert">{error}</p>}
