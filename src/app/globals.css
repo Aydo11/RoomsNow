@@ -838,7 +838,13 @@ html[data-scrolled] .site-header { box-shadow: 0 8px 24px -18px rgb(15 79 135 / 
 }
 
 /* Slowly drifting colour behind hero sections. Pure decoration. */
-.ambient-orb { position: absolute; border-radius: 999px; pointer-events: none; will-change: transform; }
+.ambient-orb { position: absolute; border-radius: 999px; pointer-events: none; }
+/* Big blurred layers are cheap on a laptop and expensive on a phone's GPU.
+   Phones get them still (no drift, no extra compositing layer). */
+@media (max-width: 1023px) {
+  .ambient-orb { animation: none !important; }
+  .ambient-orb-3 { display: none; }
+}
 @media (prefers-reduced-motion: no-preference) {
   .ambient-orb { animation: ambient-drift 18s ease-in-out infinite alternate; }
   .ambient-orb-2 { animation-duration: 23s; animation-direction: alternate-reverse; }
