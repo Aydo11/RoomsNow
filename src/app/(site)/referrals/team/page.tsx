@@ -15,6 +15,7 @@ import {
 import { ORG_ROLE_LABEL, teamFor } from "@/lib/referral-team";
 import { shortDate, timeAgo } from "@/lib/format";
 import { referrerNav } from "../nav";
+import { optimisedImage } from "@/lib/image-url";
 
 export const metadata = { title: "Team" };
 export const dynamic = "force-dynamic";
@@ -120,7 +121,7 @@ export default async function ReferralTeamPage({ searchParams }: { searchParams:
               return (
                 <li key={member.id} className="flex flex-wrap items-center gap-4 px-6 py-4">
                   {person.avatarUrl ? (
-                    <img src={person.avatarUrl} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />
+                    <img src={optimisedImage(person.avatarUrl, 44)} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />
                   ) : (
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-paper-sunk text-[14px] font-medium text-ink-soft">
                       {`${person.firstName[0] ?? ""}${person.lastName[0] ?? ""}`.toUpperCase()}
