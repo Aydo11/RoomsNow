@@ -8,6 +8,7 @@ import { matchBand } from "@/lib/client-matching";
 import { coverImage } from "@/lib/cover-image";
 import { demoListingImage } from "@/lib/demo-listings";
 import { supportLabel } from "@/lib/taxonomy";
+import { optimisedImage } from "@/lib/image-url";
 
 export const metadata = { title: "Referral pack", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -103,7 +104,7 @@ export default async function ReferralPackPage({ params }: { params: Promise<{ i
                   <div className="grid grid-cols-[200px_1fr] gap-5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={cover && !cover.isVideoFile ? cover.url : demoListingImage(listing.id).url}
+                      src={optimisedImage(cover && !cover.isVideoFile ? cover.url : demoListingImage(listing.id).url, 320)}
                       alt=""
                       className="h-[140px] w-[200px] rounded-[10px] object-cover"
                     />
