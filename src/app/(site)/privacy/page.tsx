@@ -53,6 +53,7 @@ export default function PrivacyPage() {
 
       <Section heading="6. Who receives information">
         <p>Information is shared only as needed with the provider, applicant or referrer involved in a request; authorised RoomsNow staff; and contracted suppliers for hosting, storage, email, payments, monitoring, maps and security. Suppliers receive only the access needed for their service and must protect the information under contract.</p>
+        <p>The Help Assistant is automated. Your questions are used only to answer you: the conversation is kept in your browser tab, not saved on RoomsNow&apos;s servers or linked to your account, and it disappears when you close the tab or start over. To answer general questions, the recent messages (with anything that looks like an ID, card or bank number removed) may be sent to our AI supplier, Anthropic, which processes them on our behalf and doesn&apos;t use them to train its models. If you choose &ldquo;Contact RoomsNow support&rdquo;, your message and email address are emailed to our team so we can reply, and the chat is included only if you tick the box. Please don&apos;t share health details, ID or bank numbers with the assistant.</p>
         <p>RoomsNow may disclose information where required by law, to protect someone from serious harm, to investigate fraud or abuse, to establish or defend legal rights, or as part of a properly managed business transfer. RoomsNow does not sell personal information.</p>
       </Section>
 
