@@ -5,6 +5,7 @@ import { ACCOMMODATION_TYPES, supportLabel, SUPPORT_TYPES } from "@/lib/taxonomy
 import { initials, money, monthYear } from "@/lib/format";
 import { EmptyState } from "@/components/ui";
 import { EXAMPLE_PEOPLE_THRESHOLD, exampleMoveInDate, examplePeopleFor } from "@/lib/example-people";
+import { optimisedImage } from "@/lib/image-url";
 
 export const metadata = { title: "People looking for accommodation" };
 export const dynamic = "force-dynamic";
@@ -138,7 +139,7 @@ function PeopleGrid({ cards, canContact }: { cards: CardData[]; canContact: bool
           <div className="flex items-center gap-2.5">
             {card.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={card.photoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+              <img src={optimisedImage(card.photoUrl, 36)} alt="" className="h-9 w-9 rounded-full object-cover" />
             ) : (
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-paper-sunk text-[13px] text-ink-soft">
                 {card.initials}
