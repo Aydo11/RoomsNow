@@ -5,6 +5,7 @@ import { mailshotRecipientEmails } from "@/lib/audit";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { AdminFilters, AdminFilterField } from "@/components/admin-filters";
 import { ProviderMailshotForm } from "@/components/provider-mailshot-form";
+import { CampaignTabs } from "@/components/campaign-tabs";
 import { adminNav } from "../nav";
 
 export const metadata = { title: "Provider mailshot" };
@@ -48,6 +49,7 @@ export default async function ProviderMailshotPage({
       nav={nav}
       active="/admin/provider-mailshot"
     >
+      <CampaignTabs active="/admin/provider-mailshot" />
       <div className="grid items-start gap-6 lg:grid-cols-[.85fr_1.15fr]">
         <div className="space-y-4">
           <AdminFilters>
