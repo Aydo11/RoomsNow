@@ -10,6 +10,7 @@ import { ReportForm } from "@/components/report-form";
 import { Stars } from "@/components/star-rating";
 import { businessCanAdvertise, categoryLabel, EVIDENCE_LABELS, priceLabel, responseLabel, serviceSubscriptionActive } from "@/lib/service-marketplace";
 import { monthYear, shortDate } from "@/lib/format";
+import { optimisedImage } from "@/lib/image-url";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -94,7 +95,7 @@ export default async function ServiceBusinessProfile({ params }: { params: Promi
             <section className="card p-5">
               <h2 className="text-[18px]">Recent work</h2>
               <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {business.portfolio.map((image, index) => <li key={image}><img src={image} alt={`Work by ${name} — ${index + 1}`} className="aspect-[4/3] w-full rounded-[10px] object-cover" loading="lazy" /></li>)}
+                {business.portfolio.map((image, index) => <li key={image}><img src={optimisedImage(image, 320)} alt={`Work by ${name} — ${index + 1}`} className="aspect-[4/3] w-full rounded-[10px] object-cover" loading="lazy" /></li>)}
               </ul>
             </section>
           )}
