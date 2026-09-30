@@ -135,7 +135,11 @@ export function Thread({
   }, [selectedMedia]);
 
   useEffect(() => {
-    const timer = setInterval(() => void refreshMessages(), 2500);
+    // Poll only while the conversation is on screen. A phone with a thread
+    // left open in a background tab shouldn't keep hitting the server.
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") void refreshMessages();
+    }, 3000);
     const onVisible = () => { if (document.visibilityState === "visible") void refreshMessages(); };
     window.addEventListener("focus", refreshMessages);
     document.addEventListener("visibilitychange", onVisible);
