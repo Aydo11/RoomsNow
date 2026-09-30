@@ -3,7 +3,7 @@ import { MobileMenu } from "./mobile-menu";
 import { brand } from "@/brand.config";
 import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
-import { logoutAction } from "@/server/actions/auth";
+import { SignOutButton } from "./sign-out-button";
 import { LanguageSelector } from "./language-selector";
 import { ThemeToggle } from "./theme-toggle";
 import { CookieSettingsButton } from "@/components/cookie-settings-button";
@@ -118,9 +118,7 @@ export async function SiteHeader() {
               <ThemeToggle />
               <LanguageSelector mobile />
               {user && (
-                <form action={logoutAction}>
-                  <button className="w-full rounded-[10px] px-3 py-3 text-left text-[15px] text-ink-soft hover:bg-paper-sunk">Sign out</button>
-                </form>
+                <SignOutButton className="w-full rounded-[10px] px-3 py-3 text-left text-[15px] text-ink-soft hover:bg-paper-sunk disabled:opacity-70" />
               )}
             </MobileSection>
           </MobileMenu>
