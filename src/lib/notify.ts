@@ -66,7 +66,7 @@ export async function notifyCompany(companyId: string, params: Omit<Parameters<t
   await Promise.all(staff.map((s) => notify({ ...params, userId: s.userId })));
 }
 
-export async function sendEmail(msg: { to: string; subject: string; text: string; html?: string }) {
+export async function sendEmail(msg: { to: string; subject: string; text: string; html?: string; replyTo?: string }) {
   const driver = process.env.EMAIL_DRIVER ?? "console";
   if (driver === "console") {
     console.info(`[email:${msg.to}] ${msg.subject}\n${msg.text}`);
@@ -79,7 +79,7 @@ export async function sendEmail(msg: { to: string; subject: string; text: string
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: [msg.to], subject: msg.subject, text: msg.text, html: msg.html }),
+      body: JSON.stringify({ from, to: [msg.to], subject: msg.subject, text: msg.text, html: msg.html, ...(msg.replyTo ? { reply_to: msg.replyTo } : {}) }),
     });
     if (!response.ok) throw new Error(`Email delivery failed with status ${response.status}.`);
     return;
