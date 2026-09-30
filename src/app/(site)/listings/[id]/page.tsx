@@ -35,6 +35,7 @@ import { RecordRecentlyViewed } from "@/components/recently-viewed";
 import { checkHundredViews } from "@/lib/milestones";
 import { ResidentRatingLine, ResidentReviews } from "@/components/resident-reviews";
 import { residentReviewsFor } from "@/server/resident-reviews";
+import { optimisedImage } from "@/lib/image-url";
 
 export const dynamic = "force-dynamic";
 
@@ -439,7 +440,7 @@ export default async function ListingPage({
               {listing.company.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={listing.company.logoUrl}
+                  src={optimisedImage(listing.company.logoUrl, 56)}
                   alt={`${listing.company.name} logo`}
                   className="h-14 w-14 shrink-0 rounded-full border border-line bg-white object-cover"
                   loading="lazy"
@@ -480,7 +481,7 @@ export default async function ListingPage({
         </aside>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 px-4 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(21,42,58,.10)] backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white px-4 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(21,42,58,.10)] lg:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-medium text-ink">{rentRange(listing.weeklyRentFrom, listing.weeklyRentTo)}</p>
