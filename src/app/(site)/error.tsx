@@ -3,11 +3,26 @@
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
+import { isStaleBuildError, reloadForStaleBuild } from "@/lib/stale-build";
 
 export default function SiteError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
+    // A newer version of the site went live while this page was open.
+    if (reloadForStaleBuild(error)) return;
     Sentry.captureException(error);
   }, [error]);
+
+  if (isStaleBuildError(error)) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-24 text-center" role="status">
+        <h1 className="text-[22px] font-semibold text-ink">Updating RoomsNow…</h1>
+        <p className="mt-2 text-[15px] text-ink-soft">A newer version of the site is ready. Loading it now.</p>
+        <button type="button" className="btn-primary mt-6" onClick={() => window.location.reload()}>
+          Reload now
+        </button>
+      </div>
+    );
+  }
 
   // AuthorisationError (thrown by assertCompanyAccess and friends in
   // src/lib/rbac.ts) always carries a safe, user-facing message (e.g. "You
