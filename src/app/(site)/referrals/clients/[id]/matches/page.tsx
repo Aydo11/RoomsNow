@@ -14,6 +14,7 @@ import { clsx } from "@/lib/clsx";
 import { referrerNav } from "../../../nav";
 import { teamMemberIds } from "@/lib/referral-team";
 import { ShortlistButton } from "@/components/shortlist-controls";
+import { optimisedImage } from "@/lib/image-url";
 
 export const metadata = { title: "Match to an advert" };
 export const dynamic = "force-dynamic";
@@ -172,7 +173,7 @@ export default async function ClientMatchesPage({
                     <video src={videoPosterSrc(cover.url)} preload="metadata" muted playsInline className="absolute inset-0 h-full w-full bg-black object-cover" />
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={cover?.url ?? demoListingImage(listing.id).url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                    <img src={optimisedImage(cover?.url ?? demoListingImage(listing.id).url, 320)} alt="" className="absolute inset-0 h-full w-full object-cover" />
                   )}
                 </Link>
 
