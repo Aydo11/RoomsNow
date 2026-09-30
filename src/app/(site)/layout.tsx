@@ -3,6 +3,7 @@ import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { GoodNews } from "@/components/good-news";
 import { MobileTabs } from "@/components/mobile-tabs";
 import { BackToTop, MotionEffects, RouteProgress } from "@/components/motion";
+import { HelpAssistant } from "@/components/help-assistant";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +19,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <div className="print:hidden"><SiteFooter /></div>
       <div className="print:hidden"><MobileTabs /></div>
       <BackToTop />
+      <HelpAssistant />
       <Suspense fallback={null}>
         <GoodNews />
       </Suspense>
