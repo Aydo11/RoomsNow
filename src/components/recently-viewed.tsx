@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { optimisedImage } from "@/lib/image-url";
 
 /**
  * "Recently viewed" rooms, kept only in this browser. Nothing is sent to the
@@ -65,7 +66,7 @@ export function RecentlyViewed({ excludeId, className = "" }: { excludeId?: stri
               <span className="relative block h-28 overflow-hidden bg-paper-sunk">
                 {item.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]" />
+                  <img src={optimisedImage(item.image, 256)} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]" />
                 ) : (
                   <span className="grid h-full place-items-center bg-gradient-to-br from-pine-light to-paper-sunk text-pine-dark">
                     <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M3 11 12 4l9 7v9H3v-9Z" /><path d="M9 20v-6h6v6" /></svg>
