@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { createHash, randomBytes } from "crypto";
 import { redirect } from "next/navigation";
+import { WELCOME_NOTIFICATION } from "@/lib/welcome-content";
 import { db } from "@/lib/db";
 import { createSession, destroySession, getCurrentUser } from "@/lib/session";
 import { audit } from "@/lib/audit";
@@ -156,17 +157,20 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   }
 
   await audit({ actorId: user.id, action: "user.registered", targetType: "User", targetId: user.id });
+  const seeker = data.accountType === "USER";
   await notify({
     userId: user.id,
     type: "SYSTEM",
-    title: "Welcome aboard",
+    title: seeker ? WELCOME_NOTIFICATION.title : "Welcome aboard",
     body:
       data.accountType === "PROVIDER"
         ? "Add your first advert to start receiving enquiries."
         : data.accountType === "SERVICE_PROVIDER"
           ? "Complete your business profile and upload your insurance so we can verify you."
-          : "Tell providers what you're looking for — it takes about two minutes.",
-    href: destination,
+          : seeker
+            ? WELCOME_NOTIFICATION.body
+            : "Tell providers what you're looking for — it takes about two minutes.",
+    href: seeker ? WELCOME_NOTIFICATION.href : destination,
   });
 
   try {
