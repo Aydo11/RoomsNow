@@ -48,6 +48,7 @@ export async function adminNav(): Promise<NavItem[]> {
     { href: "/admin/provider-referrals", label: "Provider referral programme" },
     { href: "/admin/pre-launch-invite", label: "Pre-launch mailshot" },
     { href: "/admin/provider-mailshot", label: "Provider mailshot" },
+    { href: "/admin/seeker-mailshot", label: "People mailshot" },
     { href: "/admin/categories", label: "Categories" },
     { href: "/admin/audit", label: "Audit log" },
   ];
