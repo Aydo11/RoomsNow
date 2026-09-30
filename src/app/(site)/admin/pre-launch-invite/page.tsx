@@ -6,6 +6,7 @@ import { DashboardShell, DataTable } from "@/components/dashboard-shell";
 import { PreLaunchInviteForm } from "@/components/marketing-forms";
 import { AdminMembershipGrantForm } from "@/components/admin-membership-grant-form";
 import { shortDate } from "@/lib/format";
+import { CampaignTabs } from "@/components/campaign-tabs";
 import { adminNav } from "../nav";
 
 export const metadata = { title: "Pre-launch mailshot" };
@@ -64,6 +65,7 @@ export default async function PreLaunchInvitePage({
       nav={nav}
       active="/admin/pre-launch-invite"
     >
+      <CampaignTabs active="/admin/pre-launch-invite" />
       <div className="grid items-start gap-6 lg:grid-cols-[1.1fr_.9fr]">
         <PreLaunchInviteForm />
         <div className="card space-y-4 p-5">
