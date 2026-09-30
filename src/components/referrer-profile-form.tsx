@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { updateReferrerProfileAction } from "@/server/actions/referrer-profile";
 import { AvatarDropzone } from "./avatar-dropzone";
+import { BannerPicker } from "./banner-picker";
 import { SocialLinksField, type SocialLink } from "./social-links-field";
 import { CheckGroup, Field, FormError, FormSuccess, SubmitButton } from "./ui";
 import { AGENCY_TYPES } from "@/lib/agency";
@@ -42,7 +43,6 @@ export function ReferrerProfileForm({
   inOrganisation?: boolean;
 }) {
   const [state, action] = useActionState(updateReferrerProfileAction, { ok: false });
-  const [bannerPreview, setBannerPreview] = useState(user.bannerUrl);
   const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase();
   const agencyInitials =
     (user.organisation || `${user.firstName} ${user.lastName}`)
@@ -50,12 +50,6 @@ export function ReferrerProfileForm({
       .slice(0, 2)
       .map((word) => word[0]?.toUpperCase() ?? "")
       .join("") || "?";
-
-  useEffect(() => {
-    return () => {
-      if (bannerPreview?.startsWith("blob:")) URL.revokeObjectURL(bannerPreview);
-    };
-  }, [bannerPreview]);
 
   return (
     <form action={action} className="space-y-6">
@@ -69,33 +63,12 @@ export function ReferrerProfileForm({
       )}
       <fieldset disabled={agencyLocked} className="m-0 min-w-0 border-0 p-0">
       <section className="card overflow-hidden">
-        <div className="relative h-40 bg-gradient-to-br from-pine-dark via-pine to-pine-light sm:h-48">
-          {bannerPreview && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={bannerPreview} alt="Agency banner preview" className="h-full w-full object-cover" />
-          )}
-          {!agencyLocked && (
-            <label htmlFor="banner" className="btn absolute bottom-3 right-3 cursor-pointer bg-white/95 text-pine-dark shadow-raise hover:bg-white">
-              {bannerPreview ? "Change banner" : "Add a banner"}
-            </label>
-          )}
-          <input
-            id="banner"
-            name="banner"
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
-              if (file) setBannerPreview(URL.createObjectURL(file));
-            }}
-          />
-        </div>
+        <BannerPicker initialUrl={user.bannerUrl} alt="Agency banner preview" disabled={agencyLocked} className="h-40 sm:h-48" />
         {state.errors?.banner && <p className="px-6 pt-2 text-[13px] text-clay" role="alert">{state.errors.banner}</p>}
 
         <div className="space-y-4 px-6 pb-6">
           <div className="relative -mt-10">
-            <AvatarDropzone id="logo" name="logo" initialPreview={user.logoUrl} fallback={agencyInitials} error={state.errors?.logo} />
+            <AvatarDropzone overlapsBanner id="logo" name="logo" initialPreview={user.logoUrl} fallback={agencyInitials} error={state.errors?.logo} />
           </div>
 
           <div className="flex flex-wrap items-baseline justify-between gap-2">
