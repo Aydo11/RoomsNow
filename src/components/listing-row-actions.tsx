@@ -58,7 +58,7 @@ export function ListingRowActions({ id, status }: { id: string; status: string }
   const canDelete = ["DRAFT", "REJECTED", "ARCHIVED"].includes(status);
 
   return (
-    <div aria-label="Advert actions" aria-busy={pending} className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+    <div aria-label="Advert actions" aria-busy={pending} className="flex w-full flex-wrap items-center gap-2">
       <Link href={`/provider/adverts/${id}/edit`} className="btn-secondary">Edit advert</Link>
       <Link href={`/provider/adverts/${id}/media`} className="btn-secondary">Photos & video</Link>
       {status === "ACTIVE" && (

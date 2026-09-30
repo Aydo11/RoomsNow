@@ -100,76 +100,77 @@ export default async function ProviderAdvertsPage({
       ) : (
         <ul className="space-y-4">
           {listings.map((listing) => (
-            <li key={listing.id} data-advert-card className="card relative flex flex-wrap gap-x-5 gap-y-4 overflow-hidden p-4">
-              <div className="h-24 w-32 shrink-0 overflow-hidden rounded-[10px] bg-paper-sunk">
-                {coverImage(listing.media)?.isVideoFile ? (
-                  <video src={videoPosterSrc(coverImage(listing.media)!.url)} preload="metadata" muted playsInline className="h-full w-full bg-black object-contain" />
-                ) : coverImage(listing.media) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={optimisedImage(coverImage(listing.media)!.url, 128)} alt="" className="h-full w-full object-contain" />
-                ) : (
-                  <span className="grid h-full place-items-center text-[12px] text-ink-faint">No photo</span>
-                )}
-              </div>
+            <li key={listing.id} data-advert-card className="card relative overflow-hidden p-4 sm:p-5">
+              <div className="grid min-w-0 gap-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-start sm:gap-5">
+                <div className="aspect-[16/9] w-full overflow-hidden rounded-[10px] bg-paper-sunk sm:aspect-[4/3]">
+                  {coverImage(listing.media)?.isVideoFile ? (
+                    <video src={videoPosterSrc(coverImage(listing.media)!.url)} preload="metadata" muted playsInline className="h-full w-full bg-black object-contain" />
+                  ) : coverImage(listing.media) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={optimisedImage(coverImage(listing.media)!.url, 640)} alt="" className="h-full w-full object-contain" />
+                  ) : (
+                    <span className="grid h-full place-items-center text-[12px] text-ink-faint">No photo</span>
+                  )}
+                </div>
 
-              <div className="min-w-[min(100%,16rem)] flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Link href={`/provider/adverts/${listing.id}`} className="text-[17px] hover:text-pine-dark">
-                    {listing.title}
-                  </Link>
-                  <StatusPill
-                    status={LISTING_STATUSES[listing.status]}
-                    tone={listing.status === "ACTIVE" ? "good" : listing.status === "PENDING_REVIEW" ? "warn" : "muted"}
-                  />
-                  {listing.featured && <FeaturedBadge />}
-                </div>
-                <p className="mt-1 text-[14px] text-ink-soft">
-                  {listing.property.city} · {rentRange(listing.weeklyRentFrom, listing.weeklyRentTo)}
-                </p>
-                <p className="mt-1 text-[13px] text-ink-faint">
-                  {listing.reference} · {listing.views} views · {listing._count.requests} requests ·{" "}
-                  {listing._count.referrals} referrals · updated {timeAgo(listing.updatedAt)}
-                </p>
-                <Link href={`/provider/adverts/${listing.id}#advert-strength-heading`} className="mt-2 inline-flex hover:opacity-80">
-                  <AdvertStrengthBar strength={advertStrength({ ...listing, media: mediaByListing.get(listing.id) ?? [] })} />
-                </Link>
-                <div className="mt-3">
-                  <RoomStrip rooms={listing.rooms} showLabels />
-                </div>
-                {listing.status === "REJECTED" && listing.rejectionNote && (
-                  <p className="mt-3 rounded-[10px] bg-clay-light px-3 py-2 text-[13px] text-clay">
-                    Not approved: {listing.rejectionNote}
-                  </p>
-                )}
-                {listing.status === "PAUSED" && listing.pausedReason && (
-                  <p className="mt-3 rounded-[10px] bg-clay-light px-3 py-2 text-[13px] text-clay">
-                    Paused automatically —{" "}
-                    {listing.pausedReason === "STALE"
-                      ? "nobody confirmed it was still available."
-                      : "every room was marked unavailable."}{" "}
-                    <Link href={`/provider/adverts/${listing.id}`} className="underline">Review it</Link>
-                  </p>
-                )}
-                {listing.status === "ACTIVE" && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Link
-                      href={`/provider/adverts/${listing.id}${sponsorChoice ? `?duration=${sponsorChoice}` : ""}#sponsored`}
-                      className={sponsorChoice ? "btn-primary inline-flex" : "btn-secondary inline-flex"}
-                    >
-                      Sponsor this advert
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link href={`/provider/adverts/${listing.id}`} className="text-[17px] hover:text-pine-dark">
+                      {listing.title}
                     </Link>
-                    <ProviderAdvertBoost
-                      listingId={listing.id}
-                      boostedUntil={listing.boostedUntil?.toISOString() ?? null}
-                      initiallyActive={!!listing.boostedUntil && listing.boostedUntil.getTime() > Date.now()}
-                      canBoost={boosts.totalRemaining > 0}
+                    <StatusPill
+                      status={LISTING_STATUSES[listing.status]}
+                      tone={listing.status === "ACTIVE" ? "good" : listing.status === "PENDING_REVIEW" ? "warn" : "muted"}
                     />
+                    {listing.featured && <FeaturedBadge />}
                   </div>
-                )}
+                  <p className="mt-1 text-[14px] text-ink-soft">
+                    {listing.property.city} · {rentRange(listing.weeklyRentFrom, listing.weeklyRentTo)}
+                  </p>
+                  <p className="mt-1 break-words text-[13px] text-ink-faint">
+                    {listing.reference} · {listing.views} views · {listing._count.requests} requests ·{" "}
+                    {listing._count.referrals} referrals · updated {timeAgo(listing.updatedAt)}
+                  </p>
+                  <Link href={`/provider/adverts/${listing.id}#advert-strength-heading`} className="mt-2 inline-flex hover:opacity-80">
+                    <AdvertStrengthBar strength={advertStrength({ ...listing, media: mediaByListing.get(listing.id) ?? [] })} />
+                  </Link>
+                  <div className="mt-3">
+                    <RoomStrip rooms={listing.rooms} showLabels />
+                  </div>
+                  {listing.status === "REJECTED" && listing.rejectionNote && (
+                    <p className="mt-3 rounded-[10px] bg-clay-light px-3 py-2 text-[13px] text-clay">
+                      Not approved: {listing.rejectionNote}
+                    </p>
+                  )}
+                  {listing.status === "PAUSED" && listing.pausedReason && (
+                    <p className="mt-3 rounded-[10px] bg-clay-light px-3 py-2 text-[13px] text-clay">
+                      Paused automatically —{" "}
+                      {listing.pausedReason === "STALE"
+                        ? "nobody confirmed it was still available."
+                        : "every room was marked unavailable."}{" "}
+                      <Link href={`/provider/adverts/${listing.id}`} className="underline">Review it</Link>
+                    </p>
+                  )}
+                  {listing.status === "ACTIVE" && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        href={`/provider/adverts/${listing.id}${sponsorChoice ? `?duration=${sponsorChoice}` : ""}#sponsored`}
+                        className={sponsorChoice ? "btn-primary inline-flex" : "btn-secondary inline-flex"}
+                      >
+                        Sponsor this advert
+                      </Link>
+                      <ProviderAdvertBoost
+                        listingId={listing.id}
+                        boostedUntil={listing.boostedUntil?.toISOString() ?? null}
+                        initiallyActive={!!listing.boostedUntil && listing.boostedUntil.getTime() > Date.now()}
+                        canBoost={boosts.totalRemaining > 0}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Its own full-width row, so the buttons never squeeze the details into a sliver. */}
-              <div className="w-full border-t border-line pt-3">
+              <div className="mt-4 border-t border-line pt-4">
                 <ListingRowActions id={listing.id} status={listing.status} />
               </div>
             </li>
