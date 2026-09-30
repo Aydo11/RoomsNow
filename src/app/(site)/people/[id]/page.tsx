@@ -7,6 +7,7 @@ import { ReportForm } from "@/components/report-form";
 import { ACCOMMODATION_TYPES, GENDER_ARRANGEMENTS, supportLabel } from "@/lib/taxonomy";
 import { initials, money, monthYear } from "@/lib/format";
 import { exampleMoveInDate, findExamplePerson, isExamplePersonId, type ExamplePerson } from "@/lib/example-people";
+import { optimisedImage } from "@/lib/image-url";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,7 @@ export default async function LookingForAdPage({ params }: { params: Promise<{ i
           <div className="flex items-center gap-4">
             {ad.user.profile?.showPhoto && ad.user.profile.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={ad.user.profile.photoUrl} alt="" className="h-14 w-14 rounded-full object-cover" />
+              <img src={optimisedImage(ad.user.profile.photoUrl, 56)} alt="" className="h-14 w-14 rounded-full object-cover" />
             ) : (
               <span className="grid h-14 w-14 place-items-center rounded-full bg-paper-sunk text-[18px] text-ink-soft">
                 {initials(ad.user.firstName, ad.user.lastName)}
