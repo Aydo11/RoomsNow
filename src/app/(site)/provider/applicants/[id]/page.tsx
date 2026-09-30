@@ -5,6 +5,7 @@ import { requireCompany, assertApplicantAccess } from "@/lib/rbac";
 import { DirectMessageForm } from "@/components/direct-message-form";
 import { ACCOMMODATION_TYPES, GENDER_ARRANGEMENTS, supportLabel } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
+import { optimisedImage } from "@/lib/image-url";
 
 export const metadata = { title: "Applicant profile" };
 export const dynamic = "force-dynamic";
@@ -37,7 +38,7 @@ export default async function ApplicantProfilePage({ params }: { params: Promise
         <div className="flex items-center gap-4">
           {profile?.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.photoUrl} alt="" className="h-20 w-20 rounded-full border-4 border-white object-cover shadow-raise" />
+            <img src={optimisedImage(profile.photoUrl, 80)} alt="" className="h-20 w-20 rounded-full border-4 border-white object-cover shadow-raise" />
           ) : (
             <span className="grid h-20 w-20 place-items-center rounded-full bg-paper-sunk text-[18px] font-semibold uppercase text-ink-soft">
               {initials || "?"}
