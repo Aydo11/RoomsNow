@@ -1,7 +1,24 @@
 import Link from "next/link";
 import { clsx } from "@/lib/clsx";
 
-export type NavItem = { href: string; label: string; badge?: number };
+/**
+ * A dashboard menu link. `group` puts it under a small heading (items in the
+ * same group should sit next to each other); `also` lists other pages that
+ * count as this item, for one menu entry that covers several tabbed pages.
+ */
+export type NavItem = { href: string; label: string; badge?: number; group?: string; also?: string[] };
+
+type NavGroup = { name?: string; items: NavItem[] };
+
+function groupNav(nav: NavItem[]): NavGroup[] {
+  const groups: NavGroup[] = [];
+  for (const item of nav) {
+    const last = groups[groups.length - 1];
+    if (last && last.name === item.group) last.items.push(item);
+    else groups.push({ name: item.group, items: [item] });
+  }
+  return groups;
+}
 
 export function DashboardShell({
   title,
@@ -18,32 +35,46 @@ export function DashboardShell({
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const activeItem = nav.find((item) => item.href === active);
+  const isActive = (item: NavItem) => item.href === active || Boolean(item.also?.includes(active));
+  const activeItem = nav.find(isActive);
+  const groups = groupNav(nav);
 
-  const navLinks = nav.map((item) => (
-    <li key={item.href}>
-      <Link
-        href={item.href}
-        aria-current={item.href === active ? "page" : undefined}
-        className={clsx(
-          "flex min-h-11 items-center justify-between gap-2 rounded-[10px] px-3.5 py-2.5 text-[14px] leading-tight sm:text-[15px] lg:whitespace-nowrap",
-          item.href === active ? "bg-ink text-white" : "text-ink-soft hover:bg-paper-sunk hover:text-ink",
-        )}
-      >
-        {item.label}
-        {item.badge ? (
-          <span
-            className={clsx(
-              "rounded-pill px-1.5 py-0.5 text-[11px] font-semibold",
-              item.href === active ? "bg-white/20 text-white" : "bg-pine-light text-pine-dark",
-            )}
-          >
-            {item.badge}
-          </span>
-        ) : null}
-      </Link>
+  const link = (item: NavItem) => {
+    const current = isActive(item);
+    return (
+      <li key={item.href}>
+        <Link
+          href={item.href}
+          aria-current={current ? "page" : undefined}
+          className={clsx(
+            "flex min-h-11 items-center justify-between gap-2 rounded-[10px] px-3.5 py-2.5 text-[14px] leading-tight sm:text-[15px] lg:min-h-10 lg:py-2 lg:whitespace-nowrap",
+            current ? "bg-ink text-white" : "text-ink-soft hover:bg-paper-sunk hover:text-ink",
+          )}
+        >
+          {item.label}
+          {item.badge ? (
+            <span
+              className={clsx(
+                "rounded-pill px-1.5 py-0.5 text-[11px] font-semibold",
+                current ? "bg-white/20 text-white" : "bg-pine-light text-pine-dark",
+              )}
+            >
+              {item.badge}
+            </span>
+          ) : null}
+        </Link>
+      </li>
+    );
+  };
+
+  const heading = (name: string, extra = "") => (
+    <li key={`h-${name}`} aria-hidden="true" className={clsx("px-3.5 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint first:pt-1", extra)}>
+      {name}
     </li>
-  ));
+  );
+
+  const desktopLinks = groups.flatMap((group) => [...(group.name ? [heading(group.name)] : []), ...group.items.map(link)]);
+  const mobileLinks = groups.flatMap((group) => [...(group.name ? [heading(group.name, "col-span-2")] : []), ...group.items.map(link)]);
 
   return (
     <div className="shell grid min-w-0 gap-5 py-4 sm:py-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8 lg:py-8">
@@ -59,10 +90,10 @@ export function DashboardShell({
             </span>
           </summary>
           <ul className="mt-2 grid grid-cols-2 gap-1 rounded-[12px] border border-line bg-white p-2 shadow-raise">
-            {navLinks}
+            {mobileLinks}
           </ul>
         </details>
-        <ul className="hidden space-y-0.5 lg:block">{navLinks}</ul>
+        <ul className="hidden space-y-0.5 lg:block">{desktopLinks}</ul>
       </nav>
 
       <div className="min-w-0">
