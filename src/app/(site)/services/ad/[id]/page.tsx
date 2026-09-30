@@ -15,6 +15,7 @@ import { ServiceAreaMap } from "@/components/service-area-map";
 import { canContactServiceBusiness, categoryLabel, EVIDENCE_LABELS, isAdvertPublic, priceLabel, rankAdverts, responseLabel } from "@/lib/service-marketplace";
 import { monthYear, shortDate } from "@/lib/format";
 import { resolveArea } from "@/lib/geo";
+import { optimisedImage } from "@/lib/image-url";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -89,7 +90,7 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
           <header className="card overflow-hidden">
             {business.coverUrl ? (
               <div className="relative h-32 overflow-hidden sm:h-44">
-                <img src={business.coverUrl} alt={`${name} cover`} className="h-full w-full object-cover" />
+                <img src={optimisedImage(business.coverUrl, 960)} alt={`${name} cover`} className="h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" aria-hidden="true" />
               </div>
             ) : (
