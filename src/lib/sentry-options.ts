@@ -24,10 +24,13 @@ export function sanitiseError(event: ErrorEvent): ErrorEvent {
   delete event.extra;
   delete event.message;
 
-  // Keep only the page it happened on, never query strings, headers or bodies.
+  // Keep only the page it happened on and the browser's User-Agent (so
+  // Sentry can say "iPhone, Safari 17"); never query strings, cookies,
+  // other headers or bodies.
   const url = event.request?.url ? event.request.url.split(/[?#]/)[0] : undefined;
+  const userAgent = event.request?.headers?.["User-Agent"] ?? event.request?.headers?.["user-agent"];
   delete event.request;
-  if (url) event.request = { url };
+  if (url) event.request = { url, ...(userAgent ? { headers: { "User-Agent": userAgent } } : {}) };
 
   // Browser / OS / device say which phones are affected; nothing personal.
   const contexts = event.contexts;
