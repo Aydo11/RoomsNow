@@ -291,7 +291,11 @@ async function HomeListings() {
     ...featured.boosted.map((listing) => ({ listing, placement: "boosted" as const })),
     ...featured.sponsored.map((listing) => ({ listing, placement: "sponsored" as const })),
     ...featured.items.map((listing) => ({ listing, placement: listing.memberListing ? "member" as const : "free" as const })),
-  ];
+  ]
+    // A boosted advert can also appear in the normal results; show it once.
+    .filter((entry, index, all) => all.findIndex((other) => other.listing.id === entry.listing.id) === index)
+    // Just a taster on the homepage; "View all vacancies" opens the full search.
+    .slice(0, 3);
   const homepageListingIds = homepageListings.map(({ listing }) => listing.id);
   const savedListingIds = new Set(
     user && homepageListingIds.length
@@ -308,7 +312,9 @@ async function HomeListings() {
               <span className="inline-flex items-center gap-2 text-[12px] font-semibold tracking-[0.08em] text-pine-dark"><span aria-hidden="true" className="live-dot" />LIVE VACANCIES</span>
               <h2 className="mt-2 text-[28px]">Accommodation available now</h2>
             </div>
-            <Link href="/search" className="btn-secondary shrink-0">View all vacancies</Link>
+            <Link href="/search" className="btn-secondary shrink-0">
+              {featured.total > 3 ? `View all ${featured.total} vacancies` : "View all vacancies"}
+            </Link>
           </div>
           <div data-reveal="stagger" className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {homepageListings.map(({ listing, placement }) => (
