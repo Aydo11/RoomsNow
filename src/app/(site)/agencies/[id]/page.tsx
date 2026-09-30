@@ -8,6 +8,7 @@ import { AGENCY_TYPES, websiteHref } from "@/lib/agency";
 import { supportLabel } from "@/lib/taxonomy";
 import { monthYear } from "@/lib/format";
 import { teamFor } from "@/lib/referral-team";
+import { optimisedImage } from "@/lib/image-url";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Referral agency", robots: { index: false, follow: false } };
@@ -80,13 +81,13 @@ export default async function AgencyPage({ params }: { params: Promise<{ id: str
 
       <header className="card overflow-hidden">
         <div className="relative h-40 bg-gradient-to-br from-pine-dark via-pine to-pine-light sm:h-56">
-          {profile?.bannerUrl && <img src={profile.bannerUrl} alt="" className="h-full w-full object-cover" />}
+          {profile?.bannerUrl && <img src={optimisedImage(profile.bannerUrl, 960)} alt="" className="h-full w-full object-cover" />}
         </div>
         <div className="relative px-6 pb-7 sm:px-8">
           <div className="-mt-12">
             {profile?.logoUrl || agent.avatarUrl ? (
               <img
-                src={(profile?.logoUrl || agent.avatarUrl)!}
+                src={optimisedImage((profile?.logoUrl || agent.avatarUrl)!, 112)}
                 alt={`${name} logo`}
                 className="h-24 w-24 rounded-full border-4 border-white bg-white object-cover shadow-raise sm:h-28 sm:w-28"
               />
@@ -147,7 +148,7 @@ export default async function AgencyPage({ params }: { params: Promise<{ id: str
             <aside className="space-y-4 rounded-[12px] bg-paper p-4 text-[14px]">
               <div className="flex items-center gap-3">
                 {agent.avatarUrl ? (
-                  <img src={agent.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
+                  <img src={optimisedImage(agent.avatarUrl, 44)} alt="" className="h-11 w-11 rounded-full object-cover" />
                 ) : (
                   <span className="grid h-11 w-11 place-items-center rounded-full bg-pine-light text-[14px] font-semibold text-pine-dark">
                     {`${agent.firstName[0] ?? ""}${agent.lastName[0] ?? ""}`.toUpperCase()}
@@ -218,7 +219,7 @@ export default async function AgencyPage({ params }: { params: Promise<{ id: str
                       <li key={person.id}>
                         <Link href={`/agencies/${person.id}`} className="flex items-center gap-2 hover:text-pine-dark">
                           {person.avatarUrl ? (
-                            <img src={person.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+                            <img src={optimisedImage(person.avatarUrl, 28)} alt="" className="h-7 w-7 rounded-full object-cover" />
                           ) : (
                             <span className="grid h-7 w-7 place-items-center rounded-full bg-pine-light text-[11px] font-semibold text-pine-dark">
                               {`${person.firstName[0] ?? ""}${person.lastName[0] ?? ""}`.toUpperCase()}
