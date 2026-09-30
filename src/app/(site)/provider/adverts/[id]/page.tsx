@@ -18,6 +18,7 @@ import { SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import { SuccessCelebration } from "@/components/success-celebration";
 import { AdvertStrengthCard } from "@/components/advert-strength";
 import { advertStrength } from "@/lib/advert-strength";
+import { optimisedImage } from "@/lib/image-url";
 
 export const dynamic = "force-dynamic";
 
@@ -145,7 +146,7 @@ export default async function ProviderAdvertPage({
               <li key={item.id} className="aspect-[4/3] overflow-hidden rounded-[10px] bg-paper-sunk">
                 {item.type === "IMAGE" ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.url} alt={item.caption ?? ""} className="h-full w-full object-contain" />
+                  <img src={optimisedImage(item.url, 320)} loading="lazy" alt={item.caption ?? ""} className="h-full w-full object-contain" />
                 ) : (
                   <span className="grid h-full place-items-center text-[12px] text-ink-faint">Video</span>
                 )}
