@@ -224,6 +224,58 @@ const s3Driver: StorageDriver = {
   },
 };
 
-export const storage: StorageDriver = process.env.STORAGE_DRIVER === "s3" ? s3Driver : localDriver;
+const baseDriver: StorageDriver = process.env.STORAGE_DRIVER === "s3" ? s3Driver : localDriver;
+
+/** Longest edge kept for public photos. Plenty for a full-screen gallery on a big monitor. */
+const MAX_PUBLIC_IMAGE_EDGE = 2560;
+const SHRINKABLE = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+/**
+ * Phone cameras produce 12 to 24 megapixel photos (5712 × 4284 is common).
+ * Stored as-is they are slow to download on mobile data and heavy for every
+ * page that shows them, so public photos are resized to a sensible maximum,
+ * turned the right way up and re-compressed before they're saved. Anything
+ * that goes wrong here falls back to storing the original untouched.
+ */
+async function shrinkPublicImage(file: File): Promise<File> {
+  if (!SHRINKABLE.has(file.type)) return file;
+  try {
+    const { default: sharp } = await import("sharp");
+    const input = Buffer.from(await file.arrayBuffer());
+    const image = sharp(input, { failOn: "none", limitInputPixels: 80_000_000 }).rotate();
+    const meta = await image.metadata();
+    const width = meta.autoOrient?.width ?? meta.width ?? 0;
+    const height = meta.autoOrient?.height ?? meta.height ?? 0;
+    const tooBig = Math.max(width, height) > MAX_PUBLIC_IMAGE_EDGE;
+    // Small, already-light files are left exactly as they were.
+    if (!tooBig && file.size < 1.5 * 1024 * 1024) return file;
+
+    const resized = image.resize({ width: MAX_PUBLIC_IMAGE_EDGE, height: MAX_PUBLIC_IMAGE_EDGE, fit: "inside", withoutEnlargement: true });
+    const keepPng = file.type === "image/png" && meta.hasAlpha;
+    const output = keepPng
+      ? await resized.png({ compressionLevel: 9, palette: true }).toBuffer()
+      : file.type === "image/webp"
+        ? await resized.webp({ quality: 82 }).toBuffer()
+        : await resized.jpeg({ quality: 82, mozjpeg: true }).toBuffer();
+    if (output.length >= file.size && !tooBig) return file;
+
+    const type = keepPng ? "image/png" : file.type === "image/webp" ? "image/webp" : "image/jpeg";
+    const ext = type === "image/png" ? "png" : type === "image/webp" ? "webp" : "jpg";
+    const name = `${file.name.replace(/\.[^.]+$/, "") || "photo"}.${ext}`;
+    return new File([new Uint8Array(output)], name, { type });
+  } catch (error) {
+    console.warn("[storage] could not optimise an image, storing the original", error);
+    return file;
+  }
+}
+
+export const storage: StorageDriver = {
+  async put(file, folder, visibility = "public") {
+    const prepared = visibility === "public" ? await shrinkPublicImage(file) : file;
+    return baseDriver.put(prepared, folder, visibility);
+  },
+  read: (key) => baseDriver.read(key),
+  remove: (key, visibility) => baseDriver.remove(key, visibility),
+};
 
 export const isPrivateKey = (url: string) => url.startsWith("private:");
