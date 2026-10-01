@@ -81,10 +81,24 @@ export function NotificationBell({ initialUnread, settingsHref }: { initialUnrea
   // the title itself after navigating, so re-apply whenever it changes.
   useEffect(() => {
     const total = feed.unread;
+    let lastWrite = 0;
+    let writesThisSecond = 0;
     const apply = () => {
-      const base = document.title.replace(/^\(\d+\+?\)\s*/, "");
+      const current = document.title;
+      const base = current.replace(/^\(\d+\+?\)\s*/, "").trim();
+      // Mid-navigation the title is briefly empty. Writing "(1) " then would
+      // read back as "(1)" (browsers trim titles), never match, and this
+      // observer would rewrite it forever, freezing the tab. Wait for the
+      // real title instead.
+      if (!base) return;
       const next = total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
-      if (document.title !== next) document.title = next;
+      if (current === next) return;
+      // Belt and braces: never rewrite the title more than a few times a second.
+      const now = Date.now();
+      writesThisSecond = now - lastWrite < 1000 ? writesThisSecond + 1 : 1;
+      lastWrite = now;
+      if (writesThisSecond > 5) return;
+      document.title = next;
     };
     apply();
     const watcher = new MutationObserver(apply);
