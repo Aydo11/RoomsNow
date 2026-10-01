@@ -1,5 +1,0 @@
-<%- include('_head', { title: 'Newsletter list' }) %>
-<div class="topbar"><div><h1>Newsletter list</h1><p><%= rows.length %> people have signed up on the website. Download the list to use in your email tool (e.g. Mailchimp or Outlook).</p></div><a class="btn" href="/admin/subscribers.csv"><svg><use href="#i-download"/></svg>Download CSV</a></div>
-<div class="card" style="padding:8px 10px"><% if (!rows.length) { %><div class="empty">No subscribers yet.</div><% } else { %><table class="t"><thead><tr><th>Email</th><th>Joined</th><th></th></tr></thead><tbody>
-<% rows.forEach(function(r){ %><tr><td><%= r.email %></td><td><%= r.created_at.slice(0,10) %></td><td><form method="post" action="/admin/subscribers/<%= r.id %>/delete" data-confirm="Remove <%= r.email %>?"><button class="btn sm danger">Remove</button></form></td></tr><% }) %></tbody></table><% } %></div>
-<%- include('_foot') %>
