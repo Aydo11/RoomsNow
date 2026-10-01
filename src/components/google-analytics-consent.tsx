@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { canLoadMarketingTags, createGoogleCommandQueue, isPublicAnalyticsPage, publicAnalyticsUrl } from "@/lib/analytics-safety";
 
 const MEASUREMENT_ID = "G-V2RLYZNG3S";
 const TIKTOK_PIXEL_ID = "DAT2MPBC77U3L597UVV0";
@@ -10,7 +11,7 @@ type ConsentChoice = "accepted" | "rejected" | null;
 
 declare global {
   interface Window {
-    dataLayer?: unknown[][];
+    dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
     TiktokAnalyticsObject?: string;
     ttq?: Array<unknown> & {
@@ -27,12 +28,6 @@ declare global {
       instance?: (id: string) => unknown;
     };
   }
-}
-
-function isPublicPage(pathname: string) {
-  // Avoid account, referral, message and applicant-profile pages. Query strings
-  // are never sent because they may contain a searcher's free-text location.
-  return !/^\/(admin|api|dashboard|messages|people|provider|service-provider|services\/(quotes|saved)|referrals|login|register|forgot-password|reset-password)(\/|$)/.test(pathname);
 }
 
 function eraseOptionalCookies() {
@@ -100,41 +95,43 @@ export function GoogleAnalyticsConsent() {
   }, []);
 
   useEffect(() => {
-    if (choice !== "accepted") return;
+    if (choice !== "accepted" || !isPublicAnalyticsPage(pathname)) return;
 
-    initialiseTikTokPixel();
-    setTikTokReady(true);
+    if (canLoadMarketingTags(pathname, window.location.search)) {
+      initialiseTikTokPixel();
+      setTikTokReady(true);
+    }
 
     window.dataLayer = window.dataLayer || [];
-    window.gtag = window.gtag || ((...args: unknown[]) => window.dataLayer?.push(args));
+    window.gtag = window.gtag || createGoogleCommandQueue(window.dataLayer);
     window.gtag("consent", "default", { analytics_storage: "denied", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
 
     const existing = document.querySelector<HTMLScriptElement>(`script[src*="${MEASUREMENT_ID}"]`);
     if (existing) {
       window.gtag("consent", "update", { analytics_storage: "granted" });
-      window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false });
+      window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: window.location.origin });
       setReady(true);
       return;
     }
 
     window.gtag("js", new Date());
     window.gtag("consent", "update", { analytics_storage: "granted" });
-    window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false });
+    window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: window.location.origin });
     const script = document.createElement("script");
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
     script.onload = () => setReady(true);
     document.head.appendChild(script);
-  }, [choice]);
+  }, [choice, pathname]);
 
   useEffect(() => {
-    if (choice === "accepted" && ready && isPublicPage(pathname)) {
-      window.gtag?.("event", "page_view", { page_path: pathname, page_location: `${window.location.origin}${pathname}`, page_title: document.title });
+    if (choice === "accepted" && ready && isPublicAnalyticsPage(pathname)) {
+      window.gtag?.("event", "page_view", { page_path: pathname, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: window.location.origin, page_title: document.title });
     }
   }, [choice, pathname, ready]);
 
   useEffect(() => {
-    if (choice === "accepted" && tiktokReady && isPublicPage(pathname)) window.ttq?.page?.();
+    if (choice === "accepted" && tiktokReady && canLoadMarketingTags(pathname, window.location.search)) window.ttq?.page?.();
   }, [choice, pathname, tiktokReady]);
 
   function choose(next: Exclude<ConsentChoice, null>) {
