@@ -13,19 +13,32 @@ export async function adminNav(): Promise<NavItem[]> {
     { group: "Directory", href: "/admin/marketplace", label: "Services marketplace" },
     { group: "Directory", href: "/admin/support-services", label: "Support services" },
   ];
-  const [pendingListings, pendingVerification, pendingAccreditations, openReports, newFeedback, marketplaceQueue, supportQueue] = await Promise.all([
-    db.listing.count({ where: { status: "PENDING_REVIEW" } }),
-    db.verificationRequest.count({ where: { status: "PENDING" } }),
-    db.providerAccreditation.count({ where: { status: "UNDER_ASSESSMENT" } }),
-    db.report.count({ where: { status: { in: ["OPEN", "REVIEWING"] }, NOT: { detail: { startsWith: FEEDBACK_MARKER } } } }),
-    db.report.count({ where: { status: { in: ["OPEN", "REVIEWING"] }, detail: { startsWith: FEEDBACK_MARKER } } }),
-    Promise.all([
-      db.serviceBusiness.count({ where: { status: "PENDING_REVIEW" } }),
-      db.serviceAdvert.count({ where: { status: "PENDING_REVIEW" } }),
-      db.serviceEvidence.count({ where: { status: "PENDING", business: { status: { in: ["PENDING_REVIEW", "APPROVED"] } } } }),
-    ]).then((counts) => counts.reduce((sum, n) => sum + n, 0)),
-    db.supportOrganisation.count({ where: { status: "PENDING" } }),
-  ]);
+  // One query for every badge in the menu; this runs on every admin page.
+  const [counts] = await db.$queryRaw<
+    Array<Record<"pendingListings" | "pendingVerification" | "pendingAccreditations" | "openReports" | "newFeedback" | "marketplaceQueue" | "supportQueue", bigint>>
+  >`
+    SELECT
+      (SELECT count(*) FROM "Listing" WHERE status::text = 'PENDING_REVIEW') AS "pendingListings",
+      (SELECT count(*) FROM "VerificationRequest" WHERE status::text = 'PENDING') AS "pendingVerification",
+      (SELECT count(*) FROM "ProviderAccreditation" WHERE status::text = 'UNDER_ASSESSMENT') AS "pendingAccreditations",
+      (SELECT count(*) FROM "Report" WHERE status::text IN ('OPEN', 'REVIEWING') AND "detail" NOT LIKE ${`${FEEDBACK_MARKER}%`}) AS "openReports",
+      (SELECT count(*) FROM "Report" WHERE status::text IN ('OPEN', 'REVIEWING') AND "detail" LIKE ${`${FEEDBACK_MARKER}%`}) AS "newFeedback",
+      (
+        (SELECT count(*) FROM "ServiceBusiness" WHERE status::text = 'PENDING_REVIEW')
+        + (SELECT count(*) FROM "ServiceAdvert" WHERE status::text = 'PENDING_REVIEW')
+        + (SELECT count(*) FROM "ServiceEvidence" e JOIN "ServiceBusiness" b ON b.id = e."businessId"
+           WHERE e.status::text = 'PENDING' AND b.status::text IN ('PENDING_REVIEW', 'APPROVED'))
+      ) AS "marketplaceQueue",
+      (SELECT count(*) FROM "SupportOrganisation" WHERE status::text = 'PENDING') AS "supportQueue"
+  `;
+  const n = (value: bigint | number | null | undefined) => Number(value ?? 0);
+  const pendingListings = n(counts?.pendingListings);
+  const pendingVerification = n(counts?.pendingVerification);
+  const pendingAccreditations = n(counts?.pendingAccreditations);
+  const openReports = n(counts?.openReports);
+  const newFeedback = n(counts?.newFeedback);
+  const marketplaceQueue = n(counts?.marketplaceQueue);
+  const supportQueue = n(counts?.supportQueue);
 
   // Grouped so the menu reads as a few clear areas rather than one long list.
   return [
