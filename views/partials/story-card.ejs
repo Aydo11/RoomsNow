@@ -1,9 +1,0 @@
-<a class="card spot" href="/stories/<%= s.slug %>" data-reveal style="--i:<%= typeof i !== 'undefined' ? i % 3 : 0 %>">
-  <div class="thumb"><% if (s.category) { %><div class="badges"><span class="badge"><%= s.category %></span></div><% } %><% if (s.sample) { %><span class="sample-tag">Sample</span><% } %><%- img((s.images || [])[0], s.title) || '<img src="/img/placeholders/community.svg" alt="">' %></div>
-  <div class="body">
-    <div class="meta-row"><span><svg><use href="#i-calendar"/></svg><%= fmtDate(s.date) %></span><% if (s.person) { %><span><svg><use href="#i-star"/></svg><%= s.person %></span><% } %></div>
-    <h3><%= s.title %></h3>
-    <p><%= s.summary %></p>
-    <div class="foot"><span class="link-arrow">Read story <svg><use href="#i-arrow"/></svg></span></div>
-  </div>
-</a>
