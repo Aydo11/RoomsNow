@@ -1,10 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 
 /**
- * A single Prisma Client per process. In dev, Next's hot reload would
- * otherwise create a fresh client (and a fresh connection pool) on every
- * file save, and Postgres' connection limit gets eaten alive within a few
- * minutes of editing — hence stashing it on `globalThis` outside production.
+ * A single Prisma Client per process, kept on `globalThis` in every
+ * environment. In dev, hot reload would otherwise create a fresh client on
+ * every save. In production, Next bundles server code into several separate
+ * module graphs (pages, route handlers, server actions, instrumentation), and
+ * each graph evaluating this file would build its own client, its own query
+ * engine and its own connection pool. That was showing up as ~30 idle
+ * connections and memory climbing towards the server's limit.
  */
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -40,7 +43,7 @@ function createClient() {
 
 export const db = globalForPrisma.prisma ?? createClient();
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+globalForPrisma.prisma = db;
 
 /**
  * Called by the health check route, and worth calling from any deployment
@@ -61,7 +64,8 @@ export async function checkDatabaseConnection(): Promise<{ ok: true } | { ok: fa
  * up on exit anyway — but it means a container orchestrator's SIGTERM finds
  * connections already released instead of racing the shutdown grace period.
  */
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production" && !(globalThis as { __prismaShutdownHook?: boolean }).__prismaShutdownHook) {
+  (globalThis as { __prismaShutdownHook?: boolean }).__prismaShutdownHook = true;
   const disconnect = () => {
     void db.$disconnect();
   };
