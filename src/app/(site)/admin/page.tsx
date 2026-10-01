@@ -18,27 +18,50 @@ export default async function AdminHome() {
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60_000);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60_000);
-  const [users, newUsers7d, newUsers30d, companies, live, pending, rooms, available, requests, newRequests30d, referrals, newReferrals30d, reports, feedback, verification, requestStatuses, referralStatuses, recent] =
-    await Promise.all([
-      db.user.count({ where: { deletedAt: null } }),
-      db.user.count({ where: { deletedAt: null, createdAt: { gte: sevenDaysAgo } } }),
-      db.user.count({ where: { deletedAt: null, createdAt: { gte: thirtyDaysAgo } } }),
-      db.company.count(),
-      db.listing.count({ where: { status: "ACTIVE" } }),
-      db.listing.count({ where: { status: "PENDING_REVIEW" } }),
-      db.room.count(),
-      db.room.count({ where: { status: "AVAILABLE" } }),
-      db.accommodationRequest.count(),
-      db.accommodationRequest.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
-      db.referral.count(),
-      db.referral.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
-      db.report.count({ where: { status: { in: ["OPEN", "REVIEWING"] }, NOT: { detail: { startsWith: FEEDBACK_MARKER } } } }),
-      db.report.count({ where: { status: { in: ["OPEN", "REVIEWING"] }, detail: { startsWith: FEEDBACK_MARKER } } }),
-      db.verificationRequest.count({ where: { status: "PENDING" } }),
-      db.accommodationRequest.groupBy({ by: ["status"], _count: true }),
-      db.referral.groupBy({ by: ["status"], _count: true }),
-      db.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 12 }),
-    ]);
+  // One round trip for all the headline numbers instead of fifteen separate
+  // count queries (which queued behind each other on the connection pool and
+  // made this page slow to open, especially with several tabs).
+  const [[totals], requestStatuses, referralStatuses, recent] = await Promise.all([
+    db.$queryRaw<
+      Array<Record<"users" | "newUsers7d" | "newUsers30d" | "companies" | "live" | "pending" | "rooms" | "available" | "requests" | "newRequests30d" | "referrals" | "newReferrals30d" | "reports" | "feedback" | "verification", bigint>>
+    >`
+      SELECT
+        (SELECT count(*) FROM "User" WHERE "deletedAt" IS NULL) AS "users",
+        (SELECT count(*) FROM "User" WHERE "deletedAt" IS NULL AND "createdAt" >= ${sevenDaysAgo}) AS "newUsers7d",
+        (SELECT count(*) FROM "User" WHERE "deletedAt" IS NULL AND "createdAt" >= ${thirtyDaysAgo}) AS "newUsers30d",
+        (SELECT count(*) FROM "Company") AS "companies",
+        (SELECT count(*) FROM "Listing" WHERE status::text = 'ACTIVE') AS "live",
+        (SELECT count(*) FROM "Listing" WHERE status::text = 'PENDING_REVIEW') AS "pending",
+        (SELECT count(*) FROM "Room") AS "rooms",
+        (SELECT count(*) FROM "Room" WHERE status::text = 'AVAILABLE') AS "available",
+        (SELECT count(*) FROM "AccommodationRequest") AS "requests",
+        (SELECT count(*) FROM "AccommodationRequest" WHERE "createdAt" >= ${thirtyDaysAgo}) AS "newRequests30d",
+        (SELECT count(*) FROM "Referral") AS "referrals",
+        (SELECT count(*) FROM "Referral" WHERE "createdAt" >= ${thirtyDaysAgo}) AS "newReferrals30d",
+        (SELECT count(*) FROM "Report" WHERE status::text IN ('OPEN', 'REVIEWING') AND "detail" NOT LIKE ${`${FEEDBACK_MARKER}%`}) AS "reports",
+        (SELECT count(*) FROM "Report" WHERE status::text IN ('OPEN', 'REVIEWING') AND "detail" LIKE ${`${FEEDBACK_MARKER}%`}) AS "feedback",
+        (SELECT count(*) FROM "VerificationRequest" WHERE status::text = 'PENDING') AS "verification"
+    `,
+    db.accommodationRequest.groupBy({ by: ["status"], _count: true }),
+    db.referral.groupBy({ by: ["status"], _count: true }),
+    db.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 12 }),
+  ]);
+  const n = (value: bigint | number | null | undefined) => Number(value ?? 0);
+  const users = n(totals.users);
+  const newUsers7d = n(totals.newUsers7d);
+  const newUsers30d = n(totals.newUsers30d);
+  const companies = n(totals.companies);
+  const live = n(totals.live);
+  const pending = n(totals.pending);
+  const rooms = n(totals.rooms);
+  const available = n(totals.available);
+  const requests = n(totals.requests);
+  const newRequests30d = n(totals.newRequests30d);
+  const referrals = n(totals.referrals);
+  const newReferrals30d = n(totals.newReferrals30d);
+  const reports = n(totals.reports);
+  const feedback = n(totals.feedback);
+  const verification = n(totals.verification);
 
   return (
     <DashboardShell
