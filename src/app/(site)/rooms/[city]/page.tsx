@@ -92,6 +92,14 @@ export default async function CityRoomsPage({ params }: Props) {
           <h2 className="text-[28px]">Finding a suitable room in {city}</h2>
           <p className="mt-3 text-[16px] leading-7 text-ink-soft">Compare the accommodation type, weekly rent, bills, availability and household arrangement shown on each advert. If support is needed, review the support categories, eligibility information and accepted referral routes before sending an enquiry.</p>
           <p className="mt-4 text-[16px] leading-7 text-ink-soft">RoomsNow connects people and professional referrers with independent providers. The provider remains responsible for the property, assessment, suitability and placement decision.</p>
+          <h3 className="mt-7 text-[21px]">Looking for a room while receiving benefits?</h3>
+          <p className="mt-3 text-[16px] leading-7 text-ink-soft">Check the benefits information on each advert, then ask the provider about eligibility, rent and any charges you would need to pay yourself. Receiving Universal Credit does not automatically make every room suitable or guarantee acceptance.</p>
+          <nav aria-label={`Room search guides for ${city}`} className="mt-6 flex flex-wrap gap-3">
+            <Link href="/guides/hmo-room-viewing-checklist" className="text-pine-dark underline">Room viewing checklist</Link>
+            <Link href="/next-steps" className="text-pine-dark underline">What happens after an enquiry</Link>
+            {slug === "birmingham" ? <Link href="/hmo-rooms-birmingham" className="text-pine-dark underline">HMO rooms in Birmingham</Link> : null}
+            {slug === "birmingham" ? <Link href="/supported-accommodation-birmingham" className="text-pine-dark underline">Supported accommodation in Birmingham</Link> : null}
+          </nav>
         </section>
       </div>
     </>
