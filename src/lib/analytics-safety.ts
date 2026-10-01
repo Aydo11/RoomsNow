@@ -10,7 +10,7 @@ export function canLoadMarketingTags(pathname: string, search: string) {
 
 function isSafeCampaignParameter(key: string, value: string) {
   return /^(utm_(source|medium|campaign|content|term|id)|gclid|gbraid|wbraid|fbclid|ttclid)$/.test(key)
-    && /^[a-zA-Z0-9_.-]{1,250}$/.test(value);
+    && /^[a-zA-Z0-9_.| -]{1,250}$/.test(value);
 }
 
 export function publicAnalyticsUrl(origin: string, pathname: string, search: string) {
