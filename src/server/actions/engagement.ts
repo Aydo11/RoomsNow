@@ -20,6 +20,7 @@ import { Prisma, type RequestStatus } from "@prisma/client";
 import { clientAttachment, conversationCompanyId } from "@/lib/client-sharing";
 import { checkFirstEnquiry, checkFirstMoveIn } from "@/lib/milestones";
 import { contactNumberFromInput, withContactNumber } from "@/lib/contact-number";
+import { openRequestConversation, requestMessageBody } from "@/lib/request-conversation";
 
 /**
  * Service businesses only ever reply inside threads a paying provider opened
@@ -532,10 +533,24 @@ export async function createRequestAction(_prev: FormState, formData: FormData):
 
   await db.application.create({ data: { listingId: listing.id, requestId: request.id } });
 
+  // Start the conversation too, so the provider and applicant can talk it
+  // through in Messages rather than the provider only getting an alert.
+  await openRequestConversation({
+    applicantId: user.id,
+    listing,
+    body: requestMessageBody({
+      listingTitle: listing.title,
+      moveInDate: request.moveInDate,
+      accommodationNeeds: request.accommodationNeeds,
+      supportNeeds: request.supportNeeds,
+      additionalInfo: request.additionalInfo,
+    }),
+  });
+
   await notifyCompany(listing.companyId, {
     type: "REQUEST",
     title: "New accommodation request",
-    body: `${user.firstName} ${user.lastName.charAt(0)}. requested ${listing.title}.`,
+    body: `${user.firstName} ${user.lastName.charAt(0)}. requested ${listing.title}. Reply to them in Messages.`,
     href: `/provider/requests?request=${encodeURIComponent(request.id)}`,
     email: true,
   });
