@@ -8,10 +8,8 @@ import { MapView } from "@/components/map-view";
 import { Pagination } from "@/components/pagination";
 import { RefineBar } from "@/components/refine-bar";
 import { SaveSearchForm } from "@/components/save-search-form";
-import { RoomAlertSignup } from "@/components/room-alert-signup";
-import { smsEnabled } from "@/lib/room-alerts";
 import { EmptyState } from "@/components/ui";
-import { parseArrayParam, searchFacets, searchListings, searchMapPins, type SearchParams } from "@/server/search";
+import { searchFacets, searchListings, searchMapPins, type SearchParams } from "@/server/search";
 import { getCurrentUser } from "@/lib/session";
 import { matchScore } from "@/lib/matching";
 import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
@@ -188,7 +186,9 @@ export default async function SearchPage({
             </div>
           )}
           {!user && (
-            <RoomAlertSignup className="mt-4" where={params.where ?? ""} support={parseArrayParam(params.support)} smsEnabled={smsEnabled()} />
+            <p className="mt-4 text-[14px] text-ink-soft">
+              <Link href="/register?type=USER" className="font-semibold text-pine-dark underline">Create a free account</Link> to save this search and get alerts when new rooms are added.
+            </p>
           )}
 
           <Suspense fallback={null}>
