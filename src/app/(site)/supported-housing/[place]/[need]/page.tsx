@@ -4,7 +4,6 @@ import { AreaPage } from "@/components/area-page";
 import { loadAreaPage } from "@/server/area-pages";
 import { areaPath, areaTitle } from "@/lib/area-pages";
 import { pageMetadata } from "@/lib/seo";
-import { smsEnabled } from "@/lib/room-alerts";
 
 export const dynamic = "force-dynamic";
 
@@ -30,5 +29,5 @@ export default async function SupportedHousingNeedPage({ params }: Props) {
   const { place, need } = await params;
   const data = await loadAreaPage(place, need);
   if (!data) notFound();
-  return <AreaPage data={data} smsEnabled={smsEnabled()} />;
+  return <AreaPage data={data} />;
 }
