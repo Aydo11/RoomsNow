@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ListingCard } from "./listing-card";
-import { RoomAlertSignup } from "./room-alert-signup";
 import { JsonLd, absoluteUrl } from "@/lib/seo";
 import { money } from "@/lib/format";
 import { areaPath, areaTitle } from "@/lib/area-pages";
@@ -10,7 +9,7 @@ import { clsx } from "@/lib/clsx";
 const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) * 100) : 0);
 
 /** Shared layout for /supported-housing/[place] and /supported-housing/[place]/[need]. */
-export function AreaPage({ data, smsEnabled }: { data: AreaPageData; smsEnabled: boolean }) {
+export function AreaPage({ data }: { data: AreaPageData }) {
   const { place, need, listings, stats, placeStats, neighbourhoods, town } = data;
   const title = areaTitle(place, need);
   const url = absoluteUrl(areaPath(place, need));
@@ -116,8 +115,6 @@ export function AreaPage({ data, smsEnabled }: { data: AreaPageData; smsEnabled:
             )}
           </section>
         ) : null}
-
-        <RoomAlertSignup where={place.name} support={need ? [need.support] : []} smsEnabled={smsEnabled} className="mt-10" />
 
         {placeStats.needs.length > 0 && (
           <section className="mt-12">
