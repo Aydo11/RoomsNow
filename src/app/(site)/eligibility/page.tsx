@@ -1,6 +1,5 @@
 import { pageMetadata } from "@/lib/seo";
 import { EligibilityCheck } from "@/components/eligibility-check";
-import { smsEnabled } from "@/lib/room-alerts";
 
 export const metadata = pageMetadata({
   title: "Am I Eligible? Find Supported Accommodation That Fits",
@@ -20,7 +19,7 @@ export default function EligibilityPage() {
             Answer five quick questions and we&apos;ll show you the rooms that fit you.
           </p>
         </div>
-        <EligibilityCheck smsEnabled={smsEnabled()} />
+        <EligibilityCheck />
       </div>
     </div>
   );
