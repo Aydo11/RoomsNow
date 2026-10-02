@@ -36,9 +36,9 @@ export default async function ConfirmRoomAlertPage({ params }: { params: Promise
         ) : (
           <>
             <h1 className="text-[24px] font-bold">This link has expired</h1>
-            <p className="mt-2 text-[15px] text-ink-soft">Set up your room alert again and we&apos;ll send a new link.</p>
-            <Link href="/search" className="btn-primary mt-6">
-              Search rooms
+            <p className="mt-2 text-[15px] text-ink-soft">Create a free account and save a search to get alerts when new rooms are added.</p>
+            <Link href="/register?type=USER" className="btn-primary mt-6">
+              Create a free account
             </Link>
           </>
         )}
