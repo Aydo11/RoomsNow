@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requestConversationIds, requestThreadKey } from "@/lib/request-conversation";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/rbac";
 import { DashboardShell, DataTable } from "@/components/dashboard-shell";
@@ -32,6 +33,10 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
     }),
     reviewablePlacements(user),
   ]);
+  const threads = await requestConversationIds(requests.map((request) => ({ listingId: request.listingId, applicantId: user.id })));
+  const threadFor = (listingId: string) => threads.get(requestThreadKey(listingId, user.id));
+  const submitted = requests.find((request) => request.id === query.submitted);
+  const submittedThread = submitted ? threadFor(submitted.listingId) : undefined;
   const reviewFor = (kind: "request" | "referral", id: string) => placements.find((p) => p.kind === kind && p.id === id);
   const referralPlacements = placements.filter((p) => p.kind === "referral");
 
@@ -44,7 +49,10 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
     >
       {query.submitted && (
         <div className="mb-8 space-y-5">
-          <FormSuccess message="Request sent. The provider has been notified and will be in touch through messages." />
+          <FormSuccess message="Request sent. We've also started a conversation with the provider in Messages, so you can talk it through there." />
+          {submittedThread && (
+            <Link href={`/messages/${submittedThread}`} className="btn-primary">Open the conversation</Link>
+          )}
           <div className="card p-5 sm:p-6">
             <NextStepsGuide current="applied" compact />
           </div>
@@ -76,7 +84,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
                 <div className="border-t border-line p-5">
                   <div className="flex flex-wrap gap-2">
                     <Link href={`/listings/${request.listing.id}`} className="btn-secondary">View advert</Link>
-                    <Link href="/messages" className="btn-secondary">Message provider</Link>
+                    <Link href={threadFor(request.listingId) ? `/messages/${threadFor(request.listingId)}` : "/messages"} className="btn-secondary">Message provider</Link>
                     {stepForStatus(request.status) && (
                       <Link href={`/next-steps?step=${stepForStatus(request.status)}#step-${stepForStatus(request.status)}`} className="btn-ghost">
                         What happens next
