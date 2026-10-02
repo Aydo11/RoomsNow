@@ -11,6 +11,7 @@ import { ViewingScheduler } from "@/components/viewing-scheduler";
 import { providerNav } from "../nav";
 import { PIPELINE, PIPELINE_LABELS } from "@/lib/taxonomy";
 import { ageFrom, shortDate } from "@/lib/format";
+import { requestConversationIds, requestThreadKey } from "@/lib/request-conversation";
 
 export const metadata = { title: "Requests" };
 export const dynamic = "force-dynamic";
@@ -49,6 +50,7 @@ export default async function ProviderRequestsPage({ searchParams }: { searchPar
       },
     }),
   ]);
+  const threads = await requestConversationIds(requests.map((request) => ({ listingId: request.listingId, applicantId: request.applicantId })));
   const unarchived = requests.filter((request) => !request.archivedAt);
   const visibleRequests =
     activeFilter.value === "archived"
@@ -133,13 +135,19 @@ export default async function ProviderRequestsPage({ searchParams }: { searchPar
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Link href={`/provider/applicants/${request.applicant.id}`} className="btn-secondary">View profile</Link>
-                          <DirectMessageForm
-                            recipientUserId={request.applicant.id}
-                            subject={`Accommodation request: ${request.listing.title}`}
-                            label="Message"
-                            placeholder={`Write a message to ${request.applicant.firstName} about this request…`}
-                            compact
-                          />
+                          {threads.get(requestThreadKey(request.listingId, request.applicantId)) ? (
+                            <Link href={`/messages/${threads.get(requestThreadKey(request.listingId, request.applicantId))}`} className="btn-primary">
+                              Open conversation
+                            </Link>
+                          ) : (
+                            <DirectMessageForm
+                              recipientUserId={request.applicant.id}
+                              subject={`Accommodation request: ${request.listing.title}`}
+                              label="Message"
+                              placeholder={`Write a message to ${request.applicant.firstName} about this request…`}
+                              compact
+                            />
+                          )}
                           <ArchiveRequestButton requestId={request.id} archived={Boolean(request.archivedAt)} />
                         </div>
                       </div>
