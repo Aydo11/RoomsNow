@@ -178,6 +178,18 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
               </nav>
             )}
 
+            {guide.slug === "how-to-find-an-hmo-room" && (
+              <nav aria-labelledby="local-room-search-heading">
+                <h2 id="local-room-search-heading" className="text-[25px]">Put the guide into practice: search by area</h2>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">Compare the adverts in your chosen area, then check current availability, costs and suitability with the provider before arranging a viewing.</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link href="/rooms/birmingham" className="btn-secondary">Rooms in Birmingham</Link>
+                  <Link href="/rooms/sutton-coldfield" className="btn-secondary">Rooms in Sutton Coldfield</Link>
+                  <Link href="/search" className="btn-secondary">Search another area</Link>
+                </div>
+              </nav>
+            )}
+
             <section className="rounded-card border border-pine/25 bg-pine-light/35 p-6 sm:p-8">
               <h2 className="text-[25px]">{guide.cta.title}</h2>
               <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{guide.cta.body}</p>
