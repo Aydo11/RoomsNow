@@ -121,7 +121,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     title: "Alerts for new rooms",
     keywords: ["alert", "alerts", "notify me", "new rooms", "tell me when", "email me", "saved search"],
     answer:
-      "Run a search with the filters you want, then save it as an alert. We'll let you know when a new room matching it is listed. You can manage or turn off alerts at any time.",
+      "Sign in to your free account, run a search with the filters you want, then save it as an alert. We'll let you know when a new room matching it is listed. You can manage or turn off alerts at any time.",
     links: [
       { label: "Saved alerts", href: "/dashboard/alerts" },
       { label: "Search rooms", href: "/search" },
