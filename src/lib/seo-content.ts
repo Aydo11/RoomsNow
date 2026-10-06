@@ -205,7 +205,7 @@ export const hmoRoomsBirminghamContent: LandingPageContent = {
   title: "Find HMO rooms in Birmingham",
   introduction: "Search current HMO rooms and shared accommodation in Birmingham. Compare weekly rent, bills, room availability, household arrangements and provider information before making an enquiry.",
   highlights: [
-    { heading: "Live Birmingham vacancies", body: "Open a filtered RoomsNow search for accommodation advertised in Birmingham." },
+    { heading: "Live Birmingham vacancies", body: "Browse available shared rooms on this page, then refine your search by rent, facilities and move-in date." },
     { heading: "Compare room details", body: "Review rent, bills, furnishing, ensuite facilities and expected move-in dates." },
     { heading: "Check the provider", body: "Read the provider profile, verification status and the information supplied with each advert." },
   ],
@@ -215,6 +215,7 @@ export const hmoRoomsBirminghamContent: LandingPageContent = {
   ],
   faqs: [
     { question: "How do I search HMO rooms in Birmingham?", answer: "Use the Birmingham search button and refine the results by accommodation type, weekly rent, facilities, household arrangement and move-in date." },
+    { question: "Can I find a Birmingham room that accepts Universal Credit or Housing Benefit?", answer: "Check the benefits information on each advert and ask the provider about eligibility, funding and any personal charges. Receiving benefits does not guarantee acceptance or that the full rent is covered." },
     { question: "Are all Birmingham HMOs licensed?", answer: "Licensing depends on the property and the local scheme in force. Ask the provider and check current requirements with Birmingham City Council." },
     { question: "Does RoomsNow manage Birmingham properties?", answer: "No. RoomsNow is a marketplace. Independent providers manage their properties, applications and tenancy arrangements." },
   ],
