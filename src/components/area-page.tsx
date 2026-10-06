@@ -77,7 +77,7 @@ export function AreaPage({ data }: { data: AreaPageData }) {
           <p className="mt-4 max-w-[62ch] text-[17px] leading-relaxed text-ink-soft">
             {stats.adverts
               ? `${stats.roomsFree} room${stats.roomsFree === 1 ? "" : "s"} free now across ${stats.adverts} live advert${stats.adverts === 1 ? "" : "s"} from ${stats.providers} provider${stats.providers === 1 ? "" : "s"} offering ${who} in ${place.name}. Updated live from providers' own adverts.`
-              : `There are no live adverts offering ${who} in ${place.name} right now. Set up a free alert and we'll tell you as soon as one goes live.`}
+              : `There are no live adverts offering ${who} in ${place.name} right now. Create a free account and save a search to hear as soon as one goes live.`}
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <Link href={`/search?where=${encodeURIComponent(place.name)}${need ? `&support=${need.support}` : ""}`} className="btn-primary">
