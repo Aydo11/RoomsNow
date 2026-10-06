@@ -25,6 +25,12 @@ export const metadata: Metadata = {
   title: { default: "HMO Rooms & Supported Accommodation UK | RoomsNow", template: `%s | ${brand.name}` },
   description: brand.description,
   applicationName: brand.name,
+  // Set GOOGLE_SITE_VERIFICATION / BING_SITE_VERIFICATION on Render to verify
+  // the site in Search Console or Bing Webmaster Tools from any account.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION } : undefined,
+  },
   appleWebApp: { capable: true, title: brand.shortName, statusBarStyle: "default" },
   robots: {
     index: true,
