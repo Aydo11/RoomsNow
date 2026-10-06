@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { JsonLd, absoluteUrl } from "@/lib/seo";
 
 export type LandingPageContent = {
@@ -15,7 +16,7 @@ export type LandingPageContent = {
   resources?: Array<{ label: string; href: string }>;
 };
 
-export function SeoLandingPage({ content }: { content: LandingPageContent }) {
+export function SeoLandingPage({ content, children }: { content: LandingPageContent; children?: ReactNode }) {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -49,6 +50,8 @@ export function SeoLandingPage({ content }: { content: LandingPageContent }) {
           </div>
         </div>
       </section>
+
+      {children}
 
       <div className="shell py-12 sm:py-16">
         <section className="grid gap-4 md:grid-cols-3" aria-label="Key benefits">
