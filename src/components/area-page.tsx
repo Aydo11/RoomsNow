@@ -5,6 +5,7 @@ import { money } from "@/lib/format";
 import { areaPath, areaTitle } from "@/lib/area-pages";
 import type { AreaPageData } from "@/server/area-pages";
 import { clsx } from "@/lib/clsx";
+import { HeroStreet } from "./hero-street";
 
 const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) * 100) : 0);
 
@@ -50,8 +51,8 @@ export function AreaPage({ data }: { data: AreaPageData }) {
         ]}
       />
 
-      <section className="surface-home border-b border-line">
-        <div className="shell py-10 sm:py-14">
+      <section className="surface-home relative overflow-hidden border-b border-line">
+        <div className="shell pb-4 pt-10 sm:pt-14">
           <nav className="flex flex-wrap gap-1 text-[14px] text-ink-faint" aria-label="Breadcrumb">
             <Link href="/supported-housing" className="hover:text-ink">
               Supported housing
@@ -88,6 +89,16 @@ export function AreaPage({ data }: { data: AreaPageData }) {
             </Link>
           </div>
         </div>
+        {stats.adverts > 0 && (
+          <HeroStreet
+            className="hero-street-compact"
+            pills={[
+              { at: 0.24, label: `${stats.roomsFree} room${stats.roomsFree === 1 ? "" : "s"} free`, tone: "amber" },
+              { at: 0.52, label: `${stats.providers} provider${stats.providers === 1 ? "" : "s"}`, tone: "blue" },
+              { at: 0.79, label: place.name, tone: "green" },
+            ]}
+          />
+        )}
       </section>
 
       <div className="shell py-10">
