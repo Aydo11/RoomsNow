@@ -143,7 +143,7 @@ export default function HomePage() {
             ))}
           </ul>
         </div>
-        <HeroStreet />
+        <HeroStreet pills={[]} />
       </section>
 
       <section className="border-b border-line bg-white">
