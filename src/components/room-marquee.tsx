@@ -35,7 +35,7 @@ export function RoomMarquee({ rooms }: { rooms: MarqueeRoom[] }) {
         const place = room.property.area ? `${room.property.area}, ${room.property.city}` : room.property.city;
         return (
           <li key={room.id} className="room-marquee-item">
-            <Link href={`/listings/${room.id}`} tabIndex={copy ? -1 : undefined} className="room-marquee-card group">
+            <Link href={`/listings/${room.id}`} tabIndex={copy ? -1 : undefined} className="room-marquee-card group" data-tilt>
               <span className="relative block h-40 overflow-hidden bg-paper-sunk">
                 <ResilientImage
                   src={cover.url}
