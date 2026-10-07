@@ -6,6 +6,7 @@ import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
 import { areaPath } from "@/lib/area-pages";
 import { money } from "@/lib/format";
 import { loadAreaPage } from "@/server/area-pages";
+import { HeroStreet } from "@/components/hero-street";
 
 export const dynamic = "force-dynamic";
 
@@ -93,8 +94,8 @@ export default async function HmoRoomsBirminghamPage() {
         ]}
       />
 
-      <section className="surface-home border-b border-line">
-        <div className="shell py-12 sm:py-16">
+      <section className="surface-home relative overflow-hidden border-b border-line">
+        <div className="shell pb-4 pt-12 sm:pt-16">
           <nav className="flex flex-wrap gap-1 text-[14px] text-ink-faint" aria-label="Breadcrumb">
             <Link href="/hmo-rooms" className="hover:text-ink">HMO rooms</Link>
             <span aria-hidden="true">/</span>
@@ -111,6 +112,14 @@ export default async function HmoRoomsBirminghamPage() {
             <Link href={content.secondaryCta.href} className="btn-secondary">{content.secondaryCta.label}</Link>
           </div>
         </div>
+        <HeroStreet
+          className="hero-street-compact"
+          pills={[
+            { at: 0.22, label: areas[0] ? `Room free · ${areas[0].place.name}` : "Room free", tone: "amber" },
+            { at: 0.5, label: "Housing Benefit accepted", tone: "blue" },
+            { at: 0.78, label: areas[1] ? `New in ${areas[1].place.name}` : "Verified provider", tone: "green" },
+          ]}
+        />
       </section>
 
       <div className="shell py-12 sm:py-14">
@@ -142,14 +151,26 @@ export default async function HmoRoomsBirminghamPage() {
         {areas.length > 0 && (
           <nav className="mt-14" aria-labelledby="by-area">
             <h2 id="by-area" className="text-[28px]">HMO rooms by area of Birmingham</h2>
-            <ul className="mt-5 flex flex-wrap gap-2">
-              {areas.map((row) => (
-                <li key={row.place.slug}>
-                  <Link href={areaPath(row.place)} className="chip hover:border-pine hover:text-pine-dark">
-                    {row.place.name} <span className="ml-1 opacity-70">{row.adverts}</span>
-                  </Link>
-                </li>
-              ))}
+            <p className="mt-2 text-[15px] text-ink-soft">The warmer the tile, the more adverts in that area right now.</p>
+            <ul data-reveal="stagger" className="area-board mt-5">
+              {areas.map((row) => {
+                const glow = Math.min(1, row.adverts / Math.max(1, areas[0]?.adverts ?? 1));
+                const lit = Math.max(1, Math.round(glow * 6));
+                return (
+                  <li key={row.place.slug}>
+                    <Link href={areaPath(row.place)} className="area-tile" style={{ ["--glow" as string]: glow.toFixed(2) }}>
+                      <span className="area-tile-windows" aria-hidden="true">
+                        {Array.from({ length: 6 }, (_, i) => <span key={i} className={i < lit ? "on" : undefined} />)}
+                      </span>
+                      <span className="area-tile-count">{row.adverts}</span>
+                      <span>
+                        <span className="area-tile-name block">{row.place.name}</span>
+                        <span className="area-tile-meta">{row.adverts === 1 ? "advert" : "adverts"} live</span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
         )}
