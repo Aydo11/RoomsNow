@@ -37,6 +37,10 @@ export default function GuidesPage() {
       </section>
 
       <main className="shell py-12 sm:py-16">
+        <div className="mb-8 grid gap-4 sm:grid-cols-2">
+          <Link href="/areas/birmingham" className="card interactive-card p-6"><h2 className="text-[23px]">Birmingham neighbourhood guides</h2><p className="mt-2 text-ink-soft">Explore local transport, health services, food support and live rooms in Erdington, Handsworth and Small Heath.</p></Link>
+          <Link href="/housing-benefit-calculator" className="card interactive-card p-6"><h2 className="text-[23px]">Housing Benefit / LHA calculator</h2><p className="mt-2 text-ink-soft">Compare private rent with your official LHA cap and understand the possible rent gap.</p></Link>
+        </div>
         <div className="grid gap-5 md:grid-cols-2">
           {guides.map((guide, index) => (
             <Link

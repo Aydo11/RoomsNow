@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 import { absoluteUrl, locationSlug } from "@/lib/seo";
 import { guides } from "@/lib/guides";
+import { neighbourhoodGuides } from "@/lib/neighbourhood-guides";
 import { AREA_NEEDS, areaPath, inPlace, placesFrom } from "@/lib/area-pages";
 
 export const dynamic = "force-dynamic";
@@ -33,14 +34,16 @@ const staticPages: Array<[string, MetadataRoute.Sitemap[number]["changeFrequency
   ["/safety", "monthly", 0.4],
   ["/verification", "monthly", 0.4],
   ["/guides", "weekly", 0.7],
+  ["/housing-benefit-calculator", "monthly", 0.7],
+  ["/areas/birmingham", "monthly", 0.7],
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = staticPages.map(([path, changeFrequency, priority]) => ({
+  const base = [...staticPages.map(([path, changeFrequency, priority]) => ({
     url: absoluteUrl(path),
     changeFrequency,
     priority,
-  }));
+  })), ...neighbourhoodGuides.map((guide) => ({ url: absoluteUrl(`/areas/birmingham/${guide.slug}`), changeFrequency: "weekly" as const, priority: 0.7 }))];
   const guidePages = guides.map((guide) => ({
     url: absoluteUrl(`/guides/${guide.slug}`),
     lastModified: new Date(guide.updatedAt),

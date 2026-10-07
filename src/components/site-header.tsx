@@ -202,6 +202,8 @@ export function SiteFooter() {
             ["How it works", "/how-it-works"],
             ["What happens after you apply", "/next-steps"],
             ["Room and referral guides", "/guides"],
+            ["Birmingham neighbourhood guides", "/areas/birmingham"],
+            ["Housing Benefit / LHA calculator", "/housing-benefit-calculator"],
             ["Staying safe", "/safety"],
             ["Support services and helplines", "/support-services"],
           ]}

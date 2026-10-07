@@ -155,6 +155,8 @@ export function CompanyForm({
     registrationNumber: string;
     email: string;
     phone: string;
+    whatsappEnabled: boolean;
+    whatsappNumber: string;
     website: string;
     addressLine1: string;
     addressLine2: string;
@@ -170,6 +172,8 @@ export function CompanyForm({
   };
 }) {
   const [state, action] = useActionState(updateCompanyAction, { ok: false });
+  const [whatsappEnabled, setWhatsappEnabled] = useState(company.whatsappEnabled);
+  const [businessWhatsapp, setBusinessWhatsapp] = useState(company.whatsappNumber);
   return (
     <form action={action} className="card space-y-4 p-6">
       <FormError message={state.errors?.form} />
@@ -233,6 +237,20 @@ export function CompanyForm({
           <input id="postcode" name="postcode" defaultValue={company.postcode} className="field" />
         </Field>
       </div>
+
+      <section className="rounded-[12px] border border-line p-4">
+        <h2 className="text-[18px]">WhatsApp enquiries</h2>
+        <label className="mt-3 flex items-start gap-3 text-[15px]">
+          <input name="whatsappEnabled" type="checkbox" checked={whatsappEnabled} onChange={(event) => setWhatsappEnabled(event.target.checked)} className="mt-1 h-4 w-4" />
+          Show a WhatsApp contact button on my accommodation adverts
+        </label>
+        <div className="mt-3">
+          <Field label="Business WhatsApp number" name="whatsappNumber" error={state.errors?.whatsappNumber} hint="Use a number registered with WhatsApp. UK example: 07700 900123. International: + followed by your country code and number.">
+            <input id="whatsappNumber" name="whatsappNumber" type="tel" autoComplete="tel" value={businessWhatsapp} onChange={(event) => setBusinessWhatsapp(event.target.value)} className="field" />
+          </Field>
+        </div>
+        <p className="mt-3 text-[13px] leading-relaxed text-ink-soft">Optional and off by default. When enabled, this business number is public on your adverts. Enquiries open outside RoomsNow; WhatsApp messages and replies are not recorded here. You can switch it off at any time.</p>
+      </section>
 
       <Field label="About your organisation" name="about" hint="Explain who you support, your approach, experience and what makes your accommodation suitable.">
         <textarea id="about" name="about" rows={6} defaultValue={company.about} className="field" />

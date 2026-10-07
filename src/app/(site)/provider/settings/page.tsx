@@ -50,6 +50,8 @@ export default async function ProviderSettingsPage() {
           registrationNumber: company.registrationNumber ?? "",
           email: company.email,
           phone: company.phone ?? "",
+          whatsappEnabled: company.whatsappEnabled,
+          whatsappNumber: company.whatsappNumber ? `+${company.whatsappNumber}` : "",
           website: company.website ?? "",
           addressLine1: company.addressLine1 ?? "",
           addressLine2: company.addressLine2 ?? "",

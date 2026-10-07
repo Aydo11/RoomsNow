@@ -36,6 +36,7 @@ import { checkHundredViews } from "@/lib/milestones";
 import { ResidentRatingLine, ResidentReviews } from "@/components/resident-reviews";
 import { residentReviewsFor } from "@/server/resident-reviews";
 import { optimisedImage } from "@/lib/image-url";
+import { whatsappAdvertUrl } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -476,6 +477,15 @@ export default async function ListingPage({
           </div>
 
           <div id="message" className="scroll-mt-24">
+            {listing.status === "ACTIVE" && listing.company.status === "ACTIVE" && whatsappAdvertUrl(listing.company.whatsappEnabled, listing.company.whatsappNumber, listing.title, absoluteUrl(`/listings/${listing.id}`)) && (
+              <div className="card mb-4 p-4">
+                <a href={whatsappAdvertUrl(listing.company.whatsappEnabled, listing.company.whatsappNumber, listing.title, absoluteUrl(`/listings/${listing.id}`))!} target="_blank" rel="noopener noreferrer" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-[#087f45] px-4 py-3 font-semibold text-white hover:bg-[#066739]">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M21 11.5a9 9 0 0 1-13.4 7.9L3 21l1.6-4.6A9 9 0 1 1 21 11.5Z"/><path d="M8 7.5c0 4.2 3 7.2 7.3 7.5l1-2-2.5-1-1 1a7 7 0 0 1-2.8-2.8l1-1-1-2.5-2 .8Z"/></svg>
+                  Contact on WhatsApp
+                </a>
+                <p className="mt-2 text-[12px] text-ink-soft">Opens WhatsApp with this advert link. Please keep sensitive documents in RoomsNow.</p>
+              </div>
+            )}
             <MessageProviderForm listingId={listing.id} signedIn={Boolean(user)} companyName={listing.company.name} defaultPhone={user?.phone ?? null} />
           </div>
         </aside>

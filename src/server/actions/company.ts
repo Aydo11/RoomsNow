@@ -8,6 +8,7 @@ import { storage, validateUpload, verifyFileContents } from "@/lib/storage";
 import { notify } from "@/lib/notify";
 import { companySchema, fieldErrors, socialLinksSchema, type FormState } from "@/lib/validation";
 import { bool, list, socialLinks, text } from "../form";
+import { whatsappNumber } from "@/lib/whatsapp";
 import {
   OPTIONAL_VERIFICATION_DOCUMENTS,
   REQUIRED_VERIFICATION_DOCUMENTS,
@@ -39,6 +40,12 @@ export async function updateCompanyAction(_prev: FormState, formData: FormData):
 
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
   const d = parsed.data;
+  const whatsappEnabled = bool(formData, "whatsappEnabled");
+  const rawWhatsapp = text(formData, "whatsappNumber");
+  const businessWhatsapp = rawWhatsapp ? whatsappNumber(rawWhatsapp) : null;
+  if ((rawWhatsapp && !businessWhatsapp) || (whatsappEnabled && !businessWhatsapp)) {
+    return { ok: false, errors: { whatsappNumber: "Enter a UK number such as 07700 900123, or an international number starting with + and the country code." } };
+  }
 
   const parsedSocial = socialLinksSchema.safeParse(socialLinks(formData));
   if (!parsedSocial.success) return { ok: false, errors: { socialUrl: "Enter valid links, including https://." } };
@@ -72,6 +79,8 @@ export async function updateCompanyAction(_prev: FormState, formData: FormData):
       registrationNumber: d.registrationNumber || null,
       email: d.email,
       phone: d.phone || null,
+      whatsappEnabled,
+      whatsappNumber: businessWhatsapp,
       website: d.website || null,
       addressLine1: d.addressLine1 || null,
       addressLine2: d.addressLine2 || null,
@@ -90,6 +99,7 @@ export async function updateCompanyAction(_prev: FormState, formData: FormData):
   await audit({ actorId: user.id, action: "company.updated", targetType: "Company", targetId: companyId });
   revalidatePath("/provider/settings");
   revalidatePath("/companies/[slug]", "page");
+  revalidatePath("/listings/[id]", "page");
   return { ok: true, message: "Company profile saved." };
 }
 

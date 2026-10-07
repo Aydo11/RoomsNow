@@ -413,6 +413,8 @@ model Company {
   registrationNumber     String?
   email                  String
   phone                  String?
+  whatsappEnabled        Boolean            @default(false)
+  whatsappNumber         String?
   website                String?
   addressLine1           String?
   addressLine2           String?

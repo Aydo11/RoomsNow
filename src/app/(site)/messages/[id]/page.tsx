@@ -7,6 +7,7 @@ import { ConversationMenu } from "@/components/conversation-menu";
 import { ConversationActions } from "@/components/conversation-actions";
 import { clientPhotoSrc, parseClientCard } from "@/lib/client-card";
 import { teamMemberIds } from "@/lib/referral-team";
+import { conversationCounterparty, counterpartyProfileUrl } from "@/lib/conversation-profile";
 
 export const metadata = { title: "Conversation" };
 export const dynamic = "force-dynamic";
@@ -47,30 +48,32 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const providerCompanyId = conversation.companyId ?? others.find((p) => p.companyId)?.companyId ?? null;
   const viewerCompanyIds = new Set(user.staffOf.map((s) => s.companyId));
   const viewerIsProvider = Boolean(providerCompanyId && viewerCompanyIds.has(providerCompanyId));
-  const otherReferrer = others.find((p) => p.user.role === "REFERRER");
+  const counterparty = conversationCounterparty(others, providerCompanyId, viewerIsProvider);
+  const otherReferrer = counterparty?.user.role === "REFERRER" ? counterparty : null;
   const quickReplies = viewerIsProvider && providerCompanyId
     ? await db.quickReply.findMany({ where: { companyId: providerCompanyId }, orderBy: { createdAt: "asc" }, select: { id: true, body: true } })
     : undefined;
   const providerCompany = providerCompanyId
     ? await db.company.findUnique({ where: { id: providerCompanyId }, select: { slug: true } })
     : null;
-  const otherLookingForAd = others[0]?.user.role === "USER"
+  const otherLookingForAd = counterparty?.user.role === "USER"
     ? await db.lookingForAd.findFirst({
-        where: { userId: others[0].userId, status: "ACTIVE", user: { profile: { is: { discoverable: true } } } },
+        where: { userId: counterparty.userId, status: "ACTIVE", user: { profile: { is: { discoverable: true } } } },
         orderBy: { updatedAt: "desc" },
         select: { id: true },
       })
     : null;
-  const otherProfileUrl = otherReferrer
-    ? `/agencies/${otherReferrer.userId}`
-    : providerCompany?.slug
-      ? `/companies/${providerCompany.slug}`
-      : otherLookingForAd
-        ? `/people/${otherLookingForAd.id}`
-        : null;
+  const otherProfileUrl = counterpartyProfileUrl({
+    viewerIsProvider,
+    otherRole: counterparty?.user.role ?? null,
+    otherUserId: counterparty?.userId ?? null,
+    lookingForAdId: otherLookingForAd?.id ?? null,
+    providerSlug: providerCompany?.slug ?? null,
+  });
   // Services threads (External Services Marketplace) have their own header and
   // never offer to share accommodation profiles across.
   const service = conversation.serviceBusiness;
+  const otherParty = service ? others[0] : counterparty;
   const viewerIsServiceBusiness = Boolean(service && service.ownerId === user.id);
   const serviceRequesterCompany = service && viewerIsServiceBusiness
     ? (await db.companyStaff.findFirst({ where: { userId: others[0]?.userId ?? "" }, select: { company: { select: { name: true } } } }))?.company.name ?? null
@@ -100,10 +103,10 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           detail: [client.status === "PLACED" ? "Placed" : "Active", client.preferredLocation].filter(Boolean).join(" · "),
         }))
       : undefined;
-  const alreadyBlocked = others[0]
+  const alreadyBlocked = otherParty
     ? Boolean(
         await db.block.findUnique({
-          where: { blockerId_blockedId: { blockerId: user.id, blockedId: others[0].userId } },
+          where: { blockerId_blockedId: { blockerId: user.id, blockedId: otherParty.userId } },
         }),
       )
     : false;
@@ -128,11 +131,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
               ) : (
                 serviceTitle
               )
-            ) : others[0] && otherProfileUrl ? (
+            ) : otherParty && otherProfileUrl ? (
               <Link href={otherProfileUrl} className="rounded-sm underline decoration-brand/40 underline-offset-4 hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">
-                {others[0].user.firstName} {others[0].user.lastName.charAt(0)}.
+                {otherParty.user.firstName} {otherParty.user.lastName.charAt(0)}.
               </Link>
-            ) : others.map((p) => `${p.user.firstName} ${p.user.lastName.charAt(0)}.`).join(", ") || "Conversation"}
+            ) : otherParty ? `${otherParty.user.firstName} ${otherParty.user.lastName.charAt(0)}.` : "Conversation"}
           </h1>
           {service && (
             <span className="flex min-w-0 items-center gap-1.5 text-[12.5px] sm:text-[14px]">
@@ -163,10 +166,10 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         </div>
         <div className="flex shrink-0 items-center gap-1 sm:gap-3">
           <ConversationActions conversationId={conversation.id} archived={participant.archived} variant="header" />
-          {others[0] && (
+          {otherParty && (
             <ConversationMenu
-              otherUserId={others[0].userId}
-              otherName={others[0].user.firstName}
+              otherUserId={otherParty.userId}
+              otherName={otherParty.user.firstName}
               initiallyBlocked={alreadyBlocked}
             />
           )}
