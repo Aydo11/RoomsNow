@@ -15,7 +15,8 @@ export type CelebrationKind =
   | "first-enquiry"
   | "first-referral"
   | "first-move-in"
-  | "views-100";
+  | "views-100"
+  | "request-sent";
 
 const COPY: Record<CelebrationKind, { eyebrow: string; title: string; message: string }> = {
   boost: {
@@ -37,6 +38,11 @@ const COPY: Record<CelebrationKind, { eyebrow: string; title: string; message: s
     eyebrow: "ADVERT SUBMITTED",
     title: "Nice work, it's on its way",
     message: "Our team will review it, usually within one working day. We'll let you know the moment it's live.",
+  },
+  "request-sent": {
+    eyebrow: "REQUEST SENT",
+    title: "Your request is with the provider",
+    message: "We've opened a conversation in Messages so you can talk it through.",
   },
   approved: {
     eyebrow: "ADVERT APPROVED",
@@ -142,7 +148,7 @@ export function SuccessCelebration({
             <LightningIcon />
           ) : kind === "boost-purchase" ? (
             <RocketIcon />
-          ) : kind === "submitted" ? (
+          ) : kind === "submitted" || kind === "request-sent" ? (
             <SentIcon />
           ) : (
             <MembershipIcon />
