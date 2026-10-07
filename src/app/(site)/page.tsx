@@ -87,7 +87,7 @@ export default function HomePage() {
         <span aria-hidden="true" className="ambient-orb -left-24 top-8 h-64 w-64 bg-pine-light/70 blur-3xl" />
         <span aria-hidden="true" className="ambient-orb ambient-orb-2 -right-20 bottom-0 h-72 w-72 bg-[#d8ebfb]/70 blur-3xl" />
         <span aria-hidden="true" className="ambient-orb ambient-orb-3 left-1/3 -top-24 h-56 w-56 bg-[#70baff]/20 blur-3xl" />
-        <div className="shell relative pb-4 pt-10 text-center sm:pb-6 sm:pt-14 lg:pt-16">
+        <div className="hero-content shell relative pb-4 pt-10 text-center sm:pb-6 sm:pt-14 lg:pt-16">
           <h1 className="home-headline mx-auto max-w-[19ch] [text-wrap:balance] text-[clamp(2rem,8vw,3.5rem)] font-bold leading-[1.12]">
             <span className="sr-only">Find an HMO room or accommodation that fits</span>
             <span aria-hidden="true">
@@ -115,9 +115,11 @@ export default function HomePage() {
               component swaps in and the decorative blob anchored to the
               bottom of this section jumps down with it.
             */}
-            <Suspense fallback={<div className="h-[300px] rounded-card border border-line bg-white sm:h-[120px]" />}>
-              <SearchPanel />
-            </Suspense>
+            <div className="search-glow">
+              <Suspense fallback={<div className="h-[300px] rounded-card border border-line bg-white sm:h-[120px]" />}>
+                <SearchPanel />
+              </Suspense>
+            </div>
             <p className="mt-3 text-center text-[14px] text-ink-soft">
               Not sure what you can get?{" "}
               <Link href="/eligibility" className="font-semibold text-pine-dark underline-offset-4 hover:underline">
@@ -482,7 +484,8 @@ async function HomeCities() {
                 <Link
                   key={city.name}
                   href={href}
-                  className="group relative aspect-[4/3] overflow-hidden rounded-card bg-ink shadow-raise transition duration-300 hover:-translate-y-1 hover:shadow-float focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
+                  data-tilt
+                  className="group relative aspect-[4/3] overflow-hidden rounded-card bg-ink shadow-raise transition-shadow duration-300 hover:shadow-float focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
                   aria-label={`Explore accommodation in ${city.name}`}
                 >
                   <Image
@@ -490,7 +493,7 @@ async function HomeCities() {
                     alt={`${city.name} city view`}
                     fill
                     sizes="(min-width: 640px) 33vw, 100vw"
-                    className="object-cover transition duration-500 group-hover:scale-[1.04]"
+                    className="parallax-img object-cover transition duration-500 group-hover:scale-[1.04]"
                   />
                   <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#092d4d]/95 via-[#092d4d]/20 to-transparent" />
                   <span className="absolute inset-x-0 bottom-0 block p-5 text-left text-white">
