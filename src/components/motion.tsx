@@ -26,12 +26,36 @@ export function MotionEffects() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
+    // Cards marked [data-tilt] lean gently towards a mouse pointer (never on
+    // touch screens), with a soft highlight where the pointer is.
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    let tilted: HTMLElement | null = null;
+    const resetTilt = (el: HTMLElement) => {
+      el.style.removeProperty("--tilt-x");
+      el.style.removeProperty("--tilt-y");
+      el.removeAttribute("data-tilting");
+    };
     const onPointer = (event: PointerEvent) => {
-      const target = (event.target as Element | null)?.closest?.("[data-spotlight]") as HTMLElement | null;
-      if (!target) return;
-      const rect = target.getBoundingClientRect();
-      target.style.setProperty("--spot-x", `${event.clientX - rect.left}px`);
-      target.style.setProperty("--spot-y", `${event.clientY - rect.top}px`);
+      const element = event.target as Element | null;
+      const target = element?.closest?.("[data-spotlight]") as HTMLElement | null;
+      if (target) {
+        const rect = target.getBoundingClientRect();
+        target.style.setProperty("--spot-x", `${event.clientX - rect.left}px`);
+        target.style.setProperty("--spot-y", `${event.clientY - rect.top}px`);
+      }
+      if (!finePointer) return;
+      const tilt = element?.closest?.("[data-tilt]") as HTMLElement | null;
+      if (tilted && tilted !== tilt) resetTilt(tilted);
+      tilted = tilt;
+      if (!tilt) return;
+      const rect = tilt.getBoundingClientRect();
+      const px = (event.clientX - rect.left) / rect.width - 0.5;
+      const py = (event.clientY - rect.top) / rect.height - 0.5;
+      tilt.setAttribute("data-tilting", "");
+      tilt.style.setProperty("--tilt-x", `${(-py * 7).toFixed(2)}deg`);
+      tilt.style.setProperty("--tilt-y", `${(px * 9).toFixed(2)}deg`);
+      tilt.style.setProperty("--glare-x", `${((px + 0.5) * 100).toFixed(1)}%`);
+      tilt.style.setProperty("--glare-y", `${((py + 0.5) * 100).toFixed(1)}%`);
     };
     if (!reduce) document.addEventListener("pointermove", onPointer, { passive: true });
 
