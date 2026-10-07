@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Sans, Plus_Jakarta_Sans } from "next/font/google";
+import { Instrument_Sans, Sora } from "next/font/google";
 import { brand } from "@/brand.config";
 import { JsonLd, SITE_URL } from "@/lib/seo";
 import { Toaster } from "@/components/toast";
@@ -13,7 +13,8 @@ const sans = Instrument_Sans({
   display: "swap",
 });
 
-const display = Plus_Jakarta_Sans({
+// Sora is the RoomsNow wordmark face, so headings and the logo now match.
+const display = Sora({
   subsets: ["latin"],
   variable: "--font-display",
   weight: ["600", "700", "800"],
