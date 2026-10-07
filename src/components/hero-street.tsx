@@ -1,7 +1,7 @@
 /**
  * The homepage street: a row of terraced houses along the bottom of the hero.
- * The RoomsNow magnifying glass glides along it and the rooms it passes light
- * up, which is what the site does. Pure SVG + CSS (transform/opacity only, no
+ * Rooms quietly light up and dim one at a time, like a real street in the
+ * evening. Pure SVG + CSS (transform/opacity only, no
  * filters or blur) so it stays cheap on phones, and it sits still for anyone
  * who prefers reduced motion. Decorative, so hidden from screen readers.
  */
@@ -10,8 +10,8 @@ const W = 1600;
 const H = 220;
 const GROUND = 206;
 /** One full cycle of the scan, in seconds. Keep in sync with globals.css. */
-const CYCLE = 14;
-/** How long the glass takes to cross the street. */
+const CYCLE = 16;
+/** Pop-up labels are spread across this many seconds of each cycle. */
 const SWEEP = 10;
 
 type House = { x: number; w: number; h: number; roof: "gable" | "flat" | "hip"; floors: number; cols: number; chimney?: boolean };
@@ -54,8 +54,9 @@ function windowsFor(house: House, index: number): Win[] {
       const y = top + f * rowH + (rowH - h) / 2;
       const r = pick(index * 31 + f * 7 + c * 3 + 1);
       const mode: Win["mode"] = r < 0.5 ? "scan" : r < 0.72 ? "home" : "off";
-      // Light up just after the glass passes this window.
-      const delay = Math.max(0, ((x + 40) / (W + 120)) * SWEEP + 0.15);
+      // Rooms light up one by one in no particular order, like a real street
+      // in the evening, rather than in a wave.
+      const delay = pick(index * 53 + f * 17 + c * 11 + 7) * CYCLE;
       wins.push({ x, y, w, h, mode, delay });
     }
   }
@@ -77,7 +78,7 @@ const DEFAULT_PILLS: StreetPill[] = [
   { at: 0.79, label: "Verified provider", tone: "green" },
 ];
 
-/** `pills` are the little cards that pop up as the glass reaches them (0–1 along the street). */
+/** `pills` are the little cards that pop up in turn (0–1 sets where along the street, and when). */
 export function HeroStreet({ pills = DEFAULT_PILLS, className }: { pills?: StreetPill[]; className?: string }) {
   const houses = HOUSES.map((house, index) => ({ house, wins: windowsFor(house, index) }));
 
@@ -124,11 +125,6 @@ export function HeroStreet({ pills = DEFAULT_PILLS, className }: { pills?: Stree
           );
         })}
         <rect className="street-ground" x="0" y={GROUND} width={W} height={H - GROUND} />
-        <g className="street-glass">
-          <circle cx="0" cy="128" r="30" className="street-glass-lens" />
-          <circle cx="0" cy="128" r="30" className="street-glass-ring" />
-          <path d="M21 149 L42 170" className="street-glass-handle" />
-        </g>
       </svg>
     </div>
   );
