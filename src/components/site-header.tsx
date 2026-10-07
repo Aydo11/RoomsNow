@@ -45,7 +45,7 @@ export async function SiteHeader() {
           ) : (
             <Link href="/services" className="font-medium text-pine-dark transition-colors hover:text-ink">Provider Services</Link>
           )}
-          <Link href="/support-services" className="transition-colors hover:text-ink">Support services</Link>
+          <Link href="/tools" className="transition-colors hover:text-ink">Tools & guides</Link>
           <Link href="/people" className="hidden transition-colors hover:text-ink 2xl:inline">People looking</Link>
           <Link href="/advertise-accommodation" className="transition-colors hover:text-ink">Advertise</Link>
           <Link href="/pricing" className={user ? "hidden transition-colors hover:text-ink 2xl:inline" : "transition-colors hover:text-ink"}>Membership</Link>
@@ -89,6 +89,7 @@ export async function SiteHeader() {
             <MobileSection title="Find accommodation">
               <MobileLink href="/search" icon="search" hint="Rooms and supported housing near you">Search accommodation</MobileLink>
               <MobileLink href={vettedHref} icon="badge" hint="Rooms from CQC or BVSC-checked providers">Vetted providers</MobileLink>
+              <MobileLink href="/tools" icon="search" hint="Rent calculator, matching check and neighbourhood guides">Tools & guides</MobileLink>
               <MobileLink href="/support-services" icon="heart" hint="Mental health, drugs and alcohol, housing help and crisis lines">Support services</MobileLink>
               <MobileLink href="/how-it-works" icon="info">How it works</MobileLink>
             </MobileSection>
@@ -202,6 +203,7 @@ export function SiteFooter() {
             ["How it works", "/how-it-works"],
             ["What happens after you apply", "/next-steps"],
             ["Room and referral guides", "/guides"],
+            ["Tools & guides", "/tools"],
             ["Birmingham neighbourhood guides", "/areas/birmingham"],
             ["Housing Benefit / LHA calculator", "/housing-benefit-calculator"],
             ["Staying safe", "/safety"],

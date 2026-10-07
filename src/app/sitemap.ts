@@ -34,6 +34,7 @@ const staticPages: Array<[string, MetadataRoute.Sitemap[number]["changeFrequency
   ["/safety", "monthly", 0.4],
   ["/verification", "monthly", 0.4],
   ["/guides", "weekly", 0.7],
+  ["/tools", "monthly", 0.7],
   ["/housing-benefit-calculator", "monthly", 0.7],
   ["/areas/birmingham", "monthly", 0.7],
 ];

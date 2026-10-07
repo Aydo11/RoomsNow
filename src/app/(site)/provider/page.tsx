@@ -155,6 +155,24 @@ export default async function ProviderDashboard() {
         </Link>
       }
     >
+      {!company.whatsappEnabled && (
+        <section className="card mb-5 flex flex-col gap-4 border-pine/30 bg-pine-light/40 p-5 sm:flex-row sm:items-center" aria-labelledby="whatsapp-announcement-heading">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-pine-light text-pine-dark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.5 8.5 0 0 1-12.8 7.3L3 21l1.7-5.4A8.5 8.5 0 1 1 21 11.5Z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 7.5c0 4 3 7 7 7l1-2-2-1-1 1c-1.5-.5-2.5-1.5-3-3l1-1-1-2-2 1Z" />
+            </svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] font-semibold uppercase tracking-wide text-pine-dark">New contact option · optional</p>
+            <h2 id="whatsapp-announcement-heading" className="mt-1 text-[20px]">Get accommodation enquiries on WhatsApp</h2>
+            <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">Add your business number to give people a WhatsApp button on your live adverts. Their message includes the advert title and link, so you know which room they are asking about.</p>
+            <p className="mt-2 text-[12px] leading-relaxed text-ink-soft">Your number will be public. Chats take place outside RoomsNow and are not recorded in your RoomsNow inbox. You can switch it off at any time.</p>
+          </div>
+          <Link href="/provider/settings#whatsapp-enquiries" className="btn-primary shrink-0 text-center">Set up WhatsApp</Link>
+        </section>
+      )}
+
       {company.verification !== "APPROVED" && (
         <VerificationBanner
           status={company.verification}

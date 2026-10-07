@@ -238,7 +238,7 @@ export function CompanyForm({
         </Field>
       </div>
 
-      <section className="rounded-[12px] border border-line p-4">
+      <section id="whatsapp-enquiries" className="scroll-mt-24 rounded-[12px] border border-line p-4">
         <h2 className="text-[18px]">WhatsApp enquiries</h2>
         <label className="mt-3 flex items-start gap-3 text-[15px]">
           <input name="whatsappEnabled" type="checkbox" checked={whatsappEnabled} onChange={(event) => setWhatsappEnabled(event.target.checked)} className="mt-1 h-4 w-4" />
