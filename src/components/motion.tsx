@@ -75,8 +75,9 @@ export function MotionEffects() {
           }
         }
       },
-      // Any pixel counts, so very tall sections can never get stuck.
-      { rootMargin: "0px 0px -24px 0px", threshold: 0 },
+      // Starts a little before the section scrolls in, so fast scrolling never
+      // shows an empty gap; any pixel counts, so tall sections never get stuck.
+      { rootMargin: "0px 0px 12% 0px", threshold: 0 },
     );
 
     const scan = () => {
