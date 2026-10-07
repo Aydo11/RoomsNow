@@ -107,6 +107,19 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
           </div>
         )}
 
+        <details className="group rounded-[12px] border border-pine/20 bg-pine-light/40 px-4 py-3 text-[13.5px] text-ink-soft">
+          <summary className="cursor-pointer list-none font-semibold text-pine-dark">
+            Photo tips: bright, landscape photos help your advert stand out
+          </summary>
+          <ul className="mt-2 list-disc space-y-1 pl-5 leading-relaxed">
+            <li>Hold the phone <strong className="font-semibold text-ink">sideways (landscape)</strong> so photos fill the card.</li>
+            <li>Shoot in daylight with curtains open and lights on. Avoid dark or blurry shots.</li>
+            <li>Make the bed, clear the surfaces, and stand in a corner to show the whole room.</li>
+            <li>Put your best room first, then the kitchen, bathroom and outside.</li>
+            <li>Add a 15–30 second walkthrough video. It plays in Tour mode and stands out in search.</li>
+          </ul>
+        </details>
+
         <div className="grid gap-4 md:grid-cols-2">
           <Field
             label="Add photos or a short video"
