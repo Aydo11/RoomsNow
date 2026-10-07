@@ -12,6 +12,8 @@ import { getCurrentUser } from "@/lib/session";
 import { CountUp } from "@/components/motion";
 import { RecentlyViewed } from "@/components/recently-viewed";
 import { HeroStreet } from "@/components/hero-street";
+import { RoomMarquee } from "@/components/room-marquee";
+import { COVER_MEDIA } from "@/lib/cover-image";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
@@ -55,6 +57,13 @@ const POPULAR_SEARCHES = [
   ["Accommodation for prison leavers", "/accommodation-for-prison-leavers"],
   ["Advertise supported accommodation vacancies", "/advertise-accommodation"],
   ["Professional accommodation referral platform", "/accommodation-referrals"],
+] as const;
+
+const TRUST_POINTS = [
+  ["shield", "Verified provider badges"],
+  ["pound", "Universal Credit adverts clearly marked"],
+  ["free", "Free for people looking"],
+  ["chat", "Message providers directly"],
 ] as const;
 
 const getActiveCities = cache(() => db.property.findMany({
@@ -123,6 +132,14 @@ export default function HomePage() {
               <HomeStats />
             </Suspense>
           </dl>
+          <ul className="trust-strip mx-auto mt-5 flex max-w-3xl flex-wrap justify-center gap-x-5 gap-y-2 text-[13.5px] text-ink-soft" aria-label="Why people use RoomsNow">
+            {TRUST_POINTS.map(([icon, label]) => (
+              <li key={label} className="inline-flex items-center gap-1.5">
+                <TrustIcon type={icon} />
+                {label}
+              </li>
+            ))}
+          </ul>
         </div>
         <HeroStreet />
       </section>
@@ -159,6 +176,10 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <Suspense fallback={null}>
+        <HomeMarquee />
+      </Suspense>
 
       <Suspense fallback={<div className="shell py-12 text-[14px] text-ink-soft" role="status">Loading current vacancies…</div>}>
         <HomeListings />
@@ -247,6 +268,10 @@ export default function HomePage() {
         </nav>
       </section>
 
+      <Suspense fallback={null}>
+        <ResidentVoices />
+      </Suspense>
+
       <section className="border-t border-line bg-white">
         <div className="shell py-12 sm:py-16">
           <div data-reveal className="flex flex-wrap items-end justify-between gap-4">
@@ -272,15 +297,99 @@ export default function HomePage() {
   );
 }
 
+/** Only shown once the number is worth showing; never padded or estimated. */
+const MOVED_IN_THRESHOLD = 10;
+
 async function HomeStats() {
-  const [roomsAvailable, areasWithVacancies] = await Promise.all([
+  const [roomsAvailable, areasWithVacancies, movedInRequests, movedInReferrals] = await Promise.all([
     db.room.count({ where: { status: "AVAILABLE", listing: { status: "ACTIVE" } } }),
     getActiveCities(),
+    db.accommodationRequest.count({ where: { status: "MOVED_IN" } }),
+    db.referral.count({ where: { status: "MOVED_IN" } }),
   ]);
+  const movedIn = movedInRequests + movedInReferrals;
   return <>
     <Stat value={roomsAvailable} label="rooms available" live />
     <Stat value={areasWithVacancies.length} label="areas with vacancies" />
+    {movedIn >= MOVED_IN_THRESHOLD && <Stat value={movedIn} label="people moved in" />}
   </>;
+}
+
+async function HomeMarquee() {
+  const rooms = await db.listing.findMany({
+    where: { status: "ACTIVE", company: { status: "ACTIVE" }, rooms: { some: { status: "AVAILABLE" } } },
+    orderBy: { publishedAt: "desc" },
+    take: 12,
+    select: {
+      id: true,
+      title: true,
+      weeklyRentFrom: true,
+      weeklyRentTo: true,
+      property: { select: { city: true, area: true } },
+      media: COVER_MEDIA,
+      rooms: { select: { status: true } },
+    },
+  });
+  return <RoomMarquee rooms={rooms} />;
+}
+
+/**
+ * Real words from real residents: reviews left after a move-in, never written
+ * by us. The section stays hidden until there are at least two worth showing.
+ */
+async function ResidentVoices() {
+  const reviews = await db.residentReview.findMany({
+    where: { hiddenAt: null, rating: { gte: 4 }, comment: { not: null } },
+    orderBy: { createdAt: "desc" },
+    take: 12,
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      author: { select: { firstName: true } },
+      listing: { select: { property: { select: { area: true, city: true } } } },
+    },
+  });
+  const usable = reviews.filter((review) => (review.comment ?? "").trim().length >= 30).slice(0, 3);
+  if (usable.length < 2) return null;
+  return (
+    <section className="border-t border-line bg-paper">
+      <div className="shell py-12 sm:py-16">
+        <div data-reveal>
+          <span className="text-[12px] font-semibold tracking-[0.08em] text-pine-dark">FROM PEOPLE WHO MOVED IN</span>
+          <h2 className="mt-2 text-[28px]">In their own words</h2>
+        </div>
+        <div data-reveal="stagger" className="mt-6 grid gap-4 md:grid-cols-3">
+          {usable.map((review) => {
+            const place = review.listing?.property.area ?? review.listing?.property.city;
+            return (
+              <figure key={review.id} className="card flex flex-col p-6">
+                <span className="text-[16px] tracking-[2px] text-[#f5b544]" aria-label={`${review.rating} out of 5`}>{"★".repeat(review.rating)}</span>
+                <blockquote className="mt-3 flex-1 text-[15.5px] leading-relaxed text-ink">&ldquo;{review.comment!.trim()}&rdquo;</blockquote>
+                <figcaption className="mt-4 text-[13.5px] text-ink-soft">
+                  {review.author.firstName}{place ? `, ${place}` : ""} · verified resident
+                </figcaption>
+              </figure>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TrustIcon({ type }: { type: (typeof TRUST_POINTS)[number][0] }) {
+  const paths = {
+    shield: <><path d="M12 3 5 6v5c0 4.4 3 8.3 7 9.6 4-1.3 7-5.2 7-9.6V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></>,
+    pound: <><path d="M16 6.5A3.5 3.5 0 0 0 9.5 8v9.5M7.5 12.5h6M7 18h10" /></>,
+    free: <><path d="M20 12v8H4v-8M2 7h20v5H2zM12 22V7M12 7H8.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7ZM12 7h3.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7Z" /></>,
+    chat: <><path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.6A8 8 0 1 1 21 12Z" /></>,
+  };
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-pine-dark" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {paths[type]}
+    </svg>
+  );
 }
 
 async function HomeListings() {
