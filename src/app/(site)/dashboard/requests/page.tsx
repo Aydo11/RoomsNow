@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SuccessCelebration } from "@/components/success-celebration";
 import { requestConversationIds, requestThreadKey } from "@/lib/request-conversation";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/rbac";
@@ -47,6 +48,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
       nav={nav}
       active="/dashboard/requests"
     >
+      {submitted && <SuccessCelebration kind="request-sent" />}
       {query.submitted && (
         <div className="mb-8 space-y-5">
           <FormSuccess message="Request sent. We've also started a conversation with the provider in Messages, so you can talk it through there." />
