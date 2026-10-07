@@ -9,5 +9,14 @@ export const metadata = pageMetadata({
 });
 
 export default function AdvertiseAccommodationPage() {
-  return <SeoLandingPage content={advertiseAccommodationContent} />;
+  return (
+    <SeoLandingPage
+      content={advertiseAccommodationContent}
+      street={[
+        { at: 0.22, label: "New enquiry", tone: "amber" },
+        { at: 0.5, label: "Referral received", tone: "blue" },
+        { at: 0.78, label: "Room let", tone: "green" },
+      ]}
+    />
+  );
 }
