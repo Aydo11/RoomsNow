@@ -69,17 +69,20 @@ function roofPath(h: House) {
   return `M${h.x - 4} ${top + 14} L${h.x + h.w / 2} ${top - 22} L${h.x + h.w + 4} ${top + 14} Z`;
 }
 
-export function HeroStreet() {
+export type StreetPill = { at: number; label: string; tone: "amber" | "blue" | "green" };
+
+const DEFAULT_PILLS: StreetPill[] = [
+  { at: 0.24, label: "Room free · Erdington", tone: "amber" },
+  { at: 0.52, label: "Bills included", tone: "blue" },
+  { at: 0.79, label: "Verified provider", tone: "green" },
+];
+
+/** `pills` are the little cards that pop up as the glass reaches them (0–1 along the street). */
+export function HeroStreet({ pills = DEFAULT_PILLS, className }: { pills?: StreetPill[]; className?: string }) {
   const houses = HOUSES.map((house, index) => ({ house, wins: windowsFor(house, index) }));
-  // Pills pop over three of the houses as the glass reaches them.
-  const pills = [
-    { at: 0.24, label: "Room free · Erdington", tone: "amber" },
-    { at: 0.52, label: "Bills included", tone: "blue" },
-    { at: 0.79, label: "Verified provider", tone: "green" },
-  ] as const;
 
   return (
-    <div className="hero-street" aria-hidden="true" style={{ ["--street-cycle" as string]: `${CYCLE}s` }}>
+    <div className={className ? `hero-street ${className}` : "hero-street"} aria-hidden="true" style={{ ["--street-cycle" as string]: `${CYCLE}s` }}>
       {pills.map((pill) => (
         <span
           key={pill.label}
