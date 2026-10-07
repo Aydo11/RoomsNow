@@ -1333,8 +1333,7 @@ html[data-theme="dark"] .street-pill { background: rgb(22 33 50); border-color: 
 }
 .room-marquee-card { position: relative; }
 
-/* A slow light that travels round the homepage search box. */
-@property --glow-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+/* A soft, still blue edge round the homepage search box. */
 .search-glow { position: relative; isolation: isolate; border-radius: 16px; }
 .search-glow::before {
   content: "";
@@ -1343,13 +1342,8 @@ html[data-theme="dark"] .street-pill { background: rgb(22 33 50); border-color: 
   z-index: -1;
   border-radius: inherit;
   pointer-events: none;
-  background: conic-gradient(from var(--glow-angle), rgb(84 157 229 / 0.15) 0deg, rgb(84 157 229 / 0.15) 200deg, #549de5 260deg, #f5b544 300deg, rgb(84 157 229 / 0.15) 340deg);
-  opacity: 0.85;
+  background: linear-gradient(135deg, rgb(84 157 229 / 0.55), rgb(84 157 229 / 0.12) 45%, rgb(84 157 229 / 0.35));
 }
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .search-glow::before { animation: glow-spin 7s linear infinite; }
-}
-@keyframes glow-spin { to { --glow-angle: 360deg; } }
 
 /* Scroll-linked motion, only where the browser supports it natively
    (no JavaScript, no scroll listeners): the hero settles away as you
