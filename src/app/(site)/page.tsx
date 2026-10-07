@@ -11,6 +11,7 @@ import { guides } from "@/lib/guides";
 import { getCurrentUser } from "@/lib/session";
 import { CountUp } from "@/components/motion";
 import { RecentlyViewed } from "@/components/recently-viewed";
+import { HeroStreet } from "@/components/hero-street";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
@@ -77,7 +78,7 @@ export default function HomePage() {
         <span aria-hidden="true" className="ambient-orb -left-24 top-8 h-64 w-64 bg-pine-light/70 blur-3xl" />
         <span aria-hidden="true" className="ambient-orb ambient-orb-2 -right-20 bottom-0 h-72 w-72 bg-[#d8ebfb]/70 blur-3xl" />
         <span aria-hidden="true" className="ambient-orb ambient-orb-3 left-1/3 -top-24 h-56 w-56 bg-[#70baff]/20 blur-3xl" />
-        <div className="shell relative py-10 text-center sm:py-14 lg:py-16">
+        <div className="shell relative pb-4 pt-10 text-center sm:pb-6 sm:pt-14 lg:pt-16">
           <h1 className="home-headline mx-auto max-w-[19ch] [text-wrap:balance] text-[clamp(2rem,8vw,3.5rem)] font-bold leading-[1.12]">
             <span className="sr-only">Find an HMO room or accommodation that fits</span>
             <span aria-hidden="true">
@@ -123,6 +124,7 @@ export default function HomePage() {
             </Suspense>
           </dl>
         </div>
+        <HeroStreet />
       </section>
 
       <section className="border-b border-line bg-white">
