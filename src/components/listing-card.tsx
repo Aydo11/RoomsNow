@@ -83,7 +83,7 @@ export function ListingCard({
               muted
               playsInline
               aria-label={`${listing.title} video`}
-              className="absolute inset-0 h-full w-full bg-black object-contain transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+              className="absolute inset-0 h-full w-full bg-black object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
             />
           ) : (
           <ResilientImage
@@ -91,7 +91,7 @@ export function ListingCard({
             fallbackSrc={fallback.url}
             fallbackLabel="Illustrative image"
             alt={image ? `${listing.title} ${cover?.fromVideo ? "video" : "property photo"}` : fallback.caption}
-            className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
             sizes="(min-width: 1280px) 380px, (min-width: 640px) 45vw, 100vw"
           />
           )}
