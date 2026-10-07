@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { JsonLd, absoluteUrl } from "@/lib/seo";
+import { HeroStreet, type StreetPill } from "./hero-street";
 
 export type LandingPageContent = {
   path: string;
@@ -15,7 +16,8 @@ export type LandingPageContent = {
   resources?: Array<{ label: string; href: string }>;
 };
 
-export function SeoLandingPage({ content }: { content: LandingPageContent }) {
+/** `street` adds the animated lit-window street under the hero, with its own pop-up labels. */
+export function SeoLandingPage({ content, street }: { content: LandingPageContent; street?: StreetPill[] }) {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -38,8 +40,8 @@ export function SeoLandingPage({ content }: { content: LandingPageContent }) {
   return (
     <>
       <JsonLd data={[faqSchema, breadcrumbSchema]} />
-      <section className="surface-home border-b border-line">
-        <div className="shell py-14 sm:py-20">
+      <section className="surface-home relative overflow-hidden border-b border-line">
+        <div className={street ? "shell pb-4 pt-14 sm:pt-20" : "shell py-14 sm:py-20"}>
           <span className="eyebrow">{content.eyebrow}</span>
           <h1 className="mt-5 max-w-[19ch] text-[40px] font-bold leading-[1.08] sm:text-[54px]">{content.title}</h1>
           <p className="mt-5 max-w-[68ch] text-[18px] leading-relaxed text-ink-soft">{content.introduction}</p>
@@ -48,6 +50,7 @@ export function SeoLandingPage({ content }: { content: LandingPageContent }) {
             <Link href={content.secondaryCta.href} className="btn-secondary">{content.secondaryCta.label}</Link>
           </div>
         </div>
+        {street && <HeroStreet className="hero-street-compact" pills={street} />}
       </section>
 
       <div className="shell py-12 sm:py-16">
