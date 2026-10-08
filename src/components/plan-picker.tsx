@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cancelMembershipAction, changePlanAction, openBillingPortalAction } from "@/server/actions/billing";
+import { whatsappPlanLine } from "@/lib/whatsapp-access";
 import { money } from "@/lib/format";
 import { clsx } from "@/lib/clsx";
 import type { MembershipTier } from "@prisma/client";
@@ -63,6 +64,9 @@ export function PlanPicker({
                 <li>{plan.includedBoosts} included 24-hour boost{plan.includedBoosts === 1 ? "" : "s"} per billing period</li>
                 <li>{plan.analytics ? "Analytics included" : "No analytics"}</li>
                 <li>{plan.priorityPlacement ? "Priority placement in search" : "Standard placement"}</li>
+                <li className={whatsappPlanLine(plan.tier).enabled ? "font-medium text-ink" : undefined}>
+                  {whatsappPlanLine(plan.tier).enabled ? whatsappPlanLine(plan.tier).text : "No WhatsApp enquiry button"}
+                </li>
               </ul>
 
               {current ? (
