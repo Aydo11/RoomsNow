@@ -148,6 +148,7 @@ function DocumentDropzone({
 
 export function CompanyForm({
   company,
+  whatsappAccess = "NEEDS_UPGRADE",
 }: {
   company: {
     name: string;
@@ -170,9 +171,12 @@ export function CompanyForm({
     bannerUrl: string | null;
     socialLinks: SocialLink[];
   };
+  /** INCLUDED / ADDON can use WhatsApp; NEEDS_ADDON (Professional) or NEEDS_UPGRADE (Free) cannot yet. */
+  whatsappAccess?: "INCLUDED" | "ADDON" | "NEEDS_ADDON" | "NEEDS_UPGRADE";
 }) {
   const [state, action] = useActionState(updateCompanyAction, { ok: false });
-  const [whatsappEnabled, setWhatsappEnabled] = useState(company.whatsappEnabled);
+  const whatsappAllowed = whatsappAccess === "INCLUDED" || whatsappAccess === "ADDON";
+  const [whatsappEnabled, setWhatsappEnabled] = useState(company.whatsappEnabled && whatsappAllowed);
   const [businessWhatsapp, setBusinessWhatsapp] = useState(company.whatsappNumber);
   return (
     <form action={action} className="card space-y-4 p-6">
@@ -239,9 +243,24 @@ export function CompanyForm({
       </div>
 
       <section id="whatsapp-enquiries" className="scroll-mt-24 rounded-[12px] border border-line p-4">
-        <h2 className="text-[18px]">WhatsApp enquiries</h2>
-        <label className="mt-3 flex items-start gap-3 text-[15px]">
-          <input name="whatsappEnabled" type="checkbox" checked={whatsappEnabled} onChange={(event) => setWhatsappEnabled(event.target.checked)} className="mt-1 h-4 w-4" />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-[18px]">WhatsApp enquiries</h2>
+          <span className="chip">
+            {whatsappAccess === "INCLUDED" ? "Included in Business" : whatsappAccess === "ADDON" ? "Add-on active" : whatsappAccess === "NEEDS_ADDON" ? "£20/month add-on" : "Business or Professional + add-on"}
+          </span>
+        </div>
+        {!whatsappAllowed && (
+          <div className="mt-3 rounded-[10px] border border-pine/25 bg-pine-light/40 p-3 text-[14px] leading-relaxed text-ink">
+            {whatsappAccess === "NEEDS_ADDON"
+              ? "Add WhatsApp to your Professional plan for £20 a month to show a WhatsApp button on your adverts."
+              : "WhatsApp enquiries are included on the Business plan, or can be added to Professional for £20 a month. They aren't available on the Free plan."}{" "}
+            <a href="/provider/membership#whatsapp-addon" className="font-semibold text-pine-dark underline">
+              {whatsappAccess === "NEEDS_ADDON" ? "Add WhatsApp" : "See plans"}
+            </a>
+          </div>
+        )}
+        <label className={`mt-3 flex items-start gap-3 text-[15px] ${whatsappAllowed ? "" : "opacity-60"}`}>
+          <input name="whatsappEnabled" type="checkbox" checked={whatsappEnabled} disabled={!whatsappAllowed} onChange={(event) => setWhatsappEnabled(event.target.checked)} className="mt-1 h-4 w-4" />
           Show a WhatsApp contact button on my accommodation adverts
         </label>
         <div className="mt-3">
