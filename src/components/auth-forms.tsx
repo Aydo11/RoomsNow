@@ -164,6 +164,7 @@ export function RegisterForm() {
 
   return (
     <form action={action} className="mt-8 space-y-6">
+      <input type="hidden" name="next" value={params.get("next") ?? ""} />
       <fieldset>
         <legend className="label">What kind of account do you need?</legend>
         <div className="grid gap-2.5">
