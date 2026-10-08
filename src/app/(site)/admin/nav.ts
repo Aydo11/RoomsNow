@@ -60,7 +60,7 @@ export async function adminNav(): Promise<NavItem[]> {
     { group: "Placements", href: "/admin/requests", label: "Requests" },
     { group: "Placements", href: "/admin/referrals", label: "Referrals" },
     { group: "Placements", href: "/admin/contact-activity", label: "Contact activity" },
-    { group: "Placements", href: "/admin/whatsapp-clicks", label: "WhatsApp clicks" },
+    { group: "Placements", href: "/admin/whatsapp-clicks", label: "WhatsApp enquiry log" },
 
     { group: "Directory", href: "/admin/marketplace", label: "Services marketplace", badge: marketplaceQueue || undefined },
     { group: "Directory", href: "/admin/support-services", label: "Support services", badge: supportQueue || undefined },
