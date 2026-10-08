@@ -16,6 +16,7 @@ import { notifyCompany } from "@/lib/notify";
 import { MAX_SPONSORED_PER_COMPANY, SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import { BOOST_PACKAGES, isBoostPack, type BoostPack } from "@/lib/boost-packages";
 import type { MembershipTier } from "@prisma/client";
+import { whatsappAccess } from "@/lib/whatsapp-access";
 
 export async function changePlanAction(tier: MembershipTier) {
   const { user, companyId } = await requireCompany();
@@ -24,6 +25,11 @@ export async function changePlanAction(tier: MembershipTier) {
   if (!(["FREE", "PROFESSIONAL", "BUSINESS"] as string[]).includes(tier)) throw new Error("Unknown membership plan.");
   if (tier === "FREE") {
     await billing.cancel(companyId, true);
+    // WhatsApp isn't available on Free, so stop the add-on at the same time.
+    const company = await db.company.findUnique({ where: { id: companyId }, select: { whatsappAddonStatus: true } });
+    if (company?.whatsappAddonStatus && company.whatsappAddonStatus !== "CANCELLED") {
+      await billing.cancelWhatsappAddon(companyId, true).catch((error) => console.error("WhatsApp add-on cancellation failed:", error));
+    }
     await audit({ actorId: user.id, action: "membership.downgrade_scheduled", targetType: "Company", targetId: companyId });
     revalidatePath("/provider/membership");
     return;
@@ -49,6 +55,35 @@ export async function changePlanAction(tier: MembershipTier) {
 
   revalidatePath("/provider/membership");
   redirect(session.url);
+}
+
+/** Professional plans: add the £20/month WhatsApp enquiries add-on. */
+export async function startWhatsappAddonAction() {
+  const { user, companyId } = await requireCompany();
+  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const [limits, company] = await Promise.all([
+    planLimits(companyId),
+    db.company.findUnique({ where: { id: companyId }, select: { whatsappAddonStatus: true } }),
+  ]);
+  if (limits.membership.tier !== "PROFESSIONAL") throw new Error("The WhatsApp add-on is for Professional plans. Business includes WhatsApp already.");
+  if (whatsappAccess(limits.membership.tier, company?.whatsappAddonStatus).allowed) {
+    redirect("/provider/settings#whatsapp-enquiries");
+  }
+  const session = await billing.startWhatsappAddonCheckout({
+    companyId,
+    successUrl: `${appUrl}/provider/membership`,
+    cancelUrl: `${appUrl}/provider/membership`,
+  });
+  await audit({ actorId: user.id, action: "membership.whatsapp_addon_checkout_started", targetType: "Company", targetId: companyId, metadata: { provider: session.provider } });
+  revalidatePath("/provider/membership");
+  redirect(session.url);
+}
+
+export async function cancelWhatsappAddonAction() {
+  const { user, companyId } = await requireCompany();
+  await billing.cancelWhatsappAddon(companyId, true);
+  await audit({ actorId: user.id, action: "membership.whatsapp_addon_cancelled", targetType: "Company", targetId: companyId });
+  revalidatePath("/provider/membership");
 }
 
 export async function openBillingPortalAction() {
