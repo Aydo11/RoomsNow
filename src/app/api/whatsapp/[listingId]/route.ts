@@ -7,6 +7,7 @@ import { whatsappAccess } from "@/lib/whatsapp-access";
 import { whatsappAdvertUrl } from "@/lib/whatsapp";
 import { absoluteUrl } from "@/lib/seo";
 import { callerIp, rateLimit } from "@/lib/rate-limit";
+import { alertAdminsOfWhatsappClick } from "@/lib/whatsapp-clicks";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ lis
           db.whatsappClick.create({ data: { listingId: listing.id, companyId: listing.companyId, userId: user?.id ?? null, signedIn: Boolean(user) } }),
           db.listing.update({ where: { id: listing.id }, data: { whatsappClicks: { increment: 1 } } }),
         ]);
+        // Let RoomsNow admins know straight away (not awaited: never slow the redirect).
+        void alertAdminsOfWhatsappClick({ listingTitle: listing.title, providerName: listing.company.name, userId: user?.id ?? null });
       }
     } catch (error) {
       // Never block someone from getting in touch because counting failed.
