@@ -51,9 +51,9 @@ export async function updateCompanyAction(_prev: FormState, formData: FormData):
   if (whatsappEnabled) {
     const [limits, current] = await Promise.all([
       planLimits(companyId),
-      db.company.findUnique({ where: { id: companyId }, select: { whatsappAddonStatus: true } }),
+      db.company.findUnique({ where: { id: companyId }, select: { whatsappAddonStatus: true, whatsappGrantActive: true, whatsappGrantExpiresAt: true } }),
     ]);
-    if (!whatsappAccess(limits.membership.tier, current?.whatsappAddonStatus).allowed) {
+    if (!whatsappAccess(limits.membership.tier, current?.whatsappAddonStatus, current).allowed) {
       return {
         ok: false,
         errors: { whatsappNumber: "WhatsApp enquiries are included on Business, or available on Professional with the £20/month add-on. See Membership." },
