@@ -522,7 +522,7 @@ export async function getListing(id: string) {
           id: true, name: true, slug: true, about: true, logoUrl: true,
           verification: true, orgType: true, city: true, status: true,
           responseMinutes: true, responseSampleSize: true,
-          whatsappEnabled: true, whatsappNumber: true,
+          whatsappEnabled: true, whatsappNumber: true, whatsappAddonStatus: true,
           subscription: { include: { membership: true } },
           membershipGrants: {
             where: { revokedAt: null },
