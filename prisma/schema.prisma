@@ -415,6 +415,12 @@ model Company {
   phone                  String?
   whatsappEnabled        Boolean            @default(false)
   whatsappNumber         String?
+  /// Paid WhatsApp add-on for Professional plans (Business includes WhatsApp).
+  /// A separate Stripe subscription so it can be added or cancelled on its own.
+  whatsappAddonStatus            SubscriptionStatus?
+  whatsappAddonSubscriptionId    String?
+  whatsappAddonPeriodEnd         DateTime?
+  whatsappAddonCancelAtPeriodEnd Boolean            @default(false)
   website                String?
   addressLine1           String?
   addressLine2           String?
