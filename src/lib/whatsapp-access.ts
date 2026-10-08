@@ -13,11 +13,21 @@ export const WHATSAPP_ADDON_LABEL = "£20/month";
 const ADDON_LIVE = new Set(["ACTIVE", "TRIALING", "PAST_DUE"]);
 
 export type WhatsappAccess =
-  | { allowed: true; reason: "INCLUDED" | "ADDON" }
+  | { allowed: true; reason: "INCLUDED" | "GRANTED" | "ADDON" }
   | { allowed: false; reason: "NEEDS_ADDON" | "NEEDS_UPGRADE" };
 
-export function whatsappAccess(tier: string, addonStatus: string | null | undefined): WhatsappAccess {
+export type WhatsappReason = WhatsappAccess["reason"];
+
+/** A complimentary WhatsApp grant from a RoomsNow admin, on any plan. */
+export type WhatsappGrant = { whatsappGrantActive: boolean; whatsappGrantExpiresAt: Date | null } | null | undefined;
+
+export function whatsappGrantLive(grant: WhatsappGrant, now = new Date()) {
+  return Boolean(grant?.whatsappGrantActive && (!grant.whatsappGrantExpiresAt || grant.whatsappGrantExpiresAt > now));
+}
+
+export function whatsappAccess(tier: string, addonStatus: string | null | undefined, grant?: WhatsappGrant): WhatsappAccess {
   if (tier === "BUSINESS") return { allowed: true, reason: "INCLUDED" };
+  if (whatsappGrantLive(grant)) return { allowed: true, reason: "GRANTED" };
   if (tier === "PROFESSIONAL") {
     return addonStatus && ADDON_LIVE.has(addonStatus) ? { allowed: true, reason: "ADDON" } : { allowed: false, reason: "NEEDS_ADDON" };
   }
