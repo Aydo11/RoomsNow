@@ -285,6 +285,21 @@ const WHATSAPP_ADDON_PLAN: CataloguePlan = {
   unitAmount: WHATSAPP_ADDON_PRICE,
 };
 
+/**
+ * Makes sure the WhatsApp add-on exists as a product and £20/month price in
+ * Stripe (created on first call, found by lookup key after that), so it shows
+ * in the Stripe dashboard and providers can be charged for it.
+ */
+export async function ensureWhatsappAddonInStripe(): Promise<{ live: boolean; priceId: string | null; testMode: boolean; error: string | null }> {
+  const testMode = (process.env.STRIPE_SECRET_KEY ?? "").startsWith("sk_test");
+  if (!billingIsLive()) return { live: false, priceId: null, testMode, error: null };
+  try {
+    return { live: true, priceId: await cataloguePriceId(stripe(), WHATSAPP_ADDON_PLAN), testMode, error: null };
+  } catch (error) {
+    return { live: true, priceId: null, testMode, error: error instanceof Error ? error.message : "Stripe could not be reached." };
+  }
+}
+
 /** Records the add-on's state. Losing it switches the WhatsApp button off on adverts. */
 export async function applyWhatsappAddon(params: {
   companyId: string;
