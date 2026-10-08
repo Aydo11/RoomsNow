@@ -63,10 +63,10 @@ export async function startWhatsappAddonAction() {
   const appUrl = process.env.APP_URL ?? "http://localhost:3000";
   const [limits, company] = await Promise.all([
     planLimits(companyId),
-    db.company.findUnique({ where: { id: companyId }, select: { whatsappAddonStatus: true } }),
+    db.company.findUnique({ where: { id: companyId }, select: { whatsappAddonStatus: true, whatsappGrantActive: true, whatsappGrantExpiresAt: true } }),
   ]);
   if (limits.membership.tier !== "PROFESSIONAL") throw new Error("The WhatsApp add-on is for Professional plans. Business includes WhatsApp already.");
-  if (whatsappAccess(limits.membership.tier, company?.whatsappAddonStatus).allowed) {
+  if (whatsappAccess(limits.membership.tier, company?.whatsappAddonStatus, company).allowed) {
     redirect("/provider/settings#whatsapp-enquiries");
   }
   const session = await billing.startWhatsappAddonCheckout({
