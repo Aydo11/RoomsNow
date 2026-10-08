@@ -129,7 +129,7 @@ export default async function ListingPage({
   const available = listing.rooms.filter((r) => r.status === "AVAILABLE");
   const canViewMap = hasProviderMapAccess(listing.company);
   // WhatsApp is a Business feature, or Professional with the paid add-on.
-  const whatsappAllowed = whatsappAccess(effectiveProviderTier(listing.company), listing.company.whatsappAddonStatus).allowed;
+  const whatsappAllowed = whatsappAccess(effectiveProviderTier(listing.company), listing.company.whatsappAddonStatus, listing.company).allowed;
   const hasCoordinates = listing.property.latitude != null && listing.property.longitude != null;
   const mapLatitude = listing.property.showExactAddress ? listing.property.latitude : listing.property.latitude == null ? null : Math.round(listing.property.latitude * 1000) / 1000;
   const mapLongitude = listing.property.showExactAddress ? listing.property.longitude : listing.property.longitude == null ? null : Math.round(listing.property.longitude * 1000) / 1000;
@@ -483,8 +483,11 @@ export default async function ListingPage({
             {whatsappAllowed && listing.status === "ACTIVE" && listing.company.status === "ACTIVE" && whatsappAdvertUrl(listing.company.whatsappEnabled, listing.company.whatsappNumber, listing.title, absoluteUrl(`/listings/${listing.id}`)) && (
               <div className="card mb-4 p-4">
                 <a
-                  href={user ? whatsappAdvertUrl(listing.company.whatsappEnabled, listing.company.whatsappNumber, listing.title, absoluteUrl(`/listings/${listing.id}`))! : `/register?type=USER&next=${encodeURIComponent(`/listings/${listing.id}#message`)}`}
-                  {...(user ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  // Goes via /api/whatsapp so the click is counted, then on to
+                  // WhatsApp (signed in) or sign-up (signed out).
+                  href={`/api/whatsapp/${listing.id}`}
+                  rel="nofollow noopener noreferrer"
+                  {...(user ? { target: "_blank" } : {})}
                   className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-[#087f45] px-4 py-3 font-semibold text-white hover:bg-[#066739]"
                 >
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M21 11.5a9 9 0 0 1-13.4 7.9L3 21l1.6-4.6A9 9 0 1 1 21 11.5Z"/><path d="M8 7.5c0 4.2 3 7.2 7.3 7.5l1-2-2.5-1-1 1a7 7 0 0 1-2.8-2.8l1-1-1-2.5-2 .8Z"/></svg>
