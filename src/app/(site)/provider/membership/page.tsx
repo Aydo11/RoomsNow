@@ -28,10 +28,10 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
     db.payment.findMany({ where: { companyId }, orderBy: { createdAt: "desc" }, take: 20 }),
     db.company.findUniqueOrThrow({
       where: { id: companyId },
-      select: { whatsappAddonStatus: true, whatsappAddonPeriodEnd: true, whatsappAddonCancelAtPeriodEnd: true, whatsappEnabled: true },
+      select: { whatsappAddonStatus: true, whatsappAddonPeriodEnd: true, whatsappAddonCancelAtPeriodEnd: true, whatsappEnabled: true, whatsappGrantActive: true, whatsappGrantExpiresAt: true },
     }),
   ]);
-  const whatsapp = whatsappAccess(limits.membership.tier, addon.whatsappAddonStatus);
+  const whatsapp = whatsappAccess(limits.membership.tier, addon.whatsappAddonStatus, addon);
 
   const limit = (value: number) => (value === -1 ? "Unlimited" : value.toString());
 
@@ -120,14 +120,16 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
             <p className="flex flex-wrap items-baseline gap-x-2 text-[17px] font-semibold text-ink">
               WhatsApp enquiries
               <span className="text-[14px] font-normal text-ink-soft">
-                {whatsapp.reason === "INCLUDED" ? "Included in Business" : `${money(WHATSAPP_ADDON_PRICE)} / month on Professional`}
+                {whatsapp.reason === "INCLUDED" ? "Included in Business" : whatsapp.reason === "GRANTED" ? "Complimentary from RoomsNow" : `${money(WHATSAPP_ADDON_PRICE)} / month on Professional`}
               </span>
             </p>
             <p className="mt-1 text-[14px] leading-relaxed text-ink-soft">
               A green WhatsApp button on your adverts, so people can message you straight from their phone. Their message includes the advert title and link.
             </p>
             <p className="mt-1.5 text-[13px] text-ink-soft">
-              {whatsapp.reason === "INCLUDED"
+              {whatsapp.reason === "GRANTED"
+                ? `Free of charge${addon.whatsappGrantExpiresAt ? ` until ${shortDate(addon.whatsappGrantExpiresAt)}` : ""}. ${addon.whatsappEnabled ? "Switched on." : "Add your number in Company profile to switch it on."}`
+                : whatsapp.reason === "INCLUDED"
                 ? addon.whatsappEnabled ? "Switched on." : "Included. Add your number in Company profile to switch it on."
                 : whatsapp.reason === "ADDON"
                   ? addon.whatsappAddonCancelAtPeriodEnd
@@ -144,7 +146,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
                 <button className="btn-primary" disabled={!paymentsEnabled}>Add for {money(WHATSAPP_ADDON_PRICE)}/month</button>
               </form>
             )}
-            {(whatsapp.reason === "INCLUDED" || whatsapp.reason === "ADDON") && (
+            {(whatsapp.reason === "INCLUDED" || whatsapp.reason === "GRANTED" || whatsapp.reason === "ADDON") && (
               <a href="/provider/settings#whatsapp-enquiries" className="btn-secondary">WhatsApp settings</a>
             )}
             {whatsapp.reason === "ADDON" && !addon.whatsappAddonCancelAtPeriodEnd && (
