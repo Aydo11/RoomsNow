@@ -100,7 +100,9 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
       phone: data.phone || null,
       locationLabel: data.locationLabel || null,
       contactMethod: data.contactMethod,
-      emailVerificationRequired: true,
+      // Email confirmation is encouraged, not required: people can use their
+      // account straight away, and the link we send just confirms the address.
+      emailVerificationRequired: false,
       acquisitionSource: data.acquisitionSource || null,
       ...(data.accountType === "REFERRER"
         ? { organisation: data.organisation || null, jobTitle: data.jobTitle || null }
@@ -178,7 +180,10 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   } catch (error) {
     console.error("Registration verification email failed:", error);
   }
-  redirect(`/verify-email?sent=1&email=${encodeURIComponent(user.email)}`);
+  // Signed in straight away; back to where they were (e.g. an advert's
+  // WhatsApp button) if they came from somewhere, otherwise their dashboard.
+  await createSession(user.id, user.role, user.tokenVersion);
+  redirect(safeRedirect(text(formData, "next"), destination));
 }
 
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -236,7 +241,8 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
     return { ok: false, errors: { form: "This account is suspended. Contact support." } };
   }
 
-  if (user.emailVerificationRequired && !user.emailVerified) {
+  // Only team admin invites must confirm their email before signing in.
+  if (user.role === "ADMIN" && user.emailVerificationRequired && !user.emailVerified) {
     return {
       ok: false,
       errors: { form: "Verify your email before signing in. You can request a new verification link below." },
