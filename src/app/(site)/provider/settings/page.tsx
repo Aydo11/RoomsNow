@@ -8,13 +8,15 @@ import { SoundSetting } from "@/components/sound-setting";
 import { AppSettings } from "@/components/app-install";
 import { vapidPublicKey } from "@/lib/web-push";
 import { WeeklySummarySetting } from "@/components/weekly-summary-setting";
+import { planLimits } from "@/lib/billing";
+import { whatsappAccess } from "@/lib/whatsapp-access";
 
 export const metadata = { title: "Company profile" };
 export const dynamic = "force-dynamic";
 
 export default async function ProviderSettingsPage() {
   const { companyId } = await requireCompany();
-  const [nav, company, verification] = await Promise.all([
+  const [nav, company, verification, limits] = await Promise.all([
     providerNav(companyId),
     db.company.findUniqueOrThrow({
       where: { id: companyId },
@@ -24,7 +26,9 @@ export default async function ProviderSettingsPage() {
       where: { companyId },
       orderBy: { createdAt: "desc" },
     }),
+    planLimits(companyId),
   ]);
+  const whatsapp = whatsappAccess(limits.membership.tier, company.whatsappAddonStatus);
 
   const REMINDER_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
   const insuranceExpiresAt = verification?.insuranceExpiresAt;
@@ -44,6 +48,7 @@ export default async function ProviderSettingsPage() {
       active="/provider/settings"
     >
       <CompanyForm
+        whatsappAccess={whatsapp.reason}
         company={{
           name: company.name,
           tradingName: company.tradingName ?? "",
