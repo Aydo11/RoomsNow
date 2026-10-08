@@ -1,3 +1,4 @@
+import { whatsappPlanLine } from "@/lib/whatsapp-access";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { money } from "@/lib/format";
@@ -128,6 +129,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                   : "Included 24-hour boosts"}
               </Feature>
               <Feature enabled={plan.prioritySupport}>Priority support</Feature>
+              <Feature enabled={whatsappPlanLine(plan.tier).enabled}>{whatsappPlanLine(plan.tier).text}</Feature>
             </ul>
 
             <Link
