@@ -7,16 +7,18 @@ import { PlanPicker } from "@/components/plan-picker";
 import { SuccessCelebration } from "@/components/success-celebration";
 import { providerNav } from "../nav";
 import { money, shortDate } from "@/lib/format";
+import { cancelWhatsappAddonAction, startWhatsappAddonAction } from "@/server/actions/billing";
+import { WHATSAPP_ADDON_PRICE, whatsappAccess } from "@/lib/whatsapp-access";
 
 export const metadata = { title: "Membership" };
 export const dynamic = "force-dynamic";
 
-export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ billing?: string }> }) {
+export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ billing?: string; whatsapp?: string }> }) {
   const { companyId } = await requireCompany();
   const query = await searchParams;
   const billingLive = billingIsLive();
   const paymentsEnabled = billingAvailable();
-  const [nav, limits, plans, payments] = await Promise.all([
+  const [nav, limits, plans, payments, addon] = await Promise.all([
     providerNav(companyId),
     planLimits(companyId),
     db.membership.findMany({
@@ -24,7 +26,12 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       orderBy: { priceMonthly: "asc" },
     }),
     db.payment.findMany({ where: { companyId }, orderBy: { createdAt: "desc" }, take: 20 }),
+    db.company.findUniqueOrThrow({
+      where: { id: companyId },
+      select: { whatsappAddonStatus: true, whatsappAddonPeriodEnd: true, whatsappAddonCancelAtPeriodEnd: true, whatsappEnabled: true },
+    }),
   ]);
+  const whatsapp = whatsappAccess(limits.membership.tier, addon.whatsappAddonStatus);
 
   const limit = (value: number) => (value === -1 ? "Unlimited" : value.toString());
 
@@ -94,6 +101,58 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
               priorityPlacement: plan.priorityPlacement,
             }))}
           />
+        </div>
+      </section>
+
+      <section id="whatsapp-addon" className="mt-8 scroll-mt-24">
+        <h2 className="text-[20px]">Add-ons</h2>
+        {query.whatsapp === "complete" && (
+          <div className="mt-3"><FormSuccess message="WhatsApp add-on set up. Add your business WhatsApp number in Company profile to show the button on your adverts." /></div>
+        )}
+        <div className="card mt-3 flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e8f7ef] text-[#087f45]" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.5 8.5 0 0 1-12.8 7.3L3 21l1.7-5.4A8.5 8.5 0 1 1 21 11.5Z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 7.5c0 4 3 7 7 7l1-2-2-1-1 1c-1.5-.5-2.5-1.5-3-3l1-1-1-2-2 1Z" />
+            </svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="flex flex-wrap items-baseline gap-x-2 text-[17px] font-semibold text-ink">
+              WhatsApp enquiries
+              <span className="text-[14px] font-normal text-ink-soft">
+                {whatsapp.reason === "INCLUDED" ? "Included in Business" : `${money(WHATSAPP_ADDON_PRICE)} / month on Professional`}
+              </span>
+            </p>
+            <p className="mt-1 text-[14px] leading-relaxed text-ink-soft">
+              A green WhatsApp button on your adverts, so people can message you straight from their phone. Their message includes the advert title and link.
+            </p>
+            <p className="mt-1.5 text-[13px] text-ink-soft">
+              {whatsapp.reason === "INCLUDED"
+                ? addon.whatsappEnabled ? "Switched on." : "Included. Add your number in Company profile to switch it on."
+                : whatsapp.reason === "ADDON"
+                  ? addon.whatsappAddonCancelAtPeriodEnd
+                    ? `Cancelled. It stays on until ${addon.whatsappAddonPeriodEnd ? shortDate(addon.whatsappAddonPeriodEnd) : "the end of this billing period"}.`
+                    : `Active${addon.whatsappAddonPeriodEnd ? `, renews ${shortDate(addon.whatsappAddonPeriodEnd)}` : ""}.`
+                  : whatsapp.reason === "NEEDS_ADDON"
+                    ? "Not added yet."
+                    : "Not available on Free. Choose Professional and add it, or choose Business where it's included."}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            {whatsapp.reason === "NEEDS_ADDON" && (
+              <form action={startWhatsappAddonAction}>
+                <button className="btn-primary" disabled={!paymentsEnabled}>Add for {money(WHATSAPP_ADDON_PRICE)}/month</button>
+              </form>
+            )}
+            {(whatsapp.reason === "INCLUDED" || whatsapp.reason === "ADDON") && (
+              <a href="/provider/settings#whatsapp-enquiries" className="btn-secondary">WhatsApp settings</a>
+            )}
+            {whatsapp.reason === "ADDON" && !addon.whatsappAddonCancelAtPeriodEnd && (
+              <form action={cancelWhatsappAddonAction}>
+                <button className="btn-ghost">Cancel add-on</button>
+              </form>
+            )}
+          </div>
         </div>
       </section>
 
