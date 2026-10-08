@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { activateSponsorship, applyReferrerSubscriptionChange, applySubscriptionChange, grantBoostPack, stripe } from "@/lib/billing";
+import { activateSponsorship, applyReferrerSubscriptionChange, applySubscriptionChange, applyWhatsappAddon, billing, grantBoostPack, stripe } from "@/lib/billing";
 import { db } from "@/lib/db";
 import { notify, notifyCompany } from "@/lib/notify";
 import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
@@ -142,6 +142,22 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
   const companyId = session.metadata?.companyId ?? session.client_reference_id;
   if (!companyId) return;
 
+  if (kind === "whatsapp_addon") {
+    const subscriptionId = stringId(session.subscription);
+    if (!subscriptionId) return;
+    const remote = await stripe().subscriptions.retrieve(subscriptionId);
+    await applyWhatsappAddon({
+      companyId,
+      status: stripeStatus(remote.status),
+      subscriptionId: remote.id,
+      periodEnd: periodEnd(remote),
+      cancelAtPeriodEnd: remote.cancel_at_period_end,
+    });
+    await notifyCompany(companyId, { type: "MEMBERSHIP", title: "WhatsApp add-on active", body: "Add your business WhatsApp number to show the button on your adverts.", href: "/provider/settings#whatsapp-enquiries" });
+    await audit({ action: "billing.whatsapp_addon_activated", targetType: "Company", targetId: companyId, metadata: { subscriptionId: remote.id } });
+    return;
+  }
+
   if (kind === "membership") {
     const tier = session.metadata?.tier as MembershipTier | undefined;
     const subscriptionId = stringId(session.subscription);
@@ -161,6 +177,13 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
     });
     if (existing?.externalSubscriptionId && existing.externalSubscriptionId !== remote.id) {
       await stripe().subscriptions.cancel(existing.externalSubscriptionId).catch((error) => console.error("Old subscription cancellation failed:", error));
+    }
+    // Business includes WhatsApp, so stop charging for the separate add-on.
+    if (tier === "BUSINESS") {
+      const company = await db.company.findUnique({ where: { id: companyId }, select: { whatsappAddonStatus: true } });
+      if (company?.whatsappAddonStatus && company.whatsappAddonStatus !== "CANCELLED") {
+        await billing.cancelWhatsappAddon(companyId, false).catch((error) => console.error("WhatsApp add-on cancellation failed:", error));
+      }
     }
     await notifyCompany(companyId, { type: "MEMBERSHIP", title: "Membership upgraded", body: `Your ${tier.toLowerCase()} plan is now active.`, href: "/provider/membership" });
     await audit({ action: "billing.membership_activated", targetType: "Company", targetId: companyId, metadata: { tier, subscriptionId: remote.id } });
@@ -201,6 +224,21 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 async function subscriptionChanged(subscription: Stripe.Subscription) {
+  if (subscription.metadata.kind === "whatsapp_addon") {
+    const companyId = subscription.metadata.companyId;
+    if (!companyId) return;
+    const company = await db.company.findUnique({ where: { id: companyId }, select: { whatsappAddonSubscriptionId: true } });
+    if (company?.whatsappAddonSubscriptionId && company.whatsappAddonSubscriptionId !== subscription.id) return;
+    await applyWhatsappAddon({
+      companyId,
+      status: stripeStatus(subscription.status),
+      subscriptionId: subscription.id,
+      periodEnd: periodEnd(subscription),
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    });
+    return;
+  }
+
   if (subscription.metadata.kind === "service_plan") {
     const businessId = subscription.metadata.businessId;
     const serviceTier = subscription.metadata.tier;
@@ -263,6 +301,21 @@ async function subscriptionChanged(subscription: Stripe.Subscription) {
 async function invoicePaid(invoice: Stripe.Invoice) {
   const customerId = stringId(invoice.customer);
   if (!customerId || !invoice.amount_paid) return;
+
+  // The WhatsApp add-on is billed on its own subscription; label it clearly.
+  const raw = invoice as unknown as { subscription?: string | { id: string } | null; parent?: { subscription_details?: { subscription?: string | { id: string } | null } | null } | null };
+  const invoiceSubscription = stringId(raw.subscription ?? raw.parent?.subscription_details?.subscription ?? null);
+  if (invoiceSubscription) {
+    const addonCompany = await db.company.findFirst({ where: { whatsappAddonSubscriptionId: invoiceSubscription }, select: { id: true } });
+    if (addonCompany) {
+      await db.payment.upsert({
+        where: { externalPaymentId: `invoice:${invoice.id}` },
+        create: { companyId: addonCompany.id, kind: "SUBSCRIPTION", amount: invoice.amount_paid, currency: invoice.currency?.toUpperCase() ?? "GBP", status: "PAID", description: "WhatsApp enquiries add-on", externalPaymentId: `invoice:${invoice.id}`, invoiceUrl: invoice.hosted_invoice_url ?? null },
+        update: { status: "PAID", invoiceUrl: invoice.hosted_invoice_url ?? null },
+      });
+      return;
+    }
+  }
 
   const companySub = await db.subscription.findFirst({ where: { externalCustomerId: customerId }, include: { membership: { select: { name: true } } } });
   if (companySub) {
