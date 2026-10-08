@@ -421,6 +421,10 @@ model Company {
   whatsappAddonSubscriptionId    String?
   whatsappAddonPeriodEnd         DateTime?
   whatsappAddonCancelAtPeriodEnd Boolean            @default(false)
+  /// Complimentary WhatsApp access given by a RoomsNow admin, on any plan.
+  /// No expiry date means it lasts until an admin removes it.
+  whatsappGrantActive            Boolean            @default(false)
+  whatsappGrantExpiresAt         DateTime?
   website                String?
   addressLine1           String?
   addressLine2           String?
@@ -658,6 +662,8 @@ model Listing {
   boostedClicks        Int       @default(0)
   views                Int       @default(0)
   enquiries            Int       @default(0)
+  /// Clicks on the advert's WhatsApp button (signed in or not).
+  whatsappClicks       Int       @default(0)
   publishedAt          DateTime?
   rejectionNote        String?
   createdAt            DateTime  @default(now())
@@ -2113,4 +2119,19 @@ model SupportPost {
 
   @@index([organisationId])
   @@index([startsAt])
+}
+
+/// One click on an advert's WhatsApp button. Signed-out clicks go to sign-up
+/// first, so they are recorded too (userId null, signedIn false).
+model WhatsappClick {
+  id        String   @id @default(cuid())
+  listingId String
+  companyId String
+  userId    String?
+  signedIn  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([companyId, createdAt])
+  @@index([listingId, createdAt])
 }
