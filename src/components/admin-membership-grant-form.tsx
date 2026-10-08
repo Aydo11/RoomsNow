@@ -31,7 +31,7 @@ export function AdminMembershipGrantForm({
 
   return (
     <details className="min-w-[20rem] text-left">
-      <summary className="cursor-pointer text-[14px] font-medium text-pine-dark">Manage access</summary>
+      <summary className="cursor-pointer text-[14px] font-medium text-pine-dark">Membership (1, 3, 6, 12 months…)</summary>
       <form action={action} className="mt-3 space-y-3 rounded-[12px] border border-line bg-surface-soft p-4">
         <input type="hidden" name="companyId" value={companyId} />
         <FormError message={state.errors?.form} />
