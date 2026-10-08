@@ -452,6 +452,87 @@ export async function manageProviderMembershipGrantAction(
   return { ok: true, message: `${parts.join(" and ")} granted to ${company.name}.` };
 }
 
+const whatsappGrantSchema = z.object({
+  companyId: z.string().cuid(),
+  intent: z.enum(["GRANT", "REVOKE"]),
+  duration: z.enum(["1", "2", "3", "6", "12", "NONE", "CUSTOM"]).optional(),
+  expiresOn: z.string().optional(),
+  reason: z.string().trim().min(5, "Add a short reason for the audit record.").max(500),
+});
+
+/**
+ * Give one provider WhatsApp enquiries free of charge, on any plan, for a set
+ * time or until removed. Separate from membership grants and from the paid
+ * add-on, and never touches Stripe.
+ */
+export async function manageWhatsappGrantAction(
+  _state: AdminMembershipGrantState,
+  formData: FormData,
+): Promise<AdminMembershipGrantState> {
+  const admin = await requireAdmin();
+  const parsed = whatsappGrantSchema.safeParse({
+    companyId: formData.get("companyId"),
+    intent: formData.get("intent"),
+    duration: formData.get("duration") || undefined,
+    expiresOn: formData.get("expiresOn") || undefined,
+    reason: formData.get("reason"),
+  });
+  if (!parsed.success) {
+    const fields = parsed.error.flatten().fieldErrors;
+    return {
+      ok: false,
+      errors: Object.fromEntries(
+        Object.entries(fields).flatMap(([key, messages]) => messages?.[0] ? [[key, messages[0]]] : []),
+      ),
+    };
+  }
+  const { companyId, intent, duration, expiresOn, reason } = parsed.data;
+  const company = await db.company.findUnique({ where: { id: companyId }, select: { name: true, whatsappGrantActive: true } });
+  if (!company) return { ok: false, errors: { form: "Provider not found." } };
+
+  if (intent === "REVOKE") {
+    if (!company.whatsappGrantActive) return { ok: false, errors: { form: "This provider has no WhatsApp grant." } };
+    await db.company.update({ where: { id: companyId }, data: { whatsappGrantActive: false, whatsappGrantExpiresAt: null } });
+    await audit({ actorId: admin.id, action: "admin.whatsapp_grant_revoked", targetType: "Company", targetId: companyId, metadata: { reason } });
+    revalidateMembershipPaths();
+    revalidatePath("/provider/settings");
+    return { ok: true, message: `WhatsApp access removed from ${company.name}.` };
+  }
+
+  let expiresAt: Date | null = null;
+  if (duration === "CUSTOM") {
+    expiresAt = expiresOn ? new Date(`${expiresOn}T23:59:59.999Z`) : null;
+    if (!expiresAt || Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+      return { ok: false, errors: { expiresOn: "Choose a future expiry date." } };
+    }
+  } else {
+    const months = GRANT_DURATION_MONTHS[duration ?? "3"];
+    if (months) {
+      expiresAt = new Date();
+      expiresAt.setUTCMonth(expiresAt.getUTCMonth() + months);
+    }
+  }
+
+  await db.company.update({ where: { id: companyId }, data: { whatsappGrantActive: true, whatsappGrantExpiresAt: expiresAt } });
+  await notifyCompany(companyId, {
+    type: "MEMBERSHIP",
+    title: "WhatsApp enquiries switched on for you",
+    body: `${expiresAt ? `Free until ${expiresAt.toLocaleDateString("en-GB")}.` : "Free until RoomsNow ends it."} Add your business WhatsApp number in Company profile to show the button on your adverts.`,
+    href: "/provider/settings#whatsapp-enquiries",
+    email: true,
+  });
+  await audit({
+    actorId: admin.id,
+    action: "admin.whatsapp_grant_created",
+    targetType: "Company",
+    targetId: companyId,
+    metadata: { expiresAt: expiresAt?.toISOString() ?? null, reason },
+  });
+  revalidateMembershipPaths();
+  revalidatePath("/provider/settings");
+  return { ok: true, message: `WhatsApp granted to ${company.name}${expiresAt ? ` until ${expiresAt.toLocaleDateString("en-GB")}` : " with no expiry"}.` };
+}
+
 const userMembershipGrantSchema = z.object({
   userId: z.string().cuid(),
   intent: z.enum(["GRANT", "REVOKE"]),
