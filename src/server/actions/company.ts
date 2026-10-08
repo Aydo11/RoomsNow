@@ -9,6 +9,8 @@ import { notify } from "@/lib/notify";
 import { companySchema, fieldErrors, socialLinksSchema, type FormState } from "@/lib/validation";
 import { bool, list, socialLinks, text } from "../form";
 import { whatsappNumber } from "@/lib/whatsapp";
+import { whatsappAccess } from "@/lib/whatsapp-access";
+import { planLimits } from "@/lib/billing";
 import {
   OPTIONAL_VERIFICATION_DOCUMENTS,
   REQUIRED_VERIFICATION_DOCUMENTS,
@@ -45,6 +47,18 @@ export async function updateCompanyAction(_prev: FormState, formData: FormData):
   const businessWhatsapp = rawWhatsapp ? whatsappNumber(rawWhatsapp) : null;
   if ((rawWhatsapp && !businessWhatsapp) || (whatsappEnabled && !businessWhatsapp)) {
     return { ok: false, errors: { whatsappNumber: "Enter a UK number such as 07700 900123, or an international number starting with + and the country code." } };
+  }
+  if (whatsappEnabled) {
+    const [limits, current] = await Promise.all([
+      planLimits(companyId),
+      db.company.findUnique({ where: { id: companyId }, select: { whatsappAddonStatus: true } }),
+    ]);
+    if (!whatsappAccess(limits.membership.tier, current?.whatsappAddonStatus).allowed) {
+      return {
+        ok: false,
+        errors: { whatsappNumber: "WhatsApp enquiries are included on Business, or available on Professional with the £20/month add-on. See Membership." },
+      };
+    }
   }
 
   const parsedSocial = socialLinksSchema.safeParse(socialLinks(formData));
