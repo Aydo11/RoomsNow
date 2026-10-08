@@ -172,10 +172,10 @@ export function CompanyForm({
     socialLinks: SocialLink[];
   };
   /** INCLUDED / ADDON can use WhatsApp; NEEDS_ADDON (Professional) or NEEDS_UPGRADE (Free) cannot yet. */
-  whatsappAccess?: "INCLUDED" | "ADDON" | "NEEDS_ADDON" | "NEEDS_UPGRADE";
+  whatsappAccess?: "INCLUDED" | "GRANTED" | "ADDON" | "NEEDS_ADDON" | "NEEDS_UPGRADE";
 }) {
   const [state, action] = useActionState(updateCompanyAction, { ok: false });
-  const whatsappAllowed = whatsappAccess === "INCLUDED" || whatsappAccess === "ADDON";
+  const whatsappAllowed = whatsappAccess === "INCLUDED" || whatsappAccess === "GRANTED" || whatsappAccess === "ADDON";
   const [whatsappEnabled, setWhatsappEnabled] = useState(company.whatsappEnabled && whatsappAllowed);
   const [businessWhatsapp, setBusinessWhatsapp] = useState(company.whatsappNumber);
   return (
@@ -246,7 +246,7 @@ export function CompanyForm({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-[18px]">WhatsApp enquiries</h2>
           <span className="chip">
-            {whatsappAccess === "INCLUDED" ? "Included in Business" : whatsappAccess === "ADDON" ? "Add-on active" : whatsappAccess === "NEEDS_ADDON" ? "£20/month add-on" : "Business or Professional + add-on"}
+            {whatsappAccess === "INCLUDED" ? "Included in Business" : whatsappAccess === "GRANTED" ? "Complimentary" : whatsappAccess === "ADDON" ? "Add-on active" : whatsappAccess === "NEEDS_ADDON" ? "£20/month add-on" : "Business or Professional + add-on"}
           </span>
         </div>
         {!whatsappAllowed && (
