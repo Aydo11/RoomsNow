@@ -15,6 +15,7 @@ import { companyVoidCost } from "@/server/void-cost";
 import { providerIsPaid } from "@/server/service-marketplace";
 import { SetupChecklist, type SetupStep } from "@/components/setup-checklist";
 import { setupChecklistHidden } from "@/lib/setup-checklist";
+import { whatsappAccess } from "@/lib/whatsapp-access";
 
 export const metadata = { title: "Provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -155,7 +156,7 @@ export default async function ProviderDashboard() {
         </Link>
       }
     >
-      {!company.whatsappEnabled && (
+      {!company.whatsappEnabled && limits.membership.tier !== "FREE" && (
         <section className="card mb-5 flex flex-col gap-4 border-pine/30 bg-pine-light/40 p-5 sm:flex-row sm:items-center" aria-labelledby="whatsapp-announcement-heading">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-pine-light text-pine-dark" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
@@ -164,12 +165,19 @@ export default async function ProviderDashboard() {
             </svg>
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-semibold uppercase tracking-wide text-pine-dark">New contact option · optional</p>
+            <p className="text-[12px] font-semibold uppercase tracking-wide text-pine-dark">
+              {whatsappAccess(limits.membership.tier, company.whatsappAddonStatus).allowed ? "Included in your plan · optional" : "Professional add-on · £20/month"}
+            </p>
             <h2 id="whatsapp-announcement-heading" className="mt-1 text-[20px]">Get accommodation enquiries on WhatsApp</h2>
             <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">Add your business number to give people a WhatsApp button on your live adverts. Their message includes the advert title and link, so you know which room they are asking about.</p>
             <p className="mt-2 text-[12px] leading-relaxed text-ink-soft">Your number will be public. Chats take place outside RoomsNow and are not recorded in your RoomsNow inbox. You can switch it off at any time.</p>
           </div>
-          <Link href="/provider/settings#whatsapp-enquiries" className="btn-primary shrink-0 text-center">Set up WhatsApp</Link>
+          <Link
+            href={whatsappAccess(limits.membership.tier, company.whatsappAddonStatus).allowed ? "/provider/settings#whatsapp-enquiries" : "/provider/membership#whatsapp-addon"}
+            className="btn-primary shrink-0 text-center"
+          >
+            {whatsappAccess(limits.membership.tier, company.whatsappAddonStatus).allowed ? "Set up WhatsApp" : "Add WhatsApp"}
+          </Link>
         </section>
       )}
 
