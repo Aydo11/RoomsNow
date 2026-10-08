@@ -5,7 +5,9 @@ import { adminNav } from "../nav";
 import { money, shortDate } from "@/lib/format";
 import { AdminMembershipGrantForm } from "@/components/admin-membership-grant-form";
 import { AdminUserMembershipGrantForm } from "@/components/admin-user-membership-grant-form";
-import { ensureReferrerMembershipCatalogue, ensureProviderMembershipCatalogue } from "@/lib/billing";
+import { ensureReferrerMembershipCatalogue, ensureProviderMembershipCatalogue, ensureWhatsappAddonInStripe } from "@/lib/billing";
+import { AdminWhatsappGrantForm } from "@/components/admin-whatsapp-grant-form";
+import { WHATSAPP_ADDON_PRICE, whatsappGrantLive } from "@/lib/whatsapp-access";
 
 export const metadata = { title: "Memberships" };
 export const dynamic = "force-dynamic";
@@ -21,7 +23,7 @@ export default async function AdminMembershipsPage({
   const now = new Date();
   await ensureReferrerMembershipCatalogue();
   await ensureProviderMembershipCatalogue();
-  const [nav, plans, subscriptions, referrerSubscriptions, providers, referrers, payments, revenue] = await Promise.all([
+  const [nav, plans, subscriptions, referrerSubscriptions, providers, referrers, payments, revenue, whatsappStripe, addonSubscribers] = await Promise.all([
     adminNav(),
     db.membership.findMany({ where: { audience: "PROVIDER" }, orderBy: { priceMonthly: "asc" } }),
     db.subscription.findMany({
@@ -49,6 +51,9 @@ export default async function AdminMembershipsPage({
       select: {
         id: true,
         name: true,
+        whatsappGrantActive: true,
+        whatsappGrantExpiresAt: true,
+        whatsappAddonStatus: true,
         subscription: {
           select: { status: true, membership: { select: { name: true, tier: true } } },
         },
@@ -101,6 +106,8 @@ export default async function AdminMembershipsPage({
     }),
     db.payment.findMany({ orderBy: { createdAt: "desc" }, take: 50, include: { company: { select: { name: true } } } }),
     db.payment.aggregate({ where: { status: "PAID" }, _sum: { amount: true } }),
+    ensureWhatsappAddonInStripe(),
+    db.company.count({ where: { whatsappAddonStatus: { in: ["ACTIVE", "TRIALING", "PAST_DUE"] } } }),
   ]);
 
   return (
@@ -134,8 +141,14 @@ export default async function AdminMembershipsPage({
           <button className="btn-secondary" type="submit">Search</button>
         </form>
         <div className="mt-3">
-          <DataTable head={["Provider", "Paid plan", "Admin grant", ""]}>
+          <DataTable head={["Provider", "Paid plan", "Admin grant", "WhatsApp", ""]}>
             {providers.map((provider) => {
+              const whatsappGranted = whatsappGrantLive(provider);
+              const whatsappLabel = whatsappGranted
+                ? `Granted${provider.whatsappGrantExpiresAt ? ` · ends ${shortDate(provider.whatsappGrantExpiresAt)}` : " · no expiry"}`
+                : provider.whatsappAddonStatus && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(provider.whatsappAddonStatus)
+                  ? "Paid add-on"
+                  : "—";
               const paid = provider.subscription && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(provider.subscription.status)
                 ? provider.subscription.membership.name
                 : "Free";
@@ -148,7 +161,8 @@ export default async function AdminMembershipsPage({
                   <td className="px-4 py-3 text-ink-soft">
                     {grant ? `${grant.membership.name}${grant.expiresAt ? ` · ends ${shortDate(grant.expiresAt)}` : " · no expiry"}` : "—"}
                   </td>
-                  <td className="px-4 py-3 align-top">
+                  <td className="px-4 py-3 text-ink-soft">{whatsappLabel}</td>
+                  <td className="px-4 py-3 align-top space-y-2">
                     <AdminMembershipGrantForm
                       companyId={provider.id}
                       currentGrant={grant ? {
@@ -157,11 +171,35 @@ export default async function AdminMembershipsPage({
                         expiresOn,
                       } : null}
                     />
+                    <AdminWhatsappGrantForm
+                      companyId={provider.id}
+                      current={{
+                        active: whatsappGranted,
+                        expiresOn: whatsappGranted && provider.whatsappGrantExpiresAt ? provider.whatsappGrantExpiresAt.toISOString().slice(0, 10) : null,
+                      }}
+                    />
                   </td>
                 </tr>
               );
             })}
           </DataTable>
+        </div>
+      </section>
+
+      <section className="mt-8" id="whatsapp-addon">
+        <h2 className="text-[20px]">WhatsApp add-on in Stripe</h2>
+        <div className="card mt-3 p-5 text-[14px] leading-relaxed">
+          <p>
+            <span className="font-semibold text-ink">RoomsNow WhatsApp enquiries add-on</span> · {money(WHATSAPP_ADDON_PRICE)} / month · paid by Professional providers from Membership → Add-ons. Business includes it.
+          </p>
+          <p className="mt-2 text-ink-soft">
+            {!whatsappStripe.live
+              ? "Stripe isn't switched on for this site, so the add-on can't be charged yet."
+              : whatsappStripe.priceId
+                ? <>Set up in Stripe{whatsappStripe.testMode ? " (test mode)" : ""}. <a className="font-semibold text-pine-dark underline" href={`https://dashboard.stripe.com/${whatsappStripe.testMode ? "test/" : ""}prices/${whatsappStripe.priceId}`} target="_blank" rel="noopener noreferrer">View the price in Stripe</a></>
+                : `Stripe couldn't set up the add-on: ${whatsappStripe.error}`}
+          </p>
+          <p className="mt-2 text-ink-soft">{addonSubscribers} provider{addonSubscribers === 1 ? "" : "s"} paying for it now.</p>
         </div>
       </section>
 
