@@ -31,3 +31,13 @@ test("effective tier takes the higher of a paid plan and a live grant", () => {
     "FREE",
   );
 });
+
+test("an admin WhatsApp grant works on any plan until it expires", () => {
+  const future = new Date(Date.now() + 86_400_000);
+  const past = new Date(Date.now() - 1000);
+  assert.deepEqual(whatsappAccess("FREE", null, { whatsappGrantActive: true, whatsappGrantExpiresAt: null }), { allowed: true, reason: "GRANTED" });
+  assert.deepEqual(whatsappAccess("PROFESSIONAL", null, { whatsappGrantActive: true, whatsappGrantExpiresAt: future }), { allowed: true, reason: "GRANTED" });
+  assert.deepEqual(whatsappAccess("FREE", null, { whatsappGrantActive: true, whatsappGrantExpiresAt: past }), { allowed: false, reason: "NEEDS_UPGRADE" });
+  assert.deepEqual(whatsappAccess("FREE", null, { whatsappGrantActive: false, whatsappGrantExpiresAt: null }), { allowed: false, reason: "NEEDS_UPGRADE" });
+  assert.deepEqual(whatsappAccess("BUSINESS", null, { whatsappGrantActive: true, whatsappGrantExpiresAt: null }), { allowed: true, reason: "INCLUDED" });
+});
