@@ -28,7 +28,7 @@ export default async function ProviderSettingsPage() {
     }),
     planLimits(companyId),
   ]);
-  const whatsapp = whatsappAccess(limits.membership.tier, company.whatsappAddonStatus);
+  const whatsapp = whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company);
 
   const REMINDER_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
   const insuranceExpiresAt = verification?.insuranceExpiresAt;
