@@ -12,6 +12,7 @@ import { highestProviderMembership, highestReferrerMembership } from "./membersh
 import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 import { teamFor } from "@/lib/referral-team";
 import { cataloguePriceId, type CataloguePlan } from "./stripe-catalogue";
+import { WHATSAPP_ADDON_PRICE } from "./whatsapp-access";
 
 export type CheckoutRequest = {
   companyId: string;
@@ -54,6 +55,9 @@ interface BillingDriver {
   startReferrerCheckout(req: ReferrerCheckoutRequest): Promise<CheckoutSession>;
   cancelReferrer(userId: string, atPeriodEnd: boolean): Promise<void>;
   referrerBillingPortalUrl(userId: string, returnUrl: string): Promise<string | null>;
+  /** The £20/month WhatsApp add-on for Professional plans: its own subscription. */
+  startWhatsappAddonCheckout(req: { companyId: string; successUrl: string; cancelUrl: string }): Promise<CheckoutSession>;
+  cancelWhatsappAddon(companyId: string, atPeriodEnd: boolean): Promise<void>;
 }
 
 const mockDriver: BillingDriver = {
@@ -82,6 +86,13 @@ const mockDriver: BillingDriver = {
     await db.referrerSubscription.update({ where: { userId }, data: atPeriodEnd ? { cancelAtPeriodEnd: true } : { status: "CANCELLED", cancelAtPeriodEnd: true } });
   },
   async referrerBillingPortalUrl() { return null; },
+  async startWhatsappAddonCheckout({ companyId, successUrl }) {
+    await applyWhatsappAddon({ companyId, status: "ACTIVE", subscriptionId: `mock-whatsapp-${Date.now()}`, periodEnd: null, cancelAtPeriodEnd: false });
+    return { url: `${successUrl}${successUrl.includes("?") ? "&" : "?"}whatsapp=complete`, externalId: null, provider: "mock" };
+  },
+  async cancelWhatsappAddon(companyId, atPeriodEnd) {
+    await db.company.update({ where: { id: companyId }, data: atPeriodEnd ? { whatsappAddonCancelAtPeriodEnd: true } : { whatsappAddonStatus: "CANCELLED", whatsappAddonCancelAtPeriodEnd: true } });
+  },
 };
 
 const disabledDriver: BillingDriver = {
@@ -94,6 +105,8 @@ const disabledDriver: BillingDriver = {
   async startReferrerCheckout() { throw new Error("Payments are not configured yet."); },
   async cancelReferrer() { throw new Error("Payments are not configured yet."); },
   async referrerBillingPortalUrl() { return null; },
+  async startWhatsappAddonCheckout() { throw new Error("Payments are not configured yet."); },
+  async cancelWhatsappAddon() { throw new Error("Payments are not configured yet."); },
 };
 
 let stripeClient: Stripe | null = null;
@@ -237,7 +250,59 @@ const stripeDriver: BillingDriver = {
     const session = await stripe().billingPortal.sessions.create({ customer, return_url: returnUrl });
     return session.url;
   },
+  async startWhatsappAddonCheckout({ companyId, successUrl, cancelUrl }) {
+    const price = await cataloguePriceId(stripe(), WHATSAPP_ADDON_PLAN);
+    const customer = await stripeCustomer(companyId);
+    const session = await stripe().checkout.sessions.create({
+      mode: "subscription",
+      customer,
+      line_items: [{ price, quantity: 1 }],
+      success_url: `${successUrl}${successUrl.includes("?") ? "&" : "?"}whatsapp=complete&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${cancelUrl}${cancelUrl.includes("?") ? "&" : "?"}whatsapp=cancelled`,
+      allow_promotion_codes: true,
+      client_reference_id: companyId,
+      metadata: { kind: "whatsapp_addon", companyId },
+      subscription_data: { metadata: { kind: "whatsapp_addon", companyId } },
+    });
+    if (!session.url) throw new Error("Stripe did not return a checkout page.");
+    return { url: session.url, externalId: session.id, provider: "stripe" };
+  },
+  async cancelWhatsappAddon(companyId, atPeriodEnd) {
+    const company = await db.company.findUnique({ where: { id: companyId }, select: { whatsappAddonSubscriptionId: true } });
+    const id = company?.whatsappAddonSubscriptionId;
+    if (id && !id.startsWith("mock-")) {
+      if (atPeriodEnd) await stripe().subscriptions.update(id, { cancel_at_period_end: true });
+      else await stripe().subscriptions.cancel(id);
+    }
+    await db.company.update({ where: { id: companyId }, data: atPeriodEnd ? { whatsappAddonCancelAtPeriodEnd: true } : { whatsappAddonStatus: "CANCELLED", whatsappAddonCancelAtPeriodEnd: true } });
+  },
 };
+
+const WHATSAPP_ADDON_PLAN: CataloguePlan = {
+  key: "provider_whatsapp_addon",
+  name: "RoomsNow WhatsApp enquiries add-on",
+  description: "WhatsApp enquiry button on your adverts, for Professional plans. Billed monthly.",
+  unitAmount: WHATSAPP_ADDON_PRICE,
+};
+
+/** Records the add-on's state. Losing it switches the WhatsApp button off on adverts. */
+export async function applyWhatsappAddon(params: {
+  companyId: string;
+  status: SubscriptionStatus;
+  subscriptionId: string;
+  periodEnd: Date | null | undefined;
+  cancelAtPeriodEnd: boolean;
+}) {
+  await db.company.update({
+    where: { id: params.companyId },
+    data: {
+      whatsappAddonStatus: params.status,
+      whatsappAddonSubscriptionId: params.subscriptionId,
+      whatsappAddonPeriodEnd: params.periodEnd ?? null,
+      whatsappAddonCancelAtPeriodEnd: params.cancelAtPeriodEnd,
+    },
+  });
+}
 
 const mockAllowed = process.env.NODE_ENV !== "production" || process.env.ALLOW_MOCK_BILLING === "true";
 export const billing: BillingDriver = process.env.BILLING_DRIVER === "stripe" ? stripeDriver : mockAllowed ? mockDriver : disabledDriver;
