@@ -270,8 +270,8 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
                 <input id="maxPrice" name="maxPrice" inputMode="decimal" defaultValue={params.maxPrice ?? ""} className="field" />
               </div>
             </div>
-            <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" name="verified" value="1" defaultChecked={filters.verifiedOnly} className="h-4 w-4 rounded border-line-strong text-pine" /> Verified only</label>
-            <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" name="emergency" value="1" defaultChecked={filters.emergency} className="h-4 w-4 rounded border-line-strong text-pine" /> Emergency or same day</label>
+            <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" name="verified" value="1" defaultChecked={filters.verifiedOnly} className="h-4 w-4 rounded-sm border-line-strong text-pine" /> Verified only</label>
+            <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" name="emergency" value="1" defaultChecked={filters.emergency} className="h-4 w-4 rounded-sm border-line-strong text-pine" /> Emergency or same day</label>
             </div>
           </details>
           <div className="flex gap-2">

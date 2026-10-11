@@ -67,7 +67,7 @@ export function ReferralTrendChart({ points }: { points: TrendPoint[] }) {
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
               onMouseLeave={() => setActive(null)}
-              className="cursor-default outline-none"
+              className="cursor-default outline-hidden"
             >
               <rect x={pad.left + slot * i} y={pad.top} width={slot} height={innerH} fill={isActive ? "#EDF2F7" : "transparent"} />
               {madeH > 0 && <path d={roundedTop(madeX, y(point.made), half, madeH, 3)} fill="#1666AA" />}

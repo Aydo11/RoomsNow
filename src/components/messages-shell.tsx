@@ -40,7 +40,7 @@ export function MessagesShell({
         >
           {list}
         </aside>
-        <main className={clsx("flex h-[calc(100dvh-4rem)] min-h-[26rem] flex-col sm:h-[calc(100dvh-9rem)] sm:min-h-[34rem] lg:h-[75vh] lg:min-h-[540px]", onIndex ? "hidden lg:flex" : "flex")}>
+        <main className={clsx("flex h-[calc(100dvh-4rem)] min-h-104 flex-col sm:h-[calc(100dvh-9rem)] sm:min-h-136 lg:h-[75vh] lg:min-h-[540px]", onIndex ? "hidden lg:flex" : "flex")}>
           {children}
         </main>
       </div>

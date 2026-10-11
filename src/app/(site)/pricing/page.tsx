@@ -208,16 +208,16 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
 
       <section id="boosts" className="mt-12 overflow-hidden rounded-card border border-pine/25 bg-white shadow-[0_1px_2px_rgba(21,42,58,.03)]">
         <div className="bg-pine p-6 text-white sm:p-8">
-          <span className="text-[12px] font-bold uppercase tracking-[0.1em] !text-white/75">Short visibility push</span>
-          <h2 className="mt-2 text-[28px] font-bold !text-white">24-hour advert boosts</h2>
-          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed !text-white/85">
+          <span className="text-[12px] font-bold uppercase tracking-widest text-white/75!">Short visibility push</span>
+          <h2 className="mt-2 text-[28px] font-bold text-white!">24-hour advert boosts</h2>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-white/85!">
             A boosted advert leads for its first three hours, then rotates hourly with other active boosts. Every boost displays a real countdown and ends automatically after 24 hours.
           </p>
         </div>
         <div className="p-6 sm:p-8">
           <div className="grid gap-4 sm:grid-cols-3">
             {Object.entries(BOOST_PACKAGES).map(([key, pack]) => (
-              <div key={key} className="rounded-[14px] border border-line p-5">
+              <div key={key} className="rounded-card border border-line p-5">
                 <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-pine-dark">{pack.shortLabel}</span>
                 <h3 className="mt-1 text-[20px] font-bold">{pack.label}</h3>
                 <p className="mt-3 font-display text-[30px]">{money(pack.amount)}</p>

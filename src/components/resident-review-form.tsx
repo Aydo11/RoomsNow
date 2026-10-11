@@ -44,7 +44,7 @@ export function ResidentReviewForm({ kind, id, existing }: { kind: "request" | "
               onClick={() => setRating(value)}
               onMouseEnter={() => setHover(value)}
               onMouseLeave={() => setHover(0)}
-              className="rounded p-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+              className="rounded-sm p-1 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-pine"
             >
               <svg viewBox="0 0 20 20" className={clsx("h-8 w-8 transition-colors", shown >= value ? "text-clay" : "text-line-strong")} fill="currentColor" aria-hidden="true">
                 <path d="M10 1.5l2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.6-4.1 6.1-.6L10 1.5Z" />

@@ -139,7 +139,7 @@ export function AdvertWriter({
     <section aria-labelledby="advert-writer-heading" className="advert-writer relative overflow-hidden rounded-card p-[1.5px]">
       <div className="relative rounded-[13px] bg-paper-card p-5 sm:p-6">
         <div className="flex items-start gap-3">
-          <span aria-hidden="true" className={clsx("writer-spark grid h-10 w-10 shrink-0 place-items-center rounded-[12px] bg-gradient-to-br from-pine to-[#70baff] text-white shadow-raise", pending && "is-working")}>
+          <span aria-hidden="true" className={clsx("writer-spark grid h-10 w-10 shrink-0 place-items-center rounded-[12px] bg-linear-to-br from-pine to-[#70baff] text-white shadow-raise", pending && "is-working")}>
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M12 2.5l1.9 5.1 5.1 1.9-5.1 1.9L12 16.5l-1.9-5.1L5 9.5l5.1-1.9L12 2.5Zm6.5 11 .9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4ZM5.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z" /></svg>
           </span>
           <div className="min-w-0">

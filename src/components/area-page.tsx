@@ -74,7 +74,7 @@ export function AreaPage({ data }: { data: AreaPageData }) {
               <span className="text-ink-soft">{place.name}</span>
             )}
           </nav>
-          <h1 className="mt-4 max-w-[22ch] text-[36px] font-bold leading-[1.1] [text-wrap:balance] sm:text-[48px]">{title}</h1>
+          <h1 className="mt-4 max-w-[22ch] text-[36px] font-bold leading-[1.1] text-balance sm:text-[48px]">{title}</h1>
           <p className="mt-4 max-w-[62ch] text-[17px] leading-relaxed text-ink-soft">
             {stats.adverts
               ? `${stats.roomsFree} room${stats.roomsFree === 1 ? "" : "s"} free now across ${stats.adverts} live advert${stats.adverts === 1 ? "" : "s"} from ${stats.providers} provider${stats.providers === 1 ? "" : "s"} offering ${who} in ${place.name}. Updated live from providers' own adverts.`

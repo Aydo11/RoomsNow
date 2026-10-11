@@ -73,7 +73,7 @@ export function ListingCard({
       <Link
         href={href}
         aria-label={`View ${listing.title}`}
-        className="absolute inset-0 z-10 rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+        className="absolute inset-0 z-10 rounded-card focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       />
         <div className={`relative overflow-hidden bg-paper-sunk ${compact ? "h-40 sm:h-44" : "h-48"}`}>
           {cover?.isVideoFile ? (
@@ -97,7 +97,7 @@ export function ListingCard({
           )}
           {cover?.fromVideo && (
             <span aria-hidden="true" className="pointer-events-none absolute inset-0 grid place-items-center">
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur">
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur-sm">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg>
               </span>
             </span>

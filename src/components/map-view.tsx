@@ -217,7 +217,7 @@ export function MapView({
     <div className="relative overflow-hidden rounded-card border border-line">
       <div ref={container} className="h-[560px] w-full lg:h-[calc(100vh-230px)]" />
 
-      <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
+      <div className="pointer-events-none absolute inset-x-0 top-3 z-500 flex justify-center px-3">
         <div className="pointer-events-auto flex flex-wrap items-center gap-2">
           {moved && (
             <button onClick={searchThisArea} className="btn-primary shadow-raise">
@@ -233,19 +233,19 @@ export function MapView({
       </div>
 
       {capped && (
-        <p className="absolute left-3 top-3 z-[500] max-w-[240px] rounded-[10px] bg-white/95 px-3 py-2 text-[12px] text-ink-soft shadow-raise">
+        <p className="absolute left-3 top-3 z-500 max-w-[240px] rounded-[10px] bg-white/95 px-3 py-2 text-[12px] text-ink-soft shadow-raise">
           Showing {pins.length} of {total} adverts. Zoom in and search this area to see the rest.
         </p>
       )}
 
       {pins.length === 0 && (
-        <p className="absolute inset-x-3 top-1/2 z-[500] mx-auto max-w-sm rounded-card border border-line bg-white px-4 py-3 text-center text-[15px] text-ink-soft shadow-raise">
+        <p className="absolute inset-x-3 top-1/2 z-500 mx-auto max-w-sm rounded-card border border-line bg-white px-4 py-3 text-center text-[15px] text-ink-soft shadow-raise">
           No adverts with a location in this area yet. Try zooming out or clearing a filter.
         </p>
       )}
 
       {selected && (
-        <div className="absolute inset-x-3 bottom-3 z-[500] rounded-card border border-line bg-white p-4 shadow-raise sm:left-3 sm:right-auto sm:w-80">
+        <div className="absolute inset-x-3 bottom-3 z-500 rounded-card border border-line bg-white p-4 shadow-raise sm:left-3 sm:right-auto sm:w-80">
           <button
             onClick={() => setSelected(null)}
             className="absolute right-3 top-3 text-[13px] text-ink-faint hover:text-ink"

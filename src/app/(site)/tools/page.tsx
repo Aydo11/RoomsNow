@@ -28,8 +28,8 @@ export default function ToolsPage() {
       <div className="shell py-10 sm:py-14">
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {tools.map((tool) => (
-            <Link key={tool.href} href={tool.href} className="card interactive-card group flex flex-col p-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine">
-              <span aria-hidden="true" className="mb-5 grid h-12 w-12 place-items-center rounded-[14px] bg-pine-light text-[26px] font-semibold text-pine-dark">{tool.symbol}</span>
+            <Link key={tool.href} href={tool.href} className="card interactive-card group flex flex-col p-6 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine">
+              <span aria-hidden="true" className="mb-5 grid h-12 w-12 place-items-center rounded-card bg-pine-light text-[26px] font-semibold text-pine-dark">{tool.symbol}</span>
               <p className="text-[12px] font-semibold uppercase tracking-wide text-pine-dark">{tool.tag}</p>
               <h2 className="mt-2 text-[23px] leading-tight group-hover:text-pine-dark">{tool.title}</h2>
               <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{tool.description}</p>
@@ -37,7 +37,7 @@ export default function ToolsPage() {
             </Link>
           ))}
         </div>
-        <aside className="mt-8 rounded-[14px] border border-line bg-paper-sunk p-5 text-[14px] leading-relaxed text-ink-soft">Tools provide guidance, not a housing offer or a benefit decision. Confirm room availability and support arrangements with the provider, and benefit entitlement with the relevant authority. If you are in immediate danger, call 999.</aside>
+        <aside className="mt-8 rounded-card border border-line bg-paper-sunk p-5 text-[14px] leading-relaxed text-ink-soft">Tools provide guidance, not a housing offer or a benefit decision. Confirm room availability and support arrangements with the provider, and benefit entitlement with the relevant authority. If you are in immediate danger, call 999.</aside>
       </div>
     </>
   );

@@ -75,7 +75,7 @@ export default async function BuyerQuotePage({ params, searchParams }: { params:
                 <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {quote.completionPhotos.map((photo, index) => (
                     <a key={photo} href={photo} target="_blank" rel="noreferrer" className="group">
-                      <img src={optimisedImage(photo, 320)} alt={`Completed job photo ${index + 1}`} className="aspect-[4/3] w-full rounded-[10px] border border-line object-cover transition group-hover:opacity-90" />
+                      <img src={optimisedImage(photo, 320)} alt={`Completed job photo ${index + 1}`} className="aspect-4/3 w-full rounded-[10px] border border-line object-cover transition group-hover:opacity-90" />
                     </a>
                   ))}
                 </div>

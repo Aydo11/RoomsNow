@@ -174,7 +174,7 @@ export function Filters() {
               <label key={key} className="flex items-center gap-2.5 text-[15px]">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 rounded border-line-strong text-pine focus:ring-pine"
+                  className="h-4 w-4 rounded-sm border-line-strong text-pine focus:ring-pine"
                   checked={get(key) === "1"}
                   onChange={(e) => update(key, e.target.checked ? "1" : null)}
                 />

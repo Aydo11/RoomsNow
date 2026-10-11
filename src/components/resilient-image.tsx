@@ -40,7 +40,7 @@ export function ResilientImage({ src, fallbackSrc, fallbackLabel, alt, className
         onError={() => setFailed(true)}
       />
       {failed && fallbackLabel && (
-        <span className="absolute bottom-2 left-2 rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">
+        <span className="absolute bottom-2 left-2 rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
           {fallbackLabel}
         </span>
       )}

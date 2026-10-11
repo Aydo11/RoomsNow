@@ -93,7 +93,7 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
         <div
           ref={trackRef}
           onScroll={(event) => updateIndexFromScroll(event, displayMedia.length, setActive)}
-          className="flex aspect-video max-h-[42vh] w-full snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:max-h-none"
+          className="flex aspect-video max-h-[42vh] w-full snap-x snap-mandatory overflow-x-auto scroll-smooth scrollbar-none [&::-webkit-scrollbar]:hidden sm:max-h-none"
         >
           {displayMedia.map((item, index) => (
             <div key={item.id} className="relative h-full min-w-full snap-center snap-always bg-black">
@@ -128,7 +128,7 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
               )}
 
               {item.illustrative && (
-                <span className="pointer-events-none absolute bottom-2 left-2 rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">
+                <span className="pointer-events-none absolute bottom-2 left-2 rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
                   Illustrative image
                 </span>
               )}
@@ -138,15 +138,15 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
 
         {displayMedia.length > 1 && (
           <>
-            <button type="button" onClick={() => scrollTo(currentIndex - 1)} aria-label="Previous photo or video" className="absolute left-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-xl text-white backdrop-blur transition hover:bg-black/80 sm:left-4">←</button>
-            <button type="button" onClick={() => scrollTo(currentIndex + 1)} aria-label="Next photo or video" className="absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-xl text-white backdrop-blur transition hover:bg-black/80 sm:right-4">→</button>
+            <button type="button" onClick={() => scrollTo(currentIndex - 1)} aria-label="Previous photo or video" className="absolute left-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-xl text-white backdrop-blur-sm transition hover:bg-black/80 sm:left-4">←</button>
+            <button type="button" onClick={() => scrollTo(currentIndex + 1)} aria-label="Next photo or video" className="absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-xl text-white backdrop-blur-sm transition hover:bg-black/80 sm:right-4">→</button>
           </>
         )}
         <span className="pointer-events-none absolute right-3 top-3 rounded-pill bg-black/70 px-2.5 py-1 text-[12px] font-medium text-white">
           {currentIndex + 1} / {displayMedia.length}
         </span>
         {current.type === "IMAGE" && (
-          <span className="pointer-events-none absolute bottom-3 right-3 hidden rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur sm:block">
+          <span className="pointer-events-none absolute bottom-3 right-3 hidden rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm sm:block">
             Click to enlarge
           </span>
         )}
@@ -195,7 +195,7 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
       )}
 
       {lightboxActive !== null && photos[lightboxActive] && typeof document !== "undefined" && createPortal(
-        <div role="dialog" aria-modal="true" aria-label={`${title} enlarged photos`} className="fixed inset-0 z-[2147483647] flex h-screen h-[100dvh] w-screen flex-col overflow-hidden bg-black text-white">
+        <div role="dialog" aria-modal="true" aria-label={`${title} enlarged photos`} className="fixed inset-0 z-2147483647 flex h-screen h-dvh w-screen flex-col overflow-hidden bg-black text-white">
           <div className="flex min-h-14 items-center justify-between gap-4 px-4 py-2 sm:px-6">
             <p className="truncate text-sm font-medium">{photos[lightboxActive].caption ?? title}</p>
             <div className="flex shrink-0 items-center gap-3">
@@ -207,7 +207,7 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
           <div
             ref={lightboxTrackRef}
             onScroll={(event) => updateIndexFromScroll(event, photos.length, setLightboxActive)}
-            className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto scroll-smooth overscroll-contain [scrollbar-width:none] [touch-action:pan-x] [&::-webkit-scrollbar]:hidden"
+            className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto scroll-smooth overscroll-contain scrollbar-none [touch-action:pan-x] [&::-webkit-scrollbar]:hidden"
           >
             {photos.map((item, index) => (
               <div key={item.id} className="relative h-full min-w-full snap-center snap-always px-2 pb-3 sm:px-16 sm:pb-6">
@@ -225,8 +225,8 @@ export function Gallery({ media, title, listingId }: { media: Media[]; title: st
 
           {photos.length > 1 && (
             <>
-              <button type="button" onClick={() => scrollLightboxTo(lightboxActive - 1)} aria-label="Previous enlarged photo" className="absolute left-2 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-2xl text-white backdrop-blur transition hover:bg-black/80 sm:left-5">←</button>
-              <button type="button" onClick={() => scrollLightboxTo(lightboxActive + 1)} aria-label="Next enlarged photo" className="absolute right-2 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-2xl text-white backdrop-blur transition hover:bg-black/80 sm:right-5">→</button>
+              <button type="button" onClick={() => scrollLightboxTo(lightboxActive - 1)} aria-label="Previous enlarged photo" className="absolute left-2 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-2xl text-white backdrop-blur-sm transition hover:bg-black/80 sm:left-5">←</button>
+              <button type="button" onClick={() => scrollLightboxTo(lightboxActive + 1)} aria-label="Next enlarged photo" className="absolute right-2 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-2xl text-white backdrop-blur-sm transition hover:bg-black/80 sm:right-5">→</button>
             </>
           )}
 

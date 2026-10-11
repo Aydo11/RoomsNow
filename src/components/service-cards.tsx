@@ -36,13 +36,13 @@ export function ServiceAdvertCard({ advert, promoted, sponsored = false, saved, 
     <article className={clsx("card group flex h-full flex-col overflow-hidden transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-raise", (promoted || sponsored) && "border-brand/50 shadow-raise")}>
       <Link href={href} tabIndex={-1} aria-hidden="true" className="relative block overflow-hidden">
         {advert.image ? (
-          <img src={optimisedImage(advert.image, 400)} alt="" className="aspect-[16/9] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
+          <img src={optimisedImage(advert.image, 400)} alt="" className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
         ) : (
-          <span className="grid aspect-[16/9] w-full place-items-center bg-gradient-to-br from-brand/15 via-brand/5 to-pine-light/60 text-brand">
+          <span className="grid aspect-video w-full place-items-center bg-linear-to-br from-brand/15 via-brand/5 to-pine-light/60 text-brand">
             <ServiceCategoryIcon slug={advert.category} className="h-12 w-12 opacity-80" />
           </span>
         )}
-        <span className="absolute left-2.5 top-2.5 rounded-pill bg-paper-card/95 px-2.5 py-1 text-[11.5px] font-medium text-ink shadow-sm">{categoryLabel(advert.category)}</span>
+        <span className="absolute left-2.5 top-2.5 rounded-pill bg-paper-card/95 px-2.5 py-1 text-[11.5px] font-medium text-ink shadow-xs">{categoryLabel(advert.category)}</span>
       </Link>
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex items-start gap-3">

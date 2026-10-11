@@ -200,7 +200,7 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {items.map((item, index) => (
             <li key={item.id} draggable onDragStart={() => setDragging(item.id)} onDragEnd={() => setDragging(null)} onDragOver={(event) => event.preventDefault()} onDrop={() => dragging && move(dragging, item.id)} className={clsx("card overflow-hidden", item.isPrimary && "ring-2 ring-pine", dragging === item.id && "opacity-60")}>
-              <div className="relative aspect-[4/3] bg-paper-sunk">
+              <div className="relative aspect-4/3 bg-paper-sunk">
                 {item.type === "IMAGE" ? (
                   <ResilientImage
                     src={item.url}

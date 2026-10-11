@@ -64,7 +64,7 @@ export function BannerPicker({
   const buttonText = dragging ? "Drop to use this banner" : preview ? "Change banner" : "Add a banner";
 
   return (
-    <div className={clsx("relative isolate overflow-hidden bg-gradient-to-br from-pine-dark via-pine to-pine-light", className)}>
+    <div className={clsx("relative isolate overflow-hidden bg-linear-to-br from-pine-dark via-pine to-pine-light", className)}>
       {preview && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={preview} alt={alt} className="pointer-events-none h-full w-full object-cover" />

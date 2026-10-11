@@ -116,7 +116,7 @@ export function Toggle({
         type="checkbox"
         name={name}
         defaultChecked={defaultChecked}
-        className="mt-0.5 h-4 w-4 shrink-0 rounded border-line-strong text-pine focus:ring-pine"
+        className="mt-0.5 h-4 w-4 shrink-0 rounded-sm border-line-strong text-pine focus:ring-pine"
       />
       <span>
         <span className="block text-[15px] text-ink">{label}</span>
@@ -149,7 +149,7 @@ export function CheckGroup({
             name={name}
             value={option.value}
             defaultChecked={selected.includes(option.value)}
-            className="h-4 w-4 rounded border-line-strong text-pine focus:ring-pine"
+            className="h-4 w-4 rounded-sm border-line-strong text-pine focus:ring-pine"
           />
           {option.label}
         </label>

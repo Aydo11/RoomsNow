@@ -13,7 +13,7 @@ function exactDate(date: Date) {
 }
 
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><p className="text-[12px] font-medium uppercase tracking-wide text-ink-faint">{label}</p><div className="mt-1 break-words text-[14px] text-ink-soft">{children}</div></div>;
+  return <div><p className="text-[12px] font-medium uppercase tracking-wide text-ink-faint">{label}</p><div className="mt-1 wrap-break-word text-[14px] text-ink-soft">{children}</div></div>;
 }
 
 export default async function AdminAuditEntryPage({ params }: { params: Promise<{ id: string }> }) {

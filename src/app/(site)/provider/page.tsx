@@ -272,7 +272,7 @@ export default async function ProviderDashboard() {
           <ul className="card mt-3 divide-y divide-line">
             {listings.map((listing) => (
               <li key={listing.id} className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4">
-                <div className="min-w-0 flex-1 basis-[15rem]">
+                <div className="min-w-0 flex-1 basis-60">
                   <Link href={`/provider/adverts/${listing.id}`} className="text-[16px] hover:text-pine-dark">
                     {listing.title}
                   </Link>

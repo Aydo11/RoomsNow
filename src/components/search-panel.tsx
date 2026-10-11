@@ -89,7 +89,7 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
           type="checkbox"
           checked={vetted}
           onChange={(e) => setVetted(e.target.checked)}
-          className="h-4 w-4 rounded border-line-strong text-pine focus:ring-pine"
+          className="h-4 w-4 rounded-sm border-line-strong text-pine focus:ring-pine"
         />
         <span>
           Vetted providers only <span className="text-ink-faint">— CQC or BVSC checked by RoomsNow</span>

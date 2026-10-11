@@ -60,7 +60,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
         ) : undefined
       }
     >
-      <nav aria-label="Filter notifications" className="-mx-1 mb-4 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav aria-label="Filter notifications" className="-mx-1 mb-4 flex gap-1.5 overflow-x-auto px-1 pb-1 scrollbar-none [&::-webkit-scrollbar]:hidden">
         {FILTERS.map((f) => (
           <Link
             key={f.key}

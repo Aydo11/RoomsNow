@@ -26,7 +26,7 @@ export function ProviderReviews({
   reviews: ProviderReviewItem[];
 }) {
   return (
-    <section className="mt-5 rounded-[14px] border border-line bg-white p-5">
+    <section className="mt-5 rounded-card border border-line bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-[16px] font-semibold text-ink">Referrer reviews</h2>
         <div className="flex items-center gap-2">

@@ -221,7 +221,7 @@ export default async function SearchPage({
                 <section className="mt-6 rounded-card border border-pine/25 bg-pine-light/45 p-4 sm:p-5" aria-label="Boosted adverts">
                   <div className="flex flex-wrap items-end justify-between gap-2">
                     <div>
-                      <span className="text-[12px] font-extrabold uppercase tracking-[0.1em] text-pine-dark">Boosted now</span>
+                      <span className="text-[12px] font-extrabold uppercase tracking-widest text-pine-dark">Boosted now</span>
                       <h2 className="mt-1 text-[22px] font-bold">Boosted accommodation</h2>
                     </div>
                     <p className="text-[13px] text-ink-soft">Priority placements rotate fairly</p>

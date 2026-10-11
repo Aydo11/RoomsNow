@@ -118,7 +118,7 @@ export function StatCard({ label, value, hint, compact = false, className }: { l
   return (
     <div className={clsx("card min-w-0", compact ? "p-3.5" : "p-4 sm:p-5", className)}>
       <p className="text-[13px] text-ink-faint">{label}</p>
-      <p className={clsx("mt-1 break-words font-display leading-none", compact ? "text-[22px] sm:text-[24px]" : "text-[25px] sm:text-[30px]")}>{value}</p>
+      <p className={clsx("mt-1 wrap-break-word font-display leading-none", compact ? "text-[22px] sm:text-[24px]" : "text-[25px] sm:text-[30px]")}>{value}</p>
       {hint && <p className={clsx("text-[13px] text-ink-soft", compact ? "mt-1" : "mt-2")}>{hint}</p>}
     </div>
   );

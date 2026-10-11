@@ -157,7 +157,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               {client.email && (
                 <div className="min-w-0">
                   <dt className="text-[13px] text-ink-faint">Email</dt>
-                  <dd className="break-words">{client.email}</dd>
+                  <dd className="wrap-break-word">{client.email}</dd>
                 </div>
               )}
               {client.preferredLocation && (

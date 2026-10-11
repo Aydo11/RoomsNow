@@ -1,51 +1,51 @@
 {
-"name": "roomsnow",
-"version": "0.1.0",
-"private": true,
-"scripts": {
-"dev": "next dev",
-"build": "prisma generate && next build",
-"start": "MALLOC_ARENA_MAX=2 node --max-old-space-size=1536 node_modules/next/dist/bin/next start",
-"lint": "next lint",
-"db:push": "prisma db push",
-"db:migrate": "prisma migrate dev",
-"db:migrate:deploy": "prisma migrate deploy",
-"db:seed": "tsx prisma/seed.ts",
-"db:seed-memberships": "tsx prisma/seed-memberships.ts",
-"db:studio": "prisma studio",
-"setup": "prisma generate && prisma db push && npm run db:seed",
-"typecheck": "tsc --noEmit",
-"test": "tsx --test tests/*.test.ts"
-},
-"prisma": {
-"seed": "tsx prisma/seed.ts"
-},
-"dependencies": {
-"@aws-sdk/client-s3": "^3.1127.0",
-"@prisma/client": "^5.22.0",
-"@sentry/nextjs": "^10.73.0",
-"bcryptjs": "^2.4.3",
-"jose": "^5.9.6",
-"leaflet": "^1.9.4",
-"next": "^16.3.4",
-"react": "^19.2.8",
-"react-dom": "^19.2.8",
-"sanitize-html": "^2.17.7",
-"stripe": "^18.5.0",
-"zod": "^3.23.8"
-},
-"devDependencies": {
-"@types/bcryptjs": "^2.4.6",
-"@types/leaflet": "^1.9.22",
-"@types/node": "^22.7.5",
-"@types/react": "^19.2.18",
-"@types/react-dom": "^19.2.7",
-"@types/sanitize-html": "^2.16.1",
-"autoprefixer": "^10.4.20",
-"postcss": "^8.4.47",
-"prisma": "^5.22.0",
-"tailwindcss": "^3.4.14",
-"tsx": "^4.19.1",
-"typescript": "^5.6.3"
-}
+  "name": "roomsnow",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "MALLOC_ARENA_MAX=2 node --max-old-space-size=1536 node_modules/next/dist/bin/next start",
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed-memberships": "tsx prisma/seed-memberships.ts",
+    "db:studio": "prisma studio",
+    "setup": "prisma generate && prisma db push && npm run db:seed",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1127.0",
+    "@prisma/client": "^5.22.0",
+    "@sentry/nextjs": "^10.73.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6",
+    "leaflet": "^1.9.4",
+    "next": "^16.3.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sanitize-html": "^2.17.7",
+    "stripe": "^18.5.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^22.7.5",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@types/sanitize-html": "^2.16.1",
+    "postcss": "^8.4.47",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
 }

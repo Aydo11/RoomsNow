@@ -106,7 +106,7 @@ export default async function HmoRoomsBirminghamPage() {
             <span aria-hidden="true">/</span>
             <span className="text-ink-soft">Birmingham</span>
           </nav>
-          <h1 className="mt-4 max-w-[20ch] text-[38px] font-bold leading-[1.08] [text-wrap:balance] sm:text-[52px]">HMO rooms to rent in Birmingham</h1>
+          <h1 className="mt-4 max-w-[20ch] text-[38px] font-bold leading-[1.08] text-balance sm:text-[52px]">HMO rooms to rent in Birmingham</h1>
           <p className="mt-5 max-w-[64ch] text-[18px] leading-relaxed text-ink-soft">
             {stats?.adverts
               ? `${stats.roomsFree} shared room${stats.roomsFree === 1 ? "" : "s"} listed as available across ${stats.adverts} live advert${stats.adverts === 1 ? "" : "s"} from ${stats.providers} Birmingham provider${stats.providers === 1 ? "" : "s"}. Compare costs, bills and area, then confirm availability with the provider.`

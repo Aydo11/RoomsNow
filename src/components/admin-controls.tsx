@@ -233,7 +233,7 @@ export function RoleSelect({ id, role }: { id: string; role: string }) {
   return (
     <select
       aria-label="Account type"
-      className="field !w-auto py-1 text-[13px] capitalize"
+      className="field w-auto! py-1 text-[13px] capitalize"
       defaultValue={role}
       disabled={pending}
       onChange={(event) => {

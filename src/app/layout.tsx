@@ -9,13 +9,13 @@ import "./globals.css";
 
 const sans = Instrument_Sans({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--rn-font-sans",
   display: "swap",
 });
 
 const display = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--rn-font-display",
   weight: ["600", "700", "800"],
   display: "swap",
 });

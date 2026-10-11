@@ -58,8 +58,8 @@ export function ProviderActivityChart({ points }: { points: ProviderActivityPoin
         </svg>
       )}
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-ink-soft" aria-hidden="true">
-        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-[#1666AA]" />Accommodation requests</span>
-        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-pine" />Professional referrals</span>
+        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-xs bg-[#1666AA]" />Accommodation requests</span>
+        <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-xs bg-pine" />Professional referrals</span>
       </div>
     </div>
   );

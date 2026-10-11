@@ -109,7 +109,7 @@ export default async function ReferralPackPage({ params }: { params: Promise<{ i
                       className="h-[140px] w-[200px] rounded-[10px] object-cover"
                     />
                     <div>
-                      <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-pine-dark">Option {index + 1}</p>
+                      <p className="text-[12px] font-semibold uppercase tracking-widest text-pine-dark">Option {index + 1}</p>
                       <h3 className="mt-1 text-[18px] font-bold leading-snug">{listing.title}</h3>
                       <p className="mt-0.5 text-[13px] text-ink-soft">
                         {[listing.property.area, listing.property.city, listing.property.postcode.split(" ")[0]].filter(Boolean).join(", ")}

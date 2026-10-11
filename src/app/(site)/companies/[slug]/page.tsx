@@ -149,7 +149,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
         },
       ]} />
       <header className="card overflow-hidden">
-        <div className="relative h-44 bg-gradient-to-br from-pine-dark via-pine to-pine-light sm:h-56">
+        <div className="relative h-44 bg-linear-to-br from-pine-dark via-pine to-pine-light sm:h-56">
           {company.bannerUrl && (
             <Image
               src={company.bannerUrl}
@@ -205,7 +205,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
               <div className="mt-3 flex flex-wrap gap-2">
                 {company.accreditations.map((item) => (
                   item.publicUrl && item.status === "APPROVED" ? (
-                    <a key={item.id} href={item.publicUrl} target="_blank" rel="noopener noreferrer" className="rounded-[10px] focus:outline-none focus:ring-2 focus:ring-brand/40">
+                    <a key={item.id} href={item.publicUrl} target="_blank" rel="noopener noreferrer" className="rounded-[10px] focus:outline-hidden focus:ring-2 focus:ring-brand/40">
                       <AccreditationBadge scheme={item.scheme} name={item.name} rating={item.rating} status={item.status} />
                     </a>
                   ) : <AccreditationBadge key={item.id} scheme={item.scheme} name={item.name} rating={item.rating} status={item.status} />

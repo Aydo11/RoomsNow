@@ -143,7 +143,7 @@ export default async function ProviderAdvertPage({
         ) : (
           <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-5">
             {listing.media.slice(0, 10).map((item) => (
-              <li key={item.id} className="aspect-[4/3] overflow-hidden rounded-[10px] bg-paper-sunk">
+              <li key={item.id} className="aspect-4/3 overflow-hidden rounded-[10px] bg-paper-sunk">
                 {item.type === "IMAGE" ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={optimisedImage(item.url, 320)} loading="lazy" alt={item.caption ?? ""} className="h-full w-full object-contain" />

@@ -102,7 +102,7 @@ export default async function ProviderAdvertsPage({
           {listings.map((listing) => (
             <li key={listing.id} data-advert-card className="card relative overflow-hidden p-4 sm:p-5">
               <div className="grid min-w-0 gap-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:items-start sm:gap-5">
-                <div className="aspect-[16/9] w-full overflow-hidden rounded-[10px] bg-paper-sunk sm:aspect-[4/3]">
+                <div className="aspect-video w-full overflow-hidden rounded-[10px] bg-paper-sunk sm:aspect-4/3">
                   {coverImage(listing.media)?.isVideoFile ? (
                     <video src={videoPosterSrc(coverImage(listing.media)!.url)} preload="metadata" muted playsInline className="h-full w-full bg-black object-contain" />
                   ) : coverImage(listing.media) ? (
@@ -127,7 +127,7 @@ export default async function ProviderAdvertsPage({
                   <p className="mt-1 text-[14px] text-ink-soft">
                     {listing.property.city} · {rentRange(listing.weeklyRentFrom, listing.weeklyRentTo)}
                   </p>
-                  <p className="mt-1 break-words text-[13px] text-ink-faint">
+                  <p className="mt-1 wrap-break-word text-[13px] text-ink-faint">
                     {listing.reference} · {listing.views} views · {listing._count.requests} requests ·{" "}
                     {listing._count.referrals} referrals · updated {timeAgo(listing.updatedAt)}
                   </p>
