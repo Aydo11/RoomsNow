@@ -41,7 +41,7 @@ export function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-200 flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div
         className="absolute inset-0 animate-fade-in bg-ink/40"
         onClick={onCancel}

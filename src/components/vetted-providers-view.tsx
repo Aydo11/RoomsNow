@@ -185,7 +185,7 @@ export async function VettedProvidersView({ params, basePath }: { params: Vetted
                 <div className="flex flex-wrap gap-2">
                   {provider.accreditations.map((item) =>
                     item.publicUrl ? (
-                      <a key={item.id} href={item.publicUrl} target="_blank" rel="noopener noreferrer" className="rounded-[10px] focus:outline-none focus:ring-2 focus:ring-brand/40">
+                      <a key={item.id} href={item.publicUrl} target="_blank" rel="noopener noreferrer" className="rounded-[10px] focus:outline-hidden focus:ring-2 focus:ring-brand/40">
                         <AccreditationBadge scheme={item.scheme} name={item.name} rating={item.rating} />
                       </a>
                     ) : (

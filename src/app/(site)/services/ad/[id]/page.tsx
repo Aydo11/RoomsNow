@@ -91,11 +91,11 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
             {business.coverUrl ? (
               <div className="relative h-32 overflow-hidden sm:h-44">
                 <img src={optimisedImage(business.coverUrl, 960)} alt={`${name} cover`} className="h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" aria-hidden="true" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/45 via-transparent to-transparent" aria-hidden="true" />
               </div>
             ) : (
-              <div className="relative h-24 overflow-hidden bg-gradient-to-br from-brand/25 via-sky-light to-pine-light sm:h-32" aria-hidden="true">
-                <span className="absolute -right-10 -top-16 h-48 w-48 rounded-full border-[28px] border-white/20" />
+              <div className="relative h-24 overflow-hidden bg-linear-to-br from-brand/25 via-sky-light to-pine-light sm:h-32" aria-hidden="true">
+                <span className="absolute -right-10 -top-16 h-48 w-48 rounded-full border-28 border-white/20" />
                 <span className="absolute bottom-[-55px] left-[18%] h-36 w-36 rounded-full bg-white/15" />
               </div>
             )}
@@ -141,7 +141,7 @@ export default async function ServiceAdvertDetail({ params, searchParams }: { pa
             />
           )}
           {galleryImages.length === 0 && (
-            <div className="grid aspect-[21/8] place-items-center rounded-card bg-gradient-to-br from-brand/15 via-brand/5 to-pine-light/60 text-brand">
+            <div className="grid aspect-21/8 place-items-center rounded-card bg-linear-to-br from-brand/15 via-brand/5 to-pine-light/60 text-brand">
               <ServiceCategoryIcon slug={advert.category} className="h-14 w-14 opacity-80" />
             </div>
           )}

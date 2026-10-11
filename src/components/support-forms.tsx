@@ -97,7 +97,7 @@ export function SupportOrganisationForm({ orgId, defaults = {}, isAdmin = false 
 
       {isAdmin && (
         <label className="flex items-center gap-2 text-[14px]">
-          <input type="checkbox" name="crisis" defaultChecked={defaults.crisis} className="h-4 w-4 rounded border-line-strong text-pine" />
+          <input type="checkbox" name="crisis" defaultChecked={defaults.crisis} className="h-4 w-4 rounded-sm border-line-strong text-pine" />
           Pin as a crisis or emergency line
         </label>
       )}
@@ -195,7 +195,7 @@ export function SupportPostForm({ orgId }: { orgId: string }) {
         </Field>
       </div>
       <label className="flex items-center gap-2 text-[14px]">
-        <input type="checkbox" name="free" defaultChecked className="h-4 w-4 rounded border-line-strong text-pine" />
+        <input type="checkbox" name="free" defaultChecked className="h-4 w-4 rounded-sm border-line-strong text-pine" />
         It&apos;s free
       </label>
       <SubmitButton pendingLabel="Posting…">Post it</SubmitButton>

@@ -38,7 +38,7 @@ export function ReviewForm({ referralId }: { referralId: string }) {
               onClick={() => setRating(value)}
               onMouseEnter={() => setHover(value)}
               onMouseLeave={() => setHover(0)}
-              className="rounded p-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+              className="rounded-sm p-0.5 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-pine"
             >
               <svg
                 viewBox="0 0 20 20"

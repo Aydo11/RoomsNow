@@ -14,7 +14,7 @@ export default function EligibilityPage() {
       <div className="shell py-8 sm:py-12">
         <div className="mx-auto mb-6 max-w-[560px] text-center sm:mb-8">
           <span className="eyebrow">Takes about a minute</span>
-          <h1 className="mt-3 text-[30px] font-bold leading-tight [text-wrap:balance] sm:text-[36px]">Am I eligible?</h1>
+          <h1 className="mt-3 text-[30px] font-bold leading-tight text-balance sm:text-[36px]">Am I eligible?</h1>
           <p className="mt-2 text-[16px] leading-relaxed text-ink-soft">
             Answer five quick questions and we&apos;ll show you the rooms that fit you.
           </p>

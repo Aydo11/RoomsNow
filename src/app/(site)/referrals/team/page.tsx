@@ -157,7 +157,7 @@ export default async function ReferralTeamPage({ searchParams }: { searchParams:
             <ul className="mt-3 divide-y divide-line">
               {org.invites.map((invite) => (
                 <li key={invite.id} className="flex flex-wrap items-center gap-3 px-6 py-3">
-                  <div className="min-w-0 flex-1 basis-[15rem]">
+                  <div className="min-w-0 flex-1 basis-60">
                     <p className="truncate text-[14px] text-ink">{invite.email}</p>
                     <p className="text-[12px] text-ink-faint">
                       {ORG_ROLE_LABEL[invite.role]} · invited by {invite.invitedBy.firstName} {invite.invitedBy.lastName} {timeAgo(invite.createdAt)} · expires {shortDate(invite.expiresAt)}

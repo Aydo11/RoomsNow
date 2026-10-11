@@ -45,7 +45,7 @@ export function SocialLinksField({ initial, error }: { initial: SocialLink[]; er
               name="socialPlatform"
               value={row.platform}
               onChange={(event) => update(index, { platform: event.target.value })}
-              className="field w-[9.5rem] shrink-0"
+              className="field w-38 shrink-0"
               aria-label="Platform"
             >
               {PLATFORMS.map((platform) => (

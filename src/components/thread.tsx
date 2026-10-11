@@ -374,7 +374,7 @@ export function Thread({
         )}
 
         {!hasText && !recording && (
-          <div className="-mx-2 mb-1.5 flex gap-1.5 overflow-x-auto px-2 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Suggested messages">
+          <div className="-mx-2 mb-1.5 flex gap-1.5 overflow-x-auto px-2 pb-0.5 scrollbar-none [&::-webkit-scrollbar]:hidden" role="group" aria-label="Suggested messages">
             {["🙂", "👍", "❤️"].map((emoji) => (
               <button key={emoji} type="button" aria-label={`Insert ${emoji}`} className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[14px] hover:bg-paper-sunk" onClick={() => insertIntoMessage(emoji)}>{emoji}</button>
             ))}
@@ -506,7 +506,7 @@ export function Thread({
 
 function MessageBody({ body }: { body: string }) {
   const parts = body.split(/(https?:\/\/[^\s<]+)/gi);
-  return <p className="whitespace-pre-line break-words text-[14.5px] leading-snug sm:text-[15px] sm:leading-relaxed">{parts.map((part, index) => {
+  return <p className="whitespace-pre-line wrap-break-word text-[14.5px] leading-snug sm:text-[15px] sm:leading-relaxed">{parts.map((part, index) => {
     if (!/^https?:\/\//i.test(part)) return part;
     const href = part.replace(/[),.!?]+$/, "");
     let label = "Open shared link";
@@ -517,7 +517,7 @@ function MessageBody({ body }: { body: string }) {
       else if (url.pathname.startsWith("/companies/") || url.pathname.startsWith("/agencies/")) label = "View provider profile";
       else label = url.hostname.replace(/^www\./, "");
     } catch { /* Keep the generic link label for malformed URLs. */ }
-    return <Fragment key={index}><a href={href} target="_blank" rel="noopener noreferrer nofollow" className="my-2 flex max-w-full items-center gap-3 rounded-[10px] border border-current/15 bg-black/[0.04] px-3 py-2.5 text-inherit no-underline transition-colors hover:bg-black/[0.08]">
+    return <Fragment key={index}><a href={href} target="_blank" rel="noopener noreferrer nofollow" className="my-2 flex max-w-full items-center gap-3 rounded-[10px] border border-current/15 bg-black/4 px-3 py-2.5 text-inherit no-underline transition-colors hover:bg-black/8">
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand/10 text-brand" aria-hidden="true">↗</span>
       <span className="min-w-0"><span className="block text-[13px] font-semibold">{label}</span><span className="block truncate text-[11px] opacity-70">{href}</span></span>
     </a>{part.slice(href.length)}</Fragment>;

@@ -88,7 +88,7 @@ export default function HomePage() {
         <span aria-hidden="true" className="ambient-orb ambient-orb-2 -right-20 bottom-0 h-72 w-72 bg-[#d8ebfb]/70 blur-3xl" />
         <span aria-hidden="true" className="ambient-orb ambient-orb-3 left-1/3 -top-24 h-56 w-56 bg-[#70baff]/20 blur-3xl" />
         <div className="hero-content shell relative pb-4 pt-10 text-center sm:pb-6 sm:pt-14 lg:pt-16">
-          <h1 className="home-headline mx-auto max-w-[19ch] [text-wrap:balance] text-[clamp(2rem,8vw,3.5rem)] font-bold leading-[1.12]">
+          <h1 className="home-headline mx-auto max-w-[19ch] text-balance text-[clamp(2rem,8vw,3.5rem)] font-bold leading-[1.12]">
             <span className="sr-only">Find an HMO room or accommodation that fits</span>
             <span aria-hidden="true">
               {"Find an HMO room or accommodation that fits".split(" ").map((word, index) => (
@@ -197,8 +197,8 @@ export default function HomePage() {
 
       <section className="border-b border-line bg-white">
         <div data-reveal className="shell py-8">
-          <Link href="/support-services" className="group flex flex-wrap items-center gap-4 rounded-card border border-line bg-gradient-to-r from-pine-light/60 via-paper-card to-paper-card p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-pine/40 hover:shadow-raise sm:p-6">
-            <span aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-[14px] bg-pine text-white">
+          <Link href="/support-services" className="group flex flex-wrap items-center gap-4 rounded-card border border-line bg-linear-to-r from-pine-light/60 via-paper-card to-paper-card p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-pine/40 hover:shadow-raise sm:p-6">
+            <span aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-card bg-pine text-white">
               <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20s-7-4.4-7-9.4A3.9 3.9 0 0 1 12 7a3.9 3.9 0 0 1 7 3.6c0 5-7 9.4-7 9.4Z" /></svg>
             </span>
             <span className="min-w-0 flex-1">
@@ -485,7 +485,7 @@ async function HomeCities() {
                   key={city.name}
                   href={href}
                   data-tilt
-                  className="group relative aspect-[4/3] overflow-hidden rounded-card bg-ink shadow-raise transition-shadow duration-300 hover:shadow-float focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
+                  className="group relative aspect-4/3 overflow-hidden rounded-card bg-ink shadow-raise transition-shadow duration-300 hover:shadow-float focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
                   aria-label={`Explore accommodation in ${city.name}`}
                 >
                   <Image
@@ -495,7 +495,7 @@ async function HomeCities() {
                     sizes="(min-width: 640px) 33vw, 100vw"
                     className="parallax-img object-cover transition duration-500 group-hover:scale-[1.04]"
                   />
-                  <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#092d4d]/95 via-[#092d4d]/20 to-transparent" />
+                  <span aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-[#092d4d]/95 via-[#092d4d]/20 to-transparent" />
                   <span className="absolute inset-x-0 bottom-0 block p-5 text-left text-white">
                     <span className="flex items-center gap-2 text-[23px] font-bold leading-tight">{city.name}<span aria-hidden="true" className="nudge-arrow text-[18px] opacity-0 transition-opacity duration-300 group-hover:opacity-100">→</span></span>
                     <span className="mt-1 block max-w-[28ch] text-[13px] leading-snug text-white/85">{city.description}</span>
@@ -512,7 +512,7 @@ async function HomeCities() {
 function Stat({ value, label, live = false }: { value: number; label: string; live?: boolean }) {
   return (
     <div className="flex items-baseline gap-2">
-      {live && <span aria-hidden="true" className="live-dot -translate-y-[3px] self-center" />}
+      {live && <span aria-hidden="true" className="live-dot translate-y-[-3px] self-center" />}
       <dt className="font-display text-[22px] font-bold text-pine-dark"><CountUp value={value} /></dt>
       <dd className="text-ink-soft">{label}</dd>
     </div>
@@ -537,7 +537,7 @@ function AudienceCard({
   highlighted?: boolean;
 }) {
   return (
-    <article data-spotlight className={`home-audience ${highlighted ? "rounded-card bg-gradient-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card border-t-4 border-t-pine/30 bg-pine-light/25 p-6"}`}>
+    <article data-spotlight className={`home-audience ${highlighted ? "rounded-card bg-linear-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card border-t-4 border-t-pine/30 bg-pine-light/25 p-6"}`}>
       <div className="flex items-center justify-between gap-4">
         <span className={highlighted ? "text-[11px] font-semibold tracking-[0.08em] text-white/80" : "text-[11px] font-semibold tracking-[0.08em] text-pine-dark"}>{eyebrow}</span>
         <AudienceIcon type={icon} highlighted={highlighted} />
@@ -557,7 +557,7 @@ function AudienceIcon({ type, highlighted }: { type: "search" | "referral" | "pr
   };
 
   return (
-    <span className={highlighted ? "grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15 text-white" : "grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-pine-dark shadow-sm"} aria-hidden="true">
+    <span className={highlighted ? "grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15 text-white" : "grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-pine-dark shadow-xs"} aria-hidden="true">
       <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         {paths[type]}
       </svg>

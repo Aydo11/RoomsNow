@@ -31,12 +31,12 @@ export function SetupChecklist({ steps, audience, title = "Get set up" }: { step
   const circumference = 2 * Math.PI * 22;
   return (
     <section aria-labelledby="setup-heading" className="setup-card card mb-6 overflow-hidden">
-      <div className="flex flex-wrap items-center gap-4 border-b border-line bg-gradient-to-r from-pine-light/70 via-pine-light/30 to-transparent px-5 py-4">
+      <div className="flex flex-wrap items-center gap-4 border-b border-line bg-linear-to-r from-pine-light/70 via-pine-light/30 to-transparent px-5 py-4">
         <div className="relative h-14 w-14 shrink-0" aria-hidden="true">
           <svg viewBox="0 0 52 52" className="h-14 w-14 -rotate-90">
-            <circle cx="26" cy="26" r="22" fill="none" stroke="rgb(var(--color-line))" strokeWidth="5" />
+            <circle cx="26" cy="26" r="22" fill="none" stroke="rgb(var(--rn-line))" strokeWidth="5" />
             <circle
-              cx="26" cy="26" r="22" fill="none" stroke="rgb(var(--color-pine))" strokeWidth="5" strokeLinecap="round"
+              cx="26" cy="26" r="22" fill="none" stroke="rgb(var(--rn-pine))" strokeWidth="5" strokeLinecap="round"
               className="setup-ring"
               style={{ strokeDasharray: circumference, strokeDashoffset: circumference * (1 - percent / 100), ["--ring-from" as string]: circumference }}
             />

@@ -13,7 +13,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       </Suspense>
       <MotionEffects />
       <div className="print:hidden"><SiteHeader /></div>
-      <main id="main" tabIndex={-1} className="pb-24 outline-none focus:ring-0 focus-visible:ring-0 lg:pb-0">
+      <main id="main" tabIndex={-1} className="pb-24 outline-hidden focus:ring-0 focus-visible:ring-0 lg:pb-0">
         {children}
       </main>
       <div className="print:hidden"><SiteFooter /></div>

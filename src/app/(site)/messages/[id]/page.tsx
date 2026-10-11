@@ -127,12 +127,12 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <h1 className="truncate text-[17px] leading-tight sm:text-[22px]">
             {serviceTitle ? (
               serviceTitleHref ? (
-                <Link href={serviceTitleHref} className="rounded-sm underline decoration-brand/40 underline-offset-4 hover:text-brand">{serviceTitle}</Link>
+                <Link href={serviceTitleHref} className="rounded-xs underline decoration-brand/40 underline-offset-4 hover:text-brand">{serviceTitle}</Link>
               ) : (
                 serviceTitle
               )
             ) : otherParty && otherProfileUrl ? (
-              <Link href={otherProfileUrl} className="rounded-sm underline decoration-brand/40 underline-offset-4 hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">
+              <Link href={otherProfileUrl} className="rounded-xs underline decoration-brand/40 underline-offset-4 hover:text-brand focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-brand">
                 {otherParty.user.firstName} {otherParty.user.lastName.charAt(0)}.
               </Link>
             ) : otherParty ? `${otherParty.user.firstName} ${otherParty.user.lastName.charAt(0)}.` : "Conversation"}

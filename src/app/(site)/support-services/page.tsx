@@ -64,12 +64,12 @@ export default async function SupportServicesPage({ searchParams }: { searchPara
             <label className="flex items-center gap-2.5 rounded-[11px] px-3 focus-within:bg-paper-sunk">
               <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-ink-faint" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2" /></svg>
               <span className="sr-only">What help do you need?</span>
-              <input name="q" type="search" defaultValue={params.q} placeholder="e.g. alcohol, mental health, housing advice" className="h-12 w-full min-w-0 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-faint" />
+              <input name="q" type="search" defaultValue={params.q} placeholder="e.g. alcohol, mental health, housing advice" className="h-12 w-full min-w-0 bg-transparent text-[15px] text-ink outline-hidden placeholder:text-ink-faint" />
             </label>
             <label className="flex items-center gap-2.5 rounded-[11px] border-line px-3 focus-within:bg-paper-sunk sm:border-l">
               <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-ink-faint" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
               <span className="sr-only">Town or postcode</span>
-              <input name="area" defaultValue={params.area} placeholder="Town or postcode" className="h-12 w-full min-w-0 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-faint" />
+              <input name="area" defaultValue={params.area} placeholder="Town or postcode" className="h-12 w-full min-w-0 bg-transparent text-[15px] text-ink outline-hidden placeholder:text-ink-faint" />
             </label>
             <button type="submit" className="btn-primary h-12 px-6">Search</button>
           </form>
@@ -169,7 +169,7 @@ export default async function SupportServicesPage({ searchParams }: { searchPara
           </div>
         )}
 
-        <section className="rounded-card bg-gradient-to-br from-pine-dark to-pine p-6 text-white sm:p-8" aria-labelledby="list-heading">
+        <section className="rounded-card bg-linear-to-br from-pine-dark to-pine p-6 text-white sm:p-8" aria-labelledby="list-heading">
           <div className="flex flex-wrap items-center justify-between gap-5">
             <div className="max-w-[60ch]">
               <h2 id="list-heading" className="text-[22px] text-white">Run a support service or council team?</h2>

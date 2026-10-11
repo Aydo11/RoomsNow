@@ -406,7 +406,7 @@ function ContactSupport({ onBack, chat, lastQuestion }: { onBack: () => void; ch
   if (status === "sent") {
     return (
       <div className="assist-contact">
-        <h3 ref={headingRef} tabIndex={-1} className="text-[17px] font-semibold text-ink outline-none">
+        <h3 ref={headingRef} tabIndex={-1} className="text-[17px] font-semibold text-ink outline-hidden">
           Message sent
         </h3>
         <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">
@@ -424,7 +424,7 @@ function ContactSupport({ onBack, chat, lastQuestion }: { onBack: () => void; ch
       <button type="button" className="assist-link-btn assist-quiet -ml-1 mb-2" onClick={onBack}>
         <span aria-hidden="true">←</span> Back to the assistant
       </button>
-      <h3 ref={headingRef} tabIndex={-1} className="text-[17px] font-semibold text-ink outline-none">
+      <h3 ref={headingRef} tabIndex={-1} className="text-[17px] font-semibold text-ink outline-hidden">
         Contact RoomsNow support
       </h3>
       <div className="assist-what">
@@ -456,7 +456,7 @@ function ContactSupport({ onBack, chat, lastQuestion }: { onBack: () => void; ch
       <textarea id="assist-contact-message" className="field" required minLength={5} rows={4} maxLength={1500} value={message} onChange={(event) => setMessage(event.target.value)} />
       {chat.length > 0 && (
         <label className="mt-3 flex items-start gap-2 text-[13px] leading-snug text-ink-soft" htmlFor="assist-contact-chat">
-          <input id="assist-contact-chat" type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-[rgb(var(--color-pine))]" checked={includeChat} onChange={(event) => setIncludeChat(event.target.checked)} />
+          <input id="assist-contact-chat" type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-[rgb(var(--rn-pine))]" checked={includeChat} onChange={(event) => setIncludeChat(event.target.checked)} />
           Include this chat so the team can see what you&apos;ve already asked
         </label>
       )}

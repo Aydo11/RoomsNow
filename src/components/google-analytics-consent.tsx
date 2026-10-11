@@ -150,7 +150,7 @@ export function GoogleAnalyticsConsent() {
   if (choice !== null && !showSettings) return null;
 
   return (
-    <aside aria-label="Cookie preferences" className="fixed inset-x-3 bottom-[5.25rem] z-[80] mx-auto max-w-3xl rounded-card border border-line bg-white p-4 shadow-float sm:inset-x-6 sm:bottom-3 sm:p-5">
+    <aside aria-label="Cookie preferences" className="fixed inset-x-3 bottom-21 z-80 mx-auto max-w-3xl rounded-card border border-line bg-white p-4 shadow-float sm:inset-x-6 sm:bottom-3 sm:p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="max-w-2xl">
           <h2 className="text-[16px]">Your privacy choices</h2>

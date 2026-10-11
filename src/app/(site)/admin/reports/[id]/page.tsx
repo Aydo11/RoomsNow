@@ -72,8 +72,8 @@ export default async function AdminReportCasePage({ params }: { params: Promise<
         <section className="card p-5">
           <h2 className="text-[19px]">Case history</h2>
           <ol className="mt-4 space-y-4 border-l border-line pl-5">
-            {report.events.map((event) => <li key={event.id} className="relative"><span className="absolute -left-[25px] top-1.5 size-2 rounded-full bg-pine" /><p className="text-[14px] font-medium capitalize">{event.status.toLowerCase()}</p><p className="text-[12px] text-ink-faint">{exactDate(event.createdAt)} · {event.actor ? `${event.actor.firstName} ${event.actor.lastName}` : "System"}</p>{event.note ? <p className="mt-1 whitespace-pre-wrap text-[14px] text-ink-soft">{event.note}</p> : null}</li>)}
-            <li className="relative"><span className="absolute -left-[25px] top-1.5 size-2 rounded-full bg-line-strong" /><p className="text-[14px] font-medium">Report submitted</p><p className="text-[12px] text-ink-faint">{exactDate(report.createdAt)} · {report.reporter.firstName} {report.reporter.lastName}</p></li>
+            {report.events.map((event) => <li key={event.id} className="relative"><span className="absolute left-[-25px] top-1.5 size-2 rounded-full bg-pine" /><p className="text-[14px] font-medium capitalize">{event.status.toLowerCase()}</p><p className="text-[12px] text-ink-faint">{exactDate(event.createdAt)} · {event.actor ? `${event.actor.firstName} ${event.actor.lastName}` : "System"}</p>{event.note ? <p className="mt-1 whitespace-pre-wrap text-[14px] text-ink-soft">{event.note}</p> : null}</li>)}
+            <li className="relative"><span className="absolute left-[-25px] top-1.5 size-2 rounded-full bg-line-strong" /><p className="text-[14px] font-medium">Report submitted</p><p className="text-[12px] text-ink-faint">{exactDate(report.createdAt)} · {report.reporter.firstName} {report.reporter.lastName}</p></li>
           </ol>
         </section>
       </div>

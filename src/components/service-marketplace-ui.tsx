@@ -99,12 +99,12 @@ export function ServiceSearchHero({
           <label className="flex items-center gap-2.5 rounded-[11px] px-3 focus-within:bg-paper-sunk">
             <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-ink-faint" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2" /></svg>
             <span className="sr-only">What do you need?</span>
-            <input name="q" type="search" defaultValue={q} placeholder="What do you need? e.g. EICR, void clean" className="h-12 w-full min-w-0 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-faint" />
+            <input name="q" type="search" defaultValue={q} placeholder="What do you need? e.g. EICR, void clean" className="h-12 w-full min-w-0 bg-transparent text-[15px] text-ink outline-hidden placeholder:text-ink-faint" />
           </label>
           <label className="flex items-center gap-2.5 rounded-[11px] border-line px-3 focus-within:bg-paper-sunk sm:border-l">
             <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-ink-faint" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
             <span className="sr-only">Town or postcode</span>
-            <input name="location" defaultValue={location} placeholder="Town or postcode" className="h-12 w-full min-w-0 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-faint" />
+            <input name="location" defaultValue={location} placeholder="Town or postcode" className="h-12 w-full min-w-0 bg-transparent text-[15px] text-ink outline-hidden placeholder:text-ink-faint" />
           </label>
           <button type="submit" className="btn-primary h-12 px-6">Search</button>
         </form>
@@ -153,7 +153,7 @@ export function ServiceCategoryTiles({ counts, active, hrefFor }: { counts: Reco
               href={href(category.slug)}
               aria-current={active === category.slug ? "page" : undefined}
               className={clsx(
-                "group flex h-full flex-col gap-2.5 rounded-[14px] border bg-paper-card p-3.5 transition-[border-color,transform,box-shadow] hover:-translate-y-0.5 hover:border-brand/50 hover:shadow-raise",
+                "group flex h-full flex-col gap-2.5 rounded-card border bg-paper-card p-3.5 transition-[border-color,transform,box-shadow] hover:-translate-y-0.5 hover:border-brand/50 hover:shadow-raise",
                 active === category.slug ? "border-brand" : "border-line",
               )}
             >

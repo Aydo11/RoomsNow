@@ -17,8 +17,8 @@ export function ContactTip({ className, compact = false }: { className?: string;
         <p className="font-semibold text-pine-dark">Leave your number for a better chance</p>
         <p className="mt-0.5 text-ink-soft">
           {compact
-            ? "Providers often ring round when a room comes up. Share your number and follow up with a call."
-            : "Rooms go quickly and providers often ring round when one comes up. Put your phone number in your message, say when you can talk, and give them a call too if you haven't heard back within a day."}
+            ? "Providers often ring-3 round when a room comes up. Share your number and follow up with a call."
+            : "Rooms go quickly and providers often ring-3 round when one comes up. Put your phone number in your message, say when you can talk, and give them a call too if you haven't heard back within a day."}
         </p>
       </div>
     </div>

@@ -39,7 +39,7 @@ function SavedSearchCard({ search }: { search: SavedSearchRow }) {
       <div className="flex shrink-0 items-center gap-2">
         <select
           aria-label={`Alert frequency for ${search.label}`}
-          className="field !w-auto py-1.5 text-[13px]"
+          className="field w-auto! py-1.5 text-[13px]"
           defaultValue={search.frequency}
           disabled={pending}
           onChange={(e) => {

@@ -143,11 +143,11 @@ export function TourFeed({ slides, backHref, heading, signedIn, loginHref, refer
   );
 
   return (
-    <div className="tour-root fixed inset-0 z-[70] bg-[#05080d] text-white" role="dialog" aria-modal="true" aria-label={`Tour mode: ${heading}`}>
+    <div className="tour-root fixed inset-0 z-70 bg-[#05080d] text-white" role="dialog" aria-modal="true" aria-label={`Tour mode: ${heading}`}>
       <style>{TOUR_CSS}</style>
 
       {/* Top bar */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-black/70 via-black/25 to-transparent px-3 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 bg-linear-to-b from-black/70 via-black/25 to-transparent px-3 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5">
         <div className="pointer-events-auto mx-auto flex max-w-[560px] items-center gap-2">
           <Link
             href={backHref}
@@ -302,7 +302,7 @@ function Slide({
     <section
       data-index={index}
       data-active={active ? "true" : "false"}
-      className="tour-slide relative h-[100dvh] w-full snap-start snap-always overflow-hidden"
+      className="tour-slide relative h-dvh w-full snap-start snap-always overflow-hidden"
       aria-roledescription="slide"
       aria-label={`${index + 1}: ${slide.title}`}
     >
@@ -346,7 +346,7 @@ function Slide({
       )}
 
       {/* Readability gradient */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[62%] bg-gradient-to-t from-black/90 via-black/45 to-transparent" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[62%] bg-linear-to-t from-black/90 via-black/45 to-transparent" aria-hidden="true" />
 
       {/* Action rail */}
       <div className="absolute bottom-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] right-3 z-30 flex flex-col items-center gap-4 sm:right-6">
@@ -382,7 +382,7 @@ function Slide({
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium text-white/85">
             <span className="truncate">{slide.company.name}</span>
             {slide.company.verified && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] backdrop-blur">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] backdrop-blur-sm">
                 <CheckIcon className="h-3 w-3" /> Verified
               </span>
             )}
@@ -482,7 +482,7 @@ function MediaView({ item, show, playing, muted, title }: { item: TourMedia; sho
       <Backdrop src={optimisedImage(item.url, 64)} />
       <img src={optimisedImage(item.url, 600)} alt={item.caption ?? `Photo of ${title}`} className="relative h-full w-full object-cover sm:object-contain" draggable={false} />
       {item.caption && (
-        <span className="absolute left-4 top-[calc(max(0.75rem,env(safe-area-inset-top))+6rem)] max-w-[70%] rounded-full bg-black/45 px-2.5 py-1 text-[11px] text-white/85 backdrop-blur">
+        <span className="absolute left-4 top-[calc(max(0.75rem,env(safe-area-inset-top))+6rem)] max-w-[70%] rounded-full bg-black/45 px-2.5 py-1 text-[11px] text-white/85 backdrop-blur-sm">
           {item.caption}
         </span>
       )}
@@ -514,7 +514,7 @@ function EndSlide({
     <section
       data-index={index}
       data-active={active ? "true" : "false"}
-      className="tour-slide relative grid h-[100dvh] w-full snap-start snap-always place-items-center bg-gradient-to-b from-[#0b1a2c] to-[#05080d] px-6"
+      className="tour-slide relative grid h-dvh w-full snap-start snap-always place-items-center bg-linear-to-b from-[#0b1a2c] to-[#05080d] px-6"
     >
       <div className="tour-caption max-w-sm text-center">
         <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-white/10">
@@ -720,7 +720,7 @@ async function share(slide: TourSlide) {
 }
 
 function Chip({ children }: { children: ReactNode }) {
-  return <span className="rounded-full bg-white/15 px-2.5 py-1 text-[12px] font-medium text-white backdrop-blur">{children}</span>;
+  return <span className="rounded-full bg-white/15 px-2.5 py-1 text-[12px] font-medium text-white backdrop-blur-sm">{children}</span>;
 }
 
 function RailButton({

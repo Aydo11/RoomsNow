@@ -58,7 +58,7 @@ export function RequestForm({
       </Field>
 
       <label className="flex items-start gap-3 rounded-[10px] border border-line bg-white p-4">
-        <input type="checkbox" name="consent" className="mt-0.5 h-4 w-4 rounded border-line-strong text-pine focus:ring-pine" />
+        <input type="checkbox" name="consent" className="mt-0.5 h-4 w-4 rounded-sm border-line-strong text-pine focus:ring-pine" />
         <span className="text-[15px] leading-relaxed">
           I&apos;m happy for this provider to see these answers so they can respond to my request.
         </span>

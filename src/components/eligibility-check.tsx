@@ -296,7 +296,7 @@ function Question({
 }) {
   return (
     <div>
-      <h2 ref={headingRef} tabIndex={-1} className="text-[24px] font-bold leading-tight text-ink outline-none sm:text-[26px]">
+      <h2 ref={headingRef} tabIndex={-1} className="text-[24px] font-bold leading-tight text-ink outline-hidden sm:text-[26px]">
         {title}
       </h2>
       <p className="mt-1.5 text-[15px] leading-relaxed text-ink-soft">{hint}</p>
@@ -433,7 +433,7 @@ function Result({
           </svg>
         )}
       </span>
-      <h2 ref={headingRef} tabIndex={-1} className="mt-4 text-[26px] font-bold leading-tight text-ink outline-none sm:text-[30px]">
+      <h2 ref={headingRef} tabIndex={-1} className="mt-4 text-[26px] font-bold leading-tight text-ink outline-hidden sm:text-[30px]">
         {count === null || (counting && typeof count !== "number")
           ? "Finding your rooms…"
           : count === "unknown"

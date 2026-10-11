@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { COVER_MEDIA } from "@/lib/cover-image";
-import { areaStats, inPlace, needFromSlug, placesFrom, type AreaNeed, type Place } from "@/lib/area-pages";
+import { areaStats, filterAreaInventory, inPlace, needFromSlug, placesFrom, type AreaInventoryFilter, type AreaNeed, type Place } from "@/lib/area-pages";
 
 const LIVE = { status: "ACTIVE" as const, company: { status: "ACTIVE" as const } };
 
@@ -36,14 +36,14 @@ const cityListings = cache(async (city: string) =>
 export type AreaPageData = NonNullable<Awaited<ReturnType<typeof loadAreaPage>>>;
 
 /** Everything an area page shows, or null when the place (or need) doesn't exist. */
-export async function loadAreaPage(placeSlug: string, needSlug?: string) {
+export async function loadAreaPage(placeSlug: string, needSlug?: string, inventoryFilter?: AreaInventoryFilter) {
   const need: AreaNeed | null = needSlug ? needFromSlug(needSlug) : null;
   if (needSlug && !need) return null;
   const places = await livePlaces();
   const place = places.find((item) => item.slug === placeSlug);
   if (!place) return null;
 
-  const inCity = await cityListings(place.city);
+  const inCity = filterAreaInventory(await cityListings(place.city), inventoryFilter);
   const here = inCity.filter((listing) => inPlace(place, listing.property));
   const matching = need ? here.filter((listing) => listing.supportTypes.includes(need.support)) : here;
   // Rooms free now first, then the newest.

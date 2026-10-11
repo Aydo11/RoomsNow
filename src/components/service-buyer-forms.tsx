@@ -154,7 +154,7 @@ function StarInput({ name, label }: { name: string; label: string }) {
           <label key={star} className="cursor-pointer">
             <input type="radio" name={name} value={star} className="peer sr-only" checked={value === star} onChange={() => setValue(star)} required />
             <span className="sr-only">{star} star{star === 1 ? "" : "s"}</span>
-            <svg viewBox="0 0 20 20" aria-hidden="true" className={clsx("h-7 w-7 rounded peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand", star <= value ? "text-clay" : "text-line-strong")} fill="currentColor">
+            <svg viewBox="0 0 20 20" aria-hidden="true" className={clsx("h-7 w-7 rounded-sm peer-focus-visible:outline-solid peer-focus-visible:outline-2 peer-focus-visible:outline-brand", star <= value ? "text-clay" : "text-line-strong")} fill="currentColor">
               <path d="M10 1.5l2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.6-4.1 6.1-.6L10 1.5Z" />
             </svg>
           </label>

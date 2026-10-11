@@ -80,7 +80,7 @@ export default async function AgencyPage({ params }: { params: Promise<{ id: str
       )}
 
       <header className="card overflow-hidden">
-        <div className="relative h-40 bg-gradient-to-br from-pine-dark via-pine to-pine-light sm:h-56">
+        <div className="relative h-40 bg-linear-to-br from-pine-dark via-pine to-pine-light sm:h-56">
           {profile?.bannerUrl && <img src={optimisedImage(profile.bannerUrl, 960)} alt="" className="h-full w-full object-cover" />}
         </div>
         <div className="relative px-6 pb-7 sm:px-8">
@@ -168,7 +168,7 @@ export default async function AgencyPage({ params }: { params: Promise<{ id: str
                     <div>
                       <dt className="text-[12px] text-ink-faint">Email</dt>
                       <dd>
-                        <a href={`mailto:${profile.publicEmail}`} className="break-words text-pine-dark hover:underline">
+                        <a href={`mailto:${profile.publicEmail}`} className="wrap-break-word text-pine-dark hover:underline">
                           {profile.publicEmail}
                         </a>
                       </dd>

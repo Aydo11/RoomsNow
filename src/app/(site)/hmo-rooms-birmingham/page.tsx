@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { ListingCard } from "@/components/listing-card";
 import { hmoRoomsBirminghamContent as content } from "@/lib/seo-content";
 import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
-import { areaPath } from "@/lib/area-pages";
 import { money } from "@/lib/format";
 import { loadAreaPage } from "@/server/area-pages";
 import { HeroStreet } from "@/components/hero-street";
@@ -12,20 +12,24 @@ export const dynamic = "force-dynamic";
 
 const PATH = content.path;
 const SEARCH = "/search?where=Birmingham&type=SHARED_ACCOMMODATION";
+const loadBirminghamRooms = cache(() => loadAreaPage("birmingham", undefined, {
+  accommodationType: "SHARED_ACCOMMODATION",
+  availableOnly: true,
+}));
 
 /** Birmingham's own HMO rules, so the page says something no other city page can. */
 const BIRMINGHAM_RULES = [
   {
     heading: "Licensing covers small HMOs too",
-    body: "Birmingham City Council's additional licensing scheme has applied to smaller HMOs across every ward since June 2023, alongside the national mandatory licence for larger HMOs. A licensed HMO has had its room sizes, fire safety and management checked against the council's conditions.",
+    body: "Ask the provider whether the property needs an HMO licence and request its details. Check the current scheme and licence information directly with Birmingham City Council; a shared-room advert is not proof of licensing or property standards.",
   },
   {
     heading: "Planning permission for new HMOs",
-    body: "A citywide Article 4 direction, in force since June 2020, means turning a family house into an HMO for three to six people needs planning permission. It is one reason HMO rooms in some wards are harder to find than others.",
+    body: "Planning permission and HMO licensing are separate checks. Ask the provider about the property's planning status and consult the council's current guidance if you need to confirm the requirements.",
   },
   {
     heading: "Supported and exempt accommodation",
-    body: "Many Birmingham HMOs are supported exempt accommodation, where Housing Benefit covers the rent and residents pay a smaller weekly service charge. Ask the provider what support is included and what you will pay yourself.",
+    body: "Some shared homes offer support and may use a supported housing funding arrangement. Ask what support is provided, whether the advertised amount is rent or a personal service charge, and what you would need to pay. Benefit entitlement and provider acceptance must be confirmed individually.",
   },
 ];
 
@@ -35,22 +39,23 @@ const RESOURCES = [
 ];
 
 export async function generateMetadata(): Promise<Metadata> {
-  const data = await loadAreaPage("birmingham").catch(() => null);
+  const data = await loadBirminghamRooms().catch(() => null);
   const free = data?.stats.roomsFree ?? 0;
   return pageMetadata({
-    title: free ? `HMO Rooms to Rent in Birmingham: ${free} Rooms Free Now` : "HMO Rooms to Rent in Birmingham",
+    title: free ? `HMO Rooms in Birmingham: ${free} Shared Rooms Available` : "HMO Rooms to Rent in Birmingham",
     description: free
-      ? `${free} HMO and shared rooms free now in Birmingham from ${data!.stats.providers} providers. Compare rent, bills, areas and Housing Benefit, then message the provider directly.`
+      ? `${free} shared rooms listed as available in Birmingham from ${data!.stats.providers} providers. Compare costs, bills, areas and benefit information, then contact the provider.`
       : "Search HMO rooms and shared accommodation in Birmingham. Compare rent, bills, areas and Housing Benefit, then message the provider directly.",
     path: PATH,
   });
 }
 
 export default async function HmoRoomsBirminghamPage() {
-  const data = await loadAreaPage("birmingham").catch(() => null);
+  const data = await loadBirminghamRooms().catch(() => null);
   const stats = data?.stats;
   const listings = data?.listings.slice(0, 9) ?? [];
   const areas = data?.neighbourhoods.slice(0, 18) ?? [];
+  const providers = [...new Map((data?.listings ?? []).map((listing) => [listing.company.id, listing.company])).values()];
   const url = absoluteUrl(PATH);
 
   return (
@@ -62,7 +67,7 @@ export default async function HmoRoomsBirminghamPage() {
             "@type": "CollectionPage",
             name: "HMO rooms to rent in Birmingham",
             url,
-            description: stats?.adverts ? `${stats.roomsFree} HMO and shared rooms free now in Birmingham.` : content.introduction,
+            description: stats?.adverts ? `${stats.roomsFree} shared rooms listed as available in Birmingham.` : content.introduction,
             ...(listings.length
               ? {
                   mainEntity: {
@@ -101,12 +106,13 @@ export default async function HmoRoomsBirminghamPage() {
             <span aria-hidden="true">/</span>
             <span className="text-ink-soft">Birmingham</span>
           </nav>
-          <h1 className="mt-4 max-w-[20ch] text-[38px] font-bold leading-[1.08] [text-wrap:balance] sm:text-[52px]">HMO rooms to rent in Birmingham</h1>
+          <h1 className="mt-4 max-w-[20ch] text-[38px] font-bold leading-[1.08] text-balance sm:text-[52px]">HMO rooms to rent in Birmingham</h1>
           <p className="mt-5 max-w-[64ch] text-[18px] leading-relaxed text-ink-soft">
             {stats?.adverts
-              ? `${stats.roomsFree} room${stats.roomsFree === 1 ? "" : "s"} free now across ${stats.adverts} live advert${stats.adverts === 1 ? "" : "s"} from ${stats.providers} Birmingham provider${stats.providers === 1 ? "" : "s"}. Compare rent, bills and area, then message the provider directly.`
+              ? `${stats.roomsFree} shared room${stats.roomsFree === 1 ? "" : "s"} listed as available across ${stats.adverts} live advert${stats.adverts === 1 ? "" : "s"} from ${stats.providers} Birmingham provider${stats.providers === 1 ? "" : "s"}. Compare costs, bills and area, then confirm availability with the provider.`
               : content.introduction}
           </p>
+          <p className="mt-3 max-w-[68ch] text-[15px] leading-relaxed text-ink-soft">Available means the provider has marked a room as available; it does not mean accommodation is free of charge. Shared homes may include supported accommodation. Check each advert's eligibility, costs and any licensing details.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href={SEARCH} className="btn-primary">{content.primaryCta.label}</Link>
             <Link href={content.secondaryCta.href} className="btn-secondary">{content.secondaryCta.label}</Link>
@@ -115,9 +121,9 @@ export default async function HmoRoomsBirminghamPage() {
         <HeroStreet
           className="hero-street-compact"
           pills={[
-            { at: 0.22, label: areas[0] ? `Room free · ${areas[0].place.name}` : "Room free", tone: "amber" },
-            { at: 0.5, label: "Housing Benefit accepted", tone: "blue" },
-            { at: 0.78, label: areas[1] ? `New in ${areas[1].place.name}` : "Verified provider", tone: "green" },
+            { at: 0.22, label: areas[0] ? `Shared rooms · ${areas[0].place.name}` : "Search shared rooms", tone: "amber" },
+            { at: 0.5, label: "Check costs and benefits", tone: "blue" },
+            { at: 0.78, label: areas[1] ? `Explore ${areas[1].place.name}` : "Compare provider details", tone: "green" },
           ]}
         />
       </section>
@@ -125,21 +131,22 @@ export default async function HmoRoomsBirminghamPage() {
       <div className="shell py-12 sm:py-14">
         {stats && stats.adverts > 0 && (
           <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-4">
-            <Fact label="Rooms free now" value={String(stats.roomsFree)} />
+            <Fact label="Rooms available" value={String(stats.roomsFree)} />
             <Fact label="Areas covered" value={String(data!.neighbourhoods.length || 1)} />
             <Fact label="Accept Housing Benefit" value={`${pct(stats.housingBenefit, stats.adverts)}%`} />
-            <Fact label="Typical weekly charge" value={stats.typicalRent ? money(stats.typicalRent) : "Ask"} />
+            <Fact label="Advertised weekly amount" value={stats.typicalRent ? money(stats.typicalRent) : "Ask"} />
           </dl>
         )}
 
         {listings.length > 0 && (
           <section className="mt-12" aria-labelledby="live-rooms">
             <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2 id="live-rooms" className="text-[28px]">Rooms free in Birmingham now</h2>
+              <h2 id="live-rooms" className="text-[28px]">Available shared rooms in Birmingham</h2>
               <Link href={SEARCH} className="text-[15px] font-semibold text-pine-dark hover:underline">
                 See all {stats!.adverts} adverts
               </Link>
             </div>
+            <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-ink-soft">Amounts shown can represent rent or a personal charge for supported accommodation. Ask for the full cost, bills, deposit and any charges in writing before applying.</p>
             <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {listings.map((listing) => (
                 <ListingCard key={listing.id} listing={{ ...listing, distanceMiles: null }} />
@@ -148,17 +155,19 @@ export default async function HmoRoomsBirminghamPage() {
           </section>
         )}
 
+        {!listings.length && <p className="mt-8 text-ink-soft">No shared rooms are currently marked as available here. <Link href="/rooms/birmingham" className="text-pine-dark underline">Check other Birmingham accommodation</Link> or return later.</p>}
+
         {areas.length > 0 && (
           <nav className="mt-14" aria-labelledby="by-area">
             <h2 id="by-area" className="text-[28px]">HMO rooms by area of Birmingham</h2>
-            <p className="mt-2 text-[15px] text-ink-soft">The warmer the tile, the more adverts in that area right now.</p>
+            <p className="mt-2 text-[15px] text-ink-soft">Choose an area to search shared rooms. Compare the journey you need, shared facilities and the full weekly cost.</p>
             <ul data-reveal="stagger" className="area-board mt-5">
               {areas.map((row) => {
                 const glow = Math.min(1, row.adverts / Math.max(1, areas[0]?.adverts ?? 1));
                 const lit = Math.max(1, Math.round(glow * 6));
                 return (
                   <li key={row.place.slug}>
-                    <Link href={areaPath(row.place)} className="area-tile" style={{ ["--glow" as string]: glow.toFixed(2) }}>
+                    <Link href={`/search?where=${encodeURIComponent(row.place.name)}&type=SHARED_ACCOMMODATION`} className="area-tile" style={{ ["--glow" as string]: glow.toFixed(2) }}>
                       <span className="area-tile-windows" aria-hidden="true">
                         {Array.from({ length: 6 }, (_, i) => <span key={i} className={i < lit ? "on" : undefined} />)}
                       </span>
@@ -171,6 +180,16 @@ export default async function HmoRoomsBirminghamPage() {
                   </li>
                 );
               })}
+            </ul>
+          </nav>
+        )}
+
+        {providers.length > 0 && (
+          <nav className="mt-14" aria-labelledby="birmingham-providers">
+            <h2 id="birmingham-providers" className="text-[28px]">Providers advertising shared rooms in Birmingham</h2>
+            <p className="mt-2 text-[15px] text-ink-soft">Read each provider's profile and current adverts before making an enquiry.</p>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {providers.map((provider) => <li key={provider.id}><Link href={`/companies/${provider.slug}`} className="chip hover:border-pine hover:text-pine-dark">{provider.name}</Link></li>)}
             </ul>
           </nav>
         )}

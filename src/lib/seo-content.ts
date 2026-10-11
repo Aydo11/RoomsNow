@@ -210,11 +210,14 @@ export const hmoRoomsBirminghamContent: LandingPageContent = {
     { heading: "Check the provider", body: "Read the provider profile, verification status and the information supplied with each advert." },
   ],
   sections: [
-    { heading: "Searching for an HMO room in Birmingham", paragraphs: ["Birmingham has a broad mix of shared homes, HMOs and specialist accommodation. Start with the location you need, then compare travel, household arrangements and the total weekly cost rather than relying on rent alone.", "RoomsNow brings current room availability and property information together. Each provider remains responsible for its advert, tenancy terms, property standards and any licence the property requires."] },
+    { heading: "Searching for an HMO room in Birmingham", paragraphs: ["Birmingham has a broad mix of shared homes, HMOs and specialist accommodation. Start with the location you need, then compare travel, household arrangements and the total weekly cost rather than relying on rent alone.", "Use the area links above to explore neighbourhoods with available shared rooms. Compare the journey to work, appointments or your support network, and ask about shared bathrooms, kitchen space and house rules before arranging a viewing.", "RoomsNow brings provider-reported availability and property information together. Each provider remains responsible for its advert, tenancy terms, property standards and any licence the property requires."] },
+    { heading: "Compare the full cost of a Birmingham room", paragraphs: ["Ask whether the advertised weekly amount is the full rent or a personal service charge, and whether heating, electricity, water, internet and any council tax are included. Confirm the deposit and any other payments in writing.", "Some adverts offer supported accommodation with specific support, funding or referral requirements. An ordinary shared-room tenancy and a supported placement can have different costs and application steps; ask the provider which arrangement applies to the room you are considering."] },
     { heading: "What to check before choosing a room", paragraphs: ["Ask whether bills are included, how the deposit is protected, which facilities are shared, who manages repairs and whether there are house rules. If the property is an HMO, ask the provider whether Birmingham City Council requires it to be licensed and, where relevant, request the licence details.", "Never pay solely because an advert appears online. View the property where possible, confirm who you are dealing with and read the proposed agreement before sending money."] },
   ],
   faqs: [
     { question: "How do I search HMO rooms in Birmingham?", answer: "Use the Birmingham search button and refine the results by accommodation type, weekly rent, facilities, household arrangement and move-in date." },
+    { question: "Does available mean a room is free of charge?", answer: "No. Available means the provider has marked the room as available. Ask about the full rent, bills, deposit and any personal service charges, and confirm the move-in date directly." },
+    { question: "Can I enquire if I receive Universal Credit or Housing Benefit?", answer: "Check each advert's benefits and referral information, then ask the provider about its requirements and what you would pay yourself. Receiving benefits does not guarantee acceptance or that all costs are covered." },
     { question: "Are all Birmingham HMOs licensed?", answer: "Licensing depends on the property and the local scheme in force. Ask the provider and check current requirements with Birmingham City Council." },
     { question: "Does RoomsNow manage Birmingham properties?", answer: "No. RoomsNow is a marketplace. Independent providers manage their properties, applications and tenancy arrangements." },
   ],
@@ -224,6 +227,9 @@ export const hmoRoomsBirminghamContent: LandingPageContent = {
     { label: "Supported accommodation in Birmingham", href: "/supported-accommodation-birmingham" },
     { label: "HMO rooms across the UK", href: "/hmo-rooms" },
     { label: "What is an HMO?", href: "/guides/what-is-an-hmo" },
+    { label: "How to find an HMO room", href: "/guides/how-to-find-an-hmo-room" },
+    { label: "Room viewing checklist", href: "/guides/hmo-room-viewing-checklist" },
+    { label: "Compare HMO room costs", href: "/guides/how-much-does-an-hmo-room-cost" },
   ],
 };
 

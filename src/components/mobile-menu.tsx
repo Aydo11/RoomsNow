@@ -77,7 +77,7 @@ export function MobileMenu({ children }: { children: React.ReactNode }) {
       {mounted &&
         open &&
         createPortal(
-          <div className="fixed inset-0 z-[60]">
+          <div className="fixed inset-0 z-60">
             <button type="button" aria-label="Close menu" tabIndex={-1} onClick={() => close()} className="mobile-menu-backdrop absolute inset-0 h-full w-full cursor-default bg-[#07101c]/55" />
             <div
               id="mobile-menu-sheet"

@@ -47,7 +47,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 function Check({ name, label, hint, defaultChecked }: { name: string; label: string; hint?: string; defaultChecked?: boolean }) {
   return (
     <label className="flex cursor-pointer items-start gap-3 rounded-[10px] border border-line bg-white p-3">
-      <input id={name} type="checkbox" name={name} defaultChecked={defaultChecked} className="mt-0.5 h-4 w-4 shrink-0 rounded border-line-strong text-pine focus:ring-pine" />
+      <input id={name} type="checkbox" name={name} defaultChecked={defaultChecked} className="mt-0.5 h-4 w-4 shrink-0 rounded-sm border-line-strong text-pine focus:ring-pine" />
       <span>
         <span className="block text-[15px] text-ink">{label}</span>
         {hint && <span className="mt-0.5 block text-[13px] text-ink-faint">{hint}</span>}
@@ -139,7 +139,7 @@ export function ServiceProfileForm({ values, maxAreas, portfolioLimit }: { value
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {SERVICE_CATEGORIES.map((category) => (
               <label key={category.slug} className="flex cursor-pointer items-center gap-2.5 rounded-[10px] border border-line bg-white px-3 py-2.5 text-[14px] hover:border-line-strong">
-                <input type="checkbox" name="categories" value={category.slug} defaultChecked={values.categories.includes(category.slug)} className="h-4 w-4 rounded border-line-strong text-pine focus:ring-pine" />
+                <input type="checkbox" name="categories" value={category.slug} defaultChecked={values.categories.includes(category.slug)} className="h-4 w-4 rounded-sm border-line-strong text-pine focus:ring-pine" />
                 {category.label}
               </label>
             ))}
@@ -205,7 +205,7 @@ export function ServiceProfileForm({ values, maxAreas, portfolioLimit }: { value
                 <li key={image} className="space-y-1">
                   <img src={optimisedImage(image, 160)} alt="" className="aspect-square w-full rounded-[8px] object-cover" />
                   <label className="flex items-center gap-1.5 text-[12px] text-ink-soft">
-                    <input type="checkbox" name="removePortfolio" value={image} className="h-3.5 w-3.5 rounded border-line-strong" />
+                    <input type="checkbox" name="removePortfolio" value={image} className="h-3.5 w-3.5 rounded-sm border-line-strong" />
                     Remove
                   </label>
                 </li>
@@ -422,7 +422,7 @@ export function ServiceAdvertForm({ values, maxAreas, canSubmit }: { values: Ser
                 <li key={image} className="space-y-1">
                   <img src={optimisedImage(image, 160)} alt="" className="aspect-square w-full rounded-[8px] object-cover" />
                   <label className="flex items-center gap-1.5 text-[12px] text-ink-soft">
-                    <input type="checkbox" name="removeImages" value={image} className="h-3.5 w-3.5 rounded border-line-strong" />
+                    <input type="checkbox" name="removeImages" value={image} className="h-3.5 w-3.5 rounded-sm border-line-strong" />
                     Remove
                   </label>
                 </li>

@@ -46,9 +46,9 @@ export default async function ServiceBusinessProfile({ params }: { params: Promi
     <div className="shell py-6 sm:py-8">
       <div className="flex justify-end"><ServicesTabs active="browse" /></div>
       <header className="card mt-4 overflow-hidden">
-        {business.coverUrl ? <img src={business.coverUrl} alt="" className="h-36 w-full object-cover sm:h-48" /> : <div aria-hidden="true" className="h-20 bg-gradient-to-r from-brand/15 to-pine-light" />}
+        {business.coverUrl ? <img src={business.coverUrl} alt="" className="h-36 w-full object-cover sm:h-48" /> : <div aria-hidden="true" className="h-20 bg-linear-to-r from-brand/15 to-pine-light" />}
         <div className="flex flex-wrap items-end gap-4 p-5">
-          <div className="-mt-12 rounded-[14px] bg-white p-1 shadow-raise"><BusinessLogo src={business.logoUrl} name={name} size={80} /></div>
+          <div className="-mt-12 rounded-card bg-white p-1 shadow-raise"><BusinessLogo src={business.logoUrl} name={name} size={80} /></div>
           <div className="min-w-0 flex-1">
             <h1 className="text-[26px] leading-tight sm:text-[30px]">{name}</h1>
             <p className="text-[14px] text-ink-soft">
@@ -95,7 +95,7 @@ export default async function ServiceBusinessProfile({ params }: { params: Promi
             <section className="card p-5">
               <h2 className="text-[18px]">Recent work</h2>
               <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {business.portfolio.map((image, index) => <li key={image}><img src={optimisedImage(image, 320)} alt={`Work by ${name} — ${index + 1}`} className="aspect-[4/3] w-full rounded-[10px] object-cover" loading="lazy" /></li>)}
+                {business.portfolio.map((image, index) => <li key={image}><img src={optimisedImage(image, 320)} alt={`Work by ${name} — ${index + 1}`} className="aspect-4/3 w-full rounded-[10px] object-cover" loading="lazy" /></li>)}
               </ul>
             </section>
           )}

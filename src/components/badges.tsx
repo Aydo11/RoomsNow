@@ -46,7 +46,7 @@ export function AccreditationBadge({
       )}
       title={assessing ? `${name} is being assessed by RoomsNow and is not yet verified.` : `${name} verified by RoomsNow against submitted evidence.`}
     >
-      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 text-[10px] font-extrabold shadow-sm" aria-hidden="true">
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 text-[10px] font-extrabold shadow-xs" aria-hidden="true">
         {scheme === "CQC" ? "CQC" : scheme === "ROOMSNOW" ? "RN" : scheme.slice(0, 4).toUpperCase()}
       </span>
       <span className="leading-tight">

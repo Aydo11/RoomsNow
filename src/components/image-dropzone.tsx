@@ -114,10 +114,10 @@ export function ImageDropzone({
           if (event.dataTransfer.files.length) applyFiles(event.dataTransfer.files);
         }}
         className={clsx(
-          "group relative flex cursor-pointer items-center justify-center overflow-hidden rounded-[12px] border-2 border-dashed text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine",
+          "group relative flex cursor-pointer items-center justify-center overflow-hidden rounded-[12px] border-2 border-dashed text-center transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-pine",
           dragging ? "border-pine bg-pine-light" : "border-line-strong bg-paper-sunk hover:border-pine/60",
           shape === "square" && "aspect-square w-full max-w-[220px]",
-          shape === "wide" && "aspect-[16/7] w-full",
+          shape === "wide" && "aspect-16/7 w-full",
           shape === "grid" && "min-h-[190px] w-full px-4 py-8",
         )}
       >

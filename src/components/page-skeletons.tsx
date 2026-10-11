@@ -40,7 +40,7 @@ export function DetailSkeleton() {
       <div className="skeleton h-4 w-48" />
       <div className="mt-5 grid gap-8 lg:grid-cols-[1fr_340px]">
         <div>
-          <div className="skeleton aspect-[16/9] w-full rounded-card" />
+          <div className="skeleton aspect-video w-full rounded-card" />
           <div className="skeleton mt-7 h-8 w-2/3" />
           <div className="skeleton mt-3 h-4 w-1/3" />
           <div className="mt-6 space-y-2.5">

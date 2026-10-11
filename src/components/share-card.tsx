@@ -81,7 +81,7 @@ function ShareSheet({ listingId, title, onClose }: { listingId: string; title: s
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Share card">
+    <div className="fixed inset-0 z-80 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Share card">
       <button type="button" aria-label="Close" onClick={onClose} className="share-fade absolute inset-0 bg-black/55" />
       <div className="share-rise relative max-h-[92dvh] w-full max-w-[460px] overflow-y-auto rounded-t-[22px] bg-paper-card p-5 shadow-float sm:rounded-[22px]">
         <style>{SHARE_CSS}</style>
@@ -91,7 +91,7 @@ function ShareSheet({ listingId, title, onClose }: { listingId: string; title: s
             ✕
           </button>
         </div>
-        <div className="relative mt-3 aspect-square overflow-hidden rounded-[14px] bg-paper-sunk">
+        <div className="relative mt-3 aspect-square overflow-hidden rounded-card bg-paper-sunk">
           {!loaded && <div className="skeleton absolute inset-0" />}
           {/* eslint-disable-next-line @next/next/no-img-element -- generated card */}
           <img src={imagePath} alt={`Share card for ${title}`} className={clsx("h-full w-full transition-opacity duration-300", loaded ? "opacity-100" : "opacity-0")} onLoad={() => setLoaded(true)} />

@@ -84,7 +84,7 @@ export default async function SupportOrganisationPage({ params }: { params: Prom
         <div className="min-w-0 space-y-8">
           <header>
             <div className="flex items-start gap-4">
-              <span aria-hidden="true" className={org.crisis ? "grid h-14 w-14 shrink-0 place-items-center rounded-[14px] bg-clay-light text-clay" : "grid h-14 w-14 shrink-0 place-items-center rounded-[14px] bg-pine-light text-pine-dark"}>
+              <span aria-hidden="true" className={org.crisis ? "grid h-14 w-14 shrink-0 place-items-center rounded-card bg-clay-light text-clay" : "grid h-14 w-14 shrink-0 place-items-center rounded-card bg-pine-light text-pine-dark"}>
                 <SupportCategoryIcon slug={org.categories[0] ?? "health-wellbeing"} className="h-7 w-7" />
               </span>
               <div className="min-w-0">

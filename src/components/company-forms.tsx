@@ -184,7 +184,7 @@ export function CompanyForm({
       <FormSuccess message={state.ok ? state.message : undefined} />
 
       <div>
-        <BannerPicker initialUrl={company.bannerUrl} alt="Provider banner preview" className="h-40 rounded-[14px] sm:h-44" />
+        <BannerPicker initialUrl={company.bannerUrl} alt="Provider banner preview" className="h-40 rounded-card sm:h-44" />
         {state.errors?.banner && <p className="mt-1 text-[13px] text-clay" role="alert">{state.errors.banner}</p>}
 
         <div className="relative -mt-10 ml-5">
