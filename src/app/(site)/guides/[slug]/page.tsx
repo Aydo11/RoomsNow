@@ -182,6 +182,9 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
               <h2 className="text-[25px]">{guide.cta.title}</h2>
               <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{guide.cta.body}</p>
               <Link href={guide.cta.href} className="btn-primary mt-5">{guide.cta.label}</Link>
+              {(guide.slug.includes("hmo") || guide.slug === "housing-benefit-and-supported-accommodation") && (
+                <p className="mt-4 text-[15px] leading-relaxed text-ink-soft">Looking in Birmingham? <Link href="/hmo-rooms-birmingham" className="font-semibold text-pine-dark underline">Compare available HMO and shared rooms in Birmingham</Link>, including costs, areas and provider details.</p>
+              )}
             </section>
           </div>
 

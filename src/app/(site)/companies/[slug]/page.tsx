@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
@@ -13,7 +14,7 @@ import { ProviderReviews } from "@/components/provider-reviews";
 import { ResidentReviews } from "@/components/resident-reviews";
 import { residentReviewsFor } from "@/server/resident-reviews";
 import { ORG_TYPES, supportLabel } from "@/lib/taxonomy";
-import { JsonLd, absoluteUrl } from "@/lib/seo";
+import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
 import { COVER_MEDIA } from "@/lib/cover-image";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const company = await db.company.findUnique({ where: { slug }, select: { name: true, about: true, city: true, status: true, logoUrl: true, bannerUrl: true } });
   if (!company) return { title: "Accommodation provider", robots: { index: false, follow: true } };
   const title = `${company.name}${company.city ? ` — ${company.city} Accommodation Provider` : " — Accommodation Provider"}`;
-  const description = company.about ?? `View accommodation and live room vacancies from ${company.name}${company.city ? ` in ${company.city}` : ""} on RoomsNow.`;
+  const description = company.about?.trim() || `View accommodation adverts and provider information from ${company.name}${company.city ? ` in ${company.city}` : ""} on RoomsNow. Check each advert for availability, costs and referral requirements.`;
   const url = absoluteUrl(`/companies/${slug}`);
   return {
     title,
@@ -103,6 +104,12 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
   const socialLinks = Array.isArray(company.socialLinks)
     ? (company.socialLinks as { platform: string; url: string }[])
     : [];
+  const vacancyCities = [...new Set(company.listings
+    .filter((listing) => listing.rooms.some((room) => room.status === "AVAILABLE"))
+    .map((listing) => listing.property.city.trim())
+    .filter(Boolean))];
+  const availableRooms = company.listings.reduce((total, listing) => total + listing.rooms.filter((room) => room.status === "AVAILABLE").length, 0);
+  const profileIntroduction = company.about?.trim() || `${company.name} has ${company.listings.length} live accommodation advert${company.listings.length === 1 ? "" : "s"} on RoomsNow${company.city ? ` and is based in ${company.city}` : ""}. Browse the adverts below for property details, costs and referral requirements. ${availableRooms} room${availableRooms === 1 ? " is" : "s are"} currently marked as available; confirm the details directly with the provider.`;
 
   return (
     <div className="shell py-10">
@@ -217,7 +224,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
             <div>
               <h2 className="text-[19px]">About this provider</h2>
               <p className="mt-2 max-w-[72ch] whitespace-pre-line text-[15px] leading-relaxed text-ink-soft">
-                {company.about || "This provider has not added an organisation introduction yet."}
+                {profileIntroduction}
               </p>
 
               {company.supportTypes.length > 0 && (
@@ -285,6 +292,15 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
           <ListingCard key={listing.id} listing={{ ...listing, distanceMiles: null }} />
         ))}
       </div>
+      {vacancyCities.length > 0 && (
+        <nav className="mt-10 border-t border-line pt-6" aria-label="Accommodation in this provider's areas">
+          <h2 className="text-[20px]">Explore accommodation in these areas</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {vacancyCities.map((city) => <Link key={city} href={`/rooms/${locationSlug(city)}`} className="chip hover:border-pine hover:text-pine-dark">Rooms in {city}</Link>)}
+            {vacancyCities.some((city) => city.toLowerCase() === "birmingham") && <Link href="/hmo-rooms-birmingham" className="chip hover:border-pine hover:text-pine-dark">Compare Birmingham HMO and shared rooms</Link>}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

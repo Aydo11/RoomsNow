@@ -61,6 +61,19 @@ export type AreaListing = {
   rooms: { status: string }[];
 };
 
+export type AreaInventoryFilter = { accommodationType?: string; availableOnly?: boolean };
+
+/** Keep displayed cards, counts and neighbourhoods on the same inventory scope. */
+export function filterAreaInventory<T extends { accommodationType: string; rooms: { status: string }[] }>(
+  listings: T[],
+  filter: AreaInventoryFilter = {},
+): T[] {
+  return listings.filter((listing) =>
+    (!filter.accommodationType || listing.accommodationType === filter.accommodationType) &&
+    (!filter.availableOnly || listing.rooms.some((room) => room.status === "AVAILABLE")),
+  );
+}
+
 export type AreaStats = {
   adverts: number;
   roomsFree: number;

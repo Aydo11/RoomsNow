@@ -55,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const [listings, companies, cities, areaListings] = await Promise.all([
       db.listing.findMany({
-        where: { status: "ACTIVE", rooms: { some: { status: "AVAILABLE" } } },
+        where: { status: "ACTIVE", company: { status: "ACTIVE" }, rooms: { some: { status: "AVAILABLE" } } },
         select: { id: true, updatedAt: true },
       }),
       db.company.findMany({
@@ -63,7 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         select: { slug: true, updatedAt: true },
       }),
       db.property.findMany({
-        where: { listings: { some: { status: "ACTIVE", rooms: { some: { status: "AVAILABLE" } } } } },
+        where: { listings: { some: { status: "ACTIVE", company: { status: "ACTIVE" }, rooms: { some: { status: "AVAILABLE" } } } } },
         select: { city: true, updatedAt: true },
         distinct: ["city"],
       }),
