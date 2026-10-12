@@ -133,9 +133,9 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
               )
             ) : otherParty && otherProfileUrl ? (
               <Link href={otherProfileUrl} className="rounded-xs underline decoration-brand/40 underline-offset-4 hover:text-brand focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-brand">
-                {otherParty.user.firstName} {otherParty.user.lastName.charAt(0)}.
+                {otherParty.user.firstName || "Room seeker"}{otherParty.user.lastName ? ` ${otherParty.user.lastName.charAt(0)}.` : ""}
               </Link>
-            ) : otherParty ? `${otherParty.user.firstName} ${otherParty.user.lastName.charAt(0)}.` : "Conversation"}
+            ) : otherParty ? (otherParty.user.firstName ? `${otherParty.user.firstName}${otherParty.user.lastName ? ` ${otherParty.user.lastName.charAt(0)}.` : ""}` : "Room seeker") : "Conversation"}
           </h1>
           {service && (
             <span className="flex min-w-0 items-center gap-1.5 text-[12.5px] sm:text-[14px]">
@@ -169,7 +169,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           {otherParty && (
             <ConversationMenu
               otherUserId={otherParty.userId}
-              otherName={otherParty.user.firstName}
+              otherName={otherParty.user.firstName || "this member"}
               initiallyBlocked={alreadyBlocked}
             />
           )}

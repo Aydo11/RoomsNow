@@ -6,7 +6,7 @@ import { db } from "./db";
 import type { Role } from "@prisma/client";
 
 const COOKIE = "sr_session";
-const MAX_AGE = 60 * 60 * 24 * 14; // 14 days
+const MAX_AGE = 60 * 60 * 24 * 14; // 14 days for professional accounts
 
 function key() {
   const secret = process.env.AUTH_SECRET;
@@ -21,11 +21,12 @@ function key() {
 export type SessionPayload = { sub: string; role: Role; ver: number };
 
 export async function createSession(userId: string, role: Role, tokenVersion = 0) {
+  const maxAge = role === "USER" ? 60 * 60 * 24 * 30 : MAX_AGE;
   const token = await new SignJWT({ role, ver: tokenVersion })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
-    .setExpirationTime(`${MAX_AGE}s`)
+    .setExpirationTime(`${maxAge}s`)
     .sign(key());
 
   const cookieStore = await cookies();
@@ -36,7 +37,7 @@ export async function createSession(userId: string, role: Role, tokenVersion = 0
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: MAX_AGE,
+    maxAge,
   });
 }
 

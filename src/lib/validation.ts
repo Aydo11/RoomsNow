@@ -37,8 +37,8 @@ export const passwordChangeSchema = z
 
 export const registerSchema = z.object({
   accountType: z.enum(["USER", "PROVIDER", "REFERRER", "SERVICE_PROVIDER"]),
-  firstName: z.string().trim().min(1, "Enter your first name.").max(80),
-  lastName: z.string().trim().min(1, "Enter your last name.").max(80),
+  firstName: z.string().trim().max(80).default(""),
+  lastName: z.string().trim().max(80).default(""),
   email,
   phone: z.string().trim().max(30).optional().or(z.literal("")),
   password,
@@ -70,6 +70,11 @@ export const registerSchema = z.object({
     .optional()
     .or(z.literal("")),
   terms: z.literal("on", { errorMap: () => ({ message: "Please accept the terms to continue." }) }),
+}).superRefine((data, context) => {
+  if (data.accountType !== "USER") {
+    if (!data.firstName) context.addIssue({ code: "custom", path: ["firstName"], message: "Enter your first name." });
+    if (!data.lastName) context.addIssue({ code: "custom", path: ["lastName"], message: "Enter your last name." });
+  }
 });
 
 export const socialLinkSchema = z.object({

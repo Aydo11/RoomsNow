@@ -1,3 +1,4 @@
+import { authHref, safeRedirect } from "@/lib/auth-navigation";
 import { createHash, randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { callerIp, LIMITS, rateLimit } from "@/lib/rate-limit";
@@ -12,12 +13,12 @@ export async function GET(request: NextRequest) {
   const base = process.env.APP_URL || request.url;
 
   const limited = await rateLimit(`oauth:${await callerIp()}`, LIMITS.oauth);
-  if (!limited.ok) return NextResponse.redirect(new URL("/login?oauth=failed", base));
+  if (!limited.ok) return NextResponse.redirect(new URL(authHref("/login?oauth=failed", request.nextUrl.searchParams.get("next")), base));
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const appUrl = process.env.APP_URL;
   if (!clientId || !process.env.GOOGLE_CLIENT_SECRET || !appUrl) {
-    return NextResponse.redirect(new URL("/login?oauth=failed", base));
+    return NextResponse.redirect(new URL(authHref("/login?oauth=failed", request.nextUrl.searchParams.get("next")), base));
   }
 
   const state = randomBytes(24).toString("base64url");
@@ -43,9 +44,4 @@ export async function GET(request: NextRequest) {
   response.cookies.set("sr_oauth_verifier", verifier, options);
   response.cookies.set("sr_oauth_next", next, options);
   return response;
-}
-
-function safeRedirect(target: string, fallback: string) {
-  if (!target.startsWith("/") || target.startsWith("//") || target.startsWith("/\\")) return fallback;
-  return target;
 }

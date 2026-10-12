@@ -1,3 +1,4 @@
+import { authHref, safeRedirect } from "@/lib/auth-navigation";
 import Link from "next/link";
 import { ResendVerificationForm } from "@/components/auth-forms";
 import { getCurrentUser } from "@/lib/session";
@@ -46,7 +47,7 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
                 <strong className="text-ink">you&apos;re now signed in</strong>. There&apos;s no need to log in again.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link href={homeFor(user.role)} className="btn-primary">Go to my dashboard</Link>
+                <Link href={safeRedirect(query.next, homeFor(user.role))} className="btn-primary">{safeRedirect(query.next) ? "Continue where I left off" : "Go to my dashboard"}</Link>
                 {user.role === "USER" && <Link href="/search" className="btn-secondary">Find a room</Link>}
               </div>
             </>
@@ -56,7 +57,7 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
                 Your email address is confirmed. <strong className="text-ink">Please log back in</strong> with the email
                 and password you signed up with to carry on.
               </p>
-              <Link href="/login?verified=1" className="btn-primary mt-6">Log back in</Link>
+              <Link href={authHref("/login?verified=1", query.next)} className="btn-primary mt-6">Log back in</Link>
             </>
           )}
         </div>
@@ -74,7 +75,7 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
             ? "That verification link is invalid or has expired. Request a fresh one below."
             : "We sent a 24-hour verification link. Press the button in the email and we'll confirm your address and sign you in straight away."}
         </p>
-        <ResendVerificationForm initialEmail={query.email ?? ""} />
+        <ResendVerificationForm initialEmail={query.email ?? ""} next={query.next} />
       </div>
     </div>
   );
