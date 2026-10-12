@@ -1434,6 +1434,15 @@ html[data-theme="dark"] {
 }
 @media (min-width: 640px) { .assist-launcher { padding: 0 18px 0 16px; } }
 @media (min-width: 1024px) { .assist-launcher { right: 24px; bottom: 24px; } }
+/* Listing contact controls must stay clear of the floating Help button. */
+@media (max-width: 1023px) {
+  body:has([aria-label="Quick accommodation contact"]) .assist-launcher {
+    bottom: calc(152px + env(safe-area-inset-bottom));
+  }
+  body:has([aria-label="Quick accommodation contact"]) .back-to-top {
+    bottom: calc(216px + env(safe-area-inset-bottom));
+  }
+}
 
 .assist-panel {
   position: fixed;

@@ -11,6 +11,7 @@ test("Mobile contact actions are before the property description and above botto
   assert.match(page, /whatsappVisible && <WhatsappContactLink listingId=\{listing.id\} title=\{listing.title\} compact/);
   assert.match(page, /const whatsappVisible = showWhatsappContact\(listing.status, listing.company\)/);
   assert.match(page, /existingRequest \? "\/dashboard\/requests"/);
+  assert.match(source("app/globals.css"), /body:has\(\[aria-label="Quick accommodation contact"\]\) \.assist-launcher/);
 });
 
 test("Card WhatsApp shortcuts stay independently clickable, accessible and tracked", () => {
