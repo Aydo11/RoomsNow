@@ -9,6 +9,7 @@ import { providerNav } from "../nav";
 import { money, shortDate } from "@/lib/format";
 import { cancelWhatsappAddonAction, startWhatsappAddonAction } from "@/server/actions/billing";
 import { WHATSAPP_ADDON_PRICE, whatsappAccess } from "@/lib/whatsapp-access";
+import { WhatsappSetupPrompt } from "@/components/whatsapp-setup-prompt";
 
 export const metadata = { title: "Membership" };
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
     db.payment.findMany({ where: { companyId }, orderBy: { createdAt: "desc" }, take: 20 }),
     db.company.findUniqueOrThrow({
       where: { id: companyId },
-      select: { whatsappAddonStatus: true, whatsappAddonPeriodEnd: true, whatsappAddonCancelAtPeriodEnd: true, whatsappEnabled: true, whatsappGrantActive: true, whatsappGrantExpiresAt: true },
+      select: { whatsappNumber: true, whatsappAddonStatus: true, whatsappAddonPeriodEnd: true, whatsappAddonCancelAtPeriodEnd: true, whatsappEnabled: true, whatsappGrantActive: true, whatsappGrantExpiresAt: true },
     }),
   ]);
   const whatsapp = whatsappAccess(limits.membership.tier, addon.whatsappAddonStatus, addon);
@@ -42,6 +43,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       nav={nav}
       active="/provider/membership"
     >
+      {whatsapp.allowed && (!addon.whatsappEnabled || !addon.whatsappNumber) && <WhatsappSetupPrompt initialNumber={addon.whatsappNumber} autoOpen={query.whatsapp === "complete"} />}
       {query.billing === "complete" && <SuccessCelebration kind="membership" clearQueryParam="billing" />}
       {query.billing === "complete" && <div className="mb-5"><FormSuccess message="Payment completed. Your membership will update as soon as Stripe confirms it." /></div>}
       {limits.grant && (
@@ -107,7 +109,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       <section id="whatsapp-addon" className="mt-8 scroll-mt-24">
         <h2 className="text-[20px]">Add-ons</h2>
         {query.whatsapp === "complete" && (
-          <div className="mt-3"><FormSuccess message="WhatsApp add-on set up. Add your business WhatsApp number in Company profile to show the button on your adverts." /></div>
+          <div className="mt-3"><FormSuccess message={whatsapp.allowed ? "WhatsApp access is active. Add your business WhatsApp number and switch on enquiries in Company profile to show the button on your adverts and search cards." : "Checkout finished. Waiting for Stripe to confirm your WhatsApp access; refresh shortly. Then add your business number and enable enquiries in Company profile."} /></div>
         )}
         <div className="card mt-3 flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e8f7ef] text-[#087f45]" aria-hidden="true">
@@ -134,7 +136,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
                 : whatsapp.reason === "ADDON"
                   ? addon.whatsappAddonCancelAtPeriodEnd
                     ? `Cancelled. It stays on until ${addon.whatsappAddonPeriodEnd ? shortDate(addon.whatsappAddonPeriodEnd) : "the end of this billing period"}.`
-                    : `Active${addon.whatsappAddonPeriodEnd ? `, renews ${shortDate(addon.whatsappAddonPeriodEnd)}` : ""}.`
+                    : `Paid access active${addon.whatsappAddonPeriodEnd ? `, renews ${shortDate(addon.whatsappAddonPeriodEnd)}` : ""}. ${addon.whatsappEnabled ? "Enquiries switched on." : "Setup still needed: add your WhatsApp number and switch on enquiries in Company profile."}`
                   : whatsapp.reason === "NEEDS_ADDON"
                     ? "Not added yet."
                     : "Not available on Free. Choose Professional and add it, or choose Business where it's included."}

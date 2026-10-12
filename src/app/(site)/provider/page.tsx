@@ -16,6 +16,7 @@ import { providerIsPaid } from "@/server/service-marketplace";
 import { SetupChecklist, type SetupStep } from "@/components/setup-checklist";
 import { setupChecklistHidden } from "@/lib/setup-checklist";
 import { whatsappAccess } from "@/lib/whatsapp-access";
+import { WhatsappSetupPrompt } from "@/components/whatsapp-setup-prompt";
 
 export const metadata = { title: "Provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -156,7 +157,10 @@ export default async function ProviderDashboard() {
         </Link>
       }
     >
-      {!company.whatsappEnabled && (limits.membership.tier !== "FREE" || whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company).allowed) && (
+      {(!company.whatsappEnabled || !company.whatsappNumber) && whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company).allowed && (
+        <WhatsappSetupPrompt initialNumber={company.whatsappNumber} autoOpen={!!company.whatsappAddonStatus && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(company.whatsappAddonStatus)} />
+      )}
+      {!company.whatsappEnabled && limits.membership.tier !== "FREE" && !whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company).allowed && (
         <section className="card mb-5 flex flex-col gap-4 border-pine/30 bg-pine-light/40 p-5 sm:flex-row sm:items-center" aria-labelledby="whatsapp-announcement-heading">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-pine-light text-pine-dark" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">

@@ -10,6 +10,8 @@ import { coverImage, videoPosterSrc } from "@/lib/cover-image";
 import { ResilientImage } from "./resilient-image";
 import { clsx } from "@/lib/clsx";
 import { ListingCardActions } from "./listing-actions";
+import { showWhatsappContact } from "@/lib/whatsapp-display";
+import { WhatsappContactLink } from "./whatsapp-contact-link";
 
 export function ListingCard({
   listing,
@@ -141,7 +143,10 @@ export function ListingCard({
               )}
             </p>
           </div>
-          {match !== undefined && <MatchScore score={match} />}
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            {showWhatsappContact(listing.status, listing.company) && <WhatsappContactLink listingId={listing.id} title={listing.title} compact />}
+            {match !== undefined && <MatchScore score={match} />}
+          </div>
         </div>
 
         <dl className="mt-3 grid grid-cols-2 gap-y-1.5 text-[14px]">

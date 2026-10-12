@@ -54,6 +54,8 @@ export default async function AdminMembershipsPage({
         whatsappGrantActive: true,
         whatsappGrantExpiresAt: true,
         whatsappAddonStatus: true,
+        whatsappEnabled: true,
+        whatsappNumber: true,
         subscription: {
           select: { status: true, membership: { select: { name: true, tier: true } } },
         },
@@ -161,7 +163,7 @@ export default async function AdminMembershipsPage({
                   <td className="px-4 py-3 text-ink-soft">
                     {grant ? `${grant.membership.name}${grant.expiresAt ? ` · ends ${shortDate(grant.expiresAt)}` : " · no expiry"}` : "—"}
                   </td>
-                  <td className="px-4 py-3 text-ink-soft">{whatsappLabel}</td>
+                  <td className="px-4 py-3 text-ink-soft">{whatsappLabel}<p className="mt-1 text-[12px]">{!provider.whatsappNumber ? "Setup needed: no WhatsApp number" : !provider.whatsappEnabled ? "Button switched off" : "Number added · button switched on"}</p></td>
                   <td className="px-4 py-3 align-top space-y-2">
                     <AdminMembershipGrantForm
                       companyId={provider.id}

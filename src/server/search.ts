@@ -6,6 +6,7 @@ import { boundingBox, distanceMiles, resolveArea, type Point } from "@/lib/geo";
 import { rankBoosted, rotateHourly } from "@/lib/boost-packages";
 import type { Prisma } from "@prisma/client";
 import { COVER_MEDIA } from "@/lib/cover-image";
+import type { WhatsappDisplayCompany } from "@/lib/whatsapp-display";
 
 // Search results, facets and map pins all resolve the same location during one
 // render. React's request cache prevents duplicate geocoding/network calls.
@@ -53,6 +54,10 @@ export const LISTING_CARD_SELECT = {
   company: {
     select: {
       id: true, name: true, slug: true, logoUrl: true, verification: true, responseMinutes: true, responseSampleSize: true,
+      status: true, whatsappEnabled: true, whatsappNumber: true, whatsappAddonStatus: true,
+      whatsappGrantActive: true, whatsappGrantExpiresAt: true,
+      subscription: { select: { status: true, membership: { select: { tier: true } } } },
+      membershipGrants: { where: { revokedAt: null }, select: { startsAt: true, expiresAt: true, revokedAt: true, membership: { select: { tier: true } } } },
       // Just enough to show a "Vetted" badge on the card (expiry is checked when rendering).
       accreditations: { where: { scheme: { in: [...VETTED_SCHEMES] }, status: "APPROVED" }, select: { scheme: true, expiresAt: true }, take: 4 },
     },
@@ -380,7 +385,7 @@ type RankedCompany = RankedSearchResult["company"];
 /** Cards are also built from other queries, so the vetted accreditations are optional. */
 export type SearchResult = Omit<RankedSearchResult, "memberListing" | "company"> & {
   memberListing?: boolean;
-  company: Omit<RankedCompany, "accreditations"> & { accreditations?: RankedCompany["accreditations"] };
+  company: Omit<RankedCompany, "accreditations" | keyof WhatsappDisplayCompany> & WhatsappDisplayCompany & { accreditations?: RankedCompany["accreditations"] };
 };
 
 /** How many live adverts match, for the eligibility check's running total. */

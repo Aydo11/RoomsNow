@@ -17,6 +17,26 @@ import {
   VERIFICATION_CHECKLIST_VERSION,
 } from "@/lib/verification";
 
+export async function enableWhatsappEnquiriesAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { user, companyId } = await requireCompany();
+  const number = whatsappNumber(text(formData, "whatsappNumber"));
+  if (!number) return { ok: false, errors: { whatsappNumber: "Enter your WhatsApp business number, for example 07700 900123 or +44 7700 900123." } };
+  if (!bool(formData, "publishWhatsappConsent")) return { ok: false, message: "Confirm that you are authorised to publish this business number before enabling enquiries." };
+  const [limits, company] = await Promise.all([
+    planLimits(companyId),
+    db.company.findUniqueOrThrow({ where: { id: companyId }, select: { whatsappAddonStatus: true, whatsappGrantActive: true, whatsappGrantExpiresAt: true } }),
+  ]);
+  if (!whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company).allowed) {
+    return { ok: false, message: "Your WhatsApp access is not active. Check Membership or wait for your payment confirmation." };
+  }
+  await db.company.update({ where: { id: companyId }, data: { whatsappNumber: number, whatsappEnabled: true } });
+  await audit({ actorId: user.id, action: "company.whatsapp_enabled", targetType: "Company", targetId: companyId, metadata: { publicNumberConsent: true } });
+  for (const path of ["/provider", "/provider/settings", "/provider/membership", "/", "/search"]) revalidatePath(path);
+  revalidatePath("/listings/[id]", "page");
+  revalidatePath("/companies/[slug]", "page");
+  return { ok: true, message: "WhatsApp enquiries enabled. Your button will now appear on your live adverts and their search cards." };
+}
+
 export async function updateCompanyAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const { user, companyId } = await requireCompany();
 

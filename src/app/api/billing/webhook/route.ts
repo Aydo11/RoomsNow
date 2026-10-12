@@ -153,7 +153,7 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
       periodEnd: periodEnd(remote),
       cancelAtPeriodEnd: remote.cancel_at_period_end,
     });
-    await notifyCompany(companyId, { type: "MEMBERSHIP", title: "WhatsApp add-on active", body: "Add your business WhatsApp number to show the button on your adverts.", href: "/provider/settings#whatsapp-enquiries" });
+    await notifyCompany(companyId, { type: "MEMBERSHIP", title: "WhatsApp paid access active — finish setup", body: "Open your dashboard, add your business WhatsApp number, confirm it can be public and press Enable WhatsApp enquiries. Your button stays off until you finish these steps.", href: "/provider" });
     await audit({ action: "billing.whatsapp_addon_activated", targetType: "Company", targetId: companyId, metadata: { subscriptionId: remote.id } });
     return;
   }

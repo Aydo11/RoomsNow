@@ -29,15 +29,15 @@ import { brand } from "@/brand.config";
 import { callerIp, LIMITS, rateLimit } from "@/lib/rate-limit";
 import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
 import { PropertyMap } from "@/components/property-map";
-import { effectiveProviderTier, hasProviderMapAccess } from "@/lib/entitlements";
-import { whatsappAccess } from "@/lib/whatsapp-access";
+import { hasProviderMapAccess } from "@/lib/entitlements";
 import { coverImage } from "@/lib/cover-image";
 import { RecordRecentlyViewed } from "@/components/recently-viewed";
 import { checkHundredViews } from "@/lib/milestones";
 import { ResidentRatingLine, ResidentReviews } from "@/components/resident-reviews";
 import { residentReviewsFor } from "@/server/resident-reviews";
 import { optimisedImage } from "@/lib/image-url";
-import { whatsappAdvertUrl } from "@/lib/whatsapp";
+import { showWhatsappContact } from "@/lib/whatsapp-display";
+import { WhatsappContactLink } from "@/components/whatsapp-contact-link";
 
 export const dynamic = "force-dynamic";
 
@@ -129,7 +129,8 @@ export default async function ListingPage({
   const available = listing.rooms.filter((r) => r.status === "AVAILABLE");
   const canViewMap = hasProviderMapAccess(listing.company);
   // WhatsApp is a Business feature, or Professional with the paid add-on.
-  const whatsappAllowed = whatsappAccess(effectiveProviderTier(listing.company), listing.company.whatsappAddonStatus, listing.company).allowed;
+  const whatsappVisible = showWhatsappContact(listing.status, listing.company);
+  const requestHref = existingRequest ? "/dashboard/requests" : `/listings/${listing.id}/request`;
   const hasCoordinates = listing.property.latitude != null && listing.property.longitude != null;
   const mapLatitude = listing.property.showExactAddress ? listing.property.latitude : listing.property.latitude == null ? null : Math.round(listing.property.latitude * 1000) / 1000;
   const mapLongitude = listing.property.showExactAddress ? listing.property.longitude : listing.property.longitude == null ? null : Math.round(listing.property.longitude * 1000) / 1000;
@@ -161,7 +162,7 @@ export default async function ListingPage({
       : null;
 
   return (
-    <div className="shell py-6 pb-28 sm:py-8 lg:pb-8">
+    <div className="shell py-6 pb-48 sm:py-8 sm:pb-48 lg:pb-8">
       <JsonLd data={[
         {
           "@context": "https://schema.org",
@@ -250,6 +251,18 @@ export default async function ListingPage({
               ))}
             </p>
           </header>
+
+          <section aria-label="Enquire about this accommodation" className="card mt-5 p-4 lg:hidden">
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <p className="text-[18px] font-semibold">{rentRange(listing.weeklyRentFrom, listing.weeklyRentTo)}</p>
+              <p className="text-[13px] text-ink-soft">{available.length} rooms available</p>
+            </div>
+            <div className="flex gap-2">
+              <Link href={requestHref} className="btn-primary min-w-0 flex-1 text-center">{existingRequest ? "Track request" : "Request accommodation"}</Link>
+              {whatsappVisible && <WhatsappContactLink listingId={listing.id} title={listing.title} />}
+            </div>
+            {whatsappVisible && <p className="mt-2 text-[12px] text-ink-soft">{user ? "WhatsApp opens with this advert link and shares your WhatsApp number with the provider." : "Sign up free to contact this provider on WhatsApp. WhatsApp shares your number with them."}</p>}
+          </section>
 
           {listing.summary && <p className="mt-6 text-[17px] leading-relaxed text-ink">{listing.summary}</p>}
 
@@ -403,6 +416,7 @@ export default async function ListingPage({
             </p>
 
             <div className="mt-4 space-y-2">
+              {whatsappVisible && <WhatsappContactLink listingId={listing.id} title={listing.title} className="w-full" />}
               {existingRequest ? (
                 <Link href="/dashboard/requests" className="btn-secondary w-full">
                   Request sent — track it
@@ -430,6 +444,7 @@ export default async function ListingPage({
               )}
             </div>
 
+            {whatsappVisible && <p className="mt-3 text-[12px] leading-relaxed text-ink-soft">{user ? "WhatsApp opens with this advert link and shares your WhatsApp number with the provider. Keep sensitive documents in RoomsNow." : "Sign up free to use WhatsApp. Chats happen outside RoomsNow and share your WhatsApp number with the provider."}</p>}
             <Link href="/next-steps" className="mt-4 inline-block text-[14px] font-semibold text-pine-dark hover:underline">
               What happens after I ask? →
             </Link>
@@ -480,38 +495,19 @@ export default async function ListingPage({
           </div>
 
           <div id="message" className="scroll-mt-24">
-            {whatsappAllowed && listing.status === "ACTIVE" && listing.company.status === "ACTIVE" && whatsappAdvertUrl(listing.company.whatsappEnabled, listing.company.whatsappNumber, listing.title, absoluteUrl(`/listings/${listing.id}`)) && (
-              <div className="card mb-4 p-4">
-                <a
-                  // Goes via /api/whatsapp so the click is counted, then on to
-                  // WhatsApp (signed in) or sign-up (signed out).
-                  href={`/api/whatsapp/${listing.id}`}
-                  rel="nofollow noopener noreferrer"
-                  {...(user ? { target: "_blank" } : {})}
-                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-[#087f45] px-4 py-3 font-semibold text-white hover:bg-[#066739]"
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M21 11.5a9 9 0 0 1-13.4 7.9L3 21l1.6-4.6A9 9 0 1 1 21 11.5Z"/><path d="M8 7.5c0 4.2 3 7.2 7.3 7.5l1-2-2.5-1-1 1a7 7 0 0 1-2.8-2.8l1-1-1-2.5-2 .8Z"/></svg>
-                  {user ? "Contact on WhatsApp" : "Sign up free to contact on WhatsApp"}
-                </a>
-                <p className="mt-2 text-[12px] text-ink-soft">
-                  {user
-                    ? "Opens WhatsApp with this advert link. Please keep sensitive documents in RoomsNow."
-                    : "Takes under a minute. You'll come straight back here to message them on WhatsApp."}
-                </p>
-              </div>
-            )}
             <MessageProviderForm listingId={listing.id} signedIn={Boolean(user)} companyName={listing.company.name} defaultPhone={user?.phone ?? null} />
           </div>
         </aside>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white px-4 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(21,42,58,.10)] lg:hidden">
+      <div className="fixed inset-x-0 bottom-[calc(4rem_+_env(safe-area-inset-bottom))] z-30 border-t border-line bg-paper-card px-4 py-3 shadow-[0_-8px_24px_rgba(21,42,58,.10)] lg:hidden" aria-label="Quick accommodation contact">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-medium text-ink">{rentRange(listing.weeklyRentFrom, listing.weeklyRentTo)}</p>
             <p className="text-[12px] text-ink-faint">{available.length} room{available.length === 1 ? "" : "s"} available</p>
           </div>
-          <Link href={existingRequest ? "/dashboard/requests" : `/listings/${listing.id}/request`} className="btn-primary shrink-0 px-4">
+          {whatsappVisible && <WhatsappContactLink listingId={listing.id} title={listing.title} compact />}
+          <Link href={requestHref} className="btn-primary shrink-0 px-3 text-[13px]">
             {existingRequest ? "Track request" : "Request room"}
           </Link>
         </div>
