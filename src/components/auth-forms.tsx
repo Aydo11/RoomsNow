@@ -6,6 +6,7 @@ import Link from "next/link";
 import { forgotPasswordAction, loginAction, registerAction, resendVerificationAction, resetPasswordAction } from "@/server/actions/auth";
 import { Field, FormError, FormSuccess, SubmitButton } from "./ui";
 import { ORG_TYPES } from "@/lib/taxonomy";
+import { authHref } from "@/lib/auth-navigation";
 
 export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const params = useSearchParams();
@@ -23,7 +24,7 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
       </Field>
       <SubmitButton className="btn-primary w-full" pendingLabel="Signing in…">Sign in</SubmitButton>
       <div className="flex items-center justify-between gap-3 text-[14px]">
-        <Link href="/forgot-password" className="text-pine-dark hover:underline">Forgot password?</Link>
+        <Link href={authHref("/forgot-password", params.get("next"))} className="text-pine-dark hover:underline">Forgot password?</Link>
       </div>
       {googleEnabled && (
         <>
@@ -42,9 +43,11 @@ function GoogleMark() {
 }
 
 export function ForgotPasswordForm() {
+  const params = useSearchParams();
   const [state, action] = useActionState(forgotPasswordAction, { ok: false });
   return (
     <form action={action} className="card mt-7 space-y-4 p-5 sm:p-6">
+      <input type="hidden" name="next" value={params.get("next") ?? ""} />
       <FormError message={state.errors?.form} />
       <FormSuccess message={state.ok ? state.message : undefined} />
       {!state.ok && (
@@ -59,10 +62,11 @@ export function ForgotPasswordForm() {
   );
 }
 
-export function ResendVerificationForm({ initialEmail = "" }: { initialEmail?: string }) {
+export function ResendVerificationForm({ initialEmail = "", next = "" }: { initialEmail?: string; next?: string }) {
   const [state, action] = useActionState(resendVerificationAction, { ok: false });
   return (
     <form action={action} className="mt-6 space-y-4">
+      <input type="hidden" name="next" value={next} />
       <FormError message={state.errors?.form} />
       <FormSuccess message={state.ok ? state.message : undefined} />
       <Field label="Email address" name="email" error={state.errors?.email}>
@@ -74,10 +78,12 @@ export function ResendVerificationForm({ initialEmail = "" }: { initialEmail?: s
 }
 
 export function ResetPasswordForm({ token }: { token: string }) {
+  const params = useSearchParams();
   const [state, action] = useActionState(resetPasswordAction, { ok: false });
   return (
     <form action={action} className="card mt-7 space-y-4 p-5 sm:p-6">
       <input type="hidden" name="token" value={token} />
+      <input type="hidden" name="next" value={params.get("next") ?? ""} />
       <FormError message={state.errors?.form} />
       <Field label="New password" name="password" hint="At least 8 characters, including a letter and number." error={state.errors?.password}>
         <input id="password" name="password" type="password" minLength={8} autoComplete="new-password" required className="field" />
@@ -163,50 +169,33 @@ export function RegisterForm() {
   const [state, action] = useActionState(registerAction, { ok: false });
 
   return (
-    <form action={action} className="mt-8 space-y-6">
+    <form action={action} className="mt-6 space-y-5">
       <input type="hidden" name="next" value={params.get("next") ?? ""} />
-      <fieldset>
-        <legend className="label">What kind of account do you need?</legend>
-        <div className="grid gap-2.5">
-          {ACCOUNT_TYPES.map((option) => (
-            <label
-              key={option.value}
-              className={`flex cursor-pointer gap-3 rounded-card border p-4 ${
-                type === option.value ? "border-pine bg-pine-light/40" : "border-line bg-white hover:border-line-strong"
-              }`}
-            >
-              <input
-                type="radio"
-                name="accountType"
-                value={option.value}
-                checked={type === option.value}
-                onChange={() => setType(option.value)}
-                className="mt-1 h-4 w-4 border-line-strong text-pine focus:ring-pine"
-              />
-              <span>
-                <span className="block text-[16px] text-ink">{option.title}</span>
-                <span className="mt-0.5 block text-[14px] text-ink-soft">{option.body}</span>
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <details open={type !== "USER"}>
+        <summary className="cursor-pointer text-[14px] text-pine-dark">{type === "USER" ? "Provider or professional? Change account type" : "Change account type"}</summary>
+        <label className="label mt-3" htmlFor="accountType">Account type</label>
+        <select id="accountType" name="accountType" value={type} onChange={(event) => setType(event.target.value as AccountType)} className="field">
+          {ACCOUNT_TYPES.map((option) => <option key={option.value} value={option.value}>{option.title}</option>)}
+        </select>
+      </details>
 
       <FormError message={state.errors?.form} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={`grid gap-4 ${type !== "USER" ? "sm:grid-cols-2" : ""}`}>
+        {type !== "USER" && <>
         <Field label="First name" name="firstName" required error={state.errors?.firstName}>
           <input id="firstName" name="firstName" required autoComplete="given-name" className="field" />
         </Field>
         <Field label="Last name" name="lastName" required error={state.errors?.lastName}>
           <input id="lastName" name="lastName" required autoComplete="family-name" className="field" />
         </Field>
+        </>}
         <Field label="Email" name="email" required error={state.errors?.email}>
           <input id="email" name="email" type="email" required autoComplete="email" className="field" />
         </Field>
-        <Field label="Mobile number" name="phone" hint="Optional" error={state.errors?.phone}>
+        {type !== "USER" && <Field label="Mobile number" name="phone" hint="Optional" error={state.errors?.phone}>
           <input id="phone" name="phone" type="tel" autoComplete="tel" className="field" />
-        </Field>
+        </Field>}
         <Field
           label="Password"
           name="password"
@@ -216,6 +205,7 @@ export function RegisterForm() {
         >
           <input id="password" name="password" type="password" required autoComplete="new-password" className="field" />
         </Field>
+        {type !== "USER" && <>
         <Field label={type === "PROVIDER" || type === "SERVICE_PROVIDER" ? "Your location" : "Where are you looking?"} name="locationLabel" error={state.errors?.locationLabel}>
           <input id="locationLabel" name="locationLabel" placeholder="Birmingham" className="field" />
         </Field>
@@ -226,16 +216,15 @@ export function RegisterForm() {
             ))}
           </select>
         </Field>
+        </>}
       </div>
 
       {type === "USER" && (
-        <Field label="Preferred way to be contacted" name="contactMethod">
-          <select id="contactMethod" name="contactMethod" className="field">
-            <option value="MESSAGE">Messages on the platform</option>
-            <option value="EMAIL">Email</option>
-            <option value="PHONE">Phone</option>
-          </select>
-        </Field>
+        <>
+          <input type="hidden" name="contactMethod" value="MESSAGE" />
+          <input type="hidden" name="acquisitionSource" value={acquisitionSourceFromLink} />
+          <p className="text-[14px] leading-relaxed text-ink-soft">Add your name and preferences later. Your messages stay in RoomsNow; your phone number is optional. You stay signed in on this device for up to 30 days. Sign out on shared devices.</p>
+        </>
       )}
 
       {type === "PROVIDER" && (

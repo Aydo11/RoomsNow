@@ -64,7 +64,7 @@ export default async function UserDashboard() {
 
   return (
     <DashboardShell
-      title={`Hello, ${user.firstName}`}
+      title={user.firstName ? `Hello, ${user.firstName}` : "Welcome to RoomsNow"}
       subtitle="Your accommodation search in one place."
       nav={nav}
       active="/dashboard"

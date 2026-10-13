@@ -14,6 +14,7 @@ import { fieldErrors, loginSchema, password, passwordChangeSchema, registerSchem
 import { bool, slugify, text } from "../form";
 import { ensureReferralCode, recordReferralSignup } from "@/lib/referral-program";
 import { uniqueServiceSlug } from "../service-marketplace";
+import { authHref, safeRedirect } from "@/lib/auth-navigation";
 
 /**
  * A real bcrypt hash of a value nobody knows, compared against when the email
@@ -21,7 +22,7 @@ import { uniqueServiceSlug } from "../service-marketplace";
  */
 const DUMMY_HASH = "$2a$12$C6UzMDM.H6dfI/f/IKcEeO3Q6q1Bnp9YAqvB7WkQ0Pu2N0hEbXHQu";
 
-async function createEmailVerification(userId: string, email: string) {
+async function createEmailVerification(userId: string, email: string, next = "") {
   const token = randomBytes(32).toString("base64url");
   const tokenHash = createHash("sha256").update(token).digest("hex");
   await db.$transaction([
@@ -31,7 +32,7 @@ async function createEmailVerification(userId: string, email: string) {
     }),
   ]);
   const appUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
-  const verifyUrl = `${appUrl}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+  const verifyUrl = `${appUrl}${authHref(`/api/auth/verify-email?token=${encodeURIComponent(token)}`, next)}`;
   await sendEmail({
     to: email,
     subject: "Verify your RoomsNow email",
@@ -176,7 +177,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   });
 
   try {
-    await createEmailVerification(user.id, user.email);
+    await createEmailVerification(user.id, user.email, text(formData, "next"));
   } catch (error) {
     console.error("Registration verification email failed:", error);
   }
@@ -258,18 +259,6 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
     user.role === "ADMIN" ? "/admin" : user.role === "PROVIDER" ? "/provider" : user.role === "REFERRER" ? "/referrals" : user.role === "SERVICE_PROVIDER" ? "/service-provider" : "/dashboard";
 
   redirect(safeRedirect(next, home));
-}
-
-/**
- * Only ever redirect within this site. "//evil.example" and "/\\evil.example"
- * are browser-legal ways of leaving the origin, so a leading-slash check on its
- * own is not enough.
- */
-function safeRedirect(target: string | undefined, fallback: string) {
-  if (!target) return fallback;
-  if (!target.startsWith("/")) return fallback;
-  if (target.startsWith("//") || target.startsWith("/\\")) return fallback;
-  return target;
 }
 
 export async function logoutAction() {
@@ -368,7 +357,7 @@ export async function forgotPasswordAction(_prev: FormState, formData: FormData)
   ]);
 
   const appUrl = process.env.APP_URL ?? "http://localhost:3000";
-  const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+  const resetUrl = `${appUrl}${authHref(`/reset-password?token=${encodeURIComponent(token)}`, text(formData, "next"))}`;
   try {
     await sendEmail({
       to: user.email,
@@ -403,7 +392,7 @@ export async function resendVerificationAction(_prev: FormState, formData: FormD
   });
   if (!user || user.emailVerified || user.deletedAt || user.status !== "ACTIVE") return generic;
   try {
-    await createEmailVerification(user.id, user.email);
+    await createEmailVerification(user.id, user.email, text(formData, "next"));
     await audit({ actorId: user.id, action: "auth.email_verification_resent", targetType: "User", targetId: user.id });
   } catch (error) {
     console.error("Verification email resend failed:", error);
@@ -443,5 +432,5 @@ export async function resetPasswordAction(_prev: FormState, formData: FormData):
 
   await audit({ actorId: reset.userId, action: "auth.password_reset_completed", targetType: "User", targetId: reset.userId });
   await destroySession();
-  redirect("/login?reset=1");
+  redirect(authHref("/login?reset=1", text(formData, "next")));
 }

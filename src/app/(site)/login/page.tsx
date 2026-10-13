@@ -2,11 +2,12 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/auth-forms";
 import { FormSuccess } from "@/components/ui";
+import { authHref } from "@/lib/auth-navigation";
 import { brand } from "@/brand.config";
 
 export const metadata = { title: "Sign in", robots: { index: false, follow: false } };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ changed?: string; reset?: string; verified?: string; oauth?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; changed?: string; reset?: string; verified?: string; oauth?: string }> }) {
   const query = await searchParams;
   const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
   return (
@@ -21,7 +22,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <LoginForm googleEnabled={googleEnabled} />
       </Suspense>
       <p className="mt-6 text-[15px] text-ink-soft">
-        No account yet? <Link href="/register" className="text-pine-dark underline">Create one</Link>
+        No account yet? <Link href={authHref("/register", query.next)} className="text-pine-dark underline">Create one</Link>
       </p>
     </div>
   );

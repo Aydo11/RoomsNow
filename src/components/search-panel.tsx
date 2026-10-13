@@ -4,10 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { SUPPORT_TYPES, UK_CITIES } from "@/lib/taxonomy";
 
-/**
- * The three questions that actually matter in this market: where, what support,
- * and when. Everything else is a filter on the results page.
- */
+/** Mobile starts with a location; optional refinements remain one tap away. */
 export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -16,10 +13,14 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
   const [from, setFrom] = useState(params.get("from") ?? "");
   const [vetted, setVetted] = useState(params.get("vetted") === "1");
 
+  const refinements = [support && "Support", from && "Move-in date", vetted && "Vetted providers"].filter(Boolean);
+
+  const [optionsOpen, setOptionsOpen] = useState(Boolean(support || from || vetted));
+
   function submit(event: React.FormEvent) {
     event.preventDefault();
     const query = new URLSearchParams();
-    if (where) query.set("where", where);
+    if (where.trim()) query.set("where", where.trim());
     if (support) query.set("support", support);
     if (from) query.set("from", from);
     if (vetted) query.set("vetted", "1");
@@ -54,6 +55,9 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
         </datalist>
       </div>
 
+      <div className="min-w-0 sm:contents">
+        <button type="button" onClick={() => setOptionsOpen(!optionsOpen)} aria-expanded={optionsOpen} aria-controls={`search-options-${size}`} className="cursor-pointer py-2 text-left text-[14px] font-medium text-pine-dark sm:hidden">{refinements.length ? `Search options (${refinements.length} selected)` : "Support, move-in date and other options"}</button>
+        <div id={`search-options-${size}`} className={`${optionsOpen ? "grid" : "hidden"} min-w-0 gap-3 pt-2 sm:contents`}>
       <div className="min-w-0">
         <label className="label" htmlFor="support">Support needed</label>
         <select id="support" value={support} onChange={(e) => setSupport(e.target.value)} className="field">
@@ -66,7 +70,7 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
 
       <div className="min-w-0">
         <label className="label" htmlFor="from">
-          Move in by <span className="font-normal text-ink-faint">(e.g. 30/09/2026)</span>
+          Move in by <span className="font-normal text-ink-faint">(optional)</span>
         </label>
         <div className="w-full min-w-0 max-w-full overflow-hidden">
           <input
@@ -76,14 +80,12 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
             onChange={(e) => setFrom(e.target.value)}
             className="field block min-w-0 max-w-full"
             style={{ boxSizing: "border-box", width: "100%", minWidth: 0, maxWidth: "100%" }}
-            aria-label="Move in by, for example 30 September 2026"
+            aria-label="Move in by"
           />
         </div>
       </div>
 
-      <button type="submit" className="btn-primary h-[46px] px-6">Search</button>
-
-      <label htmlFor={`vetted-${size}`} className="flex cursor-pointer items-center gap-2 text-[14px] text-ink-soft sm:col-span-4">
+      <label htmlFor={`vetted-${size}`} className="flex cursor-pointer items-center gap-2 text-[14px] text-ink-soft sm:col-span-4 sm:row-start-2">
         <input
           id={`vetted-${size}`}
           type="checkbox"
@@ -95,6 +97,9 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
           Vetted providers only <span className="text-ink-faint">— CQC or BVSC checked by RoomsNow</span>
         </span>
       </label>
+        </div>
+      </div>
+      <button type="submit" className="btn-primary h-[46px] px-6 sm:col-start-4 sm:row-start-1">Find rooms</button>
     </form>
   );
 }

@@ -27,15 +27,16 @@ export function MessageProviderForm({
       <div className="card p-5">
         <h2 className="text-[17px]">Message {companyName ?? "them"}</h2>
         <p className="mt-1.5 text-[14px] text-ink-soft">
-          Sign in to start a conversation. Your details stay private until you share them.
+          Create an account or sign in to start a conversation. Your details stay private until you share them.
         </p>
         {listingId && <ContactTip compact className="mt-3" />}
         <Link
-          href={`/login?next=${encodeURIComponent(listingId ? `/listings/${listingId}` : `/people/${lookingForAdId}`)}`}
+          href={`/register?next=${encodeURIComponent(listingId ? `/listings/${listingId}` : `/people/${lookingForAdId}`)}`}
           className="btn-primary mt-4 w-full"
         >
-          Sign in to message
+          Create account to message
         </Link>
+        <Link href={`/login?next=${encodeURIComponent(listingId ? `/listings/${listingId}` : `/people/${lookingForAdId}`)}`} className="mt-3 block text-center text-[14px] text-pine-dark underline">Already registered? Sign in</Link>
       </div>
     );
   }

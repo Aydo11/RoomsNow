@@ -1,3 +1,4 @@
+import { authHref, safeRedirect } from "@/lib/auth-navigation";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
   // failure redirects from APP_URL, falling back to request.url only when
   // APP_URL genuinely isn't configured.
   const base = process.env.APP_URL || request.url;
-  const fail = () => clearOAuthCookies(NextResponse.redirect(new URL("/login?oauth=failed", base)));
+  const fail = () => clearOAuthCookies(NextResponse.redirect(new URL(authHref("/login?oauth=failed", next), base)));
 
   if (!appUrl || !clientId || !clientSecret || !state || !code || !expectedState || state !== expectedState || !verifier) return fail();
 
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
     if (!email || payload.email_verified !== true) return fail();
 
     const user = await db.user.findUnique({ where: { email } });
-    if (!user) return clearOAuthCookies(NextResponse.redirect(new URL("/login?oauth=no-account", base)));
+    if (!user) return clearOAuthCookies(NextResponse.redirect(new URL(authHref("/login?oauth=no-account", next), base)));
     if (user.deletedAt || user.status !== "ACTIVE") return fail();
 
     await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date(), emailVerified: user.emailVerified ?? new Date() } });
@@ -62,9 +63,4 @@ export async function GET(request: NextRequest) {
 function clearOAuthCookies(response: NextResponse) {
   for (const name of ["sr_oauth_state", "sr_oauth_verifier", "sr_oauth_next"]) response.cookies.delete(name);
   return response;
-}
-
-function safeRedirect(target: string, fallback: string) {
-  if (!target.startsWith("/") || target.startsWith("//") || target.startsWith("/\\")) return fallback;
-  return target;
 }

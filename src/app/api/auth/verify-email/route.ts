@@ -1,3 +1,4 @@
+import { authHref } from "@/lib/auth-navigation";
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -62,5 +63,5 @@ function redirectResult(request: NextRequest, result: string, extra = "") {
   // redirect from APP_URL, falling back to request.url only when APP_URL
   // genuinely isn't configured.
   const base = process.env.APP_URL || request.url;
-  return NextResponse.redirect(new URL(`/verify-email?result=${result}${extra}`, base));
+  return NextResponse.redirect(new URL(authHref(`/verify-email?result=${result}${extra}`, request.nextUrl.searchParams.get("next")), base));
 }

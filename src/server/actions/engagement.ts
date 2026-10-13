@@ -139,7 +139,7 @@ export async function startConversationAction(_prev: FormState, formData: FormDa
       await notifyCompany(companyId, {
         type: "MESSAGE",
         title: "New enquiry",
-        body: `${user.firstName} messaged you about ${subject}.`,
+        body: `${user.firstName || "A room seeker"} messaged you about ${subject}.`,
         href: `/messages/${conversation.id}`,
         email: true,
       });
@@ -238,7 +238,7 @@ export async function startDirectMessageAction(_prev: FormState, formData: FormD
     await notifyCompany(companyId, {
       type: "MESSAGE",
       title: subject || "New message",
-      body: `${user.firstName} ${user.lastName} sent you a message${subject ? ` about ${subject}` : ""}.`,
+      body: `${`${user.firstName} ${user.lastName}`.trim() || "A RoomsNow member"} sent you a message${subject ? ` about ${subject}` : ""}.`,
       href: `/messages/${conversation.id}`,
       email: true,
     });
@@ -248,7 +248,7 @@ export async function startDirectMessageAction(_prev: FormState, formData: FormD
         notify({
           userId: id,
           type: "MESSAGE",
-          title: `New message from ${user.firstName}`,
+          title: `New message from ${user.firstName || "a RoomsNow member"}`,
           body: body.slice(0, 140),
           href: `/messages/${conversation.id}`,
           email: true,
@@ -349,7 +349,7 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
       notify({
         userId: p.userId,
         type: "MESSAGE",
-        title: `New message from ${user.firstName}`,
+        title: `New message from ${user.firstName || "a RoomsNow member"}`,
         body: parsed.data.body.slice(0, 140),
         href: `/messages/${parsed.data.conversationId}`,
       }),
@@ -550,7 +550,7 @@ export async function createRequestAction(_prev: FormState, formData: FormData):
   await notifyCompany(listing.companyId, {
     type: "REQUEST",
     title: "New accommodation request",
-    body: `${user.firstName} ${user.lastName.charAt(0)}. requested ${listing.title}. Reply to them in Messages.`,
+    body: `${user.firstName ? `${user.firstName}${user.lastName ? ` ${user.lastName.charAt(0)}.` : ""}` : "A room seeker"} requested ${listing.title}. Reply to them in Messages.`,
     href: `/provider/requests?request=${encodeURIComponent(request.id)}`,
     email: true,
   });
