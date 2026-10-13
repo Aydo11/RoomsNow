@@ -2,10 +2,16 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { submitSearchQuery } from "@/lib/search-query";
 import { SUPPORT_TYPES, UK_CITIES } from "@/lib/taxonomy";
 
 /** Mobile starts with a location; optional refinements remain one tap away. */
 export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
+  const params = useSearchParams();
+  return <SearchPanelForm key={params.toString()} size={size} />;
+}
+
+function SearchPanelForm({ size }: { size: "hero" | "compact" }) {
   const router = useRouter();
   const params = useSearchParams();
   const [where, setWhere] = useState(params.get("where") ?? "");
@@ -19,11 +25,7 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    const query = new URLSearchParams();
-    if (where.trim()) query.set("where", where.trim());
-    if (support) query.set("support", support);
-    if (from) query.set("from", from);
-    if (vetted) query.set("vetted", "1");
+    const query = submitSearchQuery(params.toString(), { where, support, from, vetted });
     router.push(`/search?${query.toString()}`);
   }
 
@@ -62,6 +64,7 @@ export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
         <label className="label" htmlFor="support">Support needed</label>
         <select id="support" value={support} onChange={(e) => setSupport(e.target.value)} className="field">
           <option value="">Any support</option>
+          {support.includes(",") && <option value={support}>{support.split(",").map((slug) => SUPPORT_TYPES.find((type) => type.slug === slug)?.label ?? slug).join(", ")}</option>}
           {SUPPORT_TYPES.map((type) => (
             <option key={type.slug} value={type.slug}>{type.label}</option>
           ))}

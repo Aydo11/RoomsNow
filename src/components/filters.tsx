@@ -26,7 +26,7 @@ export function Filters() {
     update(key, next.join(","));
   }
 
-  const activeCount = ["support", "type", "gender", "wheelchair", "furnished", "ensuite", "selfContained", "petsAllowed", "hb", "resident", "minAge", "referral", "verified", "vetted", "maxRent", "minRent", "radius", "bbox"]
+  const activeCount = ["q", "from", "support", "type", "gender", "wheelchair", "furnished", "ensuite", "selfContained", "petsAllowed", "hb", "resident", "minAge", "referral", "verified", "vetted", "maxRent", "minRent", "radius", "bbox"]
     .filter((key) => params.get(key)).length;
 
   return (
@@ -125,6 +125,7 @@ export function Filters() {
             max={120}
             placeholder="Your age"
             className="field"
+            key={get("minAge")}
             defaultValue={get("minAge")}
             onBlur={(e) => update("minAge", e.target.value)}
           />
@@ -140,6 +141,7 @@ export function Filters() {
                 min={0}
                 step={5}
                 className="field"
+                key={get("minRent")}
                 defaultValue={get("minRent")}
                 onBlur={(e) => update("minRent", e.target.value)}
               />
@@ -152,6 +154,7 @@ export function Filters() {
                 min={0}
                 step={5}
                 className="field"
+                key={get("maxRent")}
                 defaultValue={get("maxRent")}
                 onBlur={(e) => update("maxRent", e.target.value)}
               />
