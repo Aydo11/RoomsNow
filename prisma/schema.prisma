@@ -59,6 +59,7 @@ enum StaffRole {
 enum AccommodationType {
   SINGLE_ROOM
   SHARED_ACCOMMODATION
+  MOTHER_AND_BABY_UNIT
   SELF_CONTAINED
   FLAT
   HOUSE

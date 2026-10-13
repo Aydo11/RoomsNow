@@ -149,6 +149,7 @@ export const listingSchema = z.object({
   accommodationType: z.enum([
     "SINGLE_ROOM",
     "SHARED_ACCOMMODATION",
+    "MOTHER_AND_BABY_UNIT",
     "SELF_CONTAINED",
     "FLAT",
     "HOUSE",

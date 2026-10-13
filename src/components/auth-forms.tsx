@@ -99,23 +99,23 @@ export function ResetPasswordForm({ token }: { token: string }) {
 const ACCOUNT_TYPES = [
   {
     value: "USER",
-    title: "I'm looking for accommodation",
+    title: "Find a room for myself",
     body: "Search rooms, message providers and post what you need.",
   },
   {
     value: "PROVIDER",
-    title: "I'm advertising accommodation",
+    title: "Advertise rooms or accommodation",
     body: "List rooms, manage availability, receive requests and referrals.",
   },
   {
     value: "REFERRER",
-    title: "I'm a professional referrer",
-    body: "Refer people you support and track referrals to move-in.",
+    title: "Help someone find accommodation",
+    body: "For council teams, support workers, charities and other professional referrers.",
   },
   {
     value: "SERVICE_PROVIDER",
-    title: "I offer services to housing providers",
-    body: "Trades, cleaning, compliance, furniture and more. Advertise to paying accommodation providers.",
+    title: "Offer services to landlords or providers",
+    body: "For trades, cleaning, compliance, furniture and other housing services.",
   },
 ] as const;
 
@@ -171,13 +171,13 @@ export function RegisterForm() {
   return (
     <form action={action} className="mt-6 space-y-5">
       <input type="hidden" name="next" value={params.get("next") ?? ""} />
-      <details open={type !== "USER"}>
-        <summary className="cursor-pointer text-[14px] text-pine-dark">{type === "USER" ? "Provider or professional? Change account type" : "Change account type"}</summary>
-        <label className="label mt-3" htmlFor="accountType">Account type</label>
-        <select id="accountType" name="accountType" value={type} onChange={(event) => setType(event.target.value as AccountType)} className="field">
+      <div>
+        <label className="label" htmlFor="accountType">What would you like to do?</label>
+        <select id="accountType" name="accountType" value={type} onChange={(event) => setType(event.target.value as AccountType)} aria-describedby="account-type-help" className="field">
           {ACCOUNT_TYPES.map((option) => <option key={option.value} value={option.value}>{option.title}</option>)}
         </select>
-      </details>
+        <p id="account-type-help" className="mt-2 text-[13px] leading-relaxed text-ink-soft">{ACCOUNT_TYPES.find((option) => option.value === type)?.body}</p>
+      </div>
 
       <FormError message={state.errors?.form} />
 
