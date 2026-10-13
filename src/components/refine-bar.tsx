@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { ACCOMMODATION_TYPES, supportLabel } from "@/lib/taxonomy";
+import { ACCOMMODATION_TYPES } from "@/lib/taxonomy";
+import { appliedSearchFilters, removeSearchFilter } from "@/lib/search-query";
 
 type Facets = {
   types: { value: string; count: number }[];
@@ -28,27 +29,7 @@ export function RefineBar({ facets, total }: { facets: Facets; total: number }) 
     router.push(`/search?${next.toString()}`);
   }
 
-  const applied: { key: string; label: string }[] = [];
-  const add = (key: string, label: string) => applied.push({ key, label });
-
-  if (params.get("q")) add("q", `“${params.get("q")}”`);
-  if (params.get("where")) add("where", params.get("where")!);
-  if (params.get("bbox")) add("bbox", "This map area");
-  if (params.get("verified")) add("verified", "Verified providers");
-  if (params.get("vetted")) add("vetted", "Vetted providers");
-  if (params.get("wheelchair")) add("wheelchair", "Wheelchair accessible");
-  if (params.get("petsAllowed")) add("petsAllowed", "Pets allowed");
-  if (params.get("ensuite")) add("ensuite", "En-suite");
-  if (params.get("selfContained")) add("selfContained", "Self-contained");
-  if (params.get("maxRent")) add("maxRent", `Up to £${params.get("maxRent")}/wk`);
-  if (params.get("minAge")) add("minAge", `Age ${params.get("minAge")}`);
-  if (params.get("resident") === "woman") add("resident", "Homes open to women");
-  if (params.get("resident") === "man") add("resident", "Homes open to men");
-  if (params.get("hb")) add("hb", "Accepts Housing Benefit");
-  if ((params.get("referral") ?? "").includes("SELF_REFERRAL")) add("referral", "You can apply yourself");
-  for (const slug of (params.get("support") ?? "").split(",").filter(Boolean)) {
-    add("support", supportLabel(slug));
-  }
+  const applied = appliedSearchFilters(new URLSearchParams(params.toString()));
 
   const topCities = facets.cities.filter((c) => c.city !== params.get("where"));
 
@@ -59,7 +40,7 @@ export function RefineBar({ facets, total }: { facets: Facets; total: number }) 
           {applied.map((item) => (
             <button
               key={`${item.key}-${item.label}`}
-              onClick={() => set(item.key, null)}
+              onClick={() => router.push(`/search?${removeSearchFilter(params.toString(), item.key, item.value).toString()}`)}
               className="chip chip-active"
               aria-label={`Remove filter ${item.label}`}
             >
