@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { createHash, randomBytes } from "crypto";
 import { redirect } from "next/navigation";
 import { WELCOME_NOTIFICATION } from "@/lib/welcome-content";
+import { sendSignupWelcome } from "@/lib/welcome-email";
 import { db } from "@/lib/db";
 import { createSession, destroySession, getCurrentUser } from "@/lib/session";
 import { audit } from "@/lib/audit";
@@ -176,11 +177,9 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     href: seeker ? WELCOME_NOTIFICATION.href : destination,
   });
 
-  try {
-    await createEmailVerification(user.id, user.email, text(formData, "next"));
-  } catch (error) {
-    console.error("Registration verification email failed:", error);
-  }
+  // No email confirmation step: people can use their account straight away,
+  // and the first email they get is a welcome, not a "verify your email".
+  await sendSignupWelcome(user.id);
   // Signed in straight away; back to where they were (e.g. an advert's
   // WhatsApp button) if they came from somewhere, otherwise their dashboard.
   await createSession(user.id, user.role, user.tokenVersion);
