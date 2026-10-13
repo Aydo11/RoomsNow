@@ -8,8 +8,8 @@ import { WELCOME_SERVICES, WELCOME_STEPS, WELCOME_TIP } from "./welcome-content"
  * notification that also emails — advert status, verification,
  * membership, referrals). Table-based layout with inline styles for
  * compatibility with clients that ignore <style> blocks (Outlook desktop
- * chief among them). Matches the site's pine/ink/paper palette defined in
- * tailwind.config.ts.
+ * chief among them). Shares the same branded card, hero and button system
+ * as our welcome and marketing emails.
  */
 const COLORS = {
   pine: "#1666AA",
@@ -30,7 +30,7 @@ const COLORS = {
  * a "show images" click the way a data URI can't.
  */
 const APP_URL = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
-const LOGO_URL = `${APP_URL}/brand/roomsnow-logo-email.png`;
+const LOGO_URL = `${/^https:\/\//.test(APP_URL) ? APP_URL : "https://www.roomsnow.co.uk"}/brand/roomsnow-logo-email.png`;
 const RESEND_UNSUBSCRIBE_URL = "{{{RESEND_UNSUBSCRIBE_URL}}}";
 
 function marketingUnsubscribeHtml(reason: string) {
@@ -41,7 +41,7 @@ function marketingUnsubscribeHtml(reason: string) {
 
 /** Email-header logo — same markup wherever a template shows the wordmark. */
 function logoImgHtml() {
-  return `<img src="${LOGO_URL}" width="139" height="28" alt="${brand.name}" style="display:block; border:0; outline:none; text-decoration:none;" />`;
+  return `<img src="${LOGO_URL}" width="139" height="28" alt="${brand.name}" style="display:block; max-width:100%; border:0; outline:none; text-decoration:none; color:${COLORS.ink}; font-family:Arial,Helvetica,sans-serif; font-size:20px; font-weight:bold;" />`;
 }
 
 /** Escapes text pulled from user/company-supplied data before it goes into an HTML email. */
@@ -85,74 +85,20 @@ export function renderEmail(params: {
 }) {
   const { preheader, heading, bodyHtml, ctaLabel, ctaUrl, note } = params;
   const hasCta = Boolean(ctaLabel && ctaUrl);
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${brand.name}</title>
-  </head>
-  <body style="margin:0; padding:0; background-color:${COLORS.paper}; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <span style="display:none; font-size:1px; color:${COLORS.paper}; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">${preheader}</span>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.paper};">
-      <tr>
-        <td align="center" style="padding:32px 16px;">
-          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px; width:100%; background-color:${COLORS.card}; border-radius:14px; border:1px solid ${COLORS.line};">
-            <tr>
-              <td style="padding:28px 36px 20px; border-bottom:1px solid ${COLORS.line};">
-                ${logoImgHtml()}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:32px 36px 8px;">
-                <h1 style="margin:0 0 12px; font-size:22px; line-height:1.3; color:${COLORS.ink};">${heading}</h1>
-                <div style="font-size:15px; line-height:1.6; color:${COLORS.inkSoft};">${bodyHtml}</div>
-              </td>
-            </tr>
-            ${
-              hasCta
-                ? `<tr>
-              <td style="padding:12px 36px 8px;">
-                <table role="presentation" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td style="border-radius:8px; background-color:${COLORS.pine};">
-                      <a href="${ctaUrl}" style="display:inline-block; padding:12px 28px; font-size:15px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">${ctaLabel}</a>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:16px 36px 4px;">
-                <p style="margin:0; font-size:13px; line-height:1.6; color:${COLORS.inkFaint};">
-                  If the button doesn't work, copy and paste this link into your browser:<br />
-                  <a href="${ctaUrl}" style="color:${COLORS.pine}; word-break:break-all;">${ctaUrl}</a>
-                </p>
-              </td>
-            </tr>`
-                : ""
-            }
-            ${
-              note
-                ? `<tr><td style="padding:16px 36px 0;"><p style="margin:0; font-size:13px; color:${COLORS.inkFaint};">${note}</p></td></tr>`
-                : ""
-            }
-            <tr>
-              <td style="padding:28px 36px 28px;">
-                <div style="border-top:1px solid ${COLORS.line}; padding-top:20px;">
-                  <p style="margin:0; font-size:12px; line-height:1.6; color:${COLORS.inkFaint};">
-                    ${brand.name} &middot; ${brand.tagline}<br />
-                    Questions? Email <a href="mailto:${brand.supportEmail}" style="color:${COLORS.inkFaint};">${brand.supportEmail}</a>
-                  </p>
-                </div>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
+  const url = escapeHtml(ctaUrl ?? "");
+  const rows = [
+    mkRow(`<div style="font-size:16px; line-height:26px; color:${COLORS.inkSoft}; overflow-wrap:anywhere;">${bodyHtml}</div>`, 32),
+    hasCta ? mkRow(mkButton(escapeHtml(ctaLabel!), url), 26) : "",
+    note ? mkRow(mkTintNote(note), 24) : "",
+    hasCta ? mkRow(`<p style="margin:0; font-size:12px; line-height:20px; color:${COLORS.inkFaint};">If the button doesn't work, copy this link into your browser:</p><p style="margin:6px 0 0; font-size:12px; line-height:20px; overflow-wrap:anywhere; word-break:break-all;"><a href="${url}" style="color:${COLORS.pine}; text-decoration:underline; word-break:break-all;">${url}</a></p>`, 24) : "",
+  ].join("");
+  return marketingDocument({
+    preheader: escapeHtml(preheader),
+    badge: "Account &amp; activity",
+    heroEyebrow: "Your RoomsNow update",
+    heroTitle: heading,
+    rows,
+  });
 }
 
 /**
@@ -211,6 +157,7 @@ function marketingDocument(params: {
         .mk-offer-text { display: block !important; width: auto !important; padding: 0 24px 24px 24px !important; }
         .mk-h1 { font-size: 27px !important; line-height: 34px !important; }
         .mk-badge { display: none !important; }
+        .mk-outer { padding:16px 8px !important; }
       }
     </style>
   </head>
@@ -218,8 +165,8 @@ function marketingDocument(params: {
     <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:${COLORS.paper};">${preheader}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${COLORS.paper};">
       <tr>
-        <td align="center" style="padding:28px 12px;">
-          <table role="presentation" class="mk-container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background-color:${COLORS.card}; border:1px solid ${COLORS.line}; border-radius:14px; overflow:hidden; font-family:${MKT.sans}; color:${COLORS.ink};">
+        <td align="center" class="mk-outer" style="padding:28px 12px;">
+          <table role="presentation" class="mk-container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:600px; background-color:${COLORS.card}; border:1px solid ${COLORS.line}; border-radius:14px; overflow:hidden; font-family:${MKT.sans}; color:${COLORS.ink};">
             <tr>
               <td class="mk-px" style="padding:22px 40px; background-color:${COLORS.card};">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -239,7 +186,7 @@ function marketingDocument(params: {
                     ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="border:2px solid #FFFFFF; border-radius:999px; padding:7px 16px; font-size:11px; font-weight:bold; letter-spacing:1.6px; text-transform:uppercase; color:#FFFFFF;">${heroEyebrow}</td></tr></table>`
                     : ""
                 }
-                <h1 class="mk-h1" style="margin:${heroEyebrow ? "22px" : "0"} 0 0; font-family:${MKT.serif}; font-size:32px; line-height:39px; font-weight:normal; color:#FFFFFF;">${heroTitle}</h1>
+                <h1 class="mk-h1" style="margin:${heroEyebrow ? "22px" : "0"} 0 0; font-family:${MKT.serif}; font-size:32px; line-height:39px; font-weight:normal; overflow-wrap:anywhere; color:#FFFFFF;">${heroTitle}</h1>
                 ${heroIntro ? `<p style="margin:16px 0 0; font-size:16px; line-height:25px; color:${MKT.heroText};">${heroIntro}</p>` : ""}
               </td>
             </tr>
