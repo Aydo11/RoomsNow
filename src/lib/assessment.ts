@@ -111,7 +111,7 @@ export type Assessment = {
   goals?: string;
 };
 
-const ACCOMMODATION: AccommodationType[] = ["SINGLE_ROOM", "SHARED_ACCOMMODATION", "SELF_CONTAINED", "FLAT", "HOUSE", "OTHER"];
+const ACCOMMODATION: AccommodationType[] = ["SINGLE_ROOM", "SHARED_ACCOMMODATION", "MOTHER_AND_BABY_UNIT", "SELF_CONTAINED", "FLAT", "HOUSE", "OTHER"];
 const HOUSEHOLDS: GenderArrangement[] = ["ANY", "FEMALE_ONLY", "MALE_ONLY", "MIXED"];
 
 const pick = <T extends string>(value: unknown, allowed: readonly T[]) =>

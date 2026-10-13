@@ -13,7 +13,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
     <div className="shell max-w-lg py-8 sm:py-14">
       <h1 className="text-[32px]">Create an account</h1>
       <p className="mt-2 max-w-[56ch] text-[16px] leading-relaxed text-ink-soft">
-        Looking for a room? Start with your email and a password. Add your profile later.
+        Choose what you want to do below. Looking for a room? Start with your email and a password; add your profile later.
       </p>
       <Suspense fallback={null}>
         <RegisterForm />

@@ -22,6 +22,7 @@ export const supportLabel = (slug: string) =>
 export const ACCOMMODATION_TYPES = {
   SINGLE_ROOM: "Single room",
   SHARED_ACCOMMODATION: "Shared accommodation",
+  MOTHER_AND_BABY_UNIT: "Mother and baby unit",
   SELF_CONTAINED: "Self-contained",
   FLAT: "Flat",
   HOUSE: "House",

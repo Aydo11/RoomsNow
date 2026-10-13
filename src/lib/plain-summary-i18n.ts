@@ -57,6 +57,7 @@ const PACKS: Record<Other, Pack> = {
     kinds: {
       SINGLE_ROOM: "ایک سنگل کمرہ",
       SHARED_ACCOMMODATION: "ایک مشترکہ گھر میں کمرہ",
+      MOTHER_AND_BABY_UNIT: "ماں اور بچے کے لیے رہائش",
       SELF_CONTAINED: "اپنے کچن اور باتھ روم والا گھر",
       FLAT: "ایک فلیٹ",
       HOUSE: "ایک مکان",
@@ -102,6 +103,7 @@ const PACKS: Record<Other, Pack> = {
     kinds: {
       SINGLE_ROOM: "ਇੱਕ ਸਿੰਗਲ ਕਮਰਾ",
       SHARED_ACCOMMODATION: "ਸਾਂਝੇ ਘਰ ਵਿੱਚ ਇੱਕ ਕਮਰਾ",
+      MOTHER_AND_BABY_UNIT: "ਮਾਂ ਅਤੇ ਬੱਚੇ ਲਈ ਰਿਹਾਇਸ਼",
       SELF_CONTAINED: "ਆਪਣੀ ਰਸੋਈ ਅਤੇ ਬਾਥਰੂਮ ਵਾਲਾ ਘਰ",
       FLAT: "ਇੱਕ ਫਲੈਟ",
       HOUSE: "ਇੱਕ ਮਕਾਨ",
@@ -147,6 +149,7 @@ const PACKS: Record<Other, Pack> = {
     kinds: {
       SINGLE_ROOM: "pojedynczy pokój",
       SHARED_ACCOMMODATION: "pokój we wspólnym domu",
+      MOTHER_AND_BABY_UNIT: "lokal dla matki i dziecka",
       SELF_CONTAINED: "mieszkanie z własną kuchnią i łazienką",
       FLAT: "mieszkanie",
       HOUSE: "dom",
@@ -196,6 +199,7 @@ const PACKS: Record<Other, Pack> = {
     kinds: {
       SINGLE_ROOM: "غرفة فردية",
       SHARED_ACCOMMODATION: "غرفة في منزل مشترك",
+      MOTHER_AND_BABY_UNIT: "وحدة سكنية للأم والطفل",
       SELF_CONTAINED: "مسكن بمطبخ وحمّام خاصّين",
       FLAT: "شقة",
       HOUSE: "منزل",
@@ -246,6 +250,7 @@ const PACKS: Record<Other, Pack> = {
     kinds: {
       SINGLE_ROOM: "o cameră single",
       SHARED_ACCOMMODATION: "o cameră într-o casă comună",
+      MOTHER_AND_BABY_UNIT: "o unitate pentru mamă și copil",
       SELF_CONTAINED: "o locuință cu bucătărie și baie proprii",
       FLAT: "un apartament",
       HOUSE: "o casă",

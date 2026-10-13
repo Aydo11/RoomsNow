@@ -29,6 +29,7 @@ export type PlainSummaryInput = {
 const KIND: Record<string, string> = {
   SINGLE_ROOM: "a single room",
   SHARED_ACCOMMODATION: "a room in a shared home",
+  MOTHER_AND_BABY_UNIT: "a mother and baby unit",
   SELF_CONTAINED: "a home with its own kitchen and bathroom",
   FLAT: "a flat",
   HOUSE: "a house",

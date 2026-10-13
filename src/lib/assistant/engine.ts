@@ -172,6 +172,7 @@ const SUPPORT_SYNONYMS: Array<[string, RegExp]> = [
 ];
 
 const TYPE_SYNONYMS: Array<[string, RegExp]> = [
+  ["MOTHER_AND_BABY_UNIT", /\b(?:mother|mum|mom)\s*(?:and|&)\s*baby(?: unit)?\b/],
   ["SELF_CONTAINED", /\bself[- ]contained|studio/],
   ["FLAT", /\bflat\b|apartment/],
   ["HOUSE", /\bwhole house|a house\b/],
@@ -274,6 +275,7 @@ const TYPE_LABELS: Record<string, string> = {
   FLAT: "flats",
   HOUSE: "houses",
   SHARED_ACCOMMODATION: "shared homes",
+  MOTHER_AND_BABY_UNIT: "mother and baby units",
   SINGLE_ROOM: "single rooms",
 };
 

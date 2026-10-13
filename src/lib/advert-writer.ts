@@ -63,6 +63,7 @@ export const FEATURE_LABELS: Record<string, string> = {
 const TYPE_NOUN: Record<string, string> = {
   SINGLE_ROOM: "room",
   SHARED_ACCOMMODATION: "shared house",
+  MOTHER_AND_BABY_UNIT: "mother and baby unit",
   SELF_CONTAINED: "self-contained home",
   FLAT: "flat",
   HOUSE: "house",
