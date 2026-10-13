@@ -94,6 +94,8 @@ const nextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // This public wordmark must load in email clients and sandboxed mail previews.
+      { source: "/brand/roomsnow-logo-email.png", headers: [{ key: "Cross-Origin-Resource-Policy", value: "cross-origin" }] },
       // Private documents are never cached by a shared cache.
       {
         source: "/api/documents/:path*",

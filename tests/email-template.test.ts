@@ -1,4 +1,5 @@
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { emailRenderer } from "./helpers/email-renderer";
 const templates = emailRenderer();
@@ -35,4 +36,11 @@ test("marketing and welcome emails retain personalisation and unsubscribe rules"
  const welcome = templates.renderSeekerAboutEmail({ mode: "welcome", appUrl: "https://www.roomsnow.co.uk", firstName: "Sam" });
  assert.match(welcome, /Hi Sam/);
  assert.doesNotMatch(welcome, /RESEND_UNSUBSCRIBE_URL/);
+});
+
+
+test("only the public email logo receives a cross-origin resource exception", () => {
+ const config = readFileSync(new URL("../next.config.mjs", import.meta.url), "utf8");
+ assert.ok(config.includes('source: "/brand/roomsnow-logo-email.png", headers: [{ key: "Cross-Origin-Resource-Policy", value: "cross-origin" }]'));
+ assert.ok(config.includes('{ key: "Cross-Origin-Resource-Policy", value: "same-origin" }'));
 });
