@@ -1575,6 +1575,8 @@ html[data-theme="dark"] {
 }
 .hero-street { position: relative; width: 100%; pointer-events: none; user-select: none; }
 .hero-street-svg { display: block; width: 100%; height: clamp(110px, 13.75vw, 220px); }
+/* Phones: a slimmer street so the rooms below come into view sooner. */
+@media (max-width: 639px) { .hero-street-svg { height: 72px; } }
 .street-house { fill: rgb(var(--street-house)); stroke: rgb(var(--rn-pine) / 0.22); stroke-width: 1.5; }
 .street-roof { fill: rgb(var(--street-roof)); }
 .street-win { fill: rgb(var(--street-win)); }
