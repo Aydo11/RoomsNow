@@ -95,6 +95,7 @@ export default async function CityRoomsPage({ params }: Props) {
           <h3 className="mt-7 text-[21px]">Looking for a room while receiving benefits?</h3>
           <p className="mt-3 text-[16px] leading-7 text-ink-soft">Check the benefits information on each advert, then ask the provider about eligibility, rent and any charges you would need to pay yourself. Receiving Universal Credit does not automatically make every room suitable or guarantee acceptance.</p>
           <nav aria-label={`Room search guides for ${city}`} className="mt-6 flex flex-wrap gap-3">
+            <Link href="/guides/how-to-find-an-hmo-room" className="text-pine-dark underline">How to find an HMO room</Link>
             <Link href="/guides/hmo-room-viewing-checklist" className="text-pine-dark underline">Room viewing checklist</Link>
             <Link href="/next-steps" className="text-pine-dark underline">What happens after an enquiry</Link>
             {slug === "birmingham" ? <Link href="/hmo-rooms-birmingham" className="text-pine-dark underline">HMO rooms in Birmingham</Link> : null}
