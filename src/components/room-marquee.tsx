@@ -10,6 +10,7 @@ export type MarqueeRoom = {
   weeklyRentFrom: number | null;
   weeklyRentTo: number | null;
   property: { city: string; area: string | null };
+  company: { name: string; verification: string };
   media: Array<{ type: string; url: string }>;
   rooms: Array<{ status: string }>;
 };
@@ -26,6 +27,8 @@ export function RoomMarquee({ rooms }: { rooms: MarqueeRoom[] }) {
     return cover && !cover.isVideoFile;
   });
   if (withPhotos.length < 4) return null;
+  // Rooms that show their rent first: a price is the first thing people look for.
+  withPhotos.sort((a, b) => Number(Boolean(b.weeklyRentFrom || b.weeklyRentTo)) - Number(Boolean(a.weeklyRentFrom || a.weeklyRentTo)));
 
   const track = (copy: boolean) => (
     <ul className="room-marquee-track" aria-hidden={copy || undefined}>
@@ -54,7 +57,20 @@ export function RoomMarquee({ rooms }: { rooms: MarqueeRoom[] }) {
               <span className="block p-3.5">
                 <span className="block truncate text-[15px] font-semibold text-ink group-hover:text-pine-dark">{room.title}</span>
                 <span className="mt-0.5 block truncate text-[13px] text-ink-soft">{place}</span>
-                <span className="mt-1.5 block text-[13px] font-semibold text-pine-dark">{rentRange(room.weeklyRentFrom, room.weeklyRentTo)}</span>
+                {room.weeklyRentFrom || room.weeklyRentTo ? (
+                  <span className="mt-1.5 block text-[13px] font-semibold text-pine-dark">{rentRange(room.weeklyRentFrom, room.weeklyRentTo)}</span>
+                ) : (
+                  <span className="mt-1.5 block text-[13px] text-ink-soft">Ask the provider for the rent</span>
+                )}
+                <span className="mt-2 flex min-w-0 items-center gap-1.5 border-t border-line pt-2 text-[12px] text-ink-soft">
+                  <span className="truncate">{room.company.name}</span>
+                  {room.company.verification === "APPROVED" && (
+                    <span className="inline-flex shrink-0 items-center gap-1 font-semibold text-pine-dark">
+                      <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M8 1.5 13.5 4v3.6c0 3.2-2.3 5.9-5.5 6.9-3.2-1-5.5-3.7-5.5-6.9V4L8 1.5Z" /><path d="m5.6 8 1.7 1.7 3.2-3.4" /></svg>
+                      Verified
+                    </span>
+                  )}
+                </span>
               </span>
             </Link>
           </li>
