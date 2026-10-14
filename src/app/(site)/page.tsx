@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { InstallHint } from "@/components/app-install";
 import Image from "next/image";
-import { cache, Fragment, Suspense } from "react";
+import { cache, Suspense } from "react";
 import { db } from "@/lib/db";
 import { SearchPanel } from "@/components/search-panel";
 import { ListingCard } from "@/components/listing-card";
@@ -88,19 +88,11 @@ export default function HomePage() {
         <span aria-hidden="true" className="ambient-orb ambient-orb-2 -right-20 bottom-0 h-72 w-72 bg-[#d8ebfb]/70 blur-3xl" />
         <span aria-hidden="true" className="ambient-orb ambient-orb-3 left-1/3 -top-24 h-56 w-56 bg-[#70baff]/20 blur-3xl" />
         <div className="hero-content shell relative pb-4 pt-10 text-center sm:pb-6 sm:pt-14 lg:pt-16">
-          <h1 className="home-headline mx-auto max-w-[19ch] text-balance text-[clamp(2rem,8vw,3.5rem)] font-bold leading-[1.12]">
-            <span className="sr-only">Find an HMO room or accommodation that fits</span>
-            <span aria-hidden="true">
-              {"Find an HMO room or accommodation that fits".split(" ").map((word, index) => (
-                // The space sits outside each word's span so the heading can wrap between words.
-                <Fragment key={index}>
-                  <span className="home-word-slot"><span
-                    className={`home-word ${index >= 2 && index <= 5 ? "text-pine-dark" : ""} ${word === "fits" ? "home-word-accent" : ""}`}
-                    style={{ animationDelay: `${index * 80}ms` }}
-                  >{word}</span></span>{" "}
-                </Fragment>
-              ))}
-            </span>
+          {/* One complete line that reads properly from the very first frame: no
+              word-by-word reveal that can be caught half-way in a screenshot,
+              a link preview or a slow phone. */}
+          <h1 className="home-headline home-welcome mx-auto max-w-[20ch] text-balance text-[clamp(2rem,8vw,3.5rem)] font-bold leading-[1.12]">
+            Find an <span className="text-pine-dark">HMO room</span> or <span className="text-pine-dark">supported accommodation</span>
           </h1>
           <p className="home-intro mx-auto mt-5 max-w-2xl text-[17px] leading-relaxed text-ink-soft">
             Some people need more than a room — they need the right support alongside it. RoomsNow makes that connection.
@@ -146,6 +138,11 @@ export default function HomePage() {
         <HeroStreet pills={[]} />
       </section>
 
+      {/* Real rooms straight after the search: photos persuade more than icons. */}
+      <Suspense fallback={null}>
+        <HomeMarquee />
+      </Suspense>
+
       <section className="border-b border-line bg-white">
         <div className="shell py-10 sm:py-12">
           <h2 data-reveal className="text-center text-[26px]">What would you like to do?</h2>
@@ -154,15 +151,15 @@ export default function HomePage() {
               icon="search"
               eyebrow="LOOKING FOR A HOME"
               title="Search available rooms"
-              body="Browse current vacancies and contact the provider directly."
+              body="See rooms free now and message the provider."
               href="/search"
-              cta="Find accommodation"
+              cta="Find a room"
             />
             <AudienceCard
               icon="referral"
               eyebrow="PROFESSIONAL REFERRER"
               title="Place someone you support"
-              body="Find suitable vacancies and send a structured referral."
+              body="Find a suitable room and send a referral."
               href="/accommodation-referrals"
               cta="Make a referral"
             />
@@ -170,18 +167,14 @@ export default function HomePage() {
               icon="provider"
               eyebrow="LANDLORD OR PROVIDER"
               title="Advertise your vacancies"
-              body="List HMO rooms and accommodation for people and referrers to find."
+              body="List your rooms for people and referrers to find."
               href="/advertise-accommodation"
-              cta="Advertise accommodation"
+              cta="Advertise your rooms"
               highlighted
             />
           </div>
         </div>
       </section>
-
-      <Suspense fallback={null}>
-        <HomeMarquee />
-      </Suspense>
 
       <Suspense fallback={<div className="shell py-12 text-[14px] text-ink-soft" role="status">Loading current vacancies…</div>}>
         <HomeListings />
@@ -328,6 +321,7 @@ async function HomeMarquee() {
       weeklyRentFrom: true,
       weeklyRentTo: true,
       property: { select: { city: true, area: true } },
+      company: { select: { name: true, verification: true } },
       media: COVER_MEDIA,
       rooms: { select: { status: true } },
     },
@@ -537,14 +531,15 @@ function AudienceCard({
   highlighted?: boolean;
 }) {
   return (
-    <article data-spotlight className={`home-audience ${highlighted ? "rounded-card bg-linear-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card border-t-4 border-t-pine/30 bg-pine-light/25 p-6"}`}>
+    <article data-spotlight className={`home-audience flex flex-col ${highlighted ? "rounded-card bg-linear-to-br from-pine-dark to-pine p-6 text-white shadow-float" : "card border-t-4 border-t-pine/30 bg-pine-light/25 p-6"}`}>
       <div className="flex items-center justify-between gap-4">
         <span className={highlighted ? "text-[11px] font-semibold tracking-[0.08em] text-white/80" : "text-[11px] font-semibold tracking-[0.08em] text-pine-dark"}>{eyebrow}</span>
         <AudienceIcon type={icon} highlighted={highlighted} />
       </div>
       <h3 className={highlighted ? "mt-3 text-[21px] text-white" : "mt-3 text-[21px]"}>{title}</h3>
-      <p className={highlighted ? "mt-2 text-[14px] leading-relaxed text-white/80" : "mt-2 text-[14px] leading-relaxed text-ink-soft"}>{body}</p>
-      <Link href={href} className={highlighted ? "btn mt-5 bg-white text-pine-dark hover:bg-pine-light" : "btn-secondary mt-5"}>{cta}</Link>
+      <p className={highlighted ? "mt-2 mb-5 text-[14px] leading-relaxed text-white/80" : "mt-2 mb-5 text-[14px] leading-relaxed text-ink-soft"}>{body}</p>
+      {/* Same size and position on every card, whatever the copy length. */}
+      <Link href={href} className={`${highlighted ? "btn bg-white text-pine-dark hover:bg-pine-light" : "btn-secondary"} mt-auto w-full whitespace-nowrap text-center`}>{cta}</Link>
     </article>
   );
 }
