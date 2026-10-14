@@ -9,7 +9,6 @@ import { searchListings } from "@/server/search";
 import { JsonLd, locationSlug, pageMetadata } from "@/lib/seo";
 import { guides } from "@/lib/guides";
 import { getCurrentUser } from "@/lib/session";
-import { CountUp } from "@/components/motion";
 import { RecentlyViewed } from "@/components/recently-viewed";
 import { HeroStreet } from "@/components/hero-street";
 import { RoomMarquee } from "@/components/room-marquee";
@@ -507,7 +506,8 @@ function Stat({ value, label, live = false }: { value: number; label: string; li
   return (
     <div className="flex items-baseline gap-2">
       {live && <span aria-hidden="true" className="live-dot translate-y-[-3px] self-center" />}
-      <dt className="font-display text-[22px] font-bold text-pine-dark"><CountUp value={value} /></dt>
+      {/* Shown as-is, not counted up from 0: "0 rooms available" for a second looks like an empty site. */}
+      <dt className="font-display text-[22px] font-bold tabular-nums text-pine-dark">{value.toLocaleString("en-GB")}</dt>
       <dd className="text-ink-soft">{label}</dd>
     </div>
   );
