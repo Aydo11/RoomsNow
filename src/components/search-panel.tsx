@@ -5,6 +5,20 @@ import { useState } from "react";
 import { submitSearchQuery } from "@/lib/search-query";
 import { SUPPORT_TYPES, UK_CITIES } from "@/lib/taxonomy";
 
+/** Quick move-in choices instead of a fiddly date picker. Each maps to a "move in by" date. */
+const MOVE_IN_CHOICES = [
+  { label: "As soon as possible", days: 7 },
+  { label: "Within 2 weeks", days: 14 },
+  { label: "Within a month", days: 31 },
+  { label: "Within 3 months", days: 92 },
+] as const;
+
+function isoInDays(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 /** Mobile starts with a location; optional refinements remain one tap away. */
 export function SearchPanel({ size = "hero" }: { size?: "hero" | "compact" }) {
   const params = useSearchParams();
@@ -72,20 +86,17 @@ function SearchPanelForm({ size }: { size: "hero" | "compact" }) {
       </div>
 
       <div className="min-w-0">
-        <label className="label" htmlFor="from">
-          Move in by <span className="font-normal text-ink-faint">(optional)</span>
-        </label>
-        <div className="w-full min-w-0 max-w-full overflow-hidden">
-          <input
-            id="from"
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="field block min-w-0 max-w-full"
-            style={{ boxSizing: "border-box", width: "100%", minWidth: 0, maxWidth: "100%" }}
-            aria-label="Move in by"
-          />
-        </div>
+        <label className="label" htmlFor="from">Move in</label>
+        <select id="from" value={from} onChange={(e) => setFrom(e.target.value)} className="field">
+          <option value="">Any time</option>
+          {/* A date from a shared link that isn't one of the choices below. */}
+          {from && !MOVE_IN_CHOICES.some((choice) => isoInDays(choice.days) === from) && (
+            <option value={from}>By {new Date(`${from}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</option>
+          )}
+          {MOVE_IN_CHOICES.map((choice) => (
+            <option key={choice.days} value={isoInDays(choice.days)}>{choice.label}</option>
+          ))}
+        </select>
       </div>
 
       <label htmlFor={`vetted-${size}`} className="flex cursor-pointer items-center gap-2 text-[14px] text-ink-soft sm:col-span-4 sm:row-start-2">
