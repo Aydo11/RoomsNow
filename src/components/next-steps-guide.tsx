@@ -12,7 +12,8 @@ const LANG_KEY = "roomsnow:summary-lang";
  * summaries, with the step the person has reached marked. Each step can be
  * read out loud with the device's own voice (nothing is sent anywhere).
  */
-export function NextStepsGuide({ current = null, compact = false }: { current?: NextStepId | null; compact?: boolean }) {
+/** `headingLevel="h1"` when the guide is the whole page, so it has exactly one main heading. */
+export function NextStepsGuide({ current = null, compact = false, headingLevel: Heading = "h2" }: { current?: NextStepId | null; compact?: boolean; headingLevel?: "h1" | "h2" }) {
   const [lang, setLang] = useState<SummaryLanguage>("en");
   const [supported, setSupported] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -96,9 +97,9 @@ export function NextStepsGuide({ current = null, compact = false }: { current?: 
     <section aria-labelledby="next-steps-heading">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div lang={lang} dir={meta.dir}>
-          <h2 id="next-steps-heading" className={clsx("font-bold text-ink", compact ? "text-[19px]" : "text-[26px]")}>
+          <Heading id="next-steps-heading" className={clsx("font-bold text-ink", compact ? "text-[19px]" : "text-[26px]")}>
             {text.heading}
-          </h2>
+          </Heading>
           <p className="mt-1 text-[15px] text-ink-soft">{text.intro}</p>
         </div>
         {canListen &&

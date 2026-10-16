@@ -27,7 +27,7 @@ import { matchScore } from "@/lib/matching";
 import { recordBoostedClickAction, recordSponsoredClickAction } from "@/server/actions/billing";
 import { brand } from "@/brand.config";
 import { callerIp, LIMITS, rateLimit } from "@/lib/rate-limit";
-import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
+import { DEFAULT_SHARE_IMAGE, JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
 import { PropertyMap } from "@/components/property-map";
 import { hasProviderMapAccess } from "@/lib/entitlements";
 import { coverImage } from "@/lib/cover-image";
@@ -65,7 +65,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const cover = coverImage(listing.media);
   // The generated share card leads, so WhatsApp and Facebook previews show rent and area too.
   const card = listing.status === "ACTIVE" ? [{ url: absoluteUrl(`/share-card/${id}`), width: 1200, height: 630, alt: listing.title }] : [];
-  const shareImages = [...card, ...(photos.length ? photos : cover ? [cover.url] : [])];
+  const own = [...card, ...(photos.length ? photos : cover ? [cover.url] : [])];
+  const shareImages = own.length ? own : [DEFAULT_SHARE_IMAGE];
   return {
     title,
     description,
@@ -80,7 +81,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       description,
       images: shareImages,
     },
-    twitter: { card: shareImages.length ? "summary_large_image" : "summary", title, description },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 
