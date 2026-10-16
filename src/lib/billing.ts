@@ -441,7 +441,7 @@ export async function ensureProviderMembershipCatalogue() {
     db.membership.upsert({
       where: { tier: "PROFESSIONAL" },
       update: {
-        maxListings: 15,
+        maxListings: 6,
         maxRooms: -1,
         maxStaff: 8,
         maxPhotos: 20,
@@ -451,7 +451,7 @@ export async function ensureProviderMembershipCatalogue() {
         includedBoosts: 3,
         enhancedProfile: true,
         description:
-          "For growing providers managing up to 15 live property adverts, with unlimited rooms, public location maps and 3 included 24-hour boosts per billing period. Includes one free 7-day sponsored placement running at a time.",
+          "For growing providers managing up to 6 live property adverts, with unlimited rooms, public location maps and 3 included 24-hour boosts per billing period. Includes one free 7-day sponsored placement running at a time.",
       },
       create: {
         tier: "PROFESSIONAL",
@@ -459,7 +459,7 @@ export async function ensureProviderMembershipCatalogue() {
         name: "Professional",
         priceMonthly: pence(49),
         priceYearly: pence(490),
-        maxListings: 15,
+        maxListings: 6,
         maxRooms: -1,
         maxStaff: 8,
         maxPhotos: 20,
@@ -469,13 +469,13 @@ export async function ensureProviderMembershipCatalogue() {
         includedBoosts: 3,
         enhancedProfile: true,
         description:
-          "For growing providers managing up to 15 live property adverts, with unlimited rooms, public location maps and 3 included 24-hour boosts per billing period. Includes one free 7-day sponsored placement running at a time.",
+          "For growing providers managing up to 6 live property adverts, with unlimited rooms, public location maps and 3 included 24-hour boosts per billing period. Includes one free 7-day sponsored placement running at a time.",
       },
     }),
     db.membership.upsert({
       where: { tier: "BUSINESS" },
       update: {
-        maxListings: 25,
+        maxListings: 12,
         maxRooms: -1,
         maxStaff: 25,
         maxPhotos: 40,
@@ -487,7 +487,7 @@ export async function ensureProviderMembershipCatalogue() {
         enhancedProfile: true,
         prioritySupport: true,
         description:
-          "For larger portfolios managing up to 25 live property adverts, with unlimited rooms, 25 staff accounts, public location maps and 1 included 24-hour boost per billing period. Includes two free 7-day sponsored placements running at a time.",
+          "For larger portfolios managing up to 12 live property adverts, with unlimited rooms, 25 staff accounts, public location maps and 1 included 24-hour boost per billing period. Includes two free 7-day sponsored placements running at a time.",
       },
       create: {
         tier: "BUSINESS",
@@ -495,7 +495,7 @@ export async function ensureProviderMembershipCatalogue() {
         name: "Business",
         priceMonthly: pence(149),
         priceYearly: pence(1490),
-        maxListings: 25,
+        maxListings: 12,
         maxRooms: -1,
         maxStaff: 25,
         maxPhotos: 40,
@@ -507,7 +507,7 @@ export async function ensureProviderMembershipCatalogue() {
         enhancedProfile: true,
         prioritySupport: true,
         description:
-          "For larger portfolios managing up to 25 live property adverts, with unlimited rooms, 25 staff accounts, public location maps and 1 included 24-hour boost per billing period. Includes two free 7-day sponsored placements running at a time.",
+          "For larger portfolios managing up to 12 live property adverts, with unlimited rooms, 25 staff accounts, public location maps and 1 included 24-hour boost per billing period. Includes two free 7-day sponsored placements running at a time.",
       },
     }),
   ]);
