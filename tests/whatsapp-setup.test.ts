@@ -23,5 +23,14 @@ test("Paid setup has a modal, instructions, consent and a way to keep the button
   assert.match(prompt, /Set up later — keep button off/);
   assert.match(prompt, /useState\(initialNumber/);
   assert.match(source("app/(site)/provider/membership/page.tsx"), /whatsapp.allowed && \(!addon.whatsappEnabled \|\| !addon.whatsappNumber\)/);
-  assert.match(source("app/api/billing/webhook/route.ts"), /WhatsApp paid access active — finish setup/);
+  assert.match(source("app/api/billing/webhook/route.ts"), /sendWhatsappSetupInstructions\(companyId/);
+});
+
+test("Granting or buying WhatsApp sends step-by-step setup instructions", () => {
+  const email = source("lib/whatsapp-setup-email.ts");
+  assert.match(email, /notifyCompany\(/);
+  assert.match(email, /sendEmail\(/);
+  assert.match(email, /Enable WhatsApp enquiries/);
+  const grant = source("server/actions/admin.ts").split("export async function manageWhatsappGrantAction")[1];
+  assert.match(grant, /sendWhatsappSetupInstructions\(/);
 });
