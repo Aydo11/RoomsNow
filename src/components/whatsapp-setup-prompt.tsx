@@ -7,7 +7,16 @@ import { Field, FormError, FormSuccess, SubmitButton } from "@/components/ui";
 import type { FormState } from "@/lib/validation";
 
 /** Only mounted after server-side entitlement checks; buying access never publishes a number. */
-export function WhatsappSetupPrompt({ initialNumber, autoOpen = false }: { initialNumber: string | null; autoOpen?: boolean }) {
+export function WhatsappSetupPrompt({
+  initialNumber,
+  autoOpen = false,
+  source = "paid",
+}: {
+  initialNumber: string | null;
+  autoOpen?: boolean;
+  /** How they got WhatsApp, so the wording fits: bought it, given it by RoomsNow, or in their plan. */
+  source?: "paid" | "granted" | "included";
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const router = useRouter();
   const [number, setNumber] = useState(initialNumber ? `+${initialNumber.replace(/^\+/, "")}` : "");
@@ -19,9 +28,17 @@ export function WhatsappSetupPrompt({ initialNumber, autoOpen = false }: { initi
   return (
     <>
       <section className="card mb-5 border-pine/30 p-5" aria-labelledby="whatsapp-setup-banner">
-        <p className="text-[12px] font-semibold uppercase tracking-wide text-pine-dark">WhatsApp access active · setup required</p>
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-pine-dark">
+          {source === "granted" ? "Free from RoomsNow · setup required" : source === "included" ? "Included in your plan · setup required" : "WhatsApp access active · setup required"}
+        </p>
         <h2 id="whatsapp-setup-banner" className="mt-1 text-[22px]">Finish setting up your WhatsApp button</h2>
-        <p className="mt-2 text-[15px] text-ink-soft">Your access is ready, but buying it does not switch the button on. Add your business number, confirm it can be public and enable enquiries.</p>
+        <p className="mt-2 text-[15px] text-ink-soft">
+          {source === "granted"
+            ? "RoomsNow has given you WhatsApp enquiries. The button stays off until you add your business number, confirm it can be public and enable enquiries."
+            : source === "included"
+              ? "WhatsApp enquiries come with your plan. Add your business number, confirm it can be public and enable enquiries to switch the button on."
+              : "Your access is ready, but buying it does not switch the button on. Add your business number, confirm it can be public and enable enquiries."}
+        </p>
         <button type="button" className="btn-primary mt-4" onClick={() => dialog.current?.showModal()}>Set up WhatsApp now</button>
       </section>
       <dialog ref={dialog} aria-labelledby="whatsapp-setup-title" aria-describedby="whatsapp-setup-description"
