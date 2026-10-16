@@ -1,6 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { canLoadMarketingTags, createGoogleCommandQueue, isPublicAnalyticsPage, publicAnalyticsUrl } from "../src/lib/analytics-safety";
+import { canLoadMarketingTags, createGoogleCommandQueue, isPublicAnalyticsPage, publicAnalyticsUrl, publicAnalyticsReferrer, publicAnalyticsPageTitle } from "../src/lib/analytics-safety";
+
+test("referrer preserves acquisition domain without transmitting private URL details", () => {
+  assert.equal(publicAnalyticsReferrer("https://www.google.com/search?q=private+housing+need#details"), "https://www.google.com");
+  assert.equal(publicAnalyticsReferrer("https://user:secret@referrer.example/private?email=person@example.com"), "https://referrer.example");
+  for (const referrer of ["", "invalid", "javascript:alert(1)", "file:///private/file"]) {
+    assert.equal(publicAnalyticsReferrer(referrer), "");
+  }
+});
+
+test("notification counts do not split page titles into separate report rows", () => {
+  assert.equal(publicAnalyticsPageTitle("(8) Search rooms | RoomsNow"), "Search rooms | RoomsNow");
+  assert.equal(publicAnalyticsPageTitle("HMO rooms | RoomsNow"), "HMO rooms | RoomsNow");
+});
 
 test("Google command shim produces the supported Arguments queue", () => {
   const queue: unknown[] = [];
