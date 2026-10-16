@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import { brand } from "@/brand.config";
-import { JsonLd, SITE_URL } from "@/lib/seo";
+import { DEFAULT_SHARE_IMAGE, JsonLd, SITE_URL } from "@/lib/seo";
 import { Toaster } from "@/components/toast";
 import { PwaRegister } from "@/components/app-install";
 import { GoogleAnalyticsConsent } from "@/components/google-analytics-consent";
@@ -44,8 +44,9 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "HMO Rooms & Supported Accommodation UK | RoomsNow",
     description: brand.description,
+    images: [DEFAULT_SHARE_IMAGE],
   },
-  twitter: { card: "summary_large_image", title: "HMO Rooms & Supported Accommodation UK | RoomsNow", description: brand.description },
+  twitter: { card: "summary_large_image", title: "HMO Rooms & Supported Accommodation UK | RoomsNow", description: brand.description, images: [DEFAULT_SHARE_IMAGE.url] },
 };
 
 export const viewport: Viewport = {

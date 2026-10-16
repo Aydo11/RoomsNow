@@ -52,6 +52,11 @@ const securityHeaders = [
 const nextConfig = {
   turbopack: { root: fileURLToPath(new URL(".", import.meta.url)) },
   poweredByHeader: false,
+  // Next 16 streams <title>, description, canonical and robots tags into the
+  // page body for most visitors, Googlebot included. Google ignores a canonical
+  // (and may miss noindex) outside <head>, and link-preview bots often miss the
+  // title, so every page waits for its metadata and puts it in <head>.
+  htmlLimitedBots: /.*/,
   // Tags each build with its commit. When a phone still has the previous
   // version open, Next sees the mismatch and does a full page load on the
   // next navigation, instead of asking for JavaScript that no longer exists

@@ -23,6 +23,14 @@ export function locationName(slug: string) {
     .join(" ");
 }
 
+/** Link-preview picture for pages without one of their own (app/social-card.png). */
+export const DEFAULT_SHARE_IMAGE = {
+  url: absoluteUrl("/social-card.png"),
+  width: 1200,
+  height: 630,
+  alt: "RoomsNow: find an HMO room or supported accommodation",
+};
+
 export function pageMetadata({
   title,
   description,
@@ -44,11 +52,13 @@ export function pageMetadata({
       url,
       title,
       description,
+      images: [DEFAULT_SHARE_IMAGE],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: [DEFAULT_SHARE_IMAGE.url],
     },
   };
 }

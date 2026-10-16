@@ -32,7 +32,7 @@ export default async function NextStepsPage({ searchParams }: { searchParams: Pr
         }}
       />
       <div className="shell max-w-[760px] py-8 sm:py-12">
-        <NextStepsGuide current={current} />
+        <NextStepsGuide current={current} headingLevel="h1" />
         <div className="mt-8 flex flex-wrap gap-2">
           <Link href="/dashboard/requests" className="btn-secondary">
             Track my requests

@@ -14,7 +14,7 @@ import { ProviderReviews } from "@/components/provider-reviews";
 import { ResidentReviews } from "@/components/resident-reviews";
 import { residentReviewsFor } from "@/server/resident-reviews";
 import { ORG_TYPES, supportLabel } from "@/lib/taxonomy";
-import { JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
+import { DEFAULT_SHARE_IMAGE, JsonLd, absoluteUrl, locationSlug } from "@/lib/seo";
 import { COVER_MEDIA } from "@/lib/cover-image";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description,
     alternates: { canonical: url },
     robots: { index: company.status === "ACTIVE", follow: true },
-    openGraph: { type: "website", siteName: "RoomsNow", locale: "en_GB", url, title, description, ...(company.bannerUrl || company.logoUrl ? { images: [absoluteUrl(company.bannerUrl ?? company.logoUrl!)] } : {}) },
+    openGraph: { type: "website", siteName: "RoomsNow", locale: "en_GB", url, title, description, images: company.bannerUrl || company.logoUrl ? [absoluteUrl(company.bannerUrl ?? company.logoUrl!)] : [DEFAULT_SHARE_IMAGE] },
   };
 }
 
