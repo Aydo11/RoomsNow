@@ -12,6 +12,9 @@ import { usePathname, useSearchParams } from "next/navigation";
  * - `[data-spotlight]` elements get a soft glow that follows the pointer.
  * - The header gains a shadow once the page has scrolled.
  */
+/** Endless decorative animations that pause while out of view (see globals.css). */
+const AMBIENT_SELECTOR = ".hero-street, .room-marquee-rail, .ambient-orb, .live-dot";
+
 export function MotionEffects() {
   const pathname = usePathname();
 
@@ -35,6 +38,19 @@ export function MotionEffects() {
       el.style.removeProperty("--tilt-y");
       el.removeAttribute("data-tilting");
     };
+    // Pointer events can fire several times per frame on high-rate mice; only
+    // the latest one matters, so the layout reads and style writes happen at
+    // most once per frame.
+    let pointerFrame = 0;
+    let lastPointer: PointerEvent | null = null;
+    const onPointerMove = (event: PointerEvent) => {
+      lastPointer = event;
+      if (pointerFrame) return;
+      pointerFrame = requestAnimationFrame(() => {
+        pointerFrame = 0;
+        if (lastPointer) onPointer(lastPointer);
+      });
+    };
     const onPointer = (event: PointerEvent) => {
       const element = event.target as Element | null;
       const target = element?.closest?.("[data-spotlight]") as HTMLElement | null;
@@ -57,11 +73,12 @@ export function MotionEffects() {
       tilt.style.setProperty("--glare-x", `${((px + 0.5) * 100).toFixed(1)}%`);
       tilt.style.setProperty("--glare-y", `${((py + 0.5) * 100).toFixed(1)}%`);
     };
-    if (!reduce) document.addEventListener("pointermove", onPointer, { passive: true });
+    if (!reduce) document.addEventListener("pointermove", onPointerMove, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", onScroll);
-      document.removeEventListener("pointermove", onPointer);
+      document.removeEventListener("pointermove", onPointerMove);
+      cancelAnimationFrame(pointerFrame);
     };
   }, []);
 
@@ -104,7 +121,23 @@ export function MotionEffects() {
       { rootMargin: "0px 0px 12% 0px", threshold: 0 },
     );
 
+    // Looping decoration (the lit street, drifting orbs, the room strip, live
+    // dots) keeps animating even when scrolled out of sight, and SVG opacity
+    // runs on the main thread. `data-offscreen` pauses it until it's back.
+    const ambientSeen = new WeakSet<Element>();
+    const ambient = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) entry.target.toggleAttribute("data-offscreen", !entry.isIntersecting);
+      },
+      { rootMargin: "100px 0px" },
+    );
+
     const scan = () => {
+      document.querySelectorAll(AMBIENT_SELECTOR).forEach((el) => {
+        if (ambientSeen.has(el)) return;
+        ambientSeen.add(el);
+        ambient.observe(el);
+      });
       document.querySelectorAll("[data-reveal]:not(.is-revealed)").forEach((el) => {
         if (pending.has(el) && el.classList.contains("reveal-pending")) return;
         // Already on screen (or scrolled past): show it now, no flicker.
@@ -135,21 +168,33 @@ export function MotionEffects() {
     // Belt and braces: anything on screen that is somehow still pending gets
     // shown on scroll/resize, and a restored or re-shown tab shows everything.
     const sweep = () => pending.forEach((el) => onScreen(el) && show(el, true));
+    // Scroll fires far more often than frames are drawn, and every sweep reads
+    // layout for each pending element, so run it at most once per frame.
+    let sweepFrame = 0;
+    const queueSweep = () => {
+      if (sweepFrame || pending.size === 0) return;
+      sweepFrame = requestAnimationFrame(() => {
+        sweepFrame = 0;
+        sweep();
+      });
+    };
     const onPageShow = (event: PageTransitionEvent) => event.persisted && showAll();
     const onVisible = () => document.visibilityState === "visible" && sweep();
     const safety = window.setTimeout(sweep, 1500);
-    window.addEventListener("scroll", sweep, { passive: true });
-    window.addEventListener("resize", sweep);
+    window.addEventListener("scroll", queueSweep, { passive: true });
+    window.addEventListener("resize", queueSweep);
     window.addEventListener("pageshow", onPageShow);
     document.addEventListener("visibilitychange", onVisible);
 
     return () => {
       observer.disconnect();
+      ambient.disconnect();
       mutations.disconnect();
       cancelAnimationFrame(queued);
+      cancelAnimationFrame(sweepFrame);
       window.clearTimeout(safety);
-      window.removeEventListener("scroll", sweep);
-      window.removeEventListener("resize", sweep);
+      window.removeEventListener("scroll", queueSweep);
+      window.removeEventListener("resize", queueSweep);
       window.removeEventListener("pageshow", onPageShow);
       document.removeEventListener("visibilitychange", onVisible);
       // Never leave anything hidden behind when the page changes.

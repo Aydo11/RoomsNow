@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { InstallHint } from "@/components/app-install";
 import Image from "next/image";
-import { cache, Suspense } from "react";
+import { Suspense } from "react";
+import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import { SearchPanel } from "@/components/search-panel";
 import { ListingCard } from "@/components/listing-card";
@@ -65,11 +66,54 @@ const TRUST_POINTS = [
   ["chat", "Message providers directly"],
 ] as const;
 
-const getActiveCities = cache(() => db.property.findMany({
+/**
+ * Everything public on the homepage is the same for every visitor, so it is
+ * cached for a minute instead of hitting the database on every page view. A new
+ * advert or room change shows here within about a minute. Per-visitor bits
+ * (who is signed in, what they have saved) are never cached.
+ */
+const HOME_CACHE = { revalidate: 60, tags: ["home"] };
+
+const getActiveCities = unstable_cache(() => db.property.findMany({
   where: { listings: { some: { status: "ACTIVE" } } },
   select: { city: true },
   distinct: ["city"],
-}));
+}), ["home-active-cities"], HOME_CACHE);
+
+const getHomeCounts = unstable_cache(() => Promise.all([
+  db.room.count({ where: { status: "AVAILABLE", listing: { status: "ACTIVE" } } }),
+  db.accommodationRequest.count({ where: { status: "MOVED_IN" } }),
+  db.referral.count({ where: { status: "MOVED_IN" } }),
+]), ["home-counts"], HOME_CACHE);
+
+const getMarqueeRooms = unstable_cache(() => db.listing.findMany({
+  where: { status: "ACTIVE", company: { status: "ACTIVE" }, rooms: { some: { status: "AVAILABLE" } } },
+  orderBy: { publishedAt: "desc" },
+  take: 12,
+  select: {
+    id: true,
+    title: true,
+    weeklyRentFrom: true,
+    weeklyRentTo: true,
+    property: { select: { city: true, area: true } },
+    company: { select: { name: true, verification: true } },
+    media: COVER_MEDIA,
+    rooms: { select: { status: true } },
+  },
+}), ["home-marquee"], HOME_CACHE);
+
+const getResidentReviews = unstable_cache(() => db.residentReview.findMany({
+  where: { hiddenAt: null, rating: { gte: 4 }, comment: { not: null } },
+  orderBy: { createdAt: "desc" },
+  take: 12,
+  select: {
+    id: true,
+    rating: true,
+    comment: true,
+    author: { select: { firstName: true } },
+    listing: { select: { property: { select: { area: true, city: true } } } },
+  },
+}), ["home-reviews"], HOME_CACHE);
 
 export default function HomePage() {
   return (
@@ -120,7 +164,8 @@ export default function HomePage() {
             <InstallHint />
           </div>
 
-          <dl className="mt-7 flex flex-wrap justify-center gap-x-8 gap-y-3 text-[14px]">
+          {/* min-h matches one row of stats so the hero never jumps when they arrive. */}
+          <dl className="mt-7 flex min-h-[33px] flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[14px]">
             <Suspense fallback={<span role="status" className="text-ink-soft">Checking live availability…</span>}>
               <HomeStats />
             </Suspense>
@@ -138,7 +183,7 @@ export default function HomePage() {
       </section>
 
       {/* Real rooms straight after the search: photos persuade more than icons. */}
-      <Suspense fallback={null}>
+      <Suspense fallback={<MarqueeSkeleton />}>
         <HomeMarquee />
       </Suspense>
 
@@ -175,7 +220,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Suspense fallback={<div className="shell py-12 text-[14px] text-ink-soft" role="status">Loading current vacancies…</div>}>
+      <Suspense fallback={<ListingsSkeleton />}>
         <HomeListings />
       </Suspense>
 
@@ -183,8 +228,8 @@ export default function HomePage() {
         <RecentlyViewed className="pb-12" />
       </div>
 
-      <Suspense fallback={<section className="border-y border-line bg-white"><div className="shell py-12 text-[14px] text-ink-soft" role="status">Loading locations…</div></section>}>
-        <HomeCities />
+      <Suspense fallback={<HomeCities cities={[]} />}>
+        <LiveHomeCities />
       </Suspense>
 
       <section className="border-b border-line bg-white">
@@ -295,11 +340,9 @@ export default function HomePage() {
 const MOVED_IN_THRESHOLD = 10;
 
 async function HomeStats() {
-  const [roomsAvailable, areasWithVacancies, movedInRequests, movedInReferrals] = await Promise.all([
-    db.room.count({ where: { status: "AVAILABLE", listing: { status: "ACTIVE" } } }),
+  const [[roomsAvailable, movedInRequests, movedInReferrals], areasWithVacancies] = await Promise.all([
+    getHomeCounts(),
     getActiveCities(),
-    db.accommodationRequest.count({ where: { status: "MOVED_IN" } }),
-    db.referral.count({ where: { status: "MOVED_IN" } }),
   ]);
   const movedIn = movedInRequests + movedInReferrals;
   return <>
@@ -310,22 +353,67 @@ async function HomeStats() {
 }
 
 async function HomeMarquee() {
-  const rooms = await db.listing.findMany({
-    where: { status: "ACTIVE", company: { status: "ACTIVE" }, rooms: { some: { status: "AVAILABLE" } } },
-    orderBy: { publishedAt: "desc" },
-    take: 12,
-    select: {
-      id: true,
-      title: true,
-      weeklyRentFrom: true,
-      weeklyRentTo: true,
-      property: { select: { city: true, area: true } },
-      company: { select: { name: true, verification: true } },
-      media: COVER_MEDIA,
-      rooms: { select: { status: true } },
-    },
-  });
-  return <RoomMarquee rooms={rooms} />;
+  return <RoomMarquee rooms={await getMarqueeRooms()} />;
+}
+
+/**
+ * Placeholders the same size as the sections they stand in for. Without them
+ * a slow first response streams whole sections in late and everything below
+ * jumps down (a large Cumulative Layout Shift, which Google ranks on).
+ */
+function MarqueeSkeleton() {
+  return (
+    <section className="room-marquee-section border-b border-line" aria-hidden="true">
+      <div className="shell pt-10 sm:pt-12">
+        <div className="flex h-[74px] flex-col justify-end">
+          <div className="skeleton h-3 w-28" />
+          <div className="skeleton mt-3 h-8 w-72 max-w-full" />
+        </div>
+      </div>
+      <div className="room-marquee">
+        <div className="room-marquee-track">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="room-marquee-item h-[295px] overflow-hidden rounded-card border border-line bg-paper-card">
+              <div className="skeleton h-40 rounded-none" />
+              <div className="space-y-2.5 p-3.5">
+                <div className="skeleton h-4 w-3/4" />
+                <div className="skeleton h-3.5 w-1/2" />
+                <div className="skeleton h-3.5 w-1/3" />
+                <div className="skeleton mt-3 h-3.5 w-2/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ListingsSkeleton() {
+  return (
+    <section className="shell py-12 sm:py-16" role="status" aria-label="Loading current vacancies">
+      <div className="flex h-[74px] flex-col justify-end">
+        <div className="skeleton h-3 w-32" />
+        <div className="skeleton mt-3 h-8 w-80 max-w-full" />
+      </div>
+      <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i} className={`card h-[486px] overflow-hidden ${i === 2 ? "hidden lg:block" : i === 1 ? "hidden sm:block" : ""}`}>
+            <div className="skeleton h-52 rounded-none" />
+            <div className="space-y-3 p-5">
+              <div className="skeleton h-5 w-3/4" />
+              <div className="skeleton h-4 w-1/2" />
+              <div className="flex gap-2 pt-1">
+                <div className="skeleton h-6 w-20 rounded-pill" />
+                <div className="skeleton h-6 w-16 rounded-pill" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-7 h-[92px] border-t border-line" />
+    </section>
+  );
 }
 
 /**
@@ -333,18 +421,7 @@ async function HomeMarquee() {
  * by us. The section stays hidden until there are at least two worth showing.
  */
 async function ResidentVoices() {
-  const reviews = await db.residentReview.findMany({
-    where: { hiddenAt: null, rating: { gte: 4 }, comment: { not: null } },
-    orderBy: { createdAt: "desc" },
-    take: 12,
-    select: {
-      id: true,
-      rating: true,
-      comment: true,
-      author: { select: { firstName: true } },
-      listing: { select: { property: { select: { area: true, city: true } } } },
-    },
-  });
+  const reviews = await getResidentReviews();
   const usable = reviews.filter((review) => (review.comment ?? "").trim().length >= 30).slice(0, 3);
   if (usable.length < 2) return null;
   return (
@@ -450,8 +527,16 @@ async function HomeListings() {
   ) : null;
 }
 
-async function HomeCities() {
-  const cities = await getActiveCities();
+async function LiveHomeCities() {
+  return <HomeCities cities={await getActiveCities()} />;
+}
+
+/**
+ * The city cards look the same whether or not the live list has arrived; it
+ * only decides whether each one links to its area page or to a search. So the
+ * placeholder is the section itself and nothing moves when it streams in.
+ */
+function HomeCities({ cities }: { cities: Array<{ city: string }> }) {
   return (
       <section className="border-y border-line bg-white">
         <div className="shell py-12 sm:py-16">
