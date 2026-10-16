@@ -13,7 +13,7 @@ layer. Everything visible in the demo comes out of Postgres.
 ```bash
 npm install
 cp .env.example .env          # set DATABASE_URL and AUTH_SECRET at minimum
-npm run setup                 # prisma generate + db push + seed
+npm run setup                 # prisma generate + migrate deploy + seed
 npm run dev
 ```
 
@@ -36,11 +36,17 @@ Every organisation, person, address and postcode in the seed is invented.
 
 ### Database
 
-`DATABASE_URL` is the runtime connection; `DIRECT_URL` is what schema commands (`db push`,
-`migrate`) use. For a single local Postgres they're identical — `.env.example` already sets them
+`DATABASE_URL` is the runtime connection; `DIRECT_URL` is what schema commands (`migrate`)
+use. For a single local Postgres they're identical — `.env.example` already sets them
 that way. On a hosted database behind a pooler (Neon, Supabase, PgBouncer in transaction mode),
-point `DATABASE_URL` at the pooled endpoint and `DIRECT_URL` at the unpooled one, or schema pushes
+point `DATABASE_URL` at the pooled endpoint and `DIRECT_URL` at the unpooled one, or migrations
 will fail against a pooler that doesn't support prepared statements.
+
+Schema changes go through migrations, not `db push`. Edit `prisma/schema.prisma`, run
+`npx prisma migrate dev --name <change>` locally, and commit the SQL file it creates in
+`prisma/migrations/`. Production applies pending migrations with `npx prisma migrate deploy`.
+`prisma/migrations/0_init` is the baseline matching the live database as of 2026-10-16; the older
+files in `prisma/migrations-archive-pre-baseline/` are kept for history only and are never run.
 
 `GET /api/health` checks the database connection and returns 503 if it's unreachable — point your
 host's readiness probe at it instead of `/`, which renders a full page. In development, any query
