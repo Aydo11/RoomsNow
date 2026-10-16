@@ -338,7 +338,7 @@ export function renderPreLaunchInviteEmail(params: {
         figure: "3",
         figureLabel: "months free",
         title: "Professional membership, free for 3 months",
-        text: "Worth &pound;147. Publish up to 15 live adverts, manage room availability, receive enquiries and referrals, view advert analytics and use one promoted slot. No card needed and no obligation to continue afterwards.",
+        text: "Worth &pound;147. Publish up to 6 live adverts, each with as many rooms as you need, manage room availability, receive enquiries and referrals, view advert analytics and use one promoted slot. No card needed and no obligation to continue afterwards.",
       }),
       18,
     ),
@@ -403,7 +403,7 @@ It takes only a few minutes to create your provider profile and first advert. Th
 We are inviting a limited group of providers to list before wider outreach begins, so we can improve the service around real vacancies and genuine referral workflows.
 
 FOUNDING-PROVIDER OFFER
-3 months of Professional, free — worth £147. Publish up to 15 live adverts, manage room availability, receive enquiries and referrals, view advert analytics and use one promoted slot. No card is needed and there is no obligation to continue afterwards.
+3 months of Professional, free — worth £147. Publish up to 6 live adverts, each with as many rooms as you need, manage room availability, receive enquiries and referrals, view advert analytics and use one promoted slot. No card is needed and there is no obligation to continue afterwards.
 
 List your available rooms: ${ctaUrl}
 
