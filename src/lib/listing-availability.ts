@@ -7,8 +7,6 @@ const LETTABLE_ROOM_STATUSES = new Set(["AVAILABLE", "RESERVED", "VOID"]);
 
 /** 21 days with nobody touching an advert earns a "still available?" nudge. */
 const STALE_NUDGE_AFTER_MS = 21 * 24 * 60 * 60 * 1000;
-/** A further 7 unanswered days after that, the advert pauses itself. */
-const STALE_PAUSE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Keeps a listing's live/paused state honest against what its rooms
@@ -66,33 +64,20 @@ export async function syncListingAvailability(listingId: string) {
 }
 
 /**
- * Runs hourly (see scheduleListingFreshnessCheck) to catch adverts that have
- * quietly gone stale — let outside the platform, or simply forgotten about.
- * Two stages, both reset the moment a provider touches the advert (editing
- * it, changing a room, or confirming availability — see
- * confirmListingAvailabilityAction and the writes in server/actions/listings.ts):
- *
- *   1. Unconfirmed for STALE_NUDGE_AFTER_MS → one email asking to confirm.
- *   2. Unconfirmed for a further STALE_PAUSE_AFTER_MS → auto-paused, so a
- *      forgotten advert can never sit in search indefinitely.
+ * Runs hourly (see scheduleListingFreshnessCheck). An advert nobody has
+ * touched for STALE_NUDGE_AFTER_MS gets one friendly "still available?"
+ * email. Adverts are never paused for not answering it: only the provider
+ * (or every room being marked unavailable) takes an advert offline.
  */
 export async function runListingFreshnessCheck() {
   const now = new Date();
 
-  const dueForPause = await db.listing.findMany({
-    where: { status: "ACTIVE", staleNudgeSentAt: { lte: new Date(now.getTime() - STALE_PAUSE_AFTER_MS) } },
-    select: { id: true, title: true, companyId: true },
+  // Adverts that the old "no reply" rule paused go straight back live, as
+  // long as they still have a room that can be let. Harmless once done.
+  const restored = await db.listing.updateMany({
+    where: { status: "PAUSED", pausedReason: "STALE", rooms: { some: { status: { in: ["AVAILABLE", "RESERVED", "VOID"] } } } },
+    data: { status: "ACTIVE", pausedReason: null, staleNudgeSentAt: null, availabilityConfirmedAt: now },
   });
-  for (const listing of dueForPause) {
-    await db.listing.update({ where: { id: listing.id }, data: { status: "PAUSED", pausedReason: "STALE" } });
-    await notifyCompany(listing.companyId, {
-      type: "LISTING",
-      title: "Advert paused — no reply to our availability check",
-      body: `“${listing.title}” has been paused because nobody confirmed it was still available. Confirm it any time to bring it straight back.`,
-      href: `/provider/adverts/${listing.id}`,
-      email: true,
-    });
-  }
 
   const dueForNudge = await db.listing.findMany({
     where: {
@@ -106,14 +91,14 @@ export async function runListingFreshnessCheck() {
     await notifyCompany(listing.companyId, {
       type: "LISTING",
       title: "Still available?",
-      body: `It's been a few weeks since “${listing.title}” was last confirmed. Confirm it's still available, or pause it if it's let — otherwise we'll pause it automatically in a week.`,
+      body: `It's been a few weeks since “${listing.title}” was last confirmed. Tap to confirm it's still available, or pause it if it's been let. Your advert stays live either way.`,
       href: `/provider/adverts/${listing.id}`,
       email: true,
     });
     await db.listing.update({ where: { id: listing.id }, data: { staleNudgeSentAt: now } });
   }
 
-  return { paused: dueForPause.length, nudged: dueForNudge.length };
+  return { restored: restored.count, nudged: dueForNudge.length };
 }
 
 let freshnessScheduled = false;
