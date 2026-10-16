@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
 import { audit } from "@/lib/audit";
 import { notify, notifyCompany } from "@/lib/notify";
+import { sendWhatsappSetupInstructions } from "@/lib/whatsapp-setup-email";
 import { notifyInstantSavedSearches } from "@/lib/saved-search-alerts";
 import { syncListingAvailability } from "@/lib/listing-availability";
 import type { ReportStatus } from "@prisma/client";
@@ -514,13 +515,10 @@ export async function manageWhatsappGrantAction(
   }
 
   await db.company.update({ where: { id: companyId }, data: { whatsappGrantActive: true, whatsappGrantExpiresAt: expiresAt } });
-  await notifyCompany(companyId, {
-    type: "MEMBERSHIP",
-    title: "WhatsApp enquiries switched on for you",
-    body: `${expiresAt ? `Free until ${expiresAt.toLocaleDateString("en-GB")}.` : "Free until RoomsNow ends it."} Add your business WhatsApp number in Company profile to show the button on your adverts.`,
-    href: "/provider/settings#whatsapp-enquiries",
-    email: true,
-  });
+  await sendWhatsappSetupInstructions(
+    companyId,
+    `RoomsNow has given you WhatsApp enquiries free of charge${expiresAt ? ` until ${expiresAt.toLocaleDateString("en-GB")}` : ""}, so people can message you on WhatsApp straight from your adverts.`,
+  );
   await audit({
     actorId: admin.id,
     action: "admin.whatsapp_grant_created",
