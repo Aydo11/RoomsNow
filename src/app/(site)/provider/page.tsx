@@ -158,7 +158,11 @@ export default async function ProviderDashboard() {
       }
     >
       {(!company.whatsappEnabled || !company.whatsappNumber) && whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company).allowed && (
-        <WhatsappSetupPrompt initialNumber={company.whatsappNumber} autoOpen={!!company.whatsappAddonStatus && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(company.whatsappAddonStatus)} />
+        <WhatsappSetupPrompt
+          initialNumber={company.whatsappNumber}
+          source={{ GRANTED: "granted", INCLUDED: "included" }[whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company).reason as string] as "granted" | "included" | undefined ?? "paid"}
+          autoOpen={whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company).reason === "GRANTED" || (!!company.whatsappAddonStatus && ["ACTIVE", "TRIALING", "PAST_DUE"].includes(company.whatsappAddonStatus))}
+        />
       )}
       {!company.whatsappEnabled && limits.membership.tier !== "FREE" && !whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company).allowed && (
         <section className="card mb-5 flex flex-col gap-4 border-pine/30 bg-pine-light/40 p-5 sm:flex-row sm:items-center" aria-labelledby="whatsapp-announcement-heading">
