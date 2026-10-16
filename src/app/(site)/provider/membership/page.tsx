@@ -43,7 +43,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       nav={nav}
       active="/provider/membership"
     >
-      {whatsapp.allowed && (!addon.whatsappEnabled || !addon.whatsappNumber) && <WhatsappSetupPrompt initialNumber={addon.whatsappNumber} autoOpen={query.whatsapp === "complete"} />}
+      {whatsapp.allowed && (!addon.whatsappEnabled || !addon.whatsappNumber) && <WhatsappSetupPrompt initialNumber={addon.whatsappNumber} autoOpen={query.whatsapp === "complete"} source={whatsapp.reason === "GRANTED" ? "granted" : whatsapp.reason === "INCLUDED" ? "included" : "paid"} />}
       {query.billing === "complete" && <SuccessCelebration kind="membership" clearQueryParam="billing" />}
       {query.billing === "complete" && <div className="mb-5"><FormSuccess message="Payment completed. Your membership will update as soon as Stripe confirms it." /></div>}
       {limits.grant && (
