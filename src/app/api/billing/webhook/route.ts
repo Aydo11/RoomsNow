@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { activateSponsorship, applyReferrerSubscriptionChange, applySubscriptionChange, applyWhatsappAddon, billing, grantBoostPack, stripe } from "@/lib/billing";
 import { db } from "@/lib/db";
 import { notify, notifyCompany } from "@/lib/notify";
+import { sendWhatsappSetupInstructions } from "@/lib/whatsapp-setup-email";
 import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 import { isSponsorPackage, SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import { BOOST_PACKAGES, isBoostPack } from "@/lib/boost-packages";
@@ -153,7 +154,7 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
       periodEnd: periodEnd(remote),
       cancelAtPeriodEnd: remote.cancel_at_period_end,
     });
-    await notifyCompany(companyId, { type: "MEMBERSHIP", title: "WhatsApp paid access active — finish setup", body: "Open your dashboard, add your business WhatsApp number, confirm it can be public and press Enable WhatsApp enquiries. Your button stays off until you finish these steps.", href: "/provider" });
+    await sendWhatsappSetupInstructions(companyId, "Thanks, your WhatsApp enquiries add-on is active.");
     await audit({ action: "billing.whatsapp_addon_activated", targetType: "Company", targetId: companyId, metadata: { subscriptionId: remote.id } });
     return;
   }
