@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { canLoadMarketingTags, createGoogleCommandQueue, isPublicAnalyticsPage, publicAnalyticsUrl } from "@/lib/analytics-safety";
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { canLoadMarketingTags, createGoogleCommandQueue, isPublicAnalyticsPage, publicAnalyticsUrl, publicAnalyticsReferrer, publicAnalyticsPageTitle } from "@/lib/analytics-safety";
 
 const MEASUREMENT_ID = "G-V2RLYZNG3S";
 const TIKTOK_PIXEL_ID = "DAT2MPBC77U3L597UVV0";
@@ -81,6 +81,9 @@ function initialiseTikTokPixel() {
 
 export function GoogleAnalyticsConsent() {
   const pathname = usePathname();
+  const search = useSearchParams().toString();
+  const lastPage = useRef<string | null>(null);
+  const lastSearch = useRef<string | null>(null);
   const [choice, setChoice] = useState<ConsentChoice>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [ready, setReady] = useState(false);
@@ -109,14 +112,14 @@ export function GoogleAnalyticsConsent() {
     const existing = document.querySelector<HTMLScriptElement>(`script[src*="${MEASUREMENT_ID}"]`);
     if (existing) {
       window.gtag("consent", "update", { analytics_storage: "granted" });
-      window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: window.location.origin });
+      window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: publicAnalyticsReferrer(document.referrer) });
       setReady(true);
       return;
     }
 
     window.gtag("js", new Date());
     window.gtag("consent", "update", { analytics_storage: "granted" });
-    window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: window.location.origin });
+    window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: publicAnalyticsReferrer(document.referrer) });
     const script = document.createElement("script");
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
@@ -125,10 +128,30 @@ export function GoogleAnalyticsConsent() {
   }, [choice, pathname]);
 
   useEffect(() => {
-    if (choice === "accepted" && ready && isPublicAnalyticsPage(pathname)) {
-      window.gtag?.("event", "page_view", { page_path: pathname, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: window.location.origin, page_title: document.title });
+    if (choice !== "accepted" || !ready) return;
+    if (!isPublicAnalyticsPage(pathname)) {
+      lastPage.current = null;
+      lastSearch.current = null;
+      return;
     }
-  }, [choice, pathname, ready]);
+    const location = publicAnalyticsUrl(window.location.origin, pathname, search);
+    const parameters = { page_path: pathname, page_location: location, page_referrer: publicAnalyticsReferrer(document.referrer), page_title: publicAnalyticsPageTitle(document.title) };
+    // Query-only filter changes must not inflate page views of the same public URL.
+    if (lastPage.current !== location) {
+      window.gtag?.("event", "page_view", parameters);
+      lastPage.current = location;
+    }
+    if (pathname === "/search") {
+      // The query is used only locally to recognise navigation. Never send search
+      // terms, support needs, age, location filters or result-specific details.
+      if (lastSearch.current !== search) {
+        window.gtag?.("event", "roomsnow_search_view", parameters);
+        lastSearch.current = search;
+      }
+    } else {
+      lastSearch.current = null;
+    }
+  }, [choice, pathname, search, ready]);
 
   useEffect(() => {
     if (choice === "accepted" && tiktokReady && canLoadMarketingTags(pathname, window.location.search)) window.ttq?.page?.();
@@ -144,6 +167,8 @@ export function GoogleAnalyticsConsent() {
       eraseOptionalCookies();
       setReady(false);
       setTikTokReady(false);
+      lastPage.current = null;
+      lastSearch.current = null;
     }
   }
 
