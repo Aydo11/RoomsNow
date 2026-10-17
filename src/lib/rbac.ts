@@ -31,6 +31,8 @@ export async function requireUser(next?: string): Promise<CurrentUser> {
 export async function requireAdmin(permission: AdminPermission = "ALL"): Promise<CurrentUser> {
   const user = await requireUser("/admin");
   if (!hasAdminPermission(user, permission)) denyArea("admin");
+  // Admins must use two-step login before they can see anything sensitive.
+  if (!user.totpEnabledAt) redirect("/security/two-step?required=1");
   return user;
 }
 
