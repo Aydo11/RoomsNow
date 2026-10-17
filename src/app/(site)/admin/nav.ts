@@ -48,6 +48,7 @@ export async function adminNav(): Promise<NavItem[]> {
     { group: "To review", href: "/admin/verification", label: "Verification", badge: pendingVerification || undefined },
     { group: "To review", href: "/admin/accreditations", label: "Accreditations", badge: pendingAccreditations || undefined },
     { group: "To review", href: "/admin/reports", label: "Reports", badge: openReports || undefined },
+    { group: "To review", href: "/admin/safety-flags", label: "Safety flags" },
     { group: "To review", href: "/admin/reviews", label: "Resident reviews" },
     { group: "To review", href: "/admin/feedback", label: "Site feedback", badge: newFeedback || undefined },
 
