@@ -6,7 +6,7 @@ export const metadata = { title: "Terms of use" };
 
 export default function TermsPage() {
   return (
-    <ProsePage title="Terms of use" intro={`These terms govern access to and use of ${brand.name}, including listings, enquiries, referrals, messaging, verification, memberships and promoted adverts.`} updated="6 September 2026">
+    <ProsePage title="Terms of use" intro={`These terms govern access to and use of ${brand.name}, including listings, enquiries, referrals, messaging, verification, memberships and promoted adverts.`} updated="17 October 2026">
       <div className="rounded-card border border-pine/25 bg-pine-light/35 p-5">
         <p className="font-semibold text-ink">Keep a copy of these terms</p>
         <p className="mt-1 text-[15px]">The PDF is suitable for saving, printing or sharing with your organisation.</p>
@@ -14,6 +14,7 @@ export default function TermsPage() {
       </div>
 
       <Section heading="1. About these terms">
+        <p>{brand.name} is run by {brand.legal.name}, a company registered in {brand.legal.jurisdiction} (company number {brand.legal.number}), registered office {brand.legal.registeredOffice}. In these terms, &ldquo;RoomsNow&rdquo;, &ldquo;we&rdquo; and &ldquo;us&rdquo; mean {brand.legal.name}, and your agreement is with that company.</p>
         <p>By creating an account, accessing a restricted feature, buying a membership or continuing to use the service after being notified of a change, you agree to these terms. If you use RoomsNow for an organisation, you confirm that you have authority to bind it. If you do not agree, do not use the service.</p>
       </Section>
       <Section heading="2. The RoomsNow service">
