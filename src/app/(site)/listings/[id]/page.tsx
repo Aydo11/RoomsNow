@@ -38,6 +38,7 @@ import { residentReviewsFor } from "@/server/resident-reviews";
 import { optimisedImage } from "@/lib/image-url";
 import { showWhatsappContact } from "@/lib/whatsapp-display";
 import { WhatsappContactLink } from "@/components/whatsapp-contact-link";
+import { ScamWarning } from "@/components/scam-warning";
 
 export const dynamic = "force-dynamic";
 
@@ -496,6 +497,7 @@ export default async function ListingPage({
           </div>
 
           <div id="message" className="scroll-mt-24">
+            <ScamWarning className="mb-3" />
             <MessageProviderForm listingId={listing.id} signedIn={Boolean(user)} companyName={listing.company.name} defaultPhone={user?.phone ?? null} />
           </div>
         </aside>
