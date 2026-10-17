@@ -235,7 +235,9 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-line">
         <div className="shell flex flex-col gap-2 py-6 text-[13px] text-ink-faint sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} {brand.name}. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} {brand.name} is a trading name of {brand.legal.name}, registered in {brand.legal.jurisdiction}, company number {brand.legal.number}. Registered office: {brand.legal.registeredOffice}.
+          </p>
           <p className="max-w-xl">{brand.trustNote}</p>
           <CookieSettingsButton />
         </div>
