@@ -26,6 +26,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ lis
   const target =
     listing.status === "ACTIVE" &&
     listing.company.status === "ACTIVE" &&
+    listing.company.verification === "APPROVED" &&
     whatsappAccess(effectiveProviderTier(listing.company), listing.company.whatsappAddonStatus, listing.company).allowed
       ? whatsappAdvertUrl(listing.company.whatsappEnabled, listing.company.whatsappNumber, listing.title, advert)
       : null;
