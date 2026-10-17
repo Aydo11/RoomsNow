@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 import { WELCOME_NOTIFICATION } from "@/lib/welcome-content";
 import { sendSignupWelcome } from "@/lib/welcome-email";
 import { db } from "@/lib/db";
-import { createSession, destroySession, getCurrentUser } from "@/lib/session";
+import { clearPendingTwoStep, createSession, destroySession, getCurrentUser, pendingTwoStep, signInOrChallenge } from "@/lib/session";
+import { hashRecoveryCode, openTotpSecret, verifyTotp } from "@/lib/totp";
 import { audit } from "@/lib/audit";
 import { notify, sendEmail } from "@/lib/notify";
 import { renderEmail } from "@/lib/email-template";
@@ -250,14 +251,64 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   }
 
   await resetRateLimit(`login:acct:${parsed.data.email}`);
+
+  // Two-step login: password is right, now the authenticator code.
+  const challenge = await signInOrChallenge(user, next);
+  if (challenge) {
+    await audit({ actorId: user.id, action: "auth.password_ok_two_step_pending", targetType: "User", targetId: user.id, metadata: { ip } });
+    redirect(challenge);
+  }
+
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-  await createSession(user.id, user.role, user.tokenVersion);
   await audit({ actorId: user.id, action: "auth.login", targetType: "User", targetId: user.id, metadata: { ip } });
+  redirect(safeRedirect(next, homeFor(user.role)));
+}
 
-  const home =
-    user.role === "ADMIN" ? "/admin" : user.role === "PROVIDER" ? "/provider" : user.role === "REFERRER" ? "/referrals" : user.role === "SERVICE_PROVIDER" ? "/service-provider" : "/dashboard";
+function homeFor(role: string) {
+  return role === "ADMIN" ? "/admin" : role === "PROVIDER" ? "/provider" : role === "REFERRER" ? "/referrals" : role === "SERVICE_PROVIDER" ? "/service-provider" : "/dashboard";
+}
 
-  redirect(safeRedirect(next, home));
+/** Second step of signing in: the 6-digit authenticator code, or a recovery code. */
+export async function verifyTwoStepAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const pending = await pendingTwoStep();
+  if (!pending) redirect("/login?expired=1");
+
+  const throttle = await rateLimit(`two-step:${pending.userId}`, { limit: 6, windowMs: 15 * 60_000 });
+  if (!throttle.ok) return { ok: false, errors: { form: "Too many attempts. Wait 15 minutes, then sign in again." } };
+
+  const user = await db.user.findUnique({ where: { id: pending.userId } });
+  if (!user || user.deletedAt || user.status !== "ACTIVE" || (user.tokenVersion ?? 0) !== pending.ver || !user.totpSecret || !user.totpEnabledAt) {
+    await clearPendingTwoStep();
+    redirect("/login?expired=1");
+  }
+
+  const code = text(formData, "code").trim();
+  let ok = false;
+  if (/^\d[\d ]{5,6}$/.test(code)) {
+    const step = verifyTotp(openTotpSecret(user.totpSecret), code, user.totpLastStep);
+    if (step != null) {
+      await db.user.update({ where: { id: user.id }, data: { totpLastStep: step } });
+      ok = true;
+    }
+  } else if (code) {
+    const hash = hashRecoveryCode(code);
+    if (user.totpRecoveryCodes.includes(hash)) {
+      await db.user.update({ where: { id: user.id }, data: { totpRecoveryCodes: user.totpRecoveryCodes.filter((h) => h !== hash) } });
+      await audit({ actorId: user.id, action: "auth.recovery_code_used", targetType: "User", targetId: user.id });
+      ok = true;
+    }
+  }
+  if (!ok) {
+    await audit({ actorId: user.id, action: "auth.two_step_failed", targetType: "User", targetId: user.id });
+    return { ok: false, errors: { code: "That code didn't work. Check the time on your phone and use the newest code." } };
+  }
+
+  await clearPendingTwoStep();
+  await resetRateLimit(`two-step:${user.id}`);
+  await createSession(user.id, user.role, user.tokenVersion);
+  await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+  await audit({ actorId: user.id, action: "auth.login", targetType: "User", targetId: user.id, metadata: { twoStep: true } });
+  redirect(safeRedirect(pending.next, homeFor(user.role)));
 }
 
 export async function logoutAction() {
