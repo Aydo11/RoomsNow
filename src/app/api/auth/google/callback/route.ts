@@ -2,7 +2,7 @@ import { authHref, safeRedirect } from "@/lib/auth-navigation";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { createSession } from "@/lib/session";
+import { signInOrChallenge } from "@/lib/session";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -50,7 +50,9 @@ export async function GET(request: NextRequest) {
     if (user.deletedAt || user.status !== "ACTIVE") return fail();
 
     await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date(), emailVerified: user.emailVerified ?? new Date() } });
-    await createSession(user.id, user.role, user.tokenVersion);
+    // Accounts with two-step login still need their authenticator code.
+    const challenge = await signInOrChallenge(user, next);
+    if (challenge) return clearOAuthCookies(NextResponse.redirect(new URL(challenge, appUrl)));
     await audit({ actorId: user.id, action: "auth.google_login", targetType: "User", targetId: user.id });
     const home = user.role === "ADMIN" ? "/admin" : user.role === "PROVIDER" ? "/provider" : user.role === "REFERRER" ? "/referrals" : user.role === "SERVICE_PROVIDER" ? "/service-provider" : "/dashboard";
     return clearOAuthCookies(NextResponse.redirect(new URL(next || home, appUrl)));
