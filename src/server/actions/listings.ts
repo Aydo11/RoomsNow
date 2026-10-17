@@ -19,6 +19,7 @@ import { fieldErrors, listingSchema, type FormState } from "@/lib/validation";
 import { bool, date, list, num, pence, reference, text } from "../form";
 import type { Prisma, ReferralRoute, RoomStatus } from "@prisma/client";
 import { isEmptyRoom } from "@/lib/void-cost";
+import { BLOCKED_ADVERT_TEXT, checkBlockedContent } from "@/lib/blocked-content";
 
 export async function saveListingAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const { user, companyId } = await requireCompany();
@@ -71,6 +72,14 @@ export async function saveListingAction(_prev: FormState, formData: FormData): P
 
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error), values: raw };
   const d = parsed.data;
+
+  // No payment links, bank details or blocked words in adverts.
+  const advertText = [d.title, d.summary, d.description, d.houseRules, d.eligibility, d.referralProcess, d.supportDescription, d.accessibilityNotes]
+    .filter(Boolean)
+    .join("\n");
+  if (await checkBlockedContent(advertText, { actorId: user.id, where: "advert", targetId: id || null })) {
+    return { ok: false, values: raw, errors: { form: BLOCKED_ADVERT_TEXT } };
+  }
 
   if (!id) {
     const limits = await planLimits(companyId);
