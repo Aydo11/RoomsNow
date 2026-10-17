@@ -4,6 +4,8 @@ import { audit } from "./audit";
 import { notify } from "./notify";
 export { scamSignals } from "./scam-signal-patterns";
 import { scamSignals } from "./scam-signal-patterns";
+import { matchingPhrases } from "./blocked-content-patterns";
+import { adminPhrases } from "./blocked-content";
 
 /**
  * Checks a new message for signs of a rental scam (asking for money before a
@@ -14,7 +16,8 @@ import { scamSignals } from "./scam-signal-patterns";
  */
 export async function flagScamSignals(input: { messageId: string; conversationId: string; senderId: string; body: string }) {
   try {
-    const signals = scamSignals(input.body);
+    const { flag } = await adminPhrases();
+    const signals = [...scamSignals(input.body), ...matchingPhrases(input.body, flag).map((phrase) => `"${phrase}"`)];
     if (!signals.length) return [];
     const [admins, sender] = await Promise.all([
       db.user.findMany({ where: { role: "ADMIN", status: "ACTIVE", deletedAt: null, adminPermissions: { has: "ALL" } }, select: { id: true } }),
