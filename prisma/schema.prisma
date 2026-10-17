@@ -302,6 +302,14 @@ model User {
   /// token issued before the current value is rejected, so a stolen cookie stops
   /// working the moment the account owner reacts.
   tokenVersion              Int                @default(0)
+  /// Two-step login (authenticator app). The secret is stored encrypted
+  /// (see src/lib/totp.ts); required for admins.
+  totpSecret                String?
+  totpEnabledAt             DateTime?
+  /// The last 30-second step accepted, so a code can't be used twice.
+  totpLastStep              Int?
+  /// SHA-256 hashes of unused one-time recovery codes.
+  totpRecoveryCodes         String[]           @default([])
   passwordChangedAt         DateTime?
   deletedAt                 DateTime?
   retainUntil               DateTime?
