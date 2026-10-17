@@ -6,9 +6,9 @@ export const metadata = { title: "Privacy notice" };
 
 export default function PrivacyPage() {
   return (
-    <ProsePage title="Privacy notice" intro={`This notice explains how ${brand.name} collects, uses, shares and protects personal information across its housing, messaging, referral and verification services.`} updated="26 September 2026">
+    <ProsePage title="Privacy notice" intro={`This notice explains how ${brand.name} collects, uses, shares and protects personal information across its housing, messaging, referral and verification services.`} updated="17 October 2026">
       <Section heading="1. Who is responsible for your information">
-        <p>RoomsNow is responsible for personal information it determines how and why to use. Contact the privacy team at {brand.supportEmail} for questions, rights requests or complaints.</p>
+        <p>{brand.name} is run by {brand.legal.name}, a company registered in {brand.legal.jurisdiction} (company number {brand.legal.number}), whose registered office is {brand.legal.registeredOffice}. {brand.legal.name} is the controller for personal information it decides how and why to use. Contact the privacy team at {brand.supportEmail} for questions, rights requests or complaints.</p>
         <p>Providers and professional referrers are normally separate controllers for information they collect for their own housing, support, safeguarding, commissioning or referral work. Their privacy notices also apply.</p>
       </Section>
 
