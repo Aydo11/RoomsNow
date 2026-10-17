@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ScamWarning } from "@/components/scam-warning";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/rbac";
@@ -175,6 +176,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           )}
         </div>
       </header>
+      {conversation.listing && !viewerIsProvider && <ScamWarning compact className="mt-2" />}
 
       <Thread
         conversationId={conversation.id}
