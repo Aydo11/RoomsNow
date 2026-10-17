@@ -1,6 +1,6 @@
 "use client";
 import { useActionState } from "react";
-import { createTeamMember, updateTeamMember } from "@/server/actions/team";
+import { createTeamMember, resetTeamTwoStep, updateTeamMember } from "@/server/actions/team";
 import { SubmitButton } from "./ui";
 
 function PermissionSelect({ value = "MODERATION" }: { value?: string }) {
@@ -31,6 +31,17 @@ export function TeamAccessForm({ userId, permission, status }: { userId: string;
     <input type="hidden" name="userId" value={userId} /><PermissionSelect value={permission} />
     <label className="text-sm">Account status<select name="status" defaultValue={status} className="field mt-1"><option value="ACTIVE">Active</option><option value="SUSPENDED">Suspended — no access</option></select></label>
     <ConfirmPassword /><SubmitButton pendingLabel="Saving…">Save permissions</SubmitButton>
+    {state.message && <p role="status" className="text-sm">{state.message}</p>}
+  </form></details>;
+}
+
+/** For a team member who has lost their phone and recovery codes. */
+export function ResetTwoStepForm({ userId }: { userId: string }) {
+  const [state, action] = useActionState(resetTeamTwoStep, { ok: false });
+  return <details className="mt-3"><summary className="cursor-pointer text-sm text-pine-dark">Reset two-step login</summary><form action={action} className="mt-4 grid gap-3">
+    <input type="hidden" name="userId" value={userId} />
+    <p className="text-sm text-ink-soft">Only do this if they&apos;ve lost their phone and recovery codes, and you&apos;ve confirmed it&apos;s really them.</p>
+    <ConfirmPassword /><SubmitButton pendingLabel="Resetting…">Reset two-step login</SubmitButton>
     {state.message && <p role="status" className="text-sm">{state.message}</p>}
   </form></details>;
 }
