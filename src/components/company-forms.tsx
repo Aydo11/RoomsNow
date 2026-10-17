@@ -268,7 +268,7 @@ export function CompanyForm({
             <input id="whatsappNumber" name="whatsappNumber" type="tel" autoComplete="tel" value={businessWhatsapp} onChange={(event) => setBusinessWhatsapp(event.target.value)} className="field" />
           </Field>
         </div>
-        <p className="mt-3 text-[13px] leading-relaxed text-ink-soft">Optional and off by default. When enabled, this business number is public on your adverts. Enquiries open outside RoomsNow; WhatsApp messages and replies are not recorded here. You can switch it off at any time.</p>
+        <p className="mt-3 text-[13px] leading-relaxed text-ink-soft">Optional and off by default. The button only shows once your company is verified, to protect people from scams. When enabled, this business number is public on your adverts. Enquiries open outside RoomsNow; WhatsApp messages and replies are not recorded here. You can switch it off at any time.</p>
       </section>
 
       <Field label="About your organisation" name="about" hint="Explain who you support, your approach, experience and what makes your accommodation suitable.">
