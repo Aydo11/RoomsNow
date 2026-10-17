@@ -22,6 +22,7 @@ import { checkFirstEnquiry, checkFirstMoveIn } from "@/lib/milestones";
 import { contactNumberFromInput, withContactNumber } from "@/lib/contact-number";
 import { openRequestConversation, requestMessageBody } from "@/lib/request-conversation";
 import { flagScamSignals } from "@/lib/scam-signals";
+import { BLOCKED_MESSAGE_TEXT, checkBlockedContent } from "@/lib/blocked-content";
 
 /**
  * Service businesses only ever reply inside threads a paying provider opened
@@ -63,6 +64,7 @@ export async function startConversationAction(_prev: FormState, formData: FormDa
   const lookingForAdId = text(formData, "lookingForAdId") || null;
   let body = text(formData, "body").trim();
   if (!body) return { ok: false, errors: { body: "Write a message to send." } };
+  if (await checkBlockedContent(body, { actorId: user.id, where: "message" })) return { ok: false, errors: { body: BLOCKED_MESSAGE_TEXT } };
   // Optional, but strongly encouraged: a number the provider can ring.
   const phone = contactNumberFromInput(text(formData, "phone"));
   if (phone === "invalid") return { ok: false, errors: { phone: "That doesn't look like a phone number. Try something like 07700 900123." } };
@@ -131,8 +133,9 @@ export async function startConversationAction(_prev: FormState, formData: FormDa
       },
     }));
 
-  await db.message.create({ data: { conversationId: conversation.id, senderId: user.id, body } });
+  const first = await db.message.create({ data: { conversationId: conversation.id, senderId: user.id, body } });
   await db.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: new Date() } });
+  void flagScamSignals({ messageId: first.id, conversationId: conversation.id, senderId: user.id, body });
 
   if (listingId) {
     await db.listing.update({ where: { id: listingId }, data: { enquiries: { increment: 1 } } });
@@ -183,6 +186,7 @@ export async function startDirectMessageAction(_prev: FormState, formData: FormD
   const subject = text(formData, "subject") || "";
   const body = text(formData, "body").trim();
   if (!body) return { ok: false, errors: { body: "Write a message to send." } };
+  if (await checkBlockedContent(body, { actorId: user.id, where: "message" })) return { ok: false, errors: { body: BLOCKED_MESSAGE_TEXT } };
   if (!companyId && !recipientUserId) return { ok: false, errors: { form: "Nothing to message." } };
 
   let recipientIds: string[] = [];
@@ -232,8 +236,9 @@ export async function startDirectMessageAction(_prev: FormState, formData: FormD
       },
     }));
 
-  await db.message.create({ data: { conversationId: conversation.id, senderId: user.id, body } });
+  const first = await db.message.create({ data: { conversationId: conversation.id, senderId: user.id, body } });
   await db.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: new Date() } });
+  void flagScamSignals({ messageId: first.id, conversationId: conversation.id, senderId: user.id, body });
 
   if (companyId) {
     await notifyCompany(companyId, {
@@ -308,6 +313,9 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
 
   await assertConversationAccess(user.id, parsed.data.conversationId);
+  if (await checkBlockedContent(body, { actorId: user.id, where: "message", targetId: parsed.data.conversationId })) {
+    return { ok: false, errors: { body: BLOCKED_MESSAGE_TEXT, form: BLOCKED_MESSAGE_TEXT } };
+  }
 
   const others = await db.conversationParticipant.findMany({
     where: { conversationId: parsed.data.conversationId, userId: { not: user.id } },
