@@ -98,6 +98,13 @@ function SecuritySection() {
         </p>
       </form>
 
+      <div className="mt-6 border-t border-line pt-5">
+        <p className="max-w-[62ch] text-[15px] leading-relaxed text-ink-soft">
+          Two-step login asks for a code from an app on your phone when you sign in, so a stolen password isn&apos;t enough.
+        </p>
+        <a href="/security/two-step" className="btn-secondary mt-3">Two-step login</a>
+      </div>
+
       <form action={logoutEverywhereAction} className="mt-6 border-t border-line pt-5">
         <p className="max-w-[62ch] text-[15px] leading-relaxed text-ink-soft">
           Signed in somewhere you don&apos;t recognise? This ends every session on every device
