@@ -97,3 +97,23 @@ export async function updateTeamMember(_previous: FormState, form: FormData): Pr
   revalidatePath("/admin/team");
   return { ok: true, message: "Access updated. Their existing sessions have been signed out." };
 }
+
+/**
+ * Clears another admin's two-step login when they have lost their phone and
+ * recovery codes. They are signed out everywhere and must set it up again
+ * before using the admin area. Needs the acting admin's password.
+ */
+export async function resetTeamTwoStep(_previous: FormState, form: FormData): Promise<FormState> {
+  const actor = await authorise(form);
+  if (!actor) return { ok: false, message: "Check your password and try again." };
+  const id = String(form.get("userId") || "");
+  if (!id || id === actor.id) return { ok: false, message: "You can't reset your own two-step login here." };
+  const target = await db.user.findFirst({ where: { id, role: "ADMIN", deletedAt: null }, select: { id: true } });
+  if (!target) return { ok: false, message: "Team member not found." };
+  await db.$transaction([
+    db.user.update({ where: { id }, data: { totpSecret: null, totpEnabledAt: null, totpLastStep: null, totpRecoveryCodes: [], tokenVersion: { increment: 1 } } }),
+    db.auditLog.create({ data: { actorId: actor.id, action: "admin.team_two_step_reset", targetType: "User", targetId: id } }),
+  ]);
+  revalidatePath("/admin/team");
+  return { ok: true, message: "Two-step login reset. They'll set it up again next time they sign in." };
+}
