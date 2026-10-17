@@ -2144,3 +2144,14 @@ model WhatsappClick {
   @@index([companyId, createdAt])
   @@index([listingId, createdAt])
 }
+
+/// A word or phrase an admin has added to the safety list. BLOCK stops a
+/// message or advert containing it from being sent or saved; FLAG lets it
+/// through but alerts admins (see src/lib/blocked-content.ts).
+model BlockedPhrase {
+  id          String   @id @default(cuid())
+  phrase      String   @unique
+  action      String   @default("BLOCK")
+  createdById String?
+  createdAt   DateTime @default(now())
+}
