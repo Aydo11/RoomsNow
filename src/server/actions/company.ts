@@ -24,7 +24,7 @@ export async function enableWhatsappEnquiriesAction(_prev: FormState, formData: 
   if (!bool(formData, "publishWhatsappConsent")) return { ok: false, message: "Confirm that you are authorised to publish this business number before enabling enquiries." };
   const [limits, company] = await Promise.all([
     planLimits(companyId),
-    db.company.findUniqueOrThrow({ where: { id: companyId }, select: { whatsappAddonStatus: true, whatsappGrantActive: true, whatsappGrantExpiresAt: true } }),
+    db.company.findUniqueOrThrow({ where: { id: companyId }, select: { whatsappAddonStatus: true, whatsappGrantActive: true, whatsappGrantExpiresAt: true, verification: true } }),
   ]);
   if (!whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company).allowed) {
     return { ok: false, message: "Your WhatsApp access is not active. Check Membership or wait for your payment confirmation." };
@@ -34,6 +34,9 @@ export async function enableWhatsappEnquiriesAction(_prev: FormState, formData: 
   for (const path of ["/provider", "/provider/settings", "/provider/membership", "/", "/search"]) revalidatePath(path);
   revalidatePath("/listings/[id]", "page");
   revalidatePath("/companies/[slug]", "page");
+  if (company.verification !== "APPROVED") {
+    return { ok: true, message: "WhatsApp is set up. To protect people from scams, the button only appears once your company is verified. Submit your documents under Verification and it will switch on as soon as we approve you." };
+  }
   return { ok: true, message: "WhatsApp enquiries enabled. Your button will now appear on your live adverts and their search cards." };
 }
 
