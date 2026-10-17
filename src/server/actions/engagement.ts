@@ -21,6 +21,7 @@ import { clientAttachment, conversationCompanyId } from "@/lib/client-sharing";
 import { checkFirstEnquiry, checkFirstMoveIn } from "@/lib/milestones";
 import { contactNumberFromInput, withContactNumber } from "@/lib/contact-number";
 import { openRequestConversation, requestMessageBody } from "@/lib/request-conversation";
+import { flagScamSignals } from "@/lib/scam-signals";
 
 /**
  * Service businesses only ever reply inside threads a paying provider opened
@@ -330,7 +331,7 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
     storedMedia = { url: saved.url, name: mediaFile.name.slice(0, 160), type: mediaFile.type };
   }
 
-  await db.message.create({
+  const created = await db.message.create({
     data: {
       conversationId: parsed.data.conversationId,
       senderId: user.id,
@@ -343,6 +344,9 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
     where: { id: parsed.data.conversationId },
     data: { lastMessageAt: new Date() },
   });
+  // Possible scam wording (asking for money before a viewing, bank transfers,
+  // gift cards…) alerts an admin. The message still goes through.
+  void flagScamSignals({ messageId: created.id, conversationId: parsed.data.conversationId, senderId: user.id, body: body.trim() });
 
   await Promise.all(
     others.map((p) =>
