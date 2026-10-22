@@ -74,7 +74,8 @@ test("relay requires a signed success, consent and a same-origin iframe; respons
     } });
     for (const input of [request("rejected"), request("accepted", "cross-site"), request("accepted", "same-origin", "document"), request("accepted", "same-origin", "iframe", "forged")]) {
       const response = await GET(input);
-      assert.equal(response.status, 204);
+      assert.equal(response.status, 200);
+      assert.match(response.headers.get("content-type")!, /text\/html/);
       assert.doesNotMatch(await response.text(), /googletagmanager/);
     }
     const response = await GET(request("accepted"));
