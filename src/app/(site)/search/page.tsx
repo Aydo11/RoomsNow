@@ -14,6 +14,7 @@ import { getCurrentUser } from "@/lib/session";
 import { matchScore } from "@/lib/matching";
 import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
 import { db } from "@/lib/db";
+import { authHref, searchReturnPath } from "@/lib/auth-navigation";
 
 export const metadata = pageMetadata({
   title: "Search HMO Rooms & Accommodation Across the UK",
@@ -181,14 +182,18 @@ export default async function SearchPage({
           </div>
 
           {user && (
-            <div className="mt-4">
+            <div id="room-alerts" className="mt-4 scroll-mt-24">
               <SaveSearchForm params={params} resultCount={results.total} />
             </div>
           )}
           {!user && (
-            <p className="mt-4 text-[14px] text-ink-soft">
-              <Link href="/register?type=USER" className="font-semibold text-pine-dark underline">Create a free account</Link> to save this search and get alerts when new rooms are added.
-            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-card border border-pine/20 bg-pine-light/40 p-4">
+              <div>
+                <h2 className="text-[16px] font-semibold">Keep your room search moving</h2>
+                <p className="mt-1 max-w-[60ch] text-[14px] text-ink-soft">Save rooms, message providers and choose alerts for new matches. Browse without an account.</p>
+              </div>
+              <Link href={authHref("/register?type=USER", searchReturnPath(params))} className="btn-primary w-full sm:w-auto">Create a free account</Link>
+            </div>
           )}
 
           <Suspense fallback={null}>
