@@ -22,6 +22,7 @@ These are observed product patterns, not evidence of competitors' conversion rat
 - The signup invitation explains existing account benefits: save rooms, message providers and choose new-room alerts. Browsing remains open.
 - Registration explains that the room-seeker account is free and starts with email and password. Professional account requirements are unchanged.
 - The public how-it-works journey now starts with browsing and accurately describes the shorter signup flow.
+- The release audit identified advisories in existing dependencies. Compatible lockfile updates resolve them; npm audit reports zero vulnerabilities. Next.js resolves to 16.4.2, Sentry to 10.76.2 and sanitize-html to 2.18.1, with no major-version migration.
 
 ## Current advertising baseline
 
