@@ -20,8 +20,9 @@ const csp = [
   // Map tiles and uploaded images.
   "img-src 'self' data: blob: https: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.google-analytics.com",
   `connect-src 'self' https://api.postcodes.io https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.tiktok.com https://*.tiktok.com ${sentryOrigin}`,
-  // Only the video embeds the gallery actually builds.
-  "frame-src https://www.youtube.com https://player.vimeo.com",
+  // Own-origin empty conversion relay, plus the gallery's video embeds.
+  // Private pages retain DENY / frame-ancestors 'none'.
+  "frame-src 'self' https://www.youtube.com https://player.vimeo.com",
   "media-src 'self' blob: https:",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
@@ -99,6 +100,12 @@ const nextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // Only this empty signed-success document can be framed by our own site.
+      { source: "/api/analytics/outcome", headers: [
+        { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        { key: "Referrer-Policy", value: "no-referrer" },
+        { key: "Content-Security-Policy", value: "default-src 'none'; script-src 'self' https://www.googletagmanager.com; connect-src https://*.google-analytics.com https://*.analytics.google.com; img-src https://*.google-analytics.com; frame-ancestors 'self'; base-uri 'none'" },
+      ] },
       // This public wordmark must load in email clients and sandboxed mail previews.
       { source: "/brand/roomsnow-logo-email.png", headers: [{ key: "Cross-Origin-Resource-Policy", value: "cross-origin" }] },
       // Private documents are never cached by a shared cache.

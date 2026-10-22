@@ -6,7 +6,7 @@ export const metadata = { title: "Privacy notice" };
 
 export default function PrivacyPage() {
   return (
-    <ProsePage title="Privacy notice" intro={`This notice explains how ${brand.name} collects, uses, shares and protects personal information across its housing, messaging, referral and verification services.`} updated="17 October 2026">
+    <ProsePage title="Privacy notice" intro={`This notice explains how ${brand.name} collects, uses, shares and protects personal information across its housing, messaging, referral and verification services.`} updated="22 October 2026">
       <Section heading="1. Who is responsible for your information">
         <p>{brand.name} is run by {brand.legal.name}, a company registered in {brand.legal.jurisdiction} (company number {brand.legal.number}), whose registered office is {brand.legal.registeredOffice}. {brand.legal.name} is the controller for personal information it decides how and why to use. Contact the privacy team at {brand.supportEmail} for questions, rights requests or complaints.</p>
         <p>Providers and professional referrers are normally separate controllers for information they collect for their own housing, support, safeguarding, commissioning or referral work. Their privacy notices also apply.</p>
@@ -91,6 +91,7 @@ export default function PrivacyPage() {
       </Section>
 
       <Section heading="14. Cookies and changes to this notice">
+        <p>With optional analytics consent, Google Analytics also receives generic completed-account and new-accommodation-enquiry events. These are recorded after a successful action, in an empty isolated document, without the private page URL, account identifiers, room or provider identifiers, message text or support needs. We use rn_analytics_choice to remember your choice and a signed rn_completed_actions cookie, lasting up to five minutes, to pass a completed action to that document. Random receipt identifiers stay in your browser to prevent repeat counting and are not sent to Google. Refusing optional cookies prevents this measurement; it does not prevent using RoomsNow.</p>
         <p>Strictly necessary cookies support login, security and core service operation. If you accept optional cookies, RoomsNow loads Google Analytics 4 and the TikTok Pixel to measure visits to public pages, improve the service and understand campaign performance. These tools are not loaded before you choose to accept them; search query strings and account, message, referral, provider, applicant-profile and dashboard pages are excluded from page-view tracking. TikTok may receive device and browser information when its pixel is enabled. You can change or withdraw your choice at any time using Cookie settings in the footer.</p>
         <p>RoomsNow may update this notice when its services, suppliers or legal duties change and will highlight material changes to account holders.</p>
         <p>Related information appears in the <Link href="/terms" className="text-pine-dark hover:underline">terms of use</Link> and <Link href="/verification" className="text-pine-dark hover:underline">verification policy</Link>.</p>

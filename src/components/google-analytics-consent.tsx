@@ -9,6 +9,10 @@ const TIKTOK_PIXEL_ID = "DAT2MPBC77U3L597UVV0";
 const CONSENT_KEY = "roomsnow-analytics-consent";
 type ConsentChoice = "accepted" | "rejected" | null;
 
+function saveConsentCookie(choice: Exclude<ConsentChoice, null>) {
+  document.cookie = `rn_analytics_choice=${choice}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+}
+
 declare global {
   interface Window {
     dataLayer?: unknown[];
@@ -91,7 +95,10 @@ export function GoogleAnalyticsConsent() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem(CONSENT_KEY);
-    if (saved === "accepted" || saved === "rejected") setChoice(saved);
+    if (saved === "accepted" || saved === "rejected") {
+      saveConsentCookie(saved);
+      setChoice(saved);
+    }
     const openSettings = () => setShowSettings(true);
     window.addEventListener("roomsnow:cookie-settings", openSettings);
     return () => window.removeEventListener("roomsnow:cookie-settings", openSettings);
@@ -158,6 +165,7 @@ export function GoogleAnalyticsConsent() {
   }, [choice, pathname, tiktokReady]);
 
   function choose(next: Exclude<ConsentChoice, null>) {
+    saveConsentCookie(next);
     window.localStorage.setItem(CONSENT_KEY, next);
     setChoice(next);
     setShowSettings(false);
@@ -172,7 +180,10 @@ export function GoogleAnalyticsConsent() {
     }
   }
 
-  if (choice !== null && !showSettings) return null;
+  // The empty frame has no private page content, and never reads its parent DOM.
+  const outcomeFrame = choice === "accepted" ? <iframe key={pathname} src="/api/analytics/outcome" title="Completed action measurement" referrerPolicy="no-referrer" hidden /> : null;
+
+  if (choice !== null && !showSettings) return outcomeFrame;
 
   return (
     <aside aria-label="Cookie preferences" className="fixed inset-x-3 bottom-21 z-80 mx-auto max-w-3xl rounded-card border border-line bg-white p-4 shadow-float sm:inset-x-6 sm:bottom-3 sm:p-5">
@@ -180,7 +191,7 @@ export function GoogleAnalyticsConsent() {
         <div className="max-w-2xl">
           <h2 className="text-[16px]">Your privacy choices</h2>
           <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
-            RoomsNow uses essential cookies for the service. With your permission, Google Analytics and the TikTok Pixel measure visits to public pages, improve RoomsNow and measure campaigns. Search terms and account, message, referral, provider, applicant-profile and dashboard pages are not tracked.
+            RoomsNow uses essential cookies for the service. With your permission, Google Analytics and the TikTok Pixel measure visits to public pages and campaigns. Google also receives a generic event when an account is created or a new accommodation enquiry is sent. Search terms, private page views, account details and message or referral content are not shared with these tools.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
