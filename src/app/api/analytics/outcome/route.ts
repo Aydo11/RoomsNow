@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
       "Content-Type": "text/html; charset=utf-8",
       "Content-Security-Policy": "default-src 'none'; script-src 'self' https://www.googletagmanager.com; connect-src https://*.google-analytics.com https://*.analytics.google.com; img-src https://*.google-analytics.com; frame-ancestors 'self'; base-uri 'none'",
     } })
-    : new NextResponse(null, { status: 204, headers });
+    // An empty HTML page, not a 204: Safari saves a 204 loaded in an iframe as a download named "outcome".
+    : new NextResponse("<!doctype html><title></title>", { headers: { ...headers, "Content-Type": "text/html; charset=utf-8" } });
   if (sameOriginFrame) response.cookies.set(OUTCOME_COOKIE, "", { path: "/", maxAge: 0, httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
   return response;
 }
