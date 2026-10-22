@@ -14,14 +14,10 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
     <div className="shell max-w-lg py-8 sm:py-14">
       <h1 className="text-[32px]">Create an account</h1>
       <p className="mt-2 max-w-[56ch] text-[16px] leading-relaxed text-ink-soft">
-        Choose what you want to do below. Looking for a room? Start with your email and a password; add your profile later.
+        {isRoomSeeker
+          ? "Save rooms, message providers and choose new-room alerts. Your account is free; start with email and password."
+          : "Choose what you want to do, then add your details below."}
       </p>
-      {isRoomSeeker && (
-        <div className="mt-4 rounded-card border border-pine/20 bg-pine-light/40 p-4 text-[14px] leading-relaxed">
-          <p className="font-semibold">Save rooms. Message providers. Choose new-room alerts.</p>
-          <p className="mt-1 text-ink-soft">Your room-seeker account is free. Start with email and password; add other details later.</p>
-        </div>
-      )}
       <Suspense fallback={null}>
         <RegisterForm />
       </Suspense>
