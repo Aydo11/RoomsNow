@@ -22,6 +22,21 @@ export function publicAnalyticsUrl(origin: string, pathname: string, search: str
   return `${origin}${pathname}${query ? `?${query}` : ""}`;
 }
 
+/** Keep attribution without disclosing a referring page's path, query or credentials. */
+export function publicAnalyticsReferrer(referrer: string) {
+  try {
+    const url = new URL(referrer);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.origin : "";
+  } catch {
+    return "";
+  }
+}
+
+export function publicAnalyticsPageTitle(title: string) {
+  // Notification badges change independently of page navigation.
+  return title.replace(/^\(\d+\)\s*/, "");
+}
+
 export function createGoogleCommandQueue(dataLayer: unknown[]) {
   // Google consumes Arguments objects, as in its documented installation shim.
   return function (..._args: unknown[]) {

@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { canLoadMarketingTags, createGoogleCommandQueue, isPublicAnalyticsPage, publicAnalyticsUrl } from "@/lib/analytics-safety";
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { canLoadMarketingTags, createGoogleCommandQueue, isPublicAnalyticsPage, publicAnalyticsUrl, publicAnalyticsReferrer, publicAnalyticsPageTitle } from "@/lib/analytics-safety";
 
 const MEASUREMENT_ID = "G-V2RLYZNG3S";
 const TIKTOK_PIXEL_ID = "DAT2MPBC77U3L597UVV0";
 const CONSENT_KEY = "roomsnow-analytics-consent";
 type ConsentChoice = "accepted" | "rejected" | null;
+
+function saveConsentCookie(choice: Exclude<ConsentChoice, null>) {
+  document.cookie = `rn_analytics_choice=${choice}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+}
 
 declare global {
   interface Window {
@@ -81,6 +85,9 @@ function initialiseTikTokPixel() {
 
 export function GoogleAnalyticsConsent() {
   const pathname = usePathname();
+  const search = useSearchParams().toString();
+  const lastPage = useRef<string | null>(null);
+  const lastSearch = useRef<string | null>(null);
   const [choice, setChoice] = useState<ConsentChoice>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [ready, setReady] = useState(false);
@@ -88,7 +95,10 @@ export function GoogleAnalyticsConsent() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem(CONSENT_KEY);
-    if (saved === "accepted" || saved === "rejected") setChoice(saved);
+    if (saved === "accepted" || saved === "rejected") {
+      saveConsentCookie(saved);
+      setChoice(saved);
+    }
     const openSettings = () => setShowSettings(true);
     window.addEventListener("roomsnow:cookie-settings", openSettings);
     return () => window.removeEventListener("roomsnow:cookie-settings", openSettings);
@@ -109,14 +119,14 @@ export function GoogleAnalyticsConsent() {
     const existing = document.querySelector<HTMLScriptElement>(`script[src*="${MEASUREMENT_ID}"]`);
     if (existing) {
       window.gtag("consent", "update", { analytics_storage: "granted" });
-      window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: window.location.origin });
+      window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: publicAnalyticsReferrer(document.referrer) });
       setReady(true);
       return;
     }
 
     window.gtag("js", new Date());
     window.gtag("consent", "update", { analytics_storage: "granted" });
-    window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: window.location.origin });
+    window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: publicAnalyticsReferrer(document.referrer) });
     const script = document.createElement("script");
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
@@ -125,16 +135,37 @@ export function GoogleAnalyticsConsent() {
   }, [choice, pathname]);
 
   useEffect(() => {
-    if (choice === "accepted" && ready && isPublicAnalyticsPage(pathname)) {
-      window.gtag?.("event", "page_view", { page_path: pathname, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: window.location.origin, page_title: document.title });
+    if (choice !== "accepted" || !ready) return;
+    if (!isPublicAnalyticsPage(pathname)) {
+      lastPage.current = null;
+      lastSearch.current = null;
+      return;
     }
-  }, [choice, pathname, ready]);
+    const location = publicAnalyticsUrl(window.location.origin, pathname, search);
+    const parameters = { page_path: pathname, page_location: location, page_referrer: publicAnalyticsReferrer(document.referrer), page_title: publicAnalyticsPageTitle(document.title) };
+    // Query-only filter changes must not inflate page views of the same public URL.
+    if (lastPage.current !== location) {
+      window.gtag?.("event", "page_view", parameters);
+      lastPage.current = location;
+    }
+    if (pathname === "/search") {
+      // The query is used only locally to recognise navigation. Never send search
+      // terms, support needs, age, location filters or result-specific details.
+      if (lastSearch.current !== search) {
+        window.gtag?.("event", "roomsnow_search_view", parameters);
+        lastSearch.current = search;
+      }
+    } else {
+      lastSearch.current = null;
+    }
+  }, [choice, pathname, search, ready]);
 
   useEffect(() => {
     if (choice === "accepted" && tiktokReady && canLoadMarketingTags(pathname, window.location.search)) window.ttq?.page?.();
   }, [choice, pathname, tiktokReady]);
 
   function choose(next: Exclude<ConsentChoice, null>) {
+    saveConsentCookie(next);
     window.localStorage.setItem(CONSENT_KEY, next);
     setChoice(next);
     setShowSettings(false);
@@ -144,10 +175,15 @@ export function GoogleAnalyticsConsent() {
       eraseOptionalCookies();
       setReady(false);
       setTikTokReady(false);
+      lastPage.current = null;
+      lastSearch.current = null;
     }
   }
 
-  if (choice !== null && !showSettings) return null;
+  // The empty frame has no private page content, and never reads its parent DOM.
+  const outcomeFrame = choice === "accepted" ? <iframe key={pathname} src="/api/analytics/outcome" title="Completed action measurement" referrerPolicy="no-referrer" hidden /> : null;
+
+  if (choice !== null && !showSettings) return outcomeFrame;
 
   return (
     <aside aria-label="Cookie preferences" className="fixed inset-x-3 bottom-21 z-80 mx-auto max-w-3xl rounded-card border border-line bg-white p-4 shadow-float sm:inset-x-6 sm:bottom-3 sm:p-5">
@@ -155,7 +191,7 @@ export function GoogleAnalyticsConsent() {
         <div className="max-w-2xl">
           <h2 className="text-[16px]">Your privacy choices</h2>
           <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
-            RoomsNow uses essential cookies for the service. With your permission, Google Analytics and the TikTok Pixel measure visits to public pages, improve RoomsNow and measure campaigns. Search terms and account, message, referral, provider, applicant-profile and dashboard pages are not tracked.
+            RoomsNow uses essential cookies for the service. With your permission, Google Analytics and the TikTok Pixel measure visits to public pages and campaigns. Google also receives a generic event when an account is created or a new accommodation enquiry is sent. Search terms, private page views, account details and message or referral content are not shared with these tools.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">

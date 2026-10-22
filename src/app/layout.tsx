@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Instrument_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import { brand } from "@/brand.config";
 import { DEFAULT_SHARE_IMAGE, JsonLd, SITE_URL } from "@/lib/seo";
@@ -101,7 +102,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Toaster />
         <PwaRegister />
-        <GoogleAnalyticsConsent />
+        <Suspense fallback={null}>
+          <GoogleAnalyticsConsent />
+        </Suspense>
       </body>
     </html>
   );

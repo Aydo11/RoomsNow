@@ -12,7 +12,7 @@ type Props = { params: Promise<{ city: string }> };
 
 async function findCity(slug: string) {
   const cities = await db.property.findMany({
-    where: { listings: { some: { status: "ACTIVE", rooms: { some: { status: "AVAILABLE" } } } } },
+    where: { listings: { some: { status: "ACTIVE", company: { status: "ACTIVE" }, rooms: { some: { status: "AVAILABLE" } } } } },
     select: { city: true },
     distinct: ["city"],
   });
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const city = await findCity(slug);
   if (!city) return { title: "Rooms not found", robots: { index: false, follow: true } };
   return pageMetadata({
-    title: `HMO Rooms & Accommodation in ${city}`,
+    title: `Rooms to Rent & Supported Accommodation in ${city}`,
     description: `Search available HMO rooms, shared housing and supported accommodation in ${city}. Compare vacancies and contact providers on RoomsNow.`,
     path: `/rooms/${slug}`,
   });
@@ -38,6 +38,7 @@ export default async function CityRoomsPage({ params }: Props) {
   const listings = await db.listing.findMany({
     where: {
       status: "ACTIVE",
+      company: { status: "ACTIVE" },
       rooms: { some: { status: "AVAILABLE" } },
       property: { city: { equals: city, mode: "insensitive" } },
     },
@@ -57,7 +58,7 @@ export default async function CityRoomsPage({ params }: Props) {
         {
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          name: `HMO rooms and accommodation in ${city}`,
+          name: `Rooms to rent and supported accommodation in ${city}`,
           url,
           description: `Available HMO rooms, shared housing and supported accommodation in ${city}.`,
         },
@@ -74,7 +75,7 @@ export default async function CityRoomsPage({ params }: Props) {
       <section className="surface-home border-b border-line">
         <div className="shell py-12 sm:py-16">
           <nav className="text-[14px] text-ink-faint"><Link href="/search" className="hover:text-ink">Search accommodation</Link> / {city}</nav>
-          <h1 className="mt-5 text-[40px] font-bold leading-tight sm:text-[52px]">HMO rooms and accommodation in {city}</h1>
+          <h1 className="mt-5 text-[40px] font-bold leading-tight sm:text-[52px]">Rooms to rent in {city}</h1>
           <p className="mt-4 max-w-3xl text-[17px] leading-relaxed text-ink-soft">Search available HMO rooms, shared homes, supported housing and specialist accommodation in {city}. Check rent, facilities, support, referral routes and live room availability before contacting the provider.</p>
           <div className="mt-7 flex flex-wrap gap-2">
             <Link href={`/search?where=${encodeURIComponent(city)}`} className="btn-primary">Refine your {city} search</Link>

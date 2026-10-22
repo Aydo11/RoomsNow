@@ -23,6 +23,8 @@ import { contactNumberFromInput, withContactNumber } from "@/lib/contact-number"
 import { openRequestConversation, requestMessageBody } from "@/lib/request-conversation";
 import { flagScamSignals } from "@/lib/scam-signals";
 import { BLOCKED_MESSAGE_TEXT, checkBlockedContent } from "@/lib/blocked-content";
+import { isNewHousingEnquiry } from "@/lib/conversion-outcomes";
+import { recordConversionOutcome } from "@/server/conversion-outcomes";
 
 /**
  * Service businesses only ever reply inside threads a paying provider opened
@@ -164,6 +166,7 @@ export async function startConversationAction(_prev: FormState, formData: FormDa
   }
 
   await audit({ actorId: user.id, action: "conversation.started", targetType: "Conversation", targetId: conversation.id });
+  if (isNewHousingEnquiry(user.role, Boolean(listingId), Boolean(existing))) await recordConversionOutcome("generate_lead");
   redirect(`/messages/${conversation.id}`);
 }
 
@@ -264,6 +267,7 @@ export async function startDirectMessageAction(_prev: FormState, formData: FormD
   }
 
   await audit({ actorId: user.id, action: "conversation.started", targetType: "Conversation", targetId: conversation.id });
+  if (isNewHousingEnquiry(user.role, Boolean(companyId), Boolean(existing))) await recordConversionOutcome("generate_lead");
   redirect(`/messages/${conversation.id}`);
 }
 
@@ -529,6 +533,11 @@ export async function createRequestAction(_prev: FormState, formData: FormData):
   });
   if (already) return { ok: false, errors: { form: "You've already requested this accommodation." } };
 
+  const priorEnquiry = await db.conversation.findFirst({
+    where: { listingId: listing.id, participants: { some: { userId: user.id } } },
+    select: { id: true },
+  });
+
   const request = await db.accommodationRequest.create({
     data: {
       listingId: listing.id,
@@ -568,6 +577,7 @@ export async function createRequestAction(_prev: FormState, formData: FormData):
   });
   await checkFirstEnquiry(listing.companyId, request.id);
   await audit({ actorId: user.id, action: "request.created", targetType: "AccommodationRequest", targetId: request.id });
+  if (isNewHousingEnquiry(user.role, true, Boolean(priorEnquiry))) await recordConversionOutcome("generate_lead");
 
   redirect(`/dashboard/requests?submitted=${request.id}`);
 }

@@ -17,6 +17,7 @@ import { bool, slugify, text } from "../form";
 import { ensureReferralCode, recordReferralSignup } from "@/lib/referral-program";
 import { uniqueServiceSlug } from "../service-marketplace";
 import { authHref, safeRedirect } from "@/lib/auth-navigation";
+import { recordConversionOutcome } from "@/server/conversion-outcomes";
 
 /**
  * A real bcrypt hash of a value nobody knows, compared against when the email
@@ -184,6 +185,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   // Signed in straight away; back to where they were (e.g. an advert's
   // WhatsApp button) if they came from somewhere, otherwise their dashboard.
   await createSession(user.id, user.role, user.tokenVersion);
+  await recordConversionOutcome("sign_up");
   redirect(safeRedirect(text(formData, "next"), destination));
 }
 

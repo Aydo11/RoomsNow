@@ -6,7 +6,6 @@ import { hmoRoomsBirminghamContent as content } from "@/lib/seo-content";
 import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
 import { money } from "@/lib/format";
 import { loadAreaPage } from "@/server/area-pages";
-import { HeroStreet } from "@/components/hero-street";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const data = await loadBirminghamRooms().catch(() => null);
   const free = data?.stats.roomsFree ?? 0;
   return pageMetadata({
-    title: free ? `HMO Rooms in Birmingham: ${free} Shared Rooms Available` : "HMO Rooms to Rent in Birmingham",
+    title: free ? `HMO Rooms to Rent in Birmingham | ${free} Available` : "HMO Rooms to Rent in Birmingham",
     description: free
       ? `${free} shared rooms listed as available in Birmingham from ${data!.stats.providers} providers. Compare costs, bills, areas and benefit information, then contact the provider.`
       : "Search HMO rooms and shared accommodation in Birmingham. Compare rent, bills, areas and Housing Benefit, then message the provider directly.",
@@ -100,7 +99,7 @@ export default async function HmoRoomsBirminghamPage() {
       />
 
       <section className="surface-home relative overflow-hidden border-b border-line">
-        <div className="shell pb-4 pt-12 sm:pt-16">
+        <div className="shell py-8 sm:py-10">
           <nav className="flex flex-wrap gap-1 text-[14px] text-ink-faint" aria-label="Breadcrumb">
             <Link href="/hmo-rooms" className="hover:text-ink">HMO rooms</Link>
             <span aria-hidden="true">/</span>
@@ -115,17 +114,14 @@ export default async function HmoRoomsBirminghamPage() {
           <p className="mt-3 max-w-[68ch] text-[15px] leading-relaxed text-ink-soft">Available means the provider has marked a room as available; it does not mean accommodation is free of charge. Shared homes may include supported accommodation. Check each advert's eligibility, costs and any licensing details.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href={SEARCH} className="btn-primary">{content.primaryCta.label}</Link>
-            <Link href={content.secondaryCta.href} className="btn-secondary">{content.secondaryCta.label}</Link>
+            <Link href={listings.length ? "#live-rooms" : "/rooms/birmingham"} className="btn-secondary">{listings.length ? "View available rooms below" : "Other Birmingham accommodation"}</Link>
           </div>
+          <nav aria-label="Birmingham room search options" className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-[15px] font-semibold text-pine-dark">
+            <Link href={`${SEARCH}&hb=1`} className="underline">Shared rooms accepting Housing Benefit</Link>
+            <Link href="/supported-accommodation-birmingham" className="underline">Looking for supported accommodation?</Link>
+            <Link href="/search" className="underline">Search accommodation across the UK</Link>
+          </nav>
         </div>
-        <HeroStreet
-          className="hero-street-compact"
-          pills={[
-            { at: 0.22, label: areas[0] ? `Shared rooms · ${areas[0].place.name}` : "Search shared rooms", tone: "amber" },
-            { at: 0.5, label: "Check costs and benefits", tone: "blue" },
-            { at: 0.78, label: areas[1] ? `Explore ${areas[1].place.name}` : "Compare provider details", tone: "green" },
-          ]}
-        />
       </section>
 
       <div className="shell py-12 sm:py-14">
