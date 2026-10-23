@@ -12,12 +12,12 @@ const AUDIENCES = [
   {
     who: "If you're looking for somewhere to live",
     steps: [
-      ["Create an account", "You'll be asked for the basics only — name, email, roughly where you're looking."],
-      ["Post what you're looking for", "An advert providers can find, with as much or as little detail as you want public."],
-      ["Search and message", "Filter by support, area and availability. Messages go through the platform, so your number stays yours."],
-      ["Request accommodation", "A structured request goes straight to the provider's worklist, and you can track its status."],
+      ["Browse rooms before you join", "Search by area, accommodation type and availability. You can view adverts without an account."],
+      ["Create a free account", "Start with your email and a password. Add your name, preferences and optional phone number later."],
+      ["Message or request accommodation", "Ask the provider about costs, suitability and availability. Messages stay in RoomsNow, and accommodation requests go to the provider's worklist."],
+      ["Keep your search moving", "Save rooms and choose email alerts for new matches. You can also post what you're looking for so providers can find your advert."],
     ],
-    cta: ["Create your advert", "/register?type=USER"],
+    cta: ["Browse available rooms", "/search"],
   },
   {
     who: "If you advertise accommodation",

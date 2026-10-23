@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { authHref, safeRedirect } from "../src/lib/auth-navigation";
+import { authHref, safeRedirect, searchReturnPath } from "../src/lib/auth-navigation";
 import { registerSchema } from "../src/lib/validation";
 
 test("room seekers can register with only email, password and consent", () => {
@@ -27,4 +27,22 @@ test("auth links retain the room or search destination without allowing external
     assert.equal(safeRedirect(invalid, "/dashboard"), "/dashboard");
     assert.equal(authHref("/register", invalid), "/register");
   }
+});
+
+test("joining from search resumes repeated filters and the alert controls without advertising identifiers", () => {
+  const target = searchReturnPath({ where: "Birmingham & Solihull", support: ["MENTAL_HEALTH", "HOMELESSNESS"], maxRent: "100", view: "map", page: "2", gclid: "ad-click", utm_campaign: "private-campaign", next: "//external.test" });
+  const returned = new URL(target, "https://www.roomsnow.co.uk");
+  assert.equal(returned.pathname, "/search");
+  assert.equal(returned.searchParams.get("where"), "Birmingham & Solihull");
+  assert.deepEqual(returned.searchParams.getAll("support"), ["MENTAL_HEALTH", "HOMELESSNESS"]);
+  assert.equal(returned.searchParams.get("maxRent"), "100");
+  assert.equal(returned.searchParams.get("view"), "map");
+  assert.equal(returned.searchParams.get("page"), "2");
+  assert.equal(returned.hash, "#room-alerts");
+  assert.equal(returned.searchParams.has("gclid"), false);
+  assert.equal(returned.searchParams.has("utm_campaign"), false);
+  assert.equal(returned.searchParams.has("next"), false);
+  const signup = new URL(authHref("/register?type=USER", target), returned.origin);
+  assert.equal(signup.searchParams.get("next"), target);
+  assert.equal(searchReturnPath({}), "/search#room-alerts");
 });
