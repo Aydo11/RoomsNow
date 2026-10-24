@@ -66,6 +66,7 @@ export async function adminNav(): Promise<NavItem[]> {
     { group: "Directory", href: "/admin/marketplace", label: "Services marketplace", badge: marketplaceQueue || undefined },
     { group: "Directory", href: "/admin/support-services", label: "Support services", badge: supportQueue || undefined },
     { group: "Directory", href: "/admin/categories", label: "Categories" },
+    { group: "Directory", href: "/admin/spotlight", label: "Homepage spotlight" },
 
     {
       group: "Growth",
