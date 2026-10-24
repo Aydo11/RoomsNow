@@ -18,6 +18,7 @@ export async function serviceProviderNav(userId: string): Promise<NavItem[]> {
     { href: "/messages", label: "Messages" },
     { href: "/service-provider/reviews", label: "Reviews", badge: unansweredReviews || undefined },
     { href: "/service-provider/plan", label: "Plan and boosts" },
+    { href: "/advertise/homepage", label: "Homepage spotlight" },
     { href: "/dashboard/notifications", label: "Notifications", badge: unread || undefined },
     { href: "/dashboard/settings", label: "Account settings" },
   ];
