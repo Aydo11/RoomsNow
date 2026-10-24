@@ -2155,3 +2155,30 @@ model BlockedPhrase {
   createdById String?
   createdAt   DateTime @default(now())
 }
+
+/// A paid (or admin-placed) promotion in the homepage spotlight, directly
+/// under the search. Name, link and logo are snapshotted at purchase so the
+/// slot always shows what was paid for. Several live at once rotate.
+model HomepageSpotlight {
+  id                String   @id @default(cuid())
+  /// COMPANY (housing provider) or SERVICE (marketplace business).
+  orgType           String
+  orgId             String
+  orgName           String
+  href              String
+  logoUrl           String?
+  headline          String
+  body              String
+  /// ACTIVE or PAUSED. Ended spotlights simply have endsAt in the past.
+  status            String   @default("ACTIVE")
+  startsAt          DateTime @default(now())
+  endsAt            DateTime
+  /// Pence paid; 0 when an admin placed it.
+  amount            Int      @default(0)
+  externalPaymentId String?  @unique
+  createdById       String?
+  createdAt         DateTime @default(now())
+
+  @@index([status, startsAt, endsAt])
+  @@index([orgType, orgId])
+}
