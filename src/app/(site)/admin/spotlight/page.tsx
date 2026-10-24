@@ -21,14 +21,12 @@ function stateOf(row: { status: string; startsAt: Date; endsAt: Date }, now: Dat
 export default async function AdminSpotlightPage() {
   await requireAdmin();
   const now = new Date();
-  const [nav, rows, companies, businesses] = await Promise.all([
+  const [nav, rows, businesses] = await Promise.all([
     adminNav(),
     db.homepageSpotlight.findMany({ orderBy: [{ endsAt: "desc" }], take: 100 }),
-    db.company.findMany({ where: { status: "ACTIVE" }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
     db.serviceBusiness.findMany({ where: { status: "APPROVED" }, orderBy: { name: "asc" }, select: { id: true, name: true, tradingName: true } }),
   ]);
   const orgs = [
-    ...companies.map((c) => ({ value: `COMPANY:${c.id}`, label: c.name, group: "Housing providers" })),
     ...businesses.map((b) => ({ value: `SERVICE:${b.id}`, label: b.tradingName || b.name, group: "Service businesses" })),
   ];
   const live = rows.filter((row) => stateOf(row, now).label === "Live").length;
@@ -36,7 +34,7 @@ export default async function AdminSpotlightPage() {
   return (
     <DashboardShell
       title="Homepage spotlight"
-      subtitle={`The sponsored band under the homepage search. Paid spotlights go live automatically; several live at once take turns. ${live} live now.`}
+      subtitle={`Sponsored services, shown under the homepage search. Paid spotlights go live automatically; several live at once take turns. ${live} live now.`}
       nav={nav}
       active="/admin/spotlight"
     >
@@ -44,7 +42,7 @@ export default async function AdminSpotlightPage() {
 
       <h2 className="mt-8 text-lg">All spotlights</h2>
       {rows.length === 0 ? (
-        <p className="mt-2 text-[15px] text-ink-soft">No spotlights yet. Organisations can buy one at <Link href="/advertise/homepage" className="text-pine-dark hover:underline">/advertise/homepage</Link>.</p>
+        <p className="mt-2 text-[15px] text-ink-soft">No spotlights yet. Service businesses can buy one at <Link href="/advertise/homepage" className="text-pine-dark hover:underline">/advertise/homepage</Link>.</p>
       ) : (
         <ul className="mt-3 space-y-3">
           {rows.map((row) => {
