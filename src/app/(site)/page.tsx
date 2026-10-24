@@ -14,6 +14,8 @@ import { RecentlyViewed } from "@/components/recently-viewed";
 import { HeroStreet } from "@/components/hero-street";
 import { RoomMarquee } from "@/components/room-marquee";
 import { COVER_MEDIA } from "@/lib/cover-image";
+import { SpotlightCarousel } from "@/components/home-spotlight";
+import { liveSpotlights } from "@/lib/spotlight-server";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
@@ -181,6 +183,10 @@ export default function HomePage() {
         </div>
         <HeroStreet pills={[]} />
       </section>
+
+      <Suspense fallback={null}>
+        <HomeSpotlight />
+      </Suspense>
 
       {/* Real rooms straight after the search: photos persuade more than icons. */}
       <Suspense fallback={<MarqueeSkeleton />}>
@@ -642,5 +648,24 @@ function AudienceIcon({ type, highlighted }: { type: "search" | "referral" | "pr
         {paths[type]}
       </svg>
     </span>
+  );
+}
+
+/**
+ * Paid homepage spotlight, straight under the search. Shows nothing at all
+ * when no organisation has bought (or been given) the slot.
+ */
+async function HomeSpotlight() {
+  const items = await liveSpotlights().catch(() => []);
+  if (!items.length) return null;
+  return (
+    <section className="border-b border-line bg-paper" aria-label="Sponsored">
+      <div className="shell py-5 sm:py-6">
+        <SpotlightCarousel items={items} />
+        <p className="mt-2 text-right text-[12.5px] text-ink-faint">
+          <Link href="/advertise/homepage" className="hover:text-pine-dark hover:underline">Advertise your organisation here</Link>
+        </p>
+      </div>
+    </section>
   );
 }
