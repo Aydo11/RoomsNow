@@ -60,7 +60,7 @@ export function SpotlightCarousel({ items }: { items: SpotlightItem[] }) {
     <div
       role="region"
       aria-roledescription="carousel"
-      aria-label="Sponsored organisations"
+      aria-label="Sponsored services"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
