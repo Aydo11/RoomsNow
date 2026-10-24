@@ -8,6 +8,8 @@ import type { MembershipTier, SubscriptionStatus } from "@prisma/client";
 import { isSponsorPackage, SPONSOR_PACKAGES, type SponsorPackage } from "@/lib/sponsor-packages";
 import { BOOST_PACKAGES, isBoostPack } from "@/lib/boost-packages";
 import { audit } from "@/lib/audit";
+import { activateSpotlight, orgSnapshot } from "@/lib/spotlight-server";
+import { cleanSpotlightText, isSpotlightPackage, SPOTLIGHT_PACKAGES } from "@/lib/spotlight";
 import { activateServiceBoost, activateServiceSponsorship, applyServicePlan, grantServiceBoostPack } from "@/lib/service-billing";
 import { isPaidServicePlanTier, isServiceBoostKey, SERVICE_BOOSTS } from "@/lib/service-marketplace";
 
@@ -109,6 +111,19 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
     const pack = session.metadata?.pack;
     if (!businessId || !advertId || !isSponsorPackage(pack)) return;
     await activateServiceSponsorship({ businessId, advertId, pack, amount: session.amount_total ?? SPONSOR_PACKAGES[pack].amount, externalPaymentId: `checkout:${session.id}` });
+    return;
+  }
+
+  if (kind === "homepage_spotlight") {
+    const meta = session.metadata ?? {};
+    const pkg = meta.pkg;
+    const org = await orgSnapshot(meta.orgType ?? "", meta.orgId ?? "");
+    const text = cleanSpotlightText({ headline: meta.headline, body: meta.body });
+    if (!org || !isSpotlightPackage(pkg) || !text.ok) {
+      console.error("[billing] paid spotlight could not be activated", { sessionId: session.id });
+      return;
+    }
+    await activateSpotlight({ org, text: text.value, days: SPOTLIGHT_PACKAGES[pkg].days, amount: session.amount_total ?? SPOTLIGHT_PACKAGES[pkg].amount, externalPaymentId: `checkout:${session.id}`, actorId: meta.userId ?? null });
     return;
   }
 
