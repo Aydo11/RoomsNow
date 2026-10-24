@@ -215,11 +215,11 @@ export function SiteFooter() {
           links={[
             ["Advertise accommodation", "/advertise-accommodation"],
             ["Membership and pricing", "/pricing"],
-            ["Homepage spotlight", "/advertise/homepage"],
             ["Find people looking", "/people"],
             ["Get verified", "/verification"],
             ["Provider Services", "/services"],
             ["Advertise your services (trades)", "/advertise-services"],
+            ["Homepage spotlight for services", "/advertise/homepage"],
             ["List a support service free", "/support-services/join"],
           ]}
         />
