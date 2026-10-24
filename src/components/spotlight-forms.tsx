@@ -10,7 +10,7 @@ function TextFields({ errors, headline, body, setHeadline, setBody }: { errors?:
   return (
     <>
       <Field label="Headline" name="headline" error={errors?.headline} hint={`${headline.length}/${SPOTLIGHT_LIMITS.headline} characters`} required>
-        <input id="headline" name="headline" className="field" maxLength={SPOTLIGHT_LIMITS.headline} required value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder="e.g. Supported housing with 24/7 staff in Birmingham" />
+        <input id="headline" name="headline" className="field" maxLength={SPOTLIGHT_LIMITS.headline} required value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder="e.g. Gas safety certificates across Birmingham, next-day visits" />
       </Field>
       <Field label="Short description" name="body" error={errors?.body} hint={`${body.length}/${SPOTLIGHT_LIMITS.body} characters. No links: the spotlight opens your RoomsNow profile.`} required>
         <textarea id="body" name="body" className="field min-h-[96px]" maxLength={SPOTLIGHT_LIMITS.body} required value={body} onChange={(e) => setBody(e.target.value)} placeholder="What you offer and who it's for." />
@@ -56,7 +56,7 @@ export function BuySpotlightForm({ orgName, logoUrl }: { orgName: string; logoUr
   );
 }
 
-/** Admin places any live organisation in the spotlight for free. */
+/** Admin places any approved service business in the spotlight for free. */
 export function AddSpotlightForm({ orgs }: { orgs: Array<{ value: string; label: string; group: string }> }) {
   const [state, action] = useActionState(addSpotlightAction, { ok: false });
   const [headline, setHeadline] = useState("");
@@ -64,10 +64,10 @@ export function AddSpotlightForm({ orgs }: { orgs: Array<{ value: string; label:
   const groups = [...new Set(orgs.map((org) => org.group))];
   return (
     <form action={action} className="card space-y-4 p-5">
-      <h2 className="text-lg">Add an organisation</h2>
+      <h2 className="text-lg">Add a service</h2>
       <FormSuccess message={state.ok ? state.message : undefined} />
       <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
-        <Field label="Organisation" name="org" error={state.errors?.org} required>
+        <Field label="Service business" name="org" error={state.errors?.org} required>
           <select id="org" name="org" className="field" required defaultValue="">
             <option value="" disabled>Choose…</option>
             {groups.map((group) => (
