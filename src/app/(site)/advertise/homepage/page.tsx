@@ -29,11 +29,11 @@ export default async function HomepageSpotlightPage({ searchParams }: { searchPa
     <>
       <section className="surface-home border-b border-line">
         <div className="shell py-12 sm:py-16">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-pine-dark">For trades and service businesses</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-pine-dark">For service businesses and housing providers</p>
           <h1 className="mt-2 max-w-[22ch] text-balance text-[34px] font-bold leading-[1.08] sm:text-[48px]">Put your service on the RoomsNow homepage</h1>
           <p className="mt-4 max-w-[60ch] text-[17px] leading-relaxed text-ink-soft">
             The homepage spotlight is the most visible place on RoomsNow. It shows your business, a headline and a short description,
-            and links straight to your Provider Services profile.
+            and links straight to your RoomsNow profile.
           </p>
           <p className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-[15px]">
             {(Object.keys(SPOTLIGHT_PACKAGES) as Array<keyof typeof SPOTLIGHT_PACKAGES>).map((key) => (
@@ -62,7 +62,7 @@ export default async function HomepageSpotlightPage({ searchParams }: { searchPa
           {!user ? (
             <>
               <h2 className="text-xl">Sign in to buy a spotlight</h2>
-              <p className="mt-2 text-[15px] text-ink-soft">The spotlight is open to approved service businesses on RoomsNow Provider Services.</p>
+              <p className="mt-2 text-[15px] text-ink-soft">The spotlight is open to approved service businesses and housing providers on RoomsNow.</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <Link href="/login?next=/advertise/homepage" className="btn-primary">Sign in</Link>
                 <Link href="/advertise-services" className="btn-secondary">List your services</Link>
@@ -70,9 +70,9 @@ export default async function HomepageSpotlightPage({ searchParams }: { searchPa
             </>
           ) : !org ? (
             <>
-              <h2 className="text-xl">For service businesses</h2>
+              <h2 className="text-xl">For service businesses and providers</h2>
               <p className="mt-2 text-[15px] text-ink-soft">
-                The spotlight is for services, so it needs an approved service business on Provider Services. Once your business is approved, you can buy a spotlight here.
+                Your account isn&apos;t linked to an approved service business or a live provider company yet. Once it is, you can buy a spotlight here.
               </p>
             </>
           ) : (
