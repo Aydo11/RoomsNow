@@ -653,17 +653,17 @@ function AudienceIcon({ type, highlighted }: { type: "search" | "referral" | "pr
 
 /**
  * Paid homepage spotlight, straight under the search. Shows nothing at all
- * when no organisation has bought (or been given) the slot.
+ * when no service business has bought (or been given) the slot.
  */
 async function HomeSpotlight() {
   const items = await liveSpotlights().catch(() => []);
   if (!items.length) return null;
   return (
-    <section className="border-b border-line bg-paper" aria-label="Sponsored">
+    <section className="border-b border-line bg-paper" aria-label="Sponsored services">
       <div className="shell py-5 sm:py-6">
         <SpotlightCarousel items={items} />
         <p className="mt-2 text-right text-[12.5px] text-ink-faint">
-          <Link href="/advertise/homepage" className="hover:text-pine-dark hover:underline">Advertise your organisation here</Link>
+          <Link href="/advertise/homepage" className="hover:text-pine-dark hover:underline">Advertise your service here</Link>
         </p>
       </div>
     </section>
