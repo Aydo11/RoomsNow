@@ -2161,7 +2161,7 @@ model BlockedPhrase {
 /// slot always shows what was paid for. Several live at once rotate.
 model HomepageSpotlight {
   id                String   @id @default(cuid())
-  /// COMPANY (housing provider) or SERVICE (marketplace business).
+  /// Always SERVICE (a Provider Services business).
   orgType           String
   orgId             String
   orgName           String
