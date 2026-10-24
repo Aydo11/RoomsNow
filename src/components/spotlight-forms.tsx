@@ -67,7 +67,7 @@ export function AddSpotlightForm({ orgs }: { orgs: Array<{ value: string; label:
       <h2 className="text-lg">Add a service</h2>
       <FormSuccess message={state.ok ? state.message : undefined} />
       <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
-        <Field label="Service business" name="org" error={state.errors?.org} required>
+        <Field label="Service business or provider" name="org" error={state.errors?.org} required>
           <select id="org" name="org" className="field" required defaultValue="">
             <option value="" disabled>Choose…</option>
             {groups.map((group) => (
