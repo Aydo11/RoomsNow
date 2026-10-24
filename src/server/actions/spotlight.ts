@@ -16,7 +16,7 @@ const BLOCKED = "Spotlights can't include payment links, bank details or blocked
 export async function buySpotlightAction(_prev: FormState, form: FormData): Promise<FormState> {
   const user = await requireUser("/advertise/homepage");
   const org = await organisationFor(user.id);
-  if (!org) return { ok: false, errors: { form: "Only approved service businesses can buy a spotlight." } };
+  if (!org) return { ok: false, errors: { form: "Only approved service businesses and housing providers can buy a spotlight." } };
   const pkg = form.get("package");
   if (!isSpotlightPackage(pkg)) return { ok: false, errors: { package: "Choose how long you'd like the spotlight." } };
   const text = cleanSpotlightText({ headline: form.get("headline"), body: form.get("body") });
@@ -40,7 +40,7 @@ export async function addSpotlightAction(_prev: FormState, form: FormData): Prom
   const admin = await requireAdmin();
   const [orgType, orgId] = String(form.get("org") || "").split(":");
   const org = await orgSnapshot(orgType ?? "", orgId ?? "");
-  if (!org) return { ok: false, errors: { org: "Choose an approved service business." } };
+  if (!org) return { ok: false, errors: { org: "Choose an approved service business or provider." } };
   const days = Number(form.get("days"));
   if (!Number.isInteger(days) || days < 1 || days > 365) return { ok: false, errors: { days: "Enter between 1 and 365 days." } };
   const text = cleanSpotlightText({ headline: form.get("headline"), body: form.get("body") });
