@@ -4,27 +4,18 @@ import { audit } from "./audit";
 import { billingAvailable, billingIsLive, stripe } from "./billing";
 import { SPOTLIGHT_PACKAGES, type SpotlightPackage, type SpotlightText } from "./spotlight";
 
-export type SpotlightOrg = { orgType: "COMPANY" | "SERVICE"; orgId: string; orgName: string; href: string; logoUrl: string | null };
+export type SpotlightOrg = { orgType: "SERVICE"; orgId: string; orgName: string; href: string; logoUrl: string | null };
 
 const DAY = 24 * 60 * 60 * 1000;
 
-/** The organisation a signed-in user can buy a spotlight for, if any. */
+/** The service business a signed-in user can buy a spotlight for, if any. Spotlights are for services only. */
 export async function organisationFor(userId: string): Promise<SpotlightOrg | null> {
-  const staff = await db.companyStaff.findFirst({
-    where: { userId, company: { status: "ACTIVE" } },
-    select: { company: { select: { id: true } } },
-  });
-  if (staff) return orgSnapshot("COMPANY", staff.company.id);
   const business = await db.serviceBusiness.findUnique({ where: { ownerId: userId }, select: { id: true } });
   return business ? orgSnapshot("SERVICE", business.id) : null;
 }
 
-/** Name, public link and logo, only for organisations that are live on the site. */
+/** Name, public link and logo, only for approved service businesses. */
 export async function orgSnapshot(orgType: string, orgId: string): Promise<SpotlightOrg | null> {
-  if (orgType === "COMPANY") {
-    const company = await db.company.findFirst({ where: { id: orgId, status: "ACTIVE" }, select: { id: true, name: true, slug: true, logoUrl: true } });
-    return company ? { orgType, orgId: company.id, orgName: company.name, href: `/companies/${company.slug}`, logoUrl: company.logoUrl } : null;
-  }
   if (orgType === "SERVICE") {
     const business = await db.serviceBusiness.findFirst({ where: { id: orgId, status: "APPROVED" }, select: { id: true, name: true, tradingName: true, slug: true, logoUrl: true } });
     return business ? { orgType, orgId: business.id, orgName: business.tradingName || business.name, href: `/services/business/${business.slug}`, logoUrl: business.logoUrl } : null;
