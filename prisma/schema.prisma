@@ -2189,10 +2189,13 @@ model HomepageSpotlight {
 /// available right now, optionally linked to one of their live adverts.
 model ProviderStory {
   id          String   @id @default(cuid())
-  companyId   String
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  /// Null for official RoomsNow stories posted by an admin.
+  companyId   String?
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
   listingId   String?
   listing     Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  /// Optional "Find out more" link on official stories (a page on the site).
+  linkUrl     String?
   /// IMAGE or VIDEO
   mediaType   String
   mediaUrl    String
