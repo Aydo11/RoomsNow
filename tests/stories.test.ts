@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cleanCaption, groupStories, STORY_CAPTION_MAX, storyExpiry, storyFileProblem } from "../src/lib/stories";
+import { cleanCaption, groupStories, STORY_CAPTION_MAX, storyExpiry, storyFileProblem, cleanStoryLink } from "../src/lib/stories";
 
 test("stories expire 24 hours after posting", () => {
   const from = new Date("2026-11-03T09:00:00Z");
@@ -30,4 +30,13 @@ test("story files are checked before upload", () => {
   assert.match(storyFileProblem({ type: "video/mp4", size: mb }, false) ?? "", /Professional/);
   assert.match(storyFileProblem({ type: "video/quicktime", size: 60 * mb }, true) ?? "", /limit is 20 MB/);
   assert.match(storyFileProblem({ type: "image/heic", size: mb }, true) ?? "", /JPG/);
+});
+
+test("official story links stay on RoomsNow", () => {
+  assert.equal(cleanStoryLink(""), null);
+  assert.equal(cleanStoryLink("/pricing"), "/pricing");
+  assert.equal(cleanStoryLink("https://www.roomsnow.co.uk/advertise?x=1"), "/advertise?x=1");
+  assert.equal(cleanStoryLink("https://evil.example/pay"), undefined);
+  assert.equal(cleanStoryLink("//evil.example"), undefined);
+  assert.equal(cleanStoryLink("javascript:alert(1)"), undefined);
 });
