@@ -483,6 +483,7 @@ model Company {
   staff            CompanyStaff[]
   properties       Property[]
   listings         Listing[]
+  stories          ProviderStory[]
   subscription     Subscription?
   payments         Payment[]
   verifications    VerificationRequest[]
@@ -680,6 +681,7 @@ model Listing {
 
   rooms         Room[]
   media         ListingMedia[]
+  stories       ProviderStory[]
   saves         SavedListing[]
   requests      AccommodationRequest[]
   referrals     Referral[]
@@ -2181,4 +2183,26 @@ model HomepageSpotlight {
 
   @@index([status, startsAt, endsAt])
   @@index([orgType, orgId])
+}
+
+/// A 24-hour photo or video "story" a provider posts to show what's
+/// available right now, optionally linked to one of their live adverts.
+model ProviderStory {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  listingId   String?
+  listing     Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  /// IMAGE or VIDEO
+  mediaType   String
+  mediaUrl    String
+  mediaKey    String
+  caption     String?
+  views       Int      @default(0)
+  createdById String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([companyId, expiresAt])
 }
