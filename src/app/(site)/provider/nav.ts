@@ -17,6 +17,7 @@ export async function providerNav(companyId: string): Promise<NavItem[]> {
   return [
     { href: "/provider", label: "Dashboard" },
     { href: "/provider/adverts", label: "My adverts" },
+    { href: "/provider/stories", label: "Stories" },
     { href: "/provider/rooms", label: "Rooms" },
     { href: "/provider/requests", label: "Requests", badge: requests || undefined },
     { href: "/provider/referrals", label: "Referrals", badge: referrals || undefined },
