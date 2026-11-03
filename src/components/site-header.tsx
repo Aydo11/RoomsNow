@@ -103,7 +103,7 @@ export async function SiteHeader() {
               </MobileSection>
             ) : (
               <>
-                {user?.role === "PROVIDER" && (
+                {(user?.role === "PROVIDER" || (user?.staffOf.length ?? 0) > 0) && (
                   <MobileSection title="Your provider account">
                     <MobileLink href="/provider/adverts" icon="megaphone" hint="Create and manage your adverts">My adverts</MobileLink>
                     <MobileLink href="/provider/stories" icon="spark" hint="Post 24-hour photo and video stories" highlight>Stories</MobileLink>
