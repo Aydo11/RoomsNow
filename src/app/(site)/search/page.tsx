@@ -15,6 +15,8 @@ import { matchScore } from "@/lib/matching";
 import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
 import { db } from "@/lib/db";
 import { authHref, searchReturnPath } from "@/lib/auth-navigation";
+import { StoriesRail } from "@/components/stories";
+import { liveStoryGroups } from "@/server/stories";
 
 export const metadata = pageMetadata({
   title: "Search HMO Rooms & Accommodation Across the UK",
@@ -142,6 +144,10 @@ export default async function SearchPage({
           </Suspense>
         </div>
       </div>
+
+      <Suspense fallback={null}>
+        <SearchStories />
+      </Suspense>
 
       <div className="shell grid gap-8 py-8 lg:grid-cols-[260px_1fr]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
@@ -297,5 +303,18 @@ export default async function SearchPage({
         </div>
       </div>
     </>
+  );
+}
+
+/** Providers' 24-hour stories above the results. Nothing shows when none are live. */
+async function SearchStories() {
+  const groups = await liveStoryGroups().catch(() => []);
+  if (!groups.length) return null;
+  return (
+    <div className="border-b border-line bg-white">
+      <div className="shell py-5">
+        <StoriesRail groups={groups} title="Rooms available now: provider stories" />
+      </div>
+    </div>
   );
 }
