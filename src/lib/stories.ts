@@ -17,6 +17,8 @@ export type StoryCard = {
   createdAt: string;
   listing: { id: string; title: string; price: string; place: string } | null;
   whatsapp: boolean;
+  /** "Find out more" link on official RoomsNow stories. */
+  link: string | null;
 };
 
 export type StoryGroup = {
@@ -25,11 +27,29 @@ export type StoryGroup = {
   slug: string;
   logoUrl: string | null;
   verified: boolean;
+  /** Posted by the RoomsNow team rather than a provider. */
+  official: boolean;
   stories: StoryCard[];
 };
 
 export function storyExpiry(from = new Date()) {
   return new Date(from.getTime() + STORY_HOURS * 60 * 60 * 1000);
+}
+
+/** Group key for official RoomsNow stories, which have no company. */
+export const OFFICIAL_STORY_KEY = "roomsnow";
+
+/** Official story links must be a page on this site, e.g. "/advertise" — never an outside link. */
+export function cleanStoryLink(input: unknown) {
+  const link = String(input ?? "").trim();
+  if (!link) return null;
+  try {
+    const url = new URL(link, "https://www.roomsnow.co.uk");
+    if (!/^(www\.)?roomsnow\.co\.uk$/.test(url.hostname) || link.startsWith("//")) return undefined;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return undefined;
+  }
 }
 
 export function cleanCaption(input: unknown) {
