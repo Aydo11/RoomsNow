@@ -116,7 +116,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
               <Feature>{plan.maxRooms === -1 ? "Unlimited rooms" : `Up to ${plan.maxRooms} rooms`}</Feature>
               <Feature>{plan.maxStaff === -1 ? "Unlimited staff accounts" : plan.maxStaff === 1 ? "Single user" : `${plan.maxStaff} staff accounts`}</Feature>
               <Feature enabled={plan.videoUploads}>Video uploads</Feature>
-              <Feature enabled={plan.tier !== "FREE"}>{plan.tier === "FREE" ? "24-hour stories" : plan.videoUploads ? "24-hour photo and video stories on the homepage" : "24-hour photo stories on the homepage"}</Feature>
+              <Feature enabled={plan.tier !== "FREE"}>{plan.tier === "FREE" ? "24-hour stories" : plan.videoUploads ? "24-hour photo and video stories on search" : "24-hour photo stories on search"}</Feature>
               <Feature enabled={plan.analytics}>Advert analytics</Feature>
               <Feature enabled={plan.priorityPlacement}>Priority placement in search</Feature>
               <Feature enabled={plan.featuredCredits > 0}>
