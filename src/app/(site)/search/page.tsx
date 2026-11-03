@@ -312,8 +312,8 @@ async function SearchStories() {
   if (!groups.length) return null;
   return (
     <div className="border-b border-line bg-white">
-      <div className="shell py-5">
-        <StoriesRail groups={groups} title="Rooms available now: provider stories" />
+      <div className="shell py-3">
+        <StoriesRail groups={groups} title="Rooms available now: provider stories" compact />
       </div>
     </div>
   );
