@@ -1,15 +1,15 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { postStoryAction } from "@/server/actions/stories";
+import { adminPostStoryAction, postStoryAction } from "@/server/actions/stories";
 import { STORY_CAPTION_MAX, STORY_IMAGE_MAX_MB, STORY_VIDEO_MAX_MB, storyFileProblem } from "@/lib/stories";
 import { Field, FormError, FormSuccess, SubmitButton } from "./ui";
 
 type Picked = { url: string; video: boolean; name: string; size: string };
 
 /** Provider posts a story: pick a photo or short video, add a caption, optionally link an advert. */
-export function PostStoryForm({ adverts, allowVideo }: { adverts: Array<{ id: string; title: string }>; allowVideo: boolean }) {
-  const [state, action, pending] = useActionState(postStoryAction, { ok: false });
+export function PostStoryForm({ adverts, allowVideo, official = false }: { adverts: Array<{ id: string; title: string }>; allowVideo: boolean; official?: boolean }) {
+  const [state, action, pending] = useActionState(official ? adminPostStoryAction : postStoryAction, { ok: false });
   const [picked, setPicked] = useState<Picked | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
@@ -42,8 +42,8 @@ export function PostStoryForm({ adverts, allowVideo }: { adverts: Array<{ id: st
   return (
     <form ref={formRef} action={action} className="card space-y-5 p-5 sm:p-6">
       <div>
-        <h2 className="text-[18px]">Post a story</h2>
-        <p className="mt-1 text-[14px] text-ink-soft">Goes live straight away on the homepage and search, then disappears after 24 hours.</p>
+        <h2 className="text-[18px]">{official ? "Post a RoomsNow story" : "Post a story"}</h2>
+        <p className="mt-1 text-[14px] text-ink-soft">{official ? "Shown first to everyone on the search page as an official RoomsNow update, for 24 hours." : "Goes live straight away on the search page, then disappears after 24 hours."}</p>
       </div>
       <FormSuccess message={state.ok ? state.message : undefined} />
       <FormError message={state.errors?.form} />
@@ -105,14 +105,20 @@ export function PostStoryForm({ adverts, allowVideo }: { adverts: Array<{ id: st
 
         <div className="space-y-4">
           <Field label="Caption" name="caption" error={state.errors?.caption} hint={`${caption.length}/${STORY_CAPTION_MAX}. For example "Double room free now, bills included, viewings this week".`}>
-            <textarea id="caption" name="caption" maxLength={STORY_CAPTION_MAX} value={caption} onChange={(event) => setCaption(event.target.value)} className="field min-h-[96px]" placeholder="What's available?" />
+            <textarea id="caption" name="caption" maxLength={STORY_CAPTION_MAX} value={caption} onChange={(event) => setCaption(event.target.value)} className="field min-h-[96px]" placeholder={official ? "What's new on RoomsNow?" : "What's available?"} />
           </Field>
-          <Field label="Link to an advert (optional)" name="listingId" error={state.errors?.listingId} hint="Viewers can enquire on that advert straight from the story, and WhatsApp you if it's switched on.">
-            <select id="listingId" name="listingId" className="field" defaultValue="">
-              <option value="">No advert, just my profile</option>
-              {adverts.map((advert) => <option key={advert.id} value={advert.id}>{advert.title}</option>)}
-            </select>
-          </Field>
+          {official ? (
+            <Field label="Find out more link (optional)" name="linkUrl" error={state.errors?.linkUrl} hint="A page on RoomsNow, like /advertise/homepage or /pricing. Leave empty for no button.">
+              <input id="linkUrl" name="linkUrl" className="field" placeholder="/pricing" inputMode="url" />
+            </Field>
+          ) : (
+            <Field label="Link to an advert (optional)" name="listingId" error={state.errors?.listingId} hint="Viewers can enquire on that advert straight from the story, and WhatsApp you if it's switched on.">
+              <select id="listingId" name="listingId" className="field" defaultValue="">
+                <option value="">No advert, just my profile</option>
+                {adverts.map((advert) => <option key={advert.id} value={advert.id}>{advert.title}</option>)}
+              </select>
+            </Field>
+          )}
           <SubmitButton pendingLabel="Uploading…" disabled={!picked} className="btn-primary w-full sm:w-auto">Post story</SubmitButton>
           {!picked && <p className="text-[13px] text-ink-faint">Add a photo{allowVideo ? " or video" : ""} first.</p>}
         </div>
