@@ -103,6 +103,13 @@ export async function SiteHeader() {
               </MobileSection>
             ) : (
               <>
+                {user?.role === "PROVIDER" && (
+                  <MobileSection title="Your provider account">
+                    <MobileLink href="/provider/adverts" icon="megaphone" hint="Create and manage your adverts">My adverts</MobileLink>
+                    <MobileLink href="/provider/stories" icon="spark" hint="Post 24-hour photo and video stories" highlight>Stories</MobileLink>
+                    <MobileLink href="/provider/membership" icon="badge">Membership</MobileLink>
+                  </MobileSection>
+                )}
                 <MobileSection title="Accommodation providers">
                   <MobileLink href="/services" icon="tools" hint="Checked trades and suppliers for your homes" highlight>Provider Services</MobileLink>
                   <MobileLink href="/advertise-accommodation" icon="megaphone" hint="List rooms and vacancies">Advertise accommodation</MobileLink>
