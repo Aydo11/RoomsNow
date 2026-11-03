@@ -30,7 +30,7 @@ export default async function ProviderStoriesPage() {
   return (
     <DashboardShell
       title="Stories"
-      subtitle="Post quick photos and videos of rooms you have available. Stories show on the homepage and search for 24 hours, and people can enquire straight from them."
+      subtitle="Post quick photos and videos of rooms you have available. Stories show at the top of the search page for 24 hours, and people can enquire straight from them."
       nav={nav}
       active="/provider/stories"
     >
@@ -39,7 +39,7 @@ export default async function ProviderStoriesPage() {
       ) : (
         <section className="card p-5 sm:p-6">
           <h2 className="text-[18px]">Stories are a paid feature</h2>
-          <p className="mt-2 max-w-[60ch] text-[15px] text-ink-soft">Post photo and video stories of your available rooms on the homepage and search. Stories come with the Professional and Business plans.</p>
+          <p className="mt-2 max-w-[60ch] text-[15px] text-ink-soft">Post photo and video stories of your available rooms at the top of the search page. Stories come with the Professional and Business plans.</p>
           <Link href="/provider/membership" className="btn-primary mt-4">See plans</Link>
         </section>
       )}
