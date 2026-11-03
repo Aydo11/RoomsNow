@@ -16,8 +16,6 @@ import { RoomMarquee } from "@/components/room-marquee";
 import { COVER_MEDIA } from "@/lib/cover-image";
 import { SpotlightCarousel } from "@/components/home-spotlight";
 import { liveSpotlights } from "@/lib/spotlight-server";
-import { StoriesRail } from "@/components/stories";
-import { liveStoryGroups } from "@/server/stories";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
@@ -188,10 +186,6 @@ export default function HomePage() {
 
       <Suspense fallback={null}>
         <HomeSpotlight />
-      </Suspense>
-
-      <Suspense fallback={null}>
-        <HomeStories />
       </Suspense>
 
       {/* Real rooms straight after the search: photos persuade more than icons. */}
@@ -671,19 +665,6 @@ async function HomeSpotlight() {
         <p className="mt-2 text-right text-[12.5px] text-ink-faint">
           <Link href="/advertise/homepage" className="hover:text-pine-dark hover:underline">Advertise your service here</Link>
         </p>
-      </div>
-    </section>
-  );
-}
-
-/** Providers' 24-hour photo and video stories. Nothing shows when none are live. */
-async function HomeStories() {
-  const groups = await liveStoryGroups().catch(() => []);
-  if (!groups.length) return null;
-  return (
-    <section className="border-b border-line bg-white">
-      <div className="shell py-6">
-        <StoriesRail groups={groups} />
       </div>
     </section>
   );
