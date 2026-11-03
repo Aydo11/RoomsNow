@@ -25,32 +25,32 @@ function Thumb({ story }: { story: StoryGroup["stories"][number] }) {
 }
 
 /** "Provider stories" rail: one tile per provider, opening the full-screen viewer. */
-export function StoriesRail({ groups, title = "Provider stories" }: { groups: StoryGroup[]; title?: string }) {
+export function StoriesRail({ groups, title = "Provider stories", compact = false }: { groups: StoryGroup[]; title?: string; compact?: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
   if (!groups.length) return null;
   return (
     <section aria-label={title}>
-      <h2 className="flex items-center gap-2 text-[19px]">
+      <h2 className={`flex items-center gap-2 ${compact ? "text-[15px]" : "text-[19px]"}`}>
         <span aria-hidden="true" className="grid h-6 w-6 place-items-center rounded-full border-2 border-pine text-pine-dark">
           <svg viewBox="0 0 16 16" className="h-3 w-3" fill="currentColor"><path d="M5 3.5v9l7-4.5-7-4.5Z" /></svg>
         </span>
         {title}
         <span className="text-[13px] font-normal text-ink-faint">· live for 24 hours</span>
       </h2>
-      <ul className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
+      <ul className={`-mx-4 flex snap-x overflow-x-auto px-4 pb-2 [scrollbar-width:none] ${compact ? "mt-2 gap-2.5" : "mt-3 gap-3"}`}>
         {groups.map((group, index) => (
           <li key={group.companyId} className="snap-start">
             <button
               type="button"
               onClick={() => setOpen(index)}
-              className="group relative block h-[176px] w-[124px] overflow-hidden rounded-card bg-paper-sunk text-left ring-2 ring-pine ring-offset-2 ring-offset-white focus-visible:outline-2 sm:h-[200px] sm:w-[140px]"
+              className={`group relative block overflow-hidden rounded-card bg-paper-sunk text-left ring-2 ring-pine ring-offset-2 ring-offset-white focus-visible:outline-2 ${compact ? "h-[104px] w-[74px]" : "h-[176px] w-[124px] sm:h-[200px] sm:w-[140px]"}`}
               aria-label={`Watch ${group.companyName}'s stories (${group.stories.length})`}
             >
               <Thumb story={group.stories[group.stories.length - 1]} />
               <span aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-transparent" />
-              <span className="absolute inset-x-2 bottom-2 flex flex-col items-center gap-1 text-center">
-                <Avatar name={group.companyName} url={group.logoUrl} size="h-11 w-11" />
-                <span className="line-clamp-2 text-[12px] font-semibold leading-tight text-white">{group.companyName}</span>
+              <span className={`absolute flex flex-col items-center gap-1 text-center ${compact ? "inset-x-1 bottom-1.5" : "inset-x-2 bottom-2"}`}>
+                <Avatar name={group.companyName} url={group.logoUrl} size={compact ? "h-7 w-7" : "h-11 w-11"} />
+                <span className={`line-clamp-2 font-semibold leading-tight text-white ${compact ? "text-[10px]" : "text-[12px]"}`}>{group.companyName}</span>
               </span>
             </button>
           </li>
@@ -123,7 +123,7 @@ function StoryViewer({ groups, startGroup, onClose }: { groups: StoryGroup[]; st
     return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = overflow; };
   }, [next, prev, onClose]);
 
-  const enquireHref = story.listing ? `/listings/${story.listing.id}?from=story#message` : `/companies/${group.slug}`;
+  const enquireHref = group.official ? story.link : story.listing ? `/listings/${story.listing.id}?from=story#message` : `/companies/${group.slug}`;
 
   return (
     <div role="dialog" aria-modal="true" aria-label={`${group.companyName} stories`} className="fixed inset-0 z-[100] flex items-center justify-center bg-black">
@@ -142,7 +142,7 @@ function StoryViewer({ groups, startGroup, onClose }: { groups: StoryGroup[]; st
               <p className="truncate text-[15px] font-semibold">
                 {group.companyName} <span className="font-normal text-white/70">· {ago(story.createdAt)}</span>
               </p>
-              {group.verified && <p className="text-[12px] text-white/80">Verified provider</p>}
+              {group.official ? <p className="text-[12px] text-white/80">Official update</p> : group.verified && <p className="text-[12px] text-white/80">Verified provider</p>}
             </div>
             {story.mediaType === "VIDEO" && (
               <button type="button" onClick={() => { setMuted(!muted); if (videoRef.current) videoRef.current.muted = !muted; }} className="grid h-10 w-10 place-items-center rounded-full hover:bg-white/15" aria-label={muted ? "Turn sound on" : "Mute"}>
@@ -191,10 +191,12 @@ function StoryViewer({ groups, startGroup, onClose }: { groups: StoryGroup[]; st
             </Link>
           )}
           <div className={`grid gap-3 ${story.whatsapp && story.listing ? "grid-cols-2" : "grid-cols-1"}`}>
-            <Link href={enquireHref} className="flex items-center justify-center gap-2 rounded-[12px] bg-white py-3 text-[16px] font-semibold text-pine-dark hover:bg-white/90">
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12Z" /></svg>
-              Enquire
-            </Link>
+            {enquireHref && (
+              <Link href={enquireHref} className="flex items-center justify-center gap-2 rounded-[12px] bg-white py-3 text-[16px] font-semibold text-pine-dark hover:bg-white/90">
+                {!group.official && <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12Z" /></svg>}
+                {group.official ? "Find out more" : "Enquire"}
+              </Link>
+            )}
             {story.whatsapp && story.listing && (
               <a href={`/api/whatsapp/${story.listing.id}`} rel="nofollow" className="flex items-center justify-center gap-2 rounded-[12px] bg-[#25d366] py-3 text-[16px] font-semibold text-[#063d1c] hover:brightness-95">
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3Z" /></svg>
@@ -202,7 +204,7 @@ function StoryViewer({ groups, startGroup, onClose }: { groups: StoryGroup[]; st
               </a>
             )}
           </div>
-          <p className="text-center text-[11.5px] text-white/60">Never pay a deposit before you&apos;ve viewed the room.</p>
+          {!group.official && <p className="text-center text-[11.5px] text-white/60">Never pay a deposit before you&apos;ve viewed the room.</p>}
         </div>
       </div>
     </div>
