@@ -2,6 +2,7 @@ import { whatsappPlanLine } from "@/lib/whatsapp-access";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { money } from "@/lib/format";
+import { planWasPrice } from "@/lib/plan-offer";
 import { brand } from "@/brand.config";
 import { billingIsLive, ensureProviderMembershipCatalogue } from "@/lib/billing";
 import { getCurrentUser } from "@/lib/session";
@@ -105,10 +106,18 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
               <span className="chip chip-active mb-3">Most providers start here</span>
             )}
             <h2 className="text-[24px]">{plan.name}</h2>
-            <p className="mt-2 flex items-baseline gap-1.5">
+            <p className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              {planWasPrice(plan.tier, plan.priceMonthly) && (
+                <s className="text-[20px] text-ink-faint decoration-clay decoration-2" aria-label={`Was ${money(planWasPrice(plan.tier, plan.priceMonthly))}`}>{money(planWasPrice(plan.tier, plan.priceMonthly))}</s>
+              )}
               <span className="font-display text-[34px]">{plan.priceMonthly === 0 ? "Free" : money(plan.priceMonthly)}</span>
               {plan.priceMonthly > 0 && <span className="text-[15px] text-ink-soft">per month</span>}
             </p>
+            {planWasPrice(plan.tier, plan.priceMonthly) && (
+              <p className="mt-1.5 inline-block rounded-full bg-clay/10 px-2.5 py-0.5 text-[12.5px] font-semibold text-clay">
+                Limited-time offer · save {money((planWasPrice(plan.tier, plan.priceMonthly) ?? 0) - plan.priceMonthly)} a month
+              </p>
+            )}
             {plan.description && <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{plan.description}</p>}
 
             <ul className="mt-5 space-y-2.5 text-[15px]">
