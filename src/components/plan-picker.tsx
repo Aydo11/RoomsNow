@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { planWasPrice } from "@/lib/plan-offer";
 import { useRouter } from "next/navigation";
 import { cancelMembershipAction, changePlanAction, openBillingPortalAction } from "@/server/actions/billing";
 import { whatsappPlanLine } from "@/lib/whatsapp-access";
@@ -50,6 +51,7 @@ export function PlanPicker({
             <li key={plan.tier} className={clsx("card flex flex-col p-6", current && "ring-2 ring-pine")}>
               <h3 className="text-[20px]">{plan.name}</h3>
               <p className="mt-1 font-display text-[28px] leading-none">
+                {planWasPrice(plan.tier, plan.priceMonthly) && <s className="mr-2 font-sans text-[18px] text-ink-faint decoration-clay decoration-2">{money(planWasPrice(plan.tier, plan.priceMonthly))}</s>}
                 {plan.priceMonthly === 0 ? "Free" : money(plan.priceMonthly)}
                 {plan.priceMonthly > 0 && <span className="text-[14px] text-ink-soft"> / month</span>}
               </p>
