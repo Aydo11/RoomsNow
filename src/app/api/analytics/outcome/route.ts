@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const response = events.length
     ? new NextResponse(outcomeDocument(events, origin), { headers: { ...headers,
       "Content-Type": "text/html; charset=utf-8",
-      "Content-Security-Policy": "default-src 'none'; script-src 'self' https://www.googletagmanager.com; connect-src https://*.google-analytics.com https://*.analytics.google.com; img-src https://*.google-analytics.com; frame-ancestors 'self'; base-uri 'none'",
+      "Content-Security-Policy": "default-src 'none'; script-src 'self' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com; connect-src https://*.google-analytics.com https://*.analytics.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com; img-src https://*.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com; frame-ancestors 'self'; base-uri 'none'",
     } })
     // An empty HTML page, not a 204: Safari saves a 204 loaded in an iframe as a download named "outcome".
     : new NextResponse("<!doctype html><title></title>", { headers: { ...headers, "Content-Type": "text/html; charset=utf-8" } });
