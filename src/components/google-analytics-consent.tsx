@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { canLoadMarketingTags, createGoogleCommandQueue, isPublicAnalyticsPage, publicAnalyticsUrl, publicAnalyticsReferrer, publicAnalyticsPageTitle } from "@/lib/analytics-safety";
 
 const MEASUREMENT_ID = "G-V2RLYZNG3S";
+const ADS_ID = "AW-18467863295";
 const TIKTOK_PIXEL_ID = "DAT2MPBC77U3L597UVV0";
 const CONSENT_KEY = "roomsnow-analytics-consent";
 type ConsentChoice = "accepted" | "rejected" | null;
@@ -37,7 +38,7 @@ declare global {
 function eraseOptionalCookies() {
   const names = document.cookie.split(";").map((cookie) => cookie.split("=")[0]?.trim()).filter(Boolean);
   for (const name of names) {
-    if (!name.startsWith("_ga") && name !== "_ttp" && name !== "_tt_enable_cookie" && !name.startsWith("ttcsid")) continue;
+    if (!name.startsWith("_ga") && !name.startsWith("_gcl") && name !== "_ttp" && name !== "_tt_enable_cookie" && !name.startsWith("ttcsid")) continue;
     document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
     document.cookie = `${name}=; Max-Age=0; path=/; domain=${location.hostname}; SameSite=Lax`;
     if (location.hostname.endsWith(".roomsnow.co.uk")) {
@@ -107,7 +108,8 @@ export function GoogleAnalyticsConsent() {
   useEffect(() => {
     if (choice !== "accepted" || !isPublicAnalyticsPage(pathname)) return;
 
-    if (canLoadMarketingTags(pathname, window.location.search)) {
+    const marketing = canLoadMarketingTags(pathname, window.location.search);
+    if (marketing) {
       initialiseTikTokPixel();
       setTikTokReady(true);
     }
@@ -115,11 +117,18 @@ export function GoogleAnalyticsConsent() {
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || createGoogleCommandQueue(window.dataLayer);
     window.gtag("consent", "default", { analytics_storage: "denied", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
+    // Google Ads only measures ad clicks and conversions; ad personalisation stays denied.
+    const grantAds = () => {
+      if (!marketing) return;
+      window.gtag?.("consent", "update", { ad_storage: "granted", ad_user_data: "granted" });
+      window.gtag?.("config", ADS_ID, { allow_ad_personalization_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search) });
+    };
 
     const existing = document.querySelector<HTMLScriptElement>(`script[src*="${MEASUREMENT_ID}"]`);
     if (existing) {
       window.gtag("consent", "update", { analytics_storage: "granted" });
       window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: publicAnalyticsReferrer(document.referrer) });
+      grantAds();
       setReady(true);
       return;
     }
@@ -127,6 +136,7 @@ export function GoogleAnalyticsConsent() {
     window.gtag("js", new Date());
     window.gtag("consent", "update", { analytics_storage: "granted" });
     window.gtag("config", MEASUREMENT_ID, { send_page_view: false, allow_google_signals: false, page_location: publicAnalyticsUrl(window.location.origin, pathname, window.location.search), page_referrer: publicAnalyticsReferrer(document.referrer) });
+    grantAds();
     const script = document.createElement("script");
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
@@ -191,7 +201,7 @@ export function GoogleAnalyticsConsent() {
         <div className="max-w-2xl">
           <h2 className="text-[16px]">Your privacy choices</h2>
           <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
-            RoomsNow uses essential cookies for the service. With your permission, Google Analytics and the TikTok Pixel measure visits to public pages and campaigns. Google also receives a generic event when an account is created or a new accommodation enquiry is sent. Search terms, private page views, account details and message or referral content are not shared with these tools.
+            RoomsNow uses essential cookies for the service. With your permission, Google Analytics, Google Ads and the TikTok Pixel measure visits to public pages and campaigns. Google also receives a generic event when an account is created or a new accommodation enquiry is sent. Search terms, private page views, account details and message or referral content are not shared with these tools.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
