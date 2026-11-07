@@ -14,12 +14,12 @@ try { sentryOrigin = new URL(process.env.NEXT_PUBLIC_SENTRY_DSN || "").origin; }
 const csp = [
   "default-src 'self'",
   // Next injects an inline bootstrap script; dev additionally needs eval for HMR.
-  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://analytics.tiktok.com${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://analytics.tiktok.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   // Map tiles and uploaded images.
   "img-src 'self' data: blob: https: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.google-analytics.com",
-  `connect-src 'self' https://api.postcodes.io https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.tiktok.com https://*.tiktok.com ${sentryOrigin}`,
+  `connect-src 'self' https://api.postcodes.io https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://analytics.tiktok.com https://*.tiktok.com ${sentryOrigin}`,
   // Own-origin empty conversion relay, plus the gallery's video embeds.
   // Private pages retain DENY / frame-ancestors 'none'.
   "frame-src 'self' https://www.youtube.com https://player.vimeo.com",
@@ -104,7 +104,7 @@ const nextConfig = {
       { source: "/api/analytics/outcome", headers: [
         { key: "X-Frame-Options", value: "SAMEORIGIN" },
         { key: "Referrer-Policy", value: "no-referrer" },
-        { key: "Content-Security-Policy", value: "default-src 'none'; script-src 'self' https://www.googletagmanager.com; connect-src https://*.google-analytics.com https://*.analytics.google.com; img-src https://*.google-analytics.com; frame-ancestors 'self'; base-uri 'none'" },
+        { key: "Content-Security-Policy", value: "default-src 'none'; script-src 'self' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com; connect-src https://*.google-analytics.com https://*.analytics.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com; img-src https://*.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com; frame-ancestors 'self'; base-uri 'none'" },
       ] },
       // This public wordmark must load in email clients and sandboxed mail previews.
       { source: "/brand/roomsnow-logo-email.png", headers: [{ key: "Cross-Origin-Resource-Policy", value: "cross-origin" }] },
