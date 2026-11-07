@@ -60,6 +60,7 @@ export async function adminNav(): Promise<NavItem[]> {
     { group: "Accounts", href: "/admin/team", label: "Team & permissions" },
 
     { group: "Placements", href: "/admin/requests", label: "Requests" },
+    { group: "Placements", href: "/admin/top-providers", label: "Top providers" },
     { group: "Placements", href: "/admin/referrals", label: "Referrals" },
     { group: "Placements", href: "/admin/contact-activity", label: "Contact activity" },
     { group: "Placements", href: "/admin/whatsapp-clicks", label: "WhatsApp enquiry log" },
