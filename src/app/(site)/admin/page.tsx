@@ -23,7 +23,7 @@ export default async function AdminHome() {
   // made this page slow to open, especially with several tabs).
   const [[totals], requestStatuses, referralStatuses, recent] = await Promise.all([
     db.$queryRaw<
-      Array<Record<"users" | "newUsers7d" | "newUsers30d" | "companies" | "live" | "pending" | "rooms" | "available" | "requests" | "newRequests30d" | "referrals" | "newReferrals30d" | "reports" | "feedback" | "verification", bigint>>
+      Array<Record<"users" | "newUsers7d" | "newUsers30d" | "companies" | "live" | "pending" | "rooms" | "available" | "requests" | "newRequests30d" | "referrals" | "newReferrals30d" | "reports" | "feedback" | "verification" | "housedRequests" | "housedReferrals" | "tenantConfirmed" | "foundElsewhere", bigint>>
     >`
       SELECT
         (SELECT count(*) FROM "User" WHERE "deletedAt" IS NULL) AS "users",
@@ -40,7 +40,11 @@ export default async function AdminHome() {
         (SELECT count(*) FROM "Referral" WHERE "createdAt" >= ${thirtyDaysAgo}) AS "newReferrals30d",
         (SELECT count(*) FROM "Report" WHERE status::text IN ('OPEN', 'REVIEWING') AND "detail" NOT LIKE ${`${FEEDBACK_MARKER}%`}) AS "reports",
         (SELECT count(*) FROM "Report" WHERE status::text IN ('OPEN', 'REVIEWING') AND "detail" LIKE ${`${FEEDBACK_MARKER}%`}) AS "feedback",
-        (SELECT count(*) FROM "VerificationRequest" WHERE status::text = 'PENDING') AS "verification"
+        (SELECT count(*) FROM "VerificationRequest" WHERE status::text = 'PENDING') AS "verification",
+        (SELECT count(DISTINCT "applicantId") FROM "AccommodationRequest" WHERE status::text = 'MOVED_IN') AS "housedRequests",
+        (SELECT count(*) FROM "Referral" WHERE status::text = 'MOVED_IN') AS "housedReferrals",
+        (SELECT count(*) FROM "AccommodationRequest" WHERE "tenantConfirmedAt" IS NOT NULL) AS "tenantConfirmed",
+        (SELECT count(*) FROM "User" WHERE "foundHomeElsewhere" = true AND "foundHomeAt" IS NOT NULL) AS "foundElsewhere"
     `,
     db.accommodationRequest.groupBy({ by: ["status"], _count: true }),
     db.referral.groupBy({ by: ["status"], _count: true }),
@@ -62,6 +66,7 @@ export default async function AdminHome() {
   const reports = n(totals.reports);
   const feedback = n(totals.feedback);
   const verification = n(totals.verification);
+  const housed = n(totals.housedRequests) + n(totals.housedReferrals);
 
   return (
     <DashboardShell
@@ -70,12 +75,13 @@ export default async function AdminHome() {
       nav={nav}
       active="/admin"
     >
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-7">
         <StatCard compact label="Live adverts" value={live} hint={`${pending} awaiting review`} />
         <StatCard compact label="Rooms available" value={available} hint={`of ${rooms} rooms`} />
         <StatCard compact label="Users" value={users} hint={`+${newUsers7d} in 7 days · +${newUsers30d} in 30`} />
         <StatCard compact label="Requests" value={requests} hint={`+${newRequests30d} in 30 days`} />
         <StatCard compact label="Referrals" value={referrals} hint={`+${newReferrals30d} in 30 days`} />
+        <StatCard compact label="People housed" value={housed} hint={`${n(totals.tenantConfirmed)} confirmed by tenants · ${n(totals.foundElsewhere)} found elsewhere`} />
         <StatCard compact label="Review queue" value={reports + feedback + verification} hint={`${reports} reports · ${feedback} feedback · ${verification} checks`} />
       </div>
 
