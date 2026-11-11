@@ -20,6 +20,8 @@ export async function register() {
     scheduleInsuranceExpiryCheck();
     const { scheduleResponseTimeRefresh } = await import("./lib/response-time");
     scheduleResponseTimeRefresh();
+    const { scheduleRequestChasers } = await import("./lib/request-chasers");
+    scheduleRequestChasers();
     const { scheduleWeeklySummary } = await import("./lib/weekly-summary");
     scheduleWeeklySummary();
     const { schedulePlacementCheckIns } = await import("./lib/placement-checkins");
