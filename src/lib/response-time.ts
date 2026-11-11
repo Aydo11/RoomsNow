@@ -13,8 +13,8 @@ import { firstReplyMinutes, median } from "./response-label";
  */
 const WINDOW_DAYS = 90;
 
-export async function refreshResponseTimes(now = new Date()) {
-  const since = new Date(now.getTime() - WINDOW_DAYS * 24 * 60 * 60_000);
+/** First-reply minutes per company, for conversations started since `since`. */
+export async function companyReplySamples(since: Date, now = new Date()) {
   const conversations = await db.conversation.findMany({
     where: { companyId: { not: null }, createdAt: { gte: since } },
     select: {
@@ -42,6 +42,11 @@ export async function refreshResponseTimes(now = new Date()) {
     list.push(minutes);
     samples.set(conversation.companyId!, list);
   }
+  return samples;
+}
+
+export async function refreshResponseTimes(now = new Date()) {
+  const samples = await companyReplySamples(new Date(now.getTime() - WINDOW_DAYS * 24 * 60 * 60_000), now);
 
   for (const [companyId, values] of samples) {
     await db.company.update({
