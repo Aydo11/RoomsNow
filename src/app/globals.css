@@ -334,17 +334,19 @@
    Leaflet renders markers as plain HTML, so the pins are styled here rather
    than with utility classes. */
 
+/* Map tiles are always light, so pins use fixed light colours rather than
+   theme tokens — in dark mode the tokens made pins dark and unreadable. */
 @utility map-pin {
-  @apply inline-flex items-center justify-center rounded-pill border border-line bg-paper-card px-2.5 py-1
-           text-[12px] font-semibold text-pine-dark shadow-raise;
+  @apply inline-flex items-center justify-center whitespace-nowrap rounded-pill border border-[#c3cfdc] bg-[#ffffff] px-2.5 py-1
+           text-[12px] font-bold text-[#0f4f87] shadow-raise;
 }
 
 @utility map-pin-full {
-  @apply bg-paper-sunk text-ink-faint;
+  @apply border-[#c3cfdc] bg-[#eef2f7] text-[#5b6878];
 }
 
 @utility map-pin-sponsored {
-  @apply border-clay/40 bg-clay-light text-clay;
+  @apply border-[#a45512]/50 bg-[#fdf0e3] text-[#8a4410];
 }
 
 @utility map-cluster {
