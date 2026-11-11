@@ -104,3 +104,54 @@ export async function reviewAccreditationAction(id: string, approve: boolean, ra
   revalidatePath("/companies/[slug]", "page");
   return { ok: true };
 }
+
+/**
+ * Admin grants an accreditation directly, e.g. a BVSC certificate a provider
+ * sent through verification instead of the Accreditations page. Goes straight
+ * to APPROVED; the admin records where they saw the evidence in the note.
+ */
+export async function grantAccreditationAction(_previous: FormState, formData: FormData): Promise<FormState> {
+  const admin = await requireAdmin("MODERATION");
+  const companyId = String(formData.get("companyId") ?? "");
+  const scheme = String(formData.get("scheme") ?? "") as AccreditationScheme;
+  const rating = String(formData.get("rating") ?? "").trim();
+  const referenceNumber = String(formData.get("referenceNumber") ?? "").trim().slice(0, 100);
+  const note = String(formData.get("note") ?? "").trim().slice(0, 500);
+  const expiry = String(formData.get("expiresAt") ?? "");
+
+  const company = await db.company.findUnique({ where: { id: companyId }, select: { id: true, name: true } });
+  if (!company) return { ok: false, errors: { companyId: "Choose a provider." } };
+  if (!schemes.includes(scheme) || scheme === "OTHER") return { ok: false, errors: { scheme: "Choose a scheme." } };
+  if (!allowedRating(scheme, rating)) return { ok: false, errors: { rating: "Choose a rating." } };
+  const expiresAt = expiry ? new Date(`${expiry}T12:00:00.000Z`) : null;
+  if (expiresAt && Number.isNaN(expiresAt.getTime())) return { ok: false, errors: { expiresAt: "Enter a valid date." } };
+
+  const accreditation = await db.providerAccreditation.create({
+    data: {
+      companyId,
+      scheme,
+      name: accreditationName(scheme),
+      rating,
+      referenceNumber: referenceNumber || null,
+      expiresAt,
+      status: "APPROVED",
+      submittedBy: admin.id,
+      reviewedBy: admin.id,
+      reviewedAt: new Date(),
+      reviewNote: note || "Granted by RoomsNow admin.",
+    },
+  });
+  await audit({ actorId: admin.id, action: "admin.accreditation_granted", targetType: "ProviderAccreditation", targetId: accreditation.id, metadata: { companyId, scheme, rating } });
+  await notifyCompany(companyId, {
+    type: "SYSTEM",
+    title: "Accreditation added",
+    body: `${accreditation.name} (${rating}) has been checked and is now shown on your public profile.`,
+    href: "/provider/accreditations",
+    email: true,
+  });
+  revalidatePath("/admin/accreditations");
+  revalidatePath("/provider/accreditations");
+  revalidatePath("/vetted-providers");
+  revalidatePath("/companies/[slug]", "page");
+  return { ok: true, message: `${accreditation.name} (${rating}) granted to ${company.name}.` };
+}
