@@ -12,6 +12,8 @@ import { stepForStatus } from "@/lib/next-steps";
 import { NextStepsGuide } from "@/components/next-steps-guide";
 import { ResidentReviewForm } from "@/components/resident-review-form";
 import { reviewablePlacements } from "@/server/resident-reviews";
+import { FoundHomeButton } from "@/components/found-home";
+import { confirmMoveInAction, foundElsewhereAction, lookingAgainAction } from "@/server/actions/found-home";
 
 export const metadata = { title: "My requests" };
 export const dynamic = "force-dynamic";
@@ -21,7 +23,8 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
   const query = await searchParams;
   const nav = await userNav(user.id);
 
-  const [requests, referrals, placements] = await Promise.all([
+  const [account, requests, referrals, placements] = await Promise.all([
+    db.user.findUnique({ where: { id: user.id }, select: { foundHomeAt: true, foundHomeElsewhere: true } }),
     db.accommodationRequest.findMany({
       where: { applicantId: user.id },
       orderBy: { updatedAt: "desc" },
@@ -40,6 +43,8 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
   const submittedThread = submitted ? threadFor(submitted.listingId) : undefined;
   const reviewFor = (kind: "request" | "referral", id: string) => placements.find((p) => p.kind === kind && p.id === id);
   const referralPlacements = placements.filter((p) => p.kind === "referral");
+  const isOpen = (status: string) => !["MOVED_IN", "DECLINED", "WITHDRAWN"].includes(status);
+  const openCount = requests.filter((request) => isOpen(request.status)).length;
 
   return (
     <DashboardShell
@@ -59,6 +64,42 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
             <NextStepsGuide current="applied" compact />
           </div>
         </div>
+      )}
+
+      {account?.foundHomeAt ? (
+        <section className="mb-8 rounded-card border border-[#2f9e5f]/40 bg-[#e8f6ee] p-5 sm:p-6">
+          <h2 className="text-[19px] text-[#17202e]">🎉 You found somewhere to live</h2>
+          <p className="mt-1 text-[15px] text-[#3a4757]">
+            You told us on {shortDate(account.foundHomeAt)}{account.foundHomeElsewhere ? " that you found a home outside RoomsNow" : ""}. Congratulations, and good luck in your new home.
+          </p>
+          <div className="mt-3">
+            <FoundHomeButton
+              action={lookingAgainAction}
+              label="I'm looking again"
+              title="Are you looking for a room again?"
+              body="We'll treat you as still looking. Requests you withdrew stay withdrawn, so send new ones for any rooms you're interested in."
+              confirmLabel="Yes, I'm looking again"
+              className="btn-ghost px-0 text-[14px]"
+            />
+          </div>
+        </section>
+      ) : requests.length > 0 && (
+        <section className="mb-8 card p-5 sm:p-6">
+          <h2 className="text-[19px]">Found somewhere to live?</h2>
+          <p className="mt-1 max-w-[62ch] text-[15px] text-ink-soft">
+            Let us know so providers stop waiting on you. If you moved into one of the rooms below, open it and tap <strong>I moved in here</strong>.
+          </p>
+          <div className="mt-4">
+            <FoundHomeButton
+              action={foundElsewhereAction}
+              label="I found somewhere not on RoomsNow"
+              title="Found somewhere outside RoomsNow?"
+              body={openCount ? `We'll withdraw your ${openCount} open request${openCount === 1 ? "" : "s"} and let the providers know, so they don't keep a room for you.` : "We'll note that you've found somewhere to live."}
+              confirmLabel="Yes, I've found somewhere"
+              className="btn-secondary"
+            />
+          </div>
+        </section>
       )}
 
       {requests.length === 0 ? (
@@ -93,6 +134,17 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
                       </Link>
                     )}
                   </div>
+                  {isOpen(request.status) && !account?.foundHomeAt && (
+                    <div className="mt-4">
+                      <FoundHomeButton
+                        action={confirmMoveInAction.bind(null, request.id)}
+                        label="🏠 I moved in here"
+                        title={`Did you move into ${request.listing.title}?`}
+                        body={openCount > 1 ? `We'll tell ${request.listing.company.name}, and withdraw your other ${openCount - 1} open request${openCount === 2 ? "" : "s"} so those providers aren't left waiting.` : `We'll let ${request.listing.company.name} know you've moved in.`}
+                        confirmLabel="Yes, I moved in"
+                      />
+                    </div>
+                  )}
                   <div className="mt-5"><PipelineTrail status={request.status} /></div>
                   {request.statusNote && (
                     <p className="mt-4 rounded-[10px] bg-paper-sunk px-4 py-3 text-[14px] text-ink-soft">{request.statusNote}</p>
