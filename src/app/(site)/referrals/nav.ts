@@ -21,6 +21,8 @@ export async function referrerNav(userId: string): Promise<NavItem[]> {
     ...(council ? [{ href: "/council", label: "Council view" }] : []),
     { href: "/search", label: "Search accommodation" },
     { href: "/referrals/vetted", label: "Vetted providers" },
+    { href: "/fastest-providers", label: "Fastest-replying providers" },
+    { href: "/insights", label: "Area insights" },
     { href: "/dashboard/alerts", label: "Saved alerts" },
     { href: "/messages", label: "Messages" },
     { href: "/referrals/membership", label: "Membership" },
