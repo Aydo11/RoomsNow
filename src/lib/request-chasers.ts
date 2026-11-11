@@ -51,7 +51,7 @@ export async function runRequestChasers(now = new Date()) {
           type: "REQUEST",
           title: `No reply yet from ${request.listing.company.name}`,
           body: `You asked about "${request.listing.title}" ${Math.round((now.getTime() - request.createdAt.getTime()) / 86_400_000)} days ago and haven't heard back. Don't wait: here are other rooms${city ? ` in ${city}` : ""} you can ask about today. If you've already found somewhere, let us know from My requests.`,
-          href: city ? `/search?q=${encodeURIComponent(city)}` : "/search",
+          href: city ? `/search?where=${encodeURIComponent(city)}` : "/search",
           email: true,
         });
         await db.accommodationRequest.update({ where: { id: request.id }, data: { seekerFollowUpSentAt: now } });
