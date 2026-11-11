@@ -37,7 +37,7 @@ export default async function CouncilPage({ searchParams }: { searchParams: Prom
   const range: CouncilRange = (["30", "90", "365"] as const).includes(query.range as CouncilRange) ? (query.range as CouncilRange) : "90";
   const [stats, nav] = await Promise.all([
     councilStats(access.areas, range),
-    user.role === "REFERRER" || user.role === "ADMIN" ? referrerNav(user.id) : Promise.resolve([{ href: "/council", label: "Council view" }]),
+    user.role === "REFERRER" || user.role === "ADMIN" ? referrerNav(user.id) : Promise.resolve([{ href: "/council", label: "Council view" }, { href: "/insights", label: "Public area insights" }, { href: "/fastest-providers", label: "Fastest-replying providers" }]),
   ]);
   const rangeLabel = RANGES.find((r) => r.value === range)!.label;
   const outcome = stats.week12.answered ? stats.week12 : stats.week4;
