@@ -8,6 +8,7 @@ export const metadata = pageMetadata({
 });
 
 const tools = [
+  { href: "/void-cost-calculator", tag: "For providers", symbol: "£", title: "Void cost calculator", description: "See what your empty rooms cost you each month in lost rent and bills, then list them free.", action: "Work it out" },
   { href: "/housing-benefit-calculator", tag: "Rent planning", symbol: "£", title: "Housing Benefit / LHA calculator", description: "Compare your private rent with the official LHA cap and see the possible rent gap. This is not a full benefit entitlement calculation.", action: "Open calculator" },
   { href: "/eligibility", tag: "Find accommodation", symbol: "✓", title: "Accommodation matching check", description: "Answer a few questions about location, age, support and funding to explore rooms that may suit you. Providers still confirm eligibility and suitability.", action: "Start the check" },
   { href: "/areas/birmingham", tag: "Local knowledge", symbol: "⌂", title: "Birmingham neighbourhood guides", description: "Explore Erdington, Handsworth and Small Heath: transport, GP finders, food support and available rooms in each area.", action: "Explore neighbourhoods" },
