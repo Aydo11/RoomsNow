@@ -3,12 +3,15 @@ import { median } from "./response-label";
 /** Replies needed in the window before a provider can appear in the league. */
 export const LEAGUE_MIN_REPLIES = 3;
 export const LEAGUE_DAYS = 30;
+/** Only providers who typically reply within a day are listed: it's a league of the fast, not a public list of the slow. */
+export const LEAGUE_MAX_MINUTES = 24 * 60;
 
 /** Fastest median first reply first; more replies breaks a tie. Pure, so it can be tested. */
 export function rankResponders(samples: Map<string, number[]>, min = LEAGUE_MIN_REPLIES) {
   return [...samples.entries()]
     .filter(([, values]) => values.length >= min)
     .map(([companyId, values]) => ({ companyId, minutes: median(values)!, replies: values.length }))
+    .filter((entry) => entry.minutes <= LEAGUE_MAX_MINUTES)
     .sort((a, b) => a.minutes - b.minutes || b.replies - a.replies);
 }
 
