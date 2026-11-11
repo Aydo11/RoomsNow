@@ -93,7 +93,7 @@ export default async function FastestProvidersPage({ searchParams }: Props) {
         <aside className="mt-8 rounded-card border border-line bg-paper-sunk p-5 text-[14px] leading-relaxed text-ink-soft">
           <strong className="text-ink">How it works:</strong> we measure the time from someone's first message to a provider's first reply, for conversations started in the last {LEAGUE_DAYS} days.
           The figure shown is the typical (median) reply time. Unanswered messages count as a week, so ignoring enquiries lowers a provider's place.
-          Providers need at least {LEAGUE_MIN_REPLIES} enquiries to appear. <Link href="/advertise-accommodation" className="font-semibold text-pine-dark underline">Are you a provider? List your rooms free.</Link>
+          Providers need at least {LEAGUE_MIN_REPLIES} enquiries, and a typical reply within a day, to appear. <Link href="/advertise-accommodation" className="font-semibold text-pine-dark underline">Are you a provider? List your rooms free.</Link>
         </aside>
       </div>
     </>
