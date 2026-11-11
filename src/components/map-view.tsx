@@ -169,9 +169,8 @@ export function MapView({
         Leaflet.marker([pin.latitude, pin.longitude], {
           icon: Leaflet.divIcon({
             className: "",
-            html: `<span class="map-pin${pin.available ? "" : " map-pin-full"}${
-              pin.sponsored ? " map-pin-sponsored" : ""
-            }">${price(pin.rentFrom, pin.rentTo)}</span>`,
+            // Class names kept as whole words so Tailwind finds and generates them.
+            html: `<span class="${["map-pin", pin.available ? "" : "map-pin-full", pin.sponsored ? "map-pin-sponsored" : ""].join(" ")}">${price(pin.rentFrom, pin.rentTo)}</span>`,
             iconSize: [54, 26],
             iconAnchor: [27, 26],
           }),
