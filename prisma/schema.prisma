@@ -298,6 +298,10 @@ model User {
   emailVerified             DateTime?
   emailVerificationRequired Boolean            @default(false)
   lastLoginAt               DateTime?
+  /// When the person told us they'd found somewhere to live.
+  foundHomeAt               DateTime?
+  /// True when that home wasn't found through RoomsNow.
+  foundHomeElsewhere        Boolean            @default(false)
   /// Bumped on password change, logout-everywhere and suspension. Any session
   /// token issued before the current value is rejected, so a stolen cookie stops
   /// working the moment the account owner reacts.
@@ -492,6 +496,7 @@ model Company {
   membershipGrants MembershipGrant[]
   reviews          ProviderReview[]
   accreditations   ProviderAccreditation[]
+  licensingItems   LicensingItem[]
   referralsMade    ProviderReferral[]      @relation("ReferralsMade")
   referredVia      ProviderReferral?       @relation("ReferralsReceived")
   quickReplies     QuickReply[]
@@ -770,6 +775,12 @@ model AccommodationRequest {
   /// Set when a provider archives this request from their queue. Purely a
   /// view filter — never changes status or notifies the applicant.
   archivedAt         DateTime?
+  /// Set when the provider was reminded this request is waiting for a reply.
+  providerChaseSentAt  DateTime?
+  /// Set when the applicant was told there's no reply yet and shown other rooms.
+  seekerFollowUpSentAt DateTime?
+  /// Set when the applicant themselves confirmed they moved in.
+  tenantConfirmedAt    DateTime?
 
   application Application?
   documents   Document[]
@@ -2208,4 +2219,23 @@ model ProviderStory {
 
   @@index([expiresAt])
   @@index([companyId, expiresAt])
+}
+
+/// A provider's progress on one licensing-readiness checklist item
+/// (see src/lib/licensing.ts for the checklist itself).
+model LicensingItem {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  key          String
+  done         Boolean  @default(false)
+  note         String?
+  /// Private evidence file, served only through /api/documents/[id].
+  documentId   String?
+  documentName String?
+  updatedById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([companyId, key])
 }
