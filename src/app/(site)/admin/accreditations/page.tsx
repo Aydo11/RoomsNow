@@ -7,6 +7,7 @@ import { AdminFilters, AdminFilterField } from "@/components/admin-filters";
 import { AccreditationBadge } from "@/components/badges";
 import { AccreditationReview } from "@/components/accreditation-review";
 import { EmptyState } from "@/components/ui";
+import { GrantAccreditationForm } from "@/components/grant-accreditation-form";
 import { adminNav } from "../nav";
 
 export const metadata = { title: "Accreditations" };
@@ -28,17 +29,19 @@ export default async function AdminAccreditationsPage({ searchParams }: { search
       { name: { contains: q, mode: "insensitive" } },
     ] } : {}),
   };
-  const [nav, items] = await Promise.all([
+  const [nav, items, companies] = await Promise.all([
     adminNav(),
     db.providerAccreditation.findMany({
       where,
       orderBy: [{ status: "asc" }, { createdAt: "asc" }],
       include: { company: { select: { name: true, slug: true } }, documents: { select: { id: true, name: true } } },
     }),
+    db.company.findMany({ where: { status: { not: "SUSPENDED" } }, orderBy: { name: "asc" }, select: { id: true, name: true }, take: 2000 }),
   ]);
 
   return (
     <DashboardShell title="Accreditations" subtitle="Review external regulator ratings and evidence-based provider awards." nav={nav} active="/admin/accreditations">
+      <GrantAccreditationForm companies={companies} />
       <AdminFilters>
         <AdminFilterField label="Search" wide><input className="field" name="q" defaultValue={q} placeholder="Provider, award or reference" /></AdminFilterField>
         <AdminFilterField label="Status"><select className="field" name="status" defaultValue={status ?? ""}><option value="">All statuses</option>{Object.values(AccreditationStatus).map((value) => <option key={value} value={value}>{value.replaceAll("_", " ").toLowerCase()}</option>)}</select></AdminFilterField>
