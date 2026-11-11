@@ -198,7 +198,10 @@ export default async function SearchPage({
                 <h2 className="text-[16px] font-semibold">Keep your room search moving</h2>
                 <p className="mt-1 max-w-[60ch] text-[14px] text-ink-soft">Save rooms, message providers and choose alerts for new matches. Browse without an account.</p>
               </div>
-              <Link href={authHref("/register?type=USER", searchReturnPath(params))} className="btn-primary w-full sm:w-auto">Create a free account</Link>
+              <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                <Link href={`/alerts${params.where ? `?where=${encodeURIComponent(params.where)}` : ""}`} className="btn-secondary w-full sm:w-auto">🔔 Get room alerts</Link>
+                <Link href={authHref("/register?type=USER", searchReturnPath(params))} className="btn-primary w-full sm:w-auto">Create a free account</Link>
+              </div>
             </div>
           )}
 
