@@ -94,3 +94,22 @@ export function emptyFor(weeks: number): string {
 export function pounds(pence: number): string {
   return `£${Math.round(pence / 100).toLocaleString("en-GB")}`;
 }
+
+/**
+ * Public void-cost calculator (no account): what a number of empty rooms
+ * costs per week, month and year. Inputs in pounds, results in pounds.
+ * Bills keep running while a room is empty, so they're added to the loss.
+ */
+export function voidCalculator(input: { rooms: number; weeklyRent: number; weeklyBills: number; weeksEmpty: number }) {
+  const clamp = (n: number, max: number) => (Number.isFinite(n) ? Math.min(Math.max(n, 0), max) : 0);
+  const rooms = Math.round(clamp(input.rooms, 500));
+  const perRoomWeek = clamp(input.weeklyRent, 5000) + clamp(input.weeklyBills, 1000);
+  const weekly = rooms * perRoomWeek;
+  return {
+    rooms,
+    weekly,
+    monthly: Math.round((weekly * 52) / 12),
+    yearly: weekly * 52,
+    soFar: weekly * clamp(input.weeksEmpty, 520),
+  };
+}
