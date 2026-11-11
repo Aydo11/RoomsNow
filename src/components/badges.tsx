@@ -152,6 +152,18 @@ export function MatchScore({ score }: { score: number }) {
 /** "Usually replies within…" for fast-responding providers. Renders nothing otherwise. */
 export function ResponseBadge({ label, compact = false }: { label: string | null; compact?: boolean }) {
   if (!label) return null;
+  // Replying within the hour earns the stronger "Top responder" look.
+  if (label === "Usually replies within an hour") {
+    return (
+      <span
+        className={clsx("inline-flex shrink-0 items-center gap-1 rounded-pill bg-[#fdf0e3] font-semibold text-[#8a4410]", compact ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-[12px]")}
+        title="Top responder: usually replies to new messages within an hour (last 90 days)."
+      >
+        <span aria-hidden="true">⚡</span>
+        {compact ? "Top responder" : "Top responder · replies within an hour"}
+      </span>
+    );
+  }
   return (
     <span
       className={clsx(
