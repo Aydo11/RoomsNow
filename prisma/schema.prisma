@@ -1569,6 +1569,8 @@ model RoomAlert {
   support       String[]  @default([])
   /// Random token used in the confirm and stop links.
   token         String    @unique
+  /// Send to `phone` on WhatsApp instead of by text message.
+  whatsapp      Boolean   @default(false)
   confirmedAt   DateTime?
   lastAlertedAt DateTime?
   alertsSent    Int       @default(0)
