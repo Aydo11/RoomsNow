@@ -8,6 +8,7 @@ test("league ranks by median reply time and needs enough replies", () => {
     ["fast", [5, 10, 200]],
     ["tooFew", [1, 1]],
     ["tie", [10, 10, 10, 10]],
+    ["ignores", [10080, 10080, 10080]],
   ]));
   assert.deepEqual(ranked.map((r) => r.companyId), ["tie", "fast", "slow"]);
   assert.equal(ranked[1].minutes, 10);
