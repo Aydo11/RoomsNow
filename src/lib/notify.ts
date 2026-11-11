@@ -112,3 +112,34 @@ export async function sendSms(msg: { to: string; text: string }) {
   }
   throw new Error(`SMS driver "${driver}" is not implemented. See src/lib/notify.ts.`);
 }
+
+/**
+ * WhatsApp through Twilio. Business-started messages must use templates
+ * approved by Meta, so each message names a Twilio Content template and fills
+ * its {{1}}, {{2}}… variables.
+ * Env: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM (+44…),
+ *      TWILIO_WA_CONFIRM_SID (room alert confirm), TWILIO_WA_ALERT_SID (new room alert).
+ */
+export const whatsappEnabled = () =>
+  Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_FROM && process.env.TWILIO_WA_CONFIRM_SID && process.env.TWILIO_WA_ALERT_SID);
+
+export async function sendWhatsapp(msg: { to: string; contentSid: string; variables: Record<string, string> }) {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_WHATSAPP_FROM;
+  if (!sid || !token || !from) throw new Error("TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_WHATSAPP_FROM are required for WhatsApp.");
+  const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(sid)}/Messages.json`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      To: `whatsapp:${msg.to}`,
+      From: `whatsapp:${from.replace(/^whatsapp:/, "")}`,
+      ContentSid: msg.contentSid,
+      ContentVariables: JSON.stringify(msg.variables),
+    }).toString(),
+  });
+  if (!response.ok) throw new Error(`WhatsApp delivery failed with status ${response.status}.`);
+}
