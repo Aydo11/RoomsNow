@@ -17,6 +17,7 @@ import { SetupChecklist, type SetupStep } from "@/components/setup-checklist";
 import { setupChecklistHidden } from "@/lib/setup-checklist";
 import { whatsappAccess } from "@/lib/whatsapp-access";
 import { WhatsappSetupPrompt } from "@/components/whatsapp-setup-prompt";
+import { LeagueCard } from "@/components/league-card";
 
 export const metadata = { title: "Provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -199,6 +200,8 @@ export default async function ProviderDashboard() {
       )}
 
       {!checklistHidden && <SetupChecklist steps={setupSteps} audience="provider" />}
+
+      <LeagueCard companyId={companyId} />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Rooms available" value={available} hint={`of ${totalRooms} rooms`} />
