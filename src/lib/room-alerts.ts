@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "./db";
-import { sendEmail, sendSms } from "./notify";
+import { sendEmail, sendSms, sendWhatsapp, whatsappEnabled } from "./notify";
 import { escapeHtml, renderEmail } from "./email-template";
 import { alertMatchesListing, DAILY_ALERT_CAP } from "./room-alert-rules";
 import { publicLocation, rentRange } from "./format";
@@ -14,7 +14,7 @@ import { publicLocation, rentRange } from "./format";
 export const smsEnabled = () => (process.env.SMS_DRIVER ?? "console") !== "console";
 const appUrl = () => (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
-export async function sendRoomAlertConfirmation(alert: { email: string | null; phone: string | null; where: string; token: string }) {
+export async function sendRoomAlertConfirmation(alert: { email: string | null; phone: string | null; whatsapp: boolean; where: string; token: string }) {
   const confirmUrl = `${appUrl()}/alerts/confirm/${alert.token}`;
   const place = alert.where || "anywhere in the UK";
   if (alert.email) {
@@ -31,6 +31,8 @@ export async function sendRoomAlertConfirmation(alert: { email: string | null; p
         note: "If you didn't ask for this, ignore this email and nothing will be sent.",
       }),
     });
+  } else if (alert.phone && alert.whatsapp) {
+    await sendWhatsapp({ to: alert.phone, contentSid: process.env.TWILIO_WA_CONFIRM_SID!, variables: { "1": place, "2": confirmUrl } });
   } else if (alert.phone) {
     await sendSms({ to: alert.phone, text: `RoomsNow: tap to start alerts for rooms in ${place}: ${confirmUrl}` });
   }
@@ -75,7 +77,13 @@ export async function notifyRoomAlerts(listingId: string) {
               note: `Don't want these any more? <a href="${stopUrl}">Stop room alerts</a>.`,
             }),
           });
-        } else if (alert.phone && smsEnabled()) {
+        } else if (alert.phone && alert.whatsapp && whatsappEnabled()) {
+          await sendWhatsapp({
+            to: alert.phone,
+            contentSid: process.env.TWILIO_WA_ALERT_SID!,
+            variables: { "1": listing.property.area ?? listing.property.city, "2": listing.title, "3": rent, "4": listingUrl, "5": stopUrl },
+          });
+        } else if (alert.phone && !alert.whatsapp && smsEnabled()) {
           await sendSms({ to: alert.phone, text: `RoomsNow: a room has come up in ${listing.property.area ?? listing.property.city}, ${rent}. ${listingUrl} Stop: ${stopUrl}` });
         } else {
           continue;
