@@ -31,6 +31,8 @@ export async function providerNav(companyId: string): Promise<NavItem[]> {
     { href: "/advertise/homepage", label: "Homepage spotlight" },
     { href: "/provider/accreditations", label: "Accreditations" },
     { href: "/provider/licensing", label: "Licensing readiness" },
+    { href: "/fastest-providers", label: "Fastest-replying league" },
+    { href: "/insights", label: "Area insights" },
     { href: "/provider/invite", label: "Refer & earn" },
     { href: "/provider/settings", label: "Company profile" },
   ];
