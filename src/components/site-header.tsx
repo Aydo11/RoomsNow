@@ -206,6 +206,8 @@ export function SiteFooter() {
             ["Adult social care accommodation", "/adult-social-care-accommodation"],
             ["Search all accommodation", "/search"],
             ["Vetted providers", "/vetted-providers"],
+            ["Fastest-replying providers", "/fastest-providers"],
+            ["Room alerts on WhatsApp", "/alerts"],
             ["Post what you're looking for", "/dashboard/advert"],
             ["How it works", "/how-it-works"],
             ["What happens after you apply", "/next-steps"],
@@ -222,6 +224,7 @@ export function SiteFooter() {
           links={[
             ["Advertise accommodation", "/advertise-accommodation"],
             ["Membership and pricing", "/pricing"],
+            ["Void cost calculator", "/void-cost-calculator"],
             ["Find people looking", "/people"],
             ["Get verified", "/verification"],
             ["Provider Services", "/services"],
@@ -235,6 +238,7 @@ export function SiteFooter() {
           links={[
             ["Accommodation referrals", "/accommodation-referrals"],
             ["Referrer accounts", "/register?type=REFERRER"],
+            ["Live area data for councils", "/insights"],
             ["Send feedback", "/feedback"],
             ["Privacy", "/privacy"],
             ["Terms", "/terms"],
