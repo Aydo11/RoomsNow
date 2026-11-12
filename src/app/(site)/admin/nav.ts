@@ -81,6 +81,7 @@ export async function adminNav(): Promise<NavItem[]> {
       label: "Email campaigns",
       also: ["/admin/provider-mailshot", "/admin/pre-launch-invite"],
     },
+    { group: "Growth", href: "/admin/pro-services", label: "Pro Services enquiries" },
     { group: "Growth", href: "/admin/provider-referrals", label: "Provider referrals" },
     { group: "Growth", href: "/admin/acquisition-sources", label: "Acquisition sources" },
 
