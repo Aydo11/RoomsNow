@@ -223,3 +223,20 @@ export const DEMO_STORIES: Record<ProServiceKey, { title: string; endTitle: stri
   EXPERT: { title: "Expert sessions", endTitle: "RoomsNow Expert Sessions", endLine: "Calls, advice and catch-ups", captions: ["Talk through a question on WhatsApp", "Work through a checklist on video", "Send a question between sessions", "Review progress at your weekly catch-up"] },
 };
 export const DEMO_SLUG: Record<ProServiceKey, string> = { CRM: "crm", BESPOKE_CRM: "bespoke-crm", WEBSITE: "website", EXPERT: "expert-sessions" };
+
+export const ADVICE_FORMATS = [
+  { label: "WhatsApp calls", body: "Talk it through from your phone, wherever you are." },
+  { label: "1:1 video sessions", body: "Share your screen and work through documents together." },
+  { label: "Daily WhatsApp advice", body: "Message a question on any working day and get a written reply." },
+  { label: "Weekly catch-ups", body: "A regular slot with the same manager to keep your plan moving." },
+];
+
+export const HOW_IT_WORKS_STEPS = [
+  { title: "Enquire", body: "Pick a service and tell us a little about your business." },
+  { title: "Get your pack", body: "Prices, what's included and next steps land in your inbox straight away, with a detailed PDF guide attached." },
+  { title: "Reply to agree", body: "Ask questions on the same email thread. We confirm scope and price in writing." },
+  { title: "We get started", body: "Pay the agreed deposit or first month and we set things up." },
+];
+
+/** Where the PDF guide for a service (or "all") can be downloaded. */
+export const packPdfPath = (key: ProServiceKey | "ALL") => `/pro-services/guide/${key === "ALL" ? "all" : DEMO_SLUG[key]}`;
