@@ -225,3 +225,15 @@ export function newsBannerCopy(category: string, appealStatus: string | null): {
   if (category === "SECTOR") return { label: "Housing sector news", cta: "Read article" };
   return { label: "RoomsNow update", cta: "Read update" };
 }
+
+/** Rough reading time at 200 words a minute, never less than 1. */
+export function readMinutes(body: string): number {
+  return Math.max(1, Math.ceil(body.trim().split(/\s+/).filter(Boolean).length / 200));
+}
+
+/** Solid pill colour per category, for cards with a photo behind them. */
+export const NEWS_PILL: Record<string, string> = {
+  ROOMSNOW: "bg-pine text-white",
+  CHARITY: "bg-clay text-white",
+  SECTOR: "bg-[#3a5a85] text-white",
+};
