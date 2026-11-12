@@ -5,7 +5,8 @@ import type { NavItem } from "@/components/dashboard-shell";
 import { FEEDBACK_MARKER } from "@/lib/feedback";
 
 export async function adminNav(): Promise<NavItem[]> {
-  const user = await requireAdmin("MODERATION");
+  const user = await requireAdmin(["MODERATION", "NEWS"]);
+  if (!hasAdminPermission(user, "MODERATION")) return [{ href: "/admin/news", label: "News & charities" }];
   if (!hasAdminPermission(user)) return [
     { group: "To review", href: "/admin/listings", label: "Adverts" },
     { group: "To review", href: "/admin/reports", label: "Reports" },
