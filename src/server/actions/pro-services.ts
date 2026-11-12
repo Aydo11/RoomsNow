@@ -12,6 +12,7 @@ import { escapeHtml, renderEmail } from "@/lib/email-template";
 import { LIMITS, rateLimit } from "@/lib/rate-limit";
 import { reference } from "@/server/form";
 import { money } from "@/lib/format";
+import { buildProPack, packFileName } from "@/lib/pro-pack-pdf";
 import {
   PRO_SERVICES,
   DEMO_SLUG,
@@ -58,7 +59,7 @@ function pack(service: ProService, ref: string, opts: { expert?: Expert | null; 
     `<p style="margin:0 0 14px;">${escapeHtml(opts.intro)}</p>`,
     `<p style="margin:0 0 14px; font-size:18px; font-weight:bold; color:#171F2E;">${escapeHtml(service.headline)}</p>`,
     `<p style="margin:0 0 14px;">${escapeHtml(service.helps)}</p>`,
-    `<p style="margin:0 0 14px;"><a href="${demoUrl}" style="color:#1666AA; font-weight:bold;">&#9654; Watch the 16-second demo</a></p>`,
+    `<p style="margin:0 0 14px;"><a href="${demoUrl}" style="color:#1666AA; font-weight:bold;">&#9654; Watch the 16-second demo</a> &nbsp;·&nbsp; The full information pack is attached as a PDF.</p>`,
     h("What you get"),
     list(service.outcomes),
     h("Prices (plus VAT)"),
@@ -75,6 +76,7 @@ function pack(service: ProService, ref: string, opts: { expert?: Expert | null; 
     service.headline,
     service.helps,
     `Watch the 16-second demo: ${demoUrl}`,
+    "The full information pack is attached as a PDF.",
     "",
     "WHAT YOU GET",
     ...service.outcomes.map((o) => `- ${o}`),
@@ -157,6 +159,9 @@ export async function proServiceEnquiryAction(form: FormData) {
   ].filter(Boolean);
   const toRoomsNow = pack(service, ref, { expert, hours, business, intro: `New Pro Services enquiry. Reply to this email to answer the provider directly.\n${details.join("\n")}` });
 
+  // The detailed PDF guide, stamped with the reference so the email trail and the document match.
+  const attachments = [{ filename: packFileName(serviceKey).replace(".pdf", `-${ref}.pdf`), content: buildProPack(serviceKey, { reference: ref, preparedFor: enquiry.companyName, siteUrl: APP_URL }) }];
+
   let sent = false;
   try {
     await sendEmail({
@@ -165,6 +170,7 @@ export async function proServiceEnquiryAction(form: FormData) {
       text: toProvider.plain,
       html: renderEmail({ preheader: service.headline, heading: escapeHtml(service.name), bodyHtml: toProvider.html, note: `Reference ${ref}. Prices are plus VAT.` }),
       replyTo: brand.supportEmail,
+      attachments,
     });
     sent = true;
     await sendEmail({
@@ -177,6 +183,7 @@ export async function proServiceEnquiryAction(form: FormData) {
         bodyHtml: `<p style="margin:0 0 14px; white-space:pre-line;">${escapeHtml(details.join("\n"))}</p><hr style="border:0; border-top:1px solid #D9E2EC; margin:18px 0;" />${toProvider.html}`,
       }),
       replyTo: user.email,
+      attachments,
     });
   } catch (error) {
     console.error("[pro-services] pack email failed", ref, error);
