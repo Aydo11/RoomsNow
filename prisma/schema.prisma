@@ -2297,3 +2297,45 @@ model NewsPost {
   @@index([category, publishedAt])
   @@index([assigneeId])
 }
+
+/// A RoomsNow manager who sells advice by the hour on the Pro Services page.
+model ProExpert {
+  id         String   @id @default(cuid())
+  name       String
+  role       String
+  specialism String
+  bio        String
+  /// Pence per hour.
+  hourlyRate Int
+  active     Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+/// A provider asking about a Pro Service. The info pack is emailed to them and copied to RoomsNow under the reference.
+model ProServiceEnquiry {
+  id           String    @id @default(cuid())
+  reference    String    @unique
+  /// Key from PRO_SERVICES (lib/pro-services.ts).
+  service      String
+  expertId     String?
+  expertName   String?
+  hours        Int?
+  companyId    String
+  companyName  String
+  userId       String
+  contactName  String
+  contactEmail String
+  phone        String?
+  message      String?
+  /// NEW, CONTACTED, WON or LOST.
+  status       String    @default("NEW")
+  adminNote    String?
+  packSentAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([companyId, createdAt])
+}
