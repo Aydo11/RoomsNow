@@ -49,6 +49,7 @@ export default async function AdminProServicesPage({ searchParams }: { searchPar
       subtitle="Each enquiry emails the provider their pack and copies info@roomsnow.co.uk with the same reference. Reply from that email to keep the trail together, then update the status here."
       nav={nav}
       active="/admin/pro-services"
+      action={<a href="/provider/pro-services" className="btn-secondary">View the provider page</a>}
     >
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Open enquiries" value={open} />
