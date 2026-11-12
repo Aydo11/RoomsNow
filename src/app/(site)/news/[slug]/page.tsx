@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { absoluteUrl, JsonLd, pageMetadata } from "@/lib/seo";
 import { shortDate } from "@/lib/format";
 import { optimisedImage } from "@/lib/image-url";
-import { defaultLinkLabel, isNewsCategory, NEWS_CATEGORIES, newsParagraphs, ukLongDate } from "@/lib/news";
+import { CopyText } from "@/components/copy-text";
+import { NewsBody } from "@/lib/news-format";
+import { defaultLinkLabel, donateLabel, isNewsCategory, NEWS_CATEGORIES, ukLongDate } from "@/lib/news";
 import { newsPostBySlug } from "@/server/news";
 import { db } from "@/lib/db";
 import { ShareNewsButton } from "@/components/share-news-button";
@@ -94,14 +96,10 @@ export default async function NewsPostPage({ params }: Props) {
       {button && <div className="mt-6">{button}</div>}
       {post.imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={optimisedImage(post.imageUrl, 900)} alt="" className="mt-8 w-full rounded-card border border-line object-cover" />
+        <img src={optimisedImage(post.imageUrl, 900)} alt="" className="mt-8 aspect-[16/9] max-h-[380px] w-full rounded-card border border-line object-cover" />
       )}
       {appeal && <AppealPanel post={post} open={appeal === "OPEN"} />}
-      <div className="mt-8 space-y-5 text-[17px] leading-relaxed">
-        {newsParagraphs(post.body).map((p, i) => (
-          <p key={i} className="whitespace-pre-line">{p}</p>
-        ))}
-      </div>
+      <NewsBody body={post.body} font={post.bodyFont} className="mt-8 text-[17px] leading-relaxed" />
       {button && (
         <div className="card mt-10 flex flex-wrap items-center justify-between gap-4 p-5">
           <p className="text-[16px] font-semibold">{category === "CHARITY" ? "Can you help?" : "Want to know more?"}</p>
@@ -121,6 +119,10 @@ type AppealPost = {
   appealGiftAidStatus: string | null;
   appealDonateUrl: string | null;
   appealVolunteerUrl: string | null;
+  appealBankAccountName: string | null;
+  appealBankSortCode: string | null;
+  appealBankAccountNumber: string | null;
+  appealBankReference: string | null;
 };
 
 /** Who's behind a charity appeal and where the money goes, right next to the buttons. */
@@ -134,7 +136,7 @@ function AppealPanel({ post, open }: { post: AppealPost; open: boolean }) {
     ["Gift Aid", post.appealGiftAidStatus],
   ];
   const routes = open
-    ? [["Go to donation page", post.appealDonateUrl], ["Volunteer", post.appealVolunteerUrl]].flatMap(([label, url]) => (url ? [[label as string, url] as const] : []))
+    ? [[post.appealDonateUrl ? donateLabel(post.appealDonateUrl) : "", post.appealDonateUrl], ["Volunteer", post.appealVolunteerUrl]].flatMap(([label, url]) => (url ? [[label as string, url] as const] : []))
     : [];
   return (
     <section aria-labelledby="appeal-heading" className="card mt-8 border-pine/30 p-5 sm:p-6">
@@ -161,6 +163,25 @@ function AppealPanel({ post, open }: { post: AppealPost; open: boolean }) {
         </div>
       )}
       {open && post.appealDonateUrl && <p className="mt-3 text-[13px] text-ink-faint">You'll leave RoomsNow to make your donation.</p>}
+      {open && post.appealBankSortCode && post.appealBankAccountNumber && (
+        <div className="mt-5 rounded-card border border-line bg-paper-sunk/60 p-4">
+          <h3 className="text-[16px] font-semibold">Donate by bank transfer</h3>
+          <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+            {([
+              ["Account name", post.appealBankAccountName],
+              ["Sort code", post.appealBankSortCode],
+              ["Account number", post.appealBankAccountNumber],
+              ["Reference", post.appealBankReference],
+            ] as const).filter(([, v]) => v).map(([label, value]) => (
+              <div key={label}>
+                <dt className="text-[12.5px] font-semibold uppercase tracking-wide text-ink-faint">{label}</dt>
+                <dd className="mt-0.5 flex items-center gap-2 text-[16px] font-semibold tabular-nums">{value}<CopyText text={value!} label={label} /></dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-3 text-[12.5px] text-ink-faint">Only pay into the account shown here. RoomsNow will never message you asking you to pay into a different account.</p>
+        </div>
+      )}
     </section>
   );
 }
