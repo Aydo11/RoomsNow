@@ -4,7 +4,7 @@
  * plus VAT and stored in pence.
  */
 
-export type ProPrice = { label: string; price: string; detail: string };
+export type ProPrice = { label: string; price: string; detail: string; popular?: boolean; includes?: string[]; suits?: string };
 export type ProService = {
   key: ProServiceKey;
   name: string;
@@ -33,7 +33,7 @@ export const PRO_SERVICES: Record<ProServiceKey, ProService> = {
     ],
     prices: [
       { label: "Starter", price: "£59/month", detail: "Up to 5 properties and 5 staff accounts. Property records, staff roles, tasks, compliance reminders and exports." },
-      { label: "Growth", price: "£119/month", detail: "Up to 20 properties and 15 staff. Adds portfolio reporting, bulk import and one onboarding call." },
+      { label: "Growth", price: "£119/month", detail: "Up to 20 properties and 15 staff. Adds portfolio reporting, bulk import and one onboarding call.", popular: true },
       { label: "Portfolio", price: "£229/month", detail: "Up to 50 properties and 35 staff. Adds two onboarding calls and priority support. Larger portfolios quoted." },
       { label: "Assisted onboarding", price: "£199 one-off", detail: "Optional. We import your records from our template and set up your team." },
     ],
@@ -55,7 +55,7 @@ export const PRO_SERVICES: Record<ProServiceKey, ProService> = {
       "Know the full cost up front, with a written scope and acceptance checks.",
     ],
     prices: [
-      { label: "Configured CRM", price: "From £1,000 + £250/month", detail: "Built on the RoomsNow CRM. Your branded workspace, agreed roles, one standard import and up to two configured workflows. 3-month maintenance minimum." },
+      { label: "Configured CRM", price: "From £1,000 + £250/month", detail: "Built on the RoomsNow CRM. Your branded workspace, agreed roles, one standard import and up to two configured workflows. 3-month maintenance minimum.", popular: true },
       { label: "Custom CRM", price: "From £3,000 + £400/month", detail: "Agreed custom workflows, reports or integrations, with a written specification and acceptance tests. Major integrations quoted separately." },
     ],
     terms: "Build fee paid in three stages: 50% at kickoff, 30% when you approve the test version and 20% before go-live. Maintenance covers hosting, backups, security updates and fault fixes.",
@@ -77,7 +77,7 @@ export const PRO_SERVICES: Record<ProServiceKey, ProService> = {
     ],
     prices: [
       { label: "Single page", price: "£499", detail: "One well-built page with your services, areas and contact route." },
-      { label: "Brochure site", price: "From £1,500", detail: "Around five pages: home, accommodation, who we support, about and contact." },
+      { label: "Brochure site", price: "From £1,500", detail: "Around five pages: home, accommodation, who we support, about and contact.", popular: true },
       { label: "Business site", price: "From £3,000", detail: "More pages, referral routes and features agreed in a written scope." },
       { label: "Hosting", price: "£59/month", detail: "Hosting, security updates and backups." },
       { label: "Managed care", price: "£129/month", detail: "Hosting plus up to one hour of content edits each month." },
@@ -92,22 +92,60 @@ export const PRO_SERVICES: Record<ProServiceKey, ProService> = {
   EXPERT: {
     key: "EXPERT",
     name: "Expert sessions",
-    headline: "Book time with a RoomsNow housing manager",
-    helps: "Talk through a practical question about running or setting up supported accommodation or HMOs. Sessions can cover compliance, licensing readiness, Housing Benefit evidence, commissioning or safeguarding, depending on the manager's expertise.",
+    headline: "Speak 1:1 with a manager who runs housing like yours",
+    helps: "RoomsNow managers have operated supported exempt accommodation and HMOs. Talk through setup, compliance, licensing readiness, Housing Benefit evidence, commissioning or safeguarding procedures, by WhatsApp call, video or message.",
     outcomes: [
-      "Choose a one-hour, two-hour or half-day session with a manager who covers your topic.",
-      "Leave with a written action summary covering what to check and what to do next.",
-      "See the manager's hourly rate before booking. Business members get 10% off.",
+      "Get advice the way that suits you: a one-off call, weekly catch-ups or a daily WhatsApp line.",
+      "Leave every call with written action notes: priorities, who's responsible and follow-up.",
+      "See each manager's hourly rate up front. Business members get 10% off.",
     ],
-    prices: [],
-    terms: "Paid in full at booking. Cancel 48 hours or more before for a full refund, 24 to 48 hours before for 50%, under 24 hours no refund. Sessions are not recorded. Advice is guidance: decisions on licences, exempt status, benefit or contracts rest with the council or body concerned.",
+    prices: [
+      {
+        label: "One-off 1:1 consultation",
+        price: "From £150",
+        detail: "One 60-minute video or WhatsApp call on one main topic.",
+        includes: ["60-minute video or WhatsApp call", "Written action notes within 2 working days", "Review of one document (up to 5 pages) sent 2 working days before"],
+        suits: "Working through one issue or deciding what to do next.",
+      },
+      {
+        label: "Weekly catch-ups",
+        price: "£525/month",
+        detail: "Four 45-minute calls a month with the same manager.",
+        includes: ["4 × 45-minute video or WhatsApp calls a month", "Action notes after every call", "Up to 2 document reviews a month (5 pages each)", "Booking messages answered within 1 working day"],
+        suits: "A setup, compliance or improvement plan you want to keep moving.",
+        popular: true,
+      },
+      {
+        label: "Daily WhatsApp advice",
+        price: "£595/month",
+        detail: "Written advice on WhatsApp, Monday to Friday, 9am to 5pm.",
+        includes: ["One new question each working day", "Replies within 1 working day", "Key actions confirmed in writing, plus a weekly summary", "1 document review a month (5 pages)"],
+        suits: "Managers who need quick answers between meetings.",
+      },
+      {
+        label: "Mentoring plan",
+        price: "£995/month",
+        detail: "Weekly calls and the daily WhatsApp line with one manager.",
+        includes: ["4 × 60-minute calls a month", "Daily WhatsApp advice line", "Action notes after every call", "Up to 4 document reviews a month", "Up to 2 named contacts"],
+        suits: "Opening a new service or making several changes at once.",
+      },
+    ],
+    terms: "Plans are monthly; unused calls and reviews end with the billing month. One-off sessions are paid at booking: cancel 48 hours or more before for a full refund, 24 to 48 hours for 50%, under 24 hours no refund. Calls aren't recorded. WhatsApp plans are for routine advice: use your safeguarding or emergency procedures for urgent concerns. Advice is guidance: decisions on licences, exempt status, benefit or contracts rest with the council or body concerned.",
     nextSteps: [
-      "Reply with the topic, where you operate and what you want to get out of the session.",
-      "We'll send suitable managers, available times and the total price for your chosen session length.",
-      "Pay upfront to confirm. Cancel at least 48 hours before the session for a full refund, 24 to under 48 hours before for a 50% refund, or under 24 hours before with no refund.",
+      "Reply with the topic, where you operate and which option suits you: one-off call, weekly catch-ups, daily WhatsApp advice or mentoring.",
+      "We'll send suitable managers, available times and the total price.",
+      "Pay to confirm and we'll set up your first call or WhatsApp line.",
     ],
   },
 };
+
+/** What happens in an expert session, in order. */
+export const SESSION_STEPS = [
+  { title: "Tell us what you need", body: "Share your question and any agreed documents in advance, with resident details removed." },
+  { title: "Talk it through", body: "Your manager asks how your service works now and where you're stuck." },
+  { title: "Agree the next steps", body: "Work through the options and what needs checking with a council, regulator or specialist." },
+  { title: "Get written action notes", body: "A short summary of priorities, who's responsible and any follow-up." },
+];
 
 /** Session lengths offered for expert time. A half day is 4 hours. */
 export const SESSION_HOURS = [1, 2, 4] as const;
@@ -122,6 +160,8 @@ export function sessionPrice(hourlyRate: number, hours: number, business = false
 
 /** Pro Services are a perk of paid provider memberships. */
 export const canUseProServices = (tier: string) => tier === "PROFESSIONAL" || tier === "BUSINESS";
+
+export const EXPERT_PLANS = PRO_SERVICES.EXPERT.prices.map((p) => p.label);
 
 export const ENQUIRY_STATUSES = ["NEW", "CONTACTED", "WON", "LOST"] as const;
 export const isEnquiryStatus = (v: unknown): v is (typeof ENQUIRY_STATUSES)[number] => typeof v === "string" && (ENQUIRY_STATUSES as readonly string[]).includes(v);
