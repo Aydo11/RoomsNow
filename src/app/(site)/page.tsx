@@ -16,6 +16,8 @@ import { RoomMarquee } from "@/components/room-marquee";
 import { COVER_MEDIA } from "@/lib/cover-image";
 import { SpotlightCarousel } from "@/components/home-spotlight";
 import { liveSpotlights } from "@/lib/spotlight-server";
+import { pinnedNews } from "@/server/news";
+import { newsBannerCopy } from "@/lib/news";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
@@ -183,6 +185,10 @@ export default function HomePage() {
         </div>
         <HeroStreet pills={[]} />
       </section>
+
+      <Suspense fallback={null}>
+        <HomeNewsBanner />
+      </Suspense>
 
       <Suspense fallback={null}>
         <HomeSpotlight />
@@ -655,6 +661,25 @@ function AudienceIcon({ type, highlighted }: { type: "search" | "referral" | "pr
  * Paid homepage spotlight, straight under the search. Shows nothing at all
  * when no service business has bought (or been given) the slot.
  */
+/** The one News post an admin has pinned to the homepage (e.g. a charity appeal). */
+async function HomeNewsBanner() {
+  const post = await pinnedNews().catch(() => null);
+  const copy = post && newsBannerCopy(post.category, post.appealStatus);
+  if (!post || !copy) return null;
+  return (
+    <section className="border-b border-line bg-pine-light/40">
+      <Link href={`/news/${post.slug}`} className="shell group flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:gap-4">
+        <span className="w-fit shrink-0 rounded-full bg-pine px-2.5 py-0.5 text-[12px] font-semibold uppercase tracking-wide text-white">{copy.label}</span>
+        <span className="min-w-0 flex-1">
+          <span className="font-semibold group-hover:underline">{post.title}</span>
+          <span className="hidden text-ink-soft md:inline"> · {post.summary}</span>
+        </span>
+        <span className="shrink-0 text-[14px] font-semibold text-pine-dark">{copy.cta} →</span>
+      </Link>
+    </section>
+  );
+}
+
 async function HomeSpotlight() {
   const items = await liveSpotlights().catch(() => []);
   if (!items.length) return null;
