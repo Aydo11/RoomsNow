@@ -2274,6 +2274,10 @@ model NewsPost {
   sectorSourceName          String?
   sectorSourceUrl           String?
   sectorReviewedOn          DateTime? @db.Date
+  /// Byline shown on the article, e.g. "Ayden, founder of RoomsNow".
+  authorName  String?
+  /// The team member responsible for keeping this post up to date.
+  assigneeId  String?
   /// Article page views, for the "Popular" list.
   views       Int       @default(0)
   /// Null while it's a draft.
@@ -2284,4 +2288,5 @@ model NewsPost {
 
   @@index([publishedAt])
   @@index([category, publishedAt])
+  @@index([assigneeId])
 }
