@@ -195,7 +195,7 @@ export default async function AdminHome() {
       )}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-8">
-        <Kpi href="/admin/users" title="New accounts" value={n(t.users30)} change={delta(n(t.users30), n(t.usersPrev))} hint={roleSplit || `${n(t.users)} accounts in total`} />
+        <Kpi href="/admin/users" title="Total users" kind="Now" value={n(t.users)} change={{ ...delta(n(t.users30), n(t.usersPrev)), text: `${n(t.users30)} new, ${delta(n(t.users30), n(t.usersPrev)).text}` }} hint={roleSplit ? `New: ${roleSplit}` : undefined} />
         <Kpi href="/admin/requests" title="New requests" value={n(t.req30)} change={delta(n(t.req30), n(t.reqPrev))} hint={`${requests} all time`} />
         <Kpi href="/admin/referrals" title="New referrals" value={n(t.ref30)} change={delta(n(t.ref30), n(t.refPrev))} hint={`${referrals} all time`} />
         <Kpi href="/admin/memberships" title="Revenue" value={money(n(t.paid30))} change={delta(n(t.paid30), n(t.paidPrev))} hint={`${n(t.paidCount30)} payments · ${n(t.failed30)} failed · ${money(n(t.paidAll))} all time`} />
