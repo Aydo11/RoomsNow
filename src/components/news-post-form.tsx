@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { saveNewsPostAction } from "@/server/actions/news";
 import { NEWS_CATEGORIES, type NewsCategory } from "@/lib/news";
 import { FormError, FormSuccess, SubmitButton } from "./ui";
+import { NewsBodyEditor } from "./news-body-editor";
 
 export type NewsPostDraft = {
   id: string;
@@ -11,6 +12,7 @@ export type NewsPostDraft = {
   title: string;
   summary: string;
   body: string;
+  bodyFont: string | null;
   linkUrl: string | null;
   linkLabel: string | null;
   imageUrl: string | null;
@@ -25,6 +27,10 @@ export type NewsPostDraft = {
   appealGiftAidStatus: string | null;
   appealDonateUrl: string | null;
   appealVolunteerUrl: string | null;
+  appealBankAccountName: string | null;
+  appealBankSortCode: string | null;
+  appealBankAccountNumber: string | null;
+  appealBankReference: string | null;
   sectorSourceName: string | null;
   sectorSourceUrl: string | null;
   sectorReviewedOn: Date | null;
@@ -74,7 +80,7 @@ export function NewsPostForm({ post, check, team = [], defaultAuthor = "", fullA
 
       <div>
         <label htmlFor="news-category" className="label">Category</label>
-        <select id="news-category" name="category" className="field" value={category} onChange={(ev) => setCategory(ev.target.value)}>
+        <select id="news-category" name="category" className="field" value={category} onChange={(ev) => { setCategory(ev.target.value); if (!post && ev.target.value === "CHARITY" && appeal === "") setAppeal("OPEN"); }}>
           {(Object.keys(NEWS_CATEGORIES) as NewsCategory[]).map((key) => (
             <option key={key} value={key}>{NEWS_CATEGORIES[key].label}</option>
           ))}
@@ -118,11 +124,7 @@ export function NewsPostForm({ post, check, team = [], defaultAuthor = "", fullA
         <textarea id="news-summary" name="summary" required maxLength={240} rows={2} className="field" defaultValue={post?.summary} placeholder="One or two sentences. Shown on the News page and the homepage banner." />
         {err("summary")}
       </div>
-      <div className="sm:col-span-2">
-        <label htmlFor="news-body" className="label">Full post</label>
-        <textarea id="news-body" name="body" required rows={10} className="field" defaultValue={post?.body} placeholder="Leave a blank line between paragraphs." />
-        {err("body")}
-      </div>
+      <NewsBodyEditor defaultValue={post?.body} defaultFont={post?.bodyFont} error={e.body} />
 
       {/* Charity appeal. Sections are hidden, not removed, so switching category and back keeps what was typed. */}
       <fieldset hidden={!charity} className="grid gap-4 rounded-card border border-line p-4 sm:col-span-2 sm:grid-cols-2">
@@ -130,8 +132,8 @@ export function NewsPostForm({ post, check, team = [], defaultAuthor = "", fullA
         <div className="sm:col-span-2">
           <label htmlFor="news-appealStatus" className="label">Appeal status</label>
           <select id="news-appealStatus" name="appealStatus" className="field" value={appeal} onChange={(ev) => setAppeal(ev.target.value)} aria-describedby="news-appealStatus-help">
-            <option value="">No structured appeal</option>
-            <option value="OPEN">Open</option>
+            <option value="">Just a story (no donations)</option>
+            <option value="OPEN">Open: collecting donations or volunteers</option>
             <option value="CLOSED">Closed</option>
           </select>
           {err("appealStatus")}
@@ -144,8 +146,16 @@ export function NewsPostForm({ post, check, team = [], defaultAuthor = "", fullA
           <Field name="appealPurpose" label="What the appeal supports" long help="What donations or volunteer time will pay for or do." value={post?.appealPurpose} error={e.appealPurpose} />
           <Field name="appealCharityRegistration" label="Charity registration" help="Registered name, regulator and number (e.g. Charity Commission 1234567). If unregistered or unchecked, say so." value={post?.appealCharityRegistration} error={e.appealCharityRegistration} />
           <Field name="appealGiftAidStatus" label="Gift Aid" help="e.g. “Available through the donation page”, “Not available” or “Eligibility unconfirmed”." value={post?.appealGiftAidStatus} error={e.appealGiftAidStatus} />
-          <Field name="appealDonateUrl" label="Donation page" type="url" help="The https:// page where supporters donate to this appeal." placeholder="https://" value={post?.appealDonateUrl} error={e.appealDonateUrl} />
+          <Field name="appealDonateUrl" label="Donation link (GoFundMe, JustGiving, PayPal…)" type="url" help="Paste the full https:// link. GoFundMe, JustGiving and PayPal links get a matching button." placeholder="https://www.gofundme.com/f/…" value={post?.appealDonateUrl} error={e.appealDonateUrl} />
           <Field name="appealVolunteerUrl" label="Volunteer page" type="url" help="An https:// application or contact page for volunteers." placeholder="https://" value={post?.appealVolunteerUrl} error={e.appealVolunteerUrl} />
+          <div className="sm:col-span-2">
+            <p className="text-[14px] font-semibold">Bank transfer (optional)</p>
+            <p className="text-[12.5px] text-ink-faint">Shown on the post while the appeal is open. Use an account set up for the appeal if you can, and double-check the numbers: people will pay into exactly what you enter.</p>
+          </div>
+          <Field name="appealBankAccountName" label="Name on the account" help="As it appears on the account." value={post?.appealBankAccountName} error={e.appealBankAccountName} />
+          <Field name="appealBankReference" label="Payment reference (optional)" help="Up to 18 characters, e.g. FOOD RUN." value={post?.appealBankReference} error={e.appealBankReference} />
+          <Field name="appealBankSortCode" label="Sort code" help="6 digits, e.g. 12-34-56." placeholder="12-34-56" value={post?.appealBankSortCode} error={e.appealBankSortCode} />
+          <Field name="appealBankAccountNumber" label="Account number" help="8 digits." placeholder="12345678" value={post?.appealBankAccountNumber} error={e.appealBankAccountNumber} />
         </div>
       </fieldset>
 
