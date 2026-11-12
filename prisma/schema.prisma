@@ -2333,6 +2333,13 @@ model ProServiceEnquiry {
   status       String    @default("NEW")
   adminNote    String?
   packSentAt   DateTime?
+  /// PHONE, VIDEO or IN_PERSON when the provider asked for a call or meeting.
+  meetingType  String?
+  /// What they asked for, e.g. "Tue 18 Nov, morning".
+  meetingWish  String?
+  /// The time RoomsNow confirmed, and the video link or number to use.
+  meetingAt    DateTime?
+  meetingLink  String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
