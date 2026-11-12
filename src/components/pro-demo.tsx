@@ -16,14 +16,14 @@ import { DEMO_STORIES, type ProServiceKey } from "@/lib/pro-services";
 
 export type DemoKind = ProServiceKey;
 
-const C = { navy: "#171F2E", navy2: "#1D2840", blue: "#1666AA", sky: "#549DE5", paper: "#F7F9FC", mist: "#DCE8F5", amber: "#F5B544", green: "#2E9E6B", ink: "#171F2E", soft: "#5B6678", wa: "#1F8F5F" };
+export const C = { navy: "#171F2E", navy2: "#1D2840", blue: "#1666AA", sky: "#549DE5", paper: "#F7F9FC", mist: "#DCE8F5", amber: "#F5B544", green: "#2E9E6B", ink: "#171F2E", soft: "#5B6678", wa: "#1F8F5F" };
 const SCENE_MS = 4200;
 
-type Scene = { render: () => ReactNode };
+export type Scene = { render: () => ReactNode };
 
-const d = (s: number): CSSProperties => ({ animationDelay: `${s}s` });
+export const d = (s: number): CSSProperties => ({ animationDelay: `${s}s` });
 
-function Win({ title, children, style }: { title: string; children: ReactNode; style?: CSSProperties }) {
+export function Win({ title, children, style }: { title: string; children: ReactNode; style?: CSSProperties }) {
   return (
     <div className="pd-in absolute overflow-hidden rounded-[18px] shadow-[0_24px_60px_rgba(0,0,0,.35)]" style={{ background: C.paper, ...style }}>
       <div className="flex items-center gap-1.5 px-4" style={{ height: 38, background: "#fff", borderBottom: `1px solid ${C.mist}` }}>
@@ -37,12 +37,12 @@ function Win({ title, children, style }: { title: string; children: ReactNode; s
   );
 }
 
-function Chip({ children, tone = "blue", className = "", style }: { children: ReactNode; tone?: "blue" | "amber" | "green" | "grey"; className?: string; style?: CSSProperties }) {
+export function Chip({ children, tone = "blue", className = "", style }: { children: ReactNode; tone?: "blue" | "amber" | "green" | "grey"; className?: string; style?: CSSProperties }) {
   const tones = { blue: [C.mist, C.blue], amber: ["#FDEFD3", "#8A5A00"], green: ["#DDF2E8", "#1D6E49"], grey: ["#EEF1F5", C.soft] } as const;
   return <span className={`inline-flex items-center rounded-full px-3 py-1 text-[13px] font-semibold ${className}`} style={{ background: tones[tone][0], color: tones[tone][1], ...style }}>{children}</span>;
 }
 
-function Cursor({ from, to, delay = 0.6 }: { from: [number, number]; to: [number, number]; delay?: number }) {
+export function Cursor({ from, to, delay = 0.6 }: { from: [number, number]; to: [number, number]; delay?: number }) {
   return (
     <svg className="pd-cursor absolute z-20 h-7 w-7 drop-shadow" viewBox="0 0 24 24" style={{ left: to[0], top: to[1], ["--fx" as string]: `${from[0] - to[0]}px`, ["--fy" as string]: `${from[1] - to[1]}px`, ...d(delay) }} aria-hidden="true">
       <path d="M4 3l15 8-6.5 1.6L9.8 19z" fill="#fff" stroke={C.navy} strokeWidth="1.6" strokeLinejoin="round" />
@@ -50,11 +50,11 @@ function Cursor({ from, to, delay = 0.6 }: { from: [number, number]; to: [number
   );
 }
 
-function Avatar({ initials, color = C.blue, size = 30 }: { initials: string; color?: string; size?: number }) {
+export function Avatar({ initials, color = C.blue, size = 30 }: { initials: string; color?: string; size?: number }) {
   return <span className="grid shrink-0 place-items-center rounded-full font-bold text-white" style={{ width: size, height: size, background: color, fontSize: size * 0.4 }}>{initials}</span>;
 }
 
-const tick = (
+export const tick = (
   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" /></svg>
 );
 
@@ -395,7 +395,7 @@ const SCENES: Record<DemoKind, { scenes: Scene[] }> = {
   },
 };
 
-function Phone({ children, dark = false }: { children: ReactNode; dark?: boolean }) {
+export function Phone({ children, dark = false }: { children: ReactNode; dark?: boolean }) {
   return (
     <div className="pd-in absolute overflow-hidden rounded-[34px] shadow-[0_24px_60px_rgba(0,0,0,.4)]" style={{ left: 375, top: 18, width: 210, height: 412, background: dark ? "#000" : C.paper, border: "8px solid #0B1220", color: C.ink }}>
       <div className="mx-auto mt-1 h-4 w-20 rounded-full" style={{ background: "#0B1220" }} />
@@ -435,9 +435,16 @@ const CSS = `
 `;
 
 /** A playable demo for one service. `autoPlay` starts it straight away (public demo pages, recording). */
-export function ProDemo({ kind, autoPlay = false, loop = false, bare = false }: { kind: DemoKind; autoPlay?: boolean; loop?: boolean; bare?: boolean }) {
+export function ProDemo({ kind, ...rest }: { kind: DemoKind; autoPlay?: boolean; loop?: boolean; bare?: boolean }) {
+  return <DemoPlayer story={DEMO_STORIES[kind]} scenes={SCENES[kind].scenes} {...rest} />;
+}
+
+export type DemoStory = { title: string; endTitle?: string; endLine: string; captions: string[] };
+
+/** The player behind every demo: scenes, captions, progress and controls. */
+export function DemoPlayer({ story, scenes, autoPlay = false, loop = false, bare = false }: { story: DemoStory; scenes: Scene[]; autoPlay?: boolean; loop?: boolean; bare?: boolean }) {
   // Bare (recording) mode starts after a beat, once the stage has its final size.
-  const demo = { ...DEMO_STORIES[kind], scenes: SCENES[kind].scenes };
+  const demo = { ...story, endTitle: story.endTitle ?? story.title, scenes };
   const [state, setState] = useState<"idle" | "playing" | "paused" | "ended">(autoPlay && !bare ? "playing" : "idle");
   const [scene, setScene] = useState(0);
   const [scale, setScale] = useState(1);
