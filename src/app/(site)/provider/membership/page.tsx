@@ -10,7 +10,7 @@ import { money, shortDate } from "@/lib/format";
 import { cancelWhatsappAddonAction, startWhatsappAddonAction } from "@/server/actions/billing";
 import { WHATSAPP_ADDON_PRICE, whatsappAccess } from "@/lib/whatsapp-access";
 import { WhatsappSetupPrompt } from "@/components/whatsapp-setup-prompt";
-import { MembershipTabs } from "@/components/membership-tabs";
+import { MembershipTabs, ProServicesNudge } from "@/components/membership-tabs";
 
 export const metadata = { title: "Membership" };
 export const dynamic = "force-dynamic";
@@ -107,6 +107,8 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
           />
         </div>
       </section>
+
+      <ProServicesNudge className="mt-6" />
 
       <section id="whatsapp-addon" className="mt-8 scroll-mt-24">
         <h2 className="text-[20px]">Add-ons</h2>
