@@ -1,74 +1,67 @@
 /**
- * The homepage street: a row of terraced houses along the bottom of the hero.
- * Rooms quietly light up and dim one at a time, like a real street in the
- * evening. Pure SVG + CSS (transform/opacity only, no
- * filters or blur) so it stays cheap on phones, and it sits still for anyone
- * who prefers reduced motion. Decorative, so hidden from screen readers.
+ * The homepage "live map": a faint street grid along the bottom of the hero.
+ * Map pins drop onto it one after another with a ripple and a little
+ * "Room free · Erdington" tag, while light pulses run along the roads.
+ * It reads as "rooms are coming up near you, right now".
+ *
+ * Pure SVG + CSS (transform/opacity only, no filters) so it stays cheap on
+ * phones. Everything sits still, with every pin showing, for anyone who
+ * prefers reduced motion. Decorative, so hidden from screen readers.
+ * (File keeps its old name so the three pages that use it don't change.)
  */
 
 const W = 1600;
-const H = 220;
-const GROUND = 206;
-/** One full cycle of the scan, in seconds. Keep in sync with globals.css. */
-const CYCLE = 16;
-/** Pop-up labels are spread across this many seconds of each cycle. */
-const SWEEP = 10;
+const H = 290;
+/** Seconds between one pin dropping and the next. */
+const STEP = 2.4;
 
-type House = { x: number; w: number; h: number; roof: "gable" | "flat" | "hip"; floors: number; cols: number; chimney?: boolean };
-
-// Hand-placed so the skyline reads like a real terrace: varied widths,
-// heights and roof shapes, nothing in a regular rhythm.
-const HOUSES: House[] = [
-  { x: 0, w: 120, h: 138, roof: "gable", floors: 2, cols: 2, chimney: true },
-  { x: 124, w: 150, h: 164, roof: "hip", floors: 3, cols: 3 },
-  { x: 278, w: 108, h: 130, roof: "gable", floors: 2, cols: 2 },
-  { x: 390, w: 168, h: 176, roof: "flat", floors: 3, cols: 4 },
-  { x: 562, w: 124, h: 144, roof: "gable", floors: 2, cols: 2, chimney: true },
-  { x: 690, w: 140, h: 158, roof: "gable", floors: 3, cols: 3 },
-  { x: 834, w: 112, h: 126, roof: "hip", floors: 2, cols: 2 },
-  { x: 950, w: 176, h: 182, roof: "flat", floors: 3, cols: 4 },
-  { x: 1130, w: 126, h: 142, roof: "gable", floors: 2, cols: 2, chimney: true },
-  { x: 1260, w: 146, h: 162, roof: "hip", floors: 3, cols: 3 },
-  { x: 1410, w: 104, h: 128, roof: "gable", floors: 2, cols: 2 },
-  { x: 1518, w: 82, h: 146, roof: "gable", floors: 2, cols: 1, chimney: true },
+// Roads: [x1, y1, x2, y2, major?]. An irregular grid so it reads like a real map.
+const ROADS: [number, number, number, number, boolean?][] = [
+  [0, 78, 1600, 78],
+  [0, 160, 1600, 160, true],
+  [0, 238, 1600, 238],
+  [140, 0, 140, 290],
+  [330, 0, 330, 290, true],
+  [520, 0, 520, 290],
+  [700, 0, 700, 290],
+  [880, 0, 880, 290, true],
+  [1060, 0, 1060, 290],
+  [1250, 0, 1250, 290, true],
+  [1440, 0, 1440, 290],
+];
+// Two diagonal roads and a canal break up the grid.
+const DIAGONALS = ["M0 290 L420 0", "M1180 290 L1600 40"];
+const CANAL = "M0 205 C220 190 300 120 520 128 S820 220 1020 198 S1360 110 1600 122";
+// Small parks / blocks, [x, y, w, h].
+const PARKS: [number, number, number, number][] = [
+  [350, 92, 150, 52],
+  [900, 176, 140, 46],
+  [1270, 176, 150, 46],
+  [160, 94, 150, 50],
 ];
 
-// A cheap deterministic "random" so server and client render the same street.
-const pick = (n: number) => ((n * 9301 + 49297) % 233280) / 233280;
+/** Pins in the order they drop. Spread out so the eye travels across the map. */
+const PINS: { x: number; y: number; label: string }[] = [
+  { x: 700, y: 160, label: "Room free · Erdington" },
+  { x: 1250, y: 78, label: "£115/wk · Aston" },
+  { x: 330, y: 238, label: "Bills incl. · Handsworth" },
+  { x: 1060, y: 238, label: "Room free · Selly Oak" },
+  { x: 520, y: 78, label: "Verified · Moseley" },
+  { x: 1440, y: 160, label: "Room free · Digbeth" },
+  { x: 880, y: 78, label: "En-suite · Edgbaston" },
+  { x: 140, y: 160, label: "Room free · Perry Barr" },
+];
+const CYCLE = PINS.length * STEP;
 
-type Win = { x: number; y: number; w: number; h: number; mode: "scan" | "home" | "off"; delay: number };
-
-function windowsFor(house: House, index: number): Win[] {
-  const wins: Win[] = [];
-  const top = GROUND - house.h + 22;
-  const usable = house.h - 22 - 48; // leave room for the door storey
-  // Never squash windows: drop a storey rather than shrink them.
-  const floors = Math.max(1, Math.min(house.floors, Math.floor(usable / 34)));
-  const rowH = usable / floors;
-  const colW = (house.w - 24) / house.cols;
-  for (let f = 0; f < floors; f++) {
-    for (let c = 0; c < house.cols; c++) {
-      const w = Math.min(22, colW - 12);
-      const h = Math.min(26, rowH - 10);
-      const x = house.x + 12 + c * colW + (colW - w) / 2;
-      const y = top + f * rowH + (rowH - h) / 2;
-      const r = pick(index * 31 + f * 7 + c * 3 + 1);
-      const mode: Win["mode"] = r < 0.5 ? "scan" : r < 0.72 ? "home" : "off";
-      // Rooms light up one by one in no particular order, like a real street
-      // in the evening, rather than in a wave.
-      const delay = pick(index * 53 + f * 17 + c * 11 + 7) * CYCLE;
-      wins.push({ x, y, w, h, mode, delay });
-    }
-  }
-  return wins;
-}
-
-function roofPath(h: House) {
-  const top = GROUND - h.h;
-  if (h.roof === "flat") return `M${h.x - 3} ${top + 4} H${h.x + h.w + 3} V${top + 12} H${h.x - 3} Z`;
-  if (h.roof === "hip") return `M${h.x - 4} ${top + 14} L${h.x + 18} ${top - 14} H${h.x + h.w - 18} L${h.x + h.w + 4} ${top + 14} Z`;
-  return `M${h.x - 4} ${top + 14} L${h.x + h.w / 2} ${top - 22} L${h.x + h.w + 4} ${top + 14} Z`;
-}
+/** Light pulses: which road they run along, how long a run takes, and a start offset. */
+const PULSES: { road: number; dur: number; delay: number; reverse?: boolean }[] = [
+  { road: 1, dur: 9, delay: 0 },
+  { road: 0, dur: 12, delay: 3, reverse: true },
+  { road: 2, dur: 10, delay: 6 },
+  { road: 4, dur: 5, delay: 1.5 },
+  { road: 7, dur: 4.5, delay: 4, reverse: true },
+  { road: 9, dur: 5.5, delay: 7 },
+];
 
 export type StreetPill = { at: number; label: string; tone: "amber" | "blue" | "green" };
 
@@ -78,53 +71,90 @@ const DEFAULT_PILLS: StreetPill[] = [
   { at: 0.79, label: "Verified provider", tone: "green" },
 ];
 
-/** `pills` are the little cards that pop up in turn (0–1 sets where along the street, and when). */
+/** `pills` are the little cards that pop up in turn above the map (0–1 sets where along it, and when). */
 export function HeroStreet({ pills = DEFAULT_PILLS, className }: { pills?: StreetPill[]; className?: string }) {
-  const houses = HOUSES.map((house, index) => ({ house, wins: windowsFor(house, index) }));
-
   return (
     <div className={className ? `hero-street ${className}` : "hero-street"} aria-hidden="true" style={{ ["--street-cycle" as string]: `${CYCLE}s` }}>
       {pills.map((pill) => (
-        <span
-          key={pill.label}
-          className={`street-pill street-pill-${pill.tone}`}
-          style={{ left: `${pill.at * 100}%`, animationDelay: `${pill.at * SWEEP}s` }}
-        >
+        <span key={pill.label} className={`street-pill street-pill-${pill.tone}`} style={{ left: `${pill.at * 100}%`, animationDelay: `${pill.at * 10}s` }}>
           <span className="street-pill-dot" />
           {pill.label}
         </span>
       ))}
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" className="hero-street-svg" focusable="false">
-        {houses.map(({ house, wins }, index) => {
-          const doorW = 22;
-          const doorX = house.x + (index % 2 ? house.w - doorW - 16 : 16);
-          return (
-            <g key={index}>
-              {house.chimney && <rect className="street-roof" x={house.x + house.w * 0.68} y={GROUND - house.h - 26} width="14" height="30" rx="2" />}
-              <path className="street-roof" d={roofPath(house)} />
-              <rect className="street-house" x={house.x} y={GROUND - house.h + 12} width={house.w} height={house.h - 12} rx="3" />
-              {wins.map((win, i) => (
-                <g key={i}>
-                  <rect className="street-win" x={win.x} y={win.y} width={win.w} height={win.h} rx="3" />
-                  {win.mode !== "off" && (
-                    <rect
-                      className={win.mode === "scan" ? "street-lit street-lit-scan" : "street-lit street-lit-home"}
-                      x={win.x}
-                      y={win.y}
-                      width={win.w}
-                      height={win.h}
-                      rx="3"
-                      style={win.mode === "scan" ? { animationDelay: `${win.delay.toFixed(2)}s` } : undefined}
-                    />
-                  )}
+        <defs>
+          {/* The map fades out towards the top so it melts into the hero. */}
+          <linearGradient id="map-fade-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#fff" stopOpacity="0" />
+            <stop offset="0.45" stopColor="#fff" stopOpacity="1" />
+          </linearGradient>
+          <mask id="map-fade">
+            <rect width={W} height={H} fill="url(#map-fade-grad)" />
+          </mask>
+          <radialGradient id="map-glow-grad">
+            <stop offset="0" stopColor="#f5b544" stopOpacity="0.5" />
+            <stop offset="1" stopColor="#f5b544" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="map-trail-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#f5b544" stopOpacity="0" />
+            <stop offset="1" stopColor="#f5b544" stopOpacity="0.9" />
+          </linearGradient>
+        </defs>
+
+        <g mask="url(#map-fade)">
+          {PARKS.map(([x, y, w, h], i) => (
+            <rect key={i} className="map-park" x={x} y={y} width={w} height={h} rx="8" />
+          ))}
+          <path className="map-canal" d={CANAL} />
+          {DIAGONALS.map((d) => (
+            <path key={d} className="map-road" d={d} />
+          ))}
+          {ROADS.map(([x1, y1, x2, y2, major], i) => (
+            <line key={i} className={major ? "map-road map-road-major" : "map-road"} x1={x1} y1={y1} x2={x2} y2={y2} />
+          ))}
+
+          {PULSES.map((p, i) => {
+            const [x1, y1, x2, y2] = ROADS[p.road];
+            const across = y1 === y2;
+            const len = across ? x2 - x1 : y2 - y1;
+            // Trail is drawn pointing along +x, then rotated to the road's direction.
+            const angle = (across ? 0 : 90) + (p.reverse ? 180 : 0);
+            const start = p.reverse ? [x2, y2] : [x1, y1];
+            return (
+              <g key={i} transform={`translate(${start[0]} ${start[1]}) rotate(${angle})`}>
+                <g className="map-pulse" style={{ ["--run" as string]: `${len}px`, animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s` }}>
+                  <rect x="-60" y="-1.5" width="60" height="3" rx="1.5" fill="url(#map-trail-grad)" />
+                  <circle r="3.5" className="map-pulse-head" />
                 </g>
-              ))}
-              <rect className="street-door" x={doorX} y={GROUND - 38} width={doorW} height="38" rx="3" />
-              <circle className="street-knob" cx={doorX + doorW - 6} cy={GROUND - 18} r="1.8" />
+              </g>
+            );
+          })}
+        </g>
+
+        {PINS.map((pin, i) => {
+          const delay = `${(i * STEP).toFixed(2)}s`;
+          const tagW = pin.label.length * 7.4 + 30;
+          return (
+            <g key={pin.label} transform={`translate(${pin.x} ${pin.y})`}>
+              <circle className="map-ripple" r="14" style={{ animationDelay: delay }} />
+              <g className="map-pin" style={{ animationDelay: delay }}>
+                <circle className="map-pin-glow" cy="-20" r="34" fill="url(#map-glow-grad)" />
+<g transform="scale(1.35)">
+                <ellipse className="map-pin-shadow" rx="7" ry="2.5" />
+                <path className="map-pin-body" d="M0 0 C-3 -7 -12 -13 -12 -22 A12 12 0 0 1 12 -22 C12 -13 3 -7 0 0 Z" />
+                <circle className="map-pin-eye" cy="-22" r="4.5" />
+                </g>
+              </g>
+              <g className="map-tag" style={{ animationDelay: delay }}>
+                <rect x={-tagW / 2} y="-78" width={tagW} height="24" rx="12" className="map-tag-bg" />
+                <circle cx={-tagW / 2 + 15} cy="-66" r="3.5" className="map-tag-dot" />
+                <text x={-tagW / 2 + 25} y="-61.5" className="map-tag-text">
+                  {pin.label}
+                </text>
+              </g>
             </g>
           );
         })}
-        <rect className="street-ground" x="0" y={GROUND} width={W} height={H - GROUND} />
       </svg>
     </div>
   );
