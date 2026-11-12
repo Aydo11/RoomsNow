@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calendarDate, cleanNewsLink, httpsUrl, isNewsCategory, newsBannerCopy, newsParagraphs, newsSlug, readMinutes, ukLongDate, validateNewsPost } from "../src/lib/news";
+import { calendarDate, cleanNewsLink, httpsUrl, isNewsCategory, newsBannerCopy, newsParagraphs, newsSlug, readMinutes, ukLongDate, validateNewsPost, canEditNews } from "../src/lib/news";
 
 test("news slugs are tidy and URL-safe", () => {
   assert.equal(newsSlug("Support our Gambia project!"), "support-our-gambia-project");
@@ -17,6 +17,8 @@ test("news button links must be http(s) or a RoomsNow page", () => {
   assert.equal(cleanNewsLink("javascript:alert(1)"), undefined);
   assert.equal(cleanNewsLink("//evil.example"), undefined);
   assert.equal(cleanNewsLink("not a link"), undefined);
+  assert.equal(cleanNewsLink("mailto:info@roomsnow.co.uk"), "mailto:info@roomsnow.co.uk");
+  assert.equal(cleanNewsLink("mailto:nobody"), undefined);
 });
 
 test("news body splits into paragraphs on blank lines", () => {
@@ -85,4 +87,15 @@ test("reading time is at least a minute and rounds up", () => {
   assert.equal(readMinutes(""), 1);
   assert.equal(readMinutes("word ".repeat(200)), 1);
   assert.equal(readMinutes("word ".repeat(201)), 2);
+});
+
+test("moderators only edit the news posts assigned to them", () => {
+  const admin = { id: "a", fullAdmin: true };
+  const mod = { id: "m", fullAdmin: false };
+  assert.ok(canEditNews(admin, null));
+  assert.ok(canEditNews(admin, { assigneeId: "x" }));
+  assert.ok(canEditNews(mod, { assigneeId: "m" }));
+  assert.ok(!canEditNews(mod, { assigneeId: "x" }));
+  assert.ok(!canEditNews(mod, { assigneeId: null }));
+  assert.ok(!canEditNews(mod, null));
 });
