@@ -14,8 +14,8 @@ export const metadata = { title: "News" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminNewsPage() {
-  const admin = await requireAdmin("MODERATION");
-  const fullAdmin = hasAdminPermission(admin);
+  const admin = await requireAdmin(["MODERATION", "NEWS"]);
+  const fullAdmin = hasAdminPermission(admin, "NEWS");
   const [nav, posts, team] = await Promise.all([
     adminNav(),
     // Moderators only see the posts they've been asked to keep up to date.
