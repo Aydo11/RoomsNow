@@ -3,30 +3,39 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
 import { shortDate } from "@/lib/format";
 import { isNewsCategory, NEWS_CATEGORIES } from "@/lib/news";
+import { hasAdminPermission } from "@/lib/admin-permissions";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { NewsPostForm } from "@/components/news-post-form";
 import { deleteNewsPostAction, setNewsPinnedAction, setNewsPublishedAction } from "@/server/actions/news";
 import { adminNav } from "../nav";
+import { newsTeam } from "@/server/news";
 
 export const metadata = { title: "News" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminNewsPage() {
-  await requireAdmin("ALL");
-  const [nav, posts] = await Promise.all([adminNav(), db.newsPost.findMany({ orderBy: [{ publishedAt: { sort: "desc", nulls: "first" } }, { createdAt: "desc" }], take: 200 })]);
+  const admin = await requireAdmin("MODERATION");
+  const fullAdmin = hasAdminPermission(admin);
+  const [nav, posts, team] = await Promise.all([
+    adminNav(),
+    // Moderators only see the posts they've been asked to keep up to date.
+    db.newsPost.findMany({ where: fullAdmin ? {} : { assigneeId: admin.id }, orderBy: [{ publishedAt: { sort: "desc", nulls: "first" } }, { createdAt: "desc" }], take: 200 }),
+    newsTeam(),
+  ]);
+  const names = new Map(team.map((t) => [t.id, t.name]));
 
   return (
     <DashboardShell
       title="News"
-      subtitle="Post RoomsNow news, charity appeals and sector news at /news. Tick “Show as the homepage banner” to promote one post at the top of the homepage."
+      subtitle={fullAdmin ? "Post RoomsNow news, charity appeals and sector news at /news. Assign a team member to keep a post up to date, and tick “Show as the homepage banner” to promote one at the top of the homepage." : "The news posts you've been asked to keep up to date."}
       nav={nav}
       active="/admin/news"
     >
-      <NewsPostForm />
+      {fullAdmin && <NewsPostForm team={team} defaultAuthor={`${admin.firstName} ${admin.lastName}`.trim()} fullAdmin />}
 
       <h2 className="mt-8 text-lg">All posts</h2>
       {posts.length === 0 ? (
-        <p className="mt-2 text-[15px] text-ink-soft">No posts yet.</p>
+        <p className="mt-2 text-[15px] text-ink-soft">{fullAdmin ? "No posts yet." : "Nothing is assigned to you yet. An admin can assign you a post to keep up to date."}</p>
       ) : (
         <ul className="mt-3 space-y-3">
           {posts.map((post) => (
@@ -36,6 +45,7 @@ export default async function AdminNewsPage() {
                   {isNewsCategory(post.category) ? NEWS_CATEGORIES[post.category].label : post.category} ·{" "}
                   {post.publishedAt ? <span className="font-semibold text-pine-dark">Live since {shortDate(post.publishedAt)}</span> : <span className="text-clay">Draft</span>}
                   {post.appealStatus && <span> · {post.appealStatus === "OPEN" ? "Open appeal" : "Closed appeal"}</span>}
+                  {post.assigneeId && <span> · Kept up to date by {names.get(post.assigneeId) ?? "a former team member"}</span>}
                   {post.pinned && <span className="font-semibold text-pine-dark"> · {post.appealStatus === "CLOSED" ? "Pinned (hidden from homepage while closed)" : "Homepage banner"}</span>}
                 </p>
                 <p className="mt-1 font-semibold">
@@ -45,6 +55,8 @@ export default async function AdminNewsPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link href={`/admin/news/${post.id}`} className="btn-secondary">Edit</Link>
+                {fullAdmin && (
+                  <>
                 <form action={setNewsPublishedAction.bind(null, post.id, !post.publishedAt)}>
                   <button className="btn-secondary">{post.publishedAt ? "Unpublish" : "Publish"}</button>
                 </form>
@@ -56,6 +68,8 @@ export default async function AdminNewsPage() {
                 <form action={deleteNewsPostAction.bind(null, post.id)}>
                   <button className="btn-secondary text-clay">Delete</button>
                 </form>
+                  </>
+                )}
               </div>
             </li>
           ))}
