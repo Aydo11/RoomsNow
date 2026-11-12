@@ -13,8 +13,8 @@ export const metadata = { title: "Edit news post" };
 export const dynamic = "force-dynamic";
 
 export default async function EditNewsPostPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ check?: string }> }) {
-  const admin = await requireAdmin("MODERATION");
-  const fullAdmin = hasAdminPermission(admin);
+  const admin = await requireAdmin(["MODERATION", "NEWS"]);
+  const fullAdmin = hasAdminPermission(admin, "NEWS");
   const { id } = await params;
   const [nav, post, team] = await Promise.all([adminNav(), db.newsPost.findUnique({ where: { id } }), newsTeam()]);
   if (!post || !canEditNews({ id: admin.id, fullAdmin }, post)) notFound();
