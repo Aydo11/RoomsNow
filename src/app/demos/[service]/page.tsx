@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ProDemo, type DemoKind } from "@/components/pro-demo";
-import { DEMO_SLUG, DEMO_STORIES, PRO_SERVICES } from "@/lib/pro-services";
+import { DEMO_SLUG, DEMO_STORIES, PRO_SERVICES, packPdfPath } from "@/lib/pro-services";
 
 /** Public, shareable demo pages, one per Pro Service: /demos/crm, /demos/website… */
 const SLUGS: Record<string, DemoKind | undefined> = Object.fromEntries(Object.entries(DEMO_SLUG).map(([k, v]) => [v, k as DemoKind]));
@@ -59,6 +59,7 @@ export default async function DemoPage({ params, searchParams }: { params: Promi
             <p className="font-display text-[30px]">{s.prices[0]?.price ?? "Ask us"}</p>
             <p className="mt-1 text-[13px] text-white/60">Plus VAT. For Professional and Business members.</p>
             <Link href={`/provider/pro-services#${kind.toLowerCase()}`} className="mt-4 block rounded-full bg-[#1666AA] px-5 py-3 text-center font-bold hover:bg-[#0F4F87]">Get the full pack by email</Link>
+            <a href={packPdfPath(kind)} target="_blank" rel="noopener" className="mt-2 block rounded-full bg-white/10 px-5 py-3 text-center font-semibold hover:bg-white/20">Download the PDF guide</a>
             <Link href="/join" className="mt-2 block rounded-full bg-white/10 px-5 py-3 text-center font-semibold hover:bg-white/20">New to RoomsNow? Join</Link>
           </div>
         </div>
