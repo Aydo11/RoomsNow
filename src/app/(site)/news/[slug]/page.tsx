@@ -6,6 +6,7 @@ import { shortDate } from "@/lib/format";
 import { optimisedImage } from "@/lib/image-url";
 import { defaultLinkLabel, isNewsCategory, NEWS_CATEGORIES, newsParagraphs, ukLongDate } from "@/lib/news";
 import { newsPostBySlug } from "@/server/news";
+import { db } from "@/lib/db";
 import { ShareNewsButton } from "@/components/share-news-button";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function NewsPostPage({ params }: Props) {
   const post = await newsPostBySlug((await params).slug);
   if (!post) notFound();
+  // Count the view for "Popular"; never hold up or break the page over it.
+  void db.newsPost.update({ where: { id: post.id }, data: { views: { increment: 1 } } }).catch(() => undefined);
   const category = isNewsCategory(post.category) ? post.category : null;
   const cat = category ? NEWS_CATEGORIES[category] : null;
   const appeal = category === "CHARITY" ? post.appealStatus : null;
