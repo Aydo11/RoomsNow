@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { requireCompany } from "@/lib/rbac";
+import { requireCompany, requireUser } from "@/lib/rbac";
+import { hasAdminPermission } from "@/lib/admin-permissions";
+import { adminNav } from "../../admin/nav";
 import { planLimits } from "@/lib/billing";
 import { clsx } from "@/lib/clsx";
 import { money, shortDate } from "@/lib/format";
@@ -88,7 +90,10 @@ type Expert = { id: string; name: string; role: string; specialism: string; bio:
 
 const tomorrow = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date(Date.now() + 86_400_000));
 
-function EnquiryForm({ service, experts, allowed }: { service: ProService; experts: Expert[]; allowed: boolean }) {
+function EnquiryForm({ service, experts, allowed, preview = false }: { service: ProService; experts: Expert[]; allowed: boolean; preview?: boolean }) {
+  if (preview) {
+    return <p className="rounded-card border border-dashed border-line-strong p-3 text-[14px] text-ink-soft">Admin preview: providers see the enquiry and call booking form here.</p>;
+  }
   if (!allowed) {
     return <Link href="/provider/membership" className="btn-secondary">Upgrade to enquire</Link>;
   }
@@ -186,25 +191,36 @@ function PriceCard({ p }: { p: ProService["prices"][number] }) {
 }
 
 export default async function ProServicesPage({ searchParams }: { searchParams: Promise<{ sent?: string; queued?: string; error?: string }> }) {
-  const { user, companyId } = await requireCompany();
+  // Admins without a provider company see a read-only preview of the page providers get.
+  const signedIn = await requireUser("/provider/pro-services");
+  const preview = !signedIn.staffOf[0] && hasAdminPermission(signedIn);
+  const { user, companyId } = preview ? { user: signedIn, companyId: null } : await requireCompany();
   const query = await searchParams;
   const [nav, limits, experts, enquiries] = await Promise.all([
-    providerNav(companyId),
-    planLimits(companyId),
+    companyId ? providerNav(companyId) : adminNav(),
+    companyId ? planLimits(companyId) : null,
     db.proExpert.findMany({ where: { active: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
-    db.proServiceEnquiry.findMany({ where: { companyId }, orderBy: { createdAt: "desc" }, take: 10 }),
+    companyId ? db.proServiceEnquiry.findMany({ where: { companyId }, orderBy: { createdAt: "desc" }, take: 10 }) : [],
   ]);
-  const allowed = canUseProServices(limits.membership.tier);
-  const business = limits.membership.tier === "BUSINESS";
+  const tier = limits?.membership.tier ?? "PROFESSIONAL";
+  const allowed = canUseProServices(tier);
+  const business = tier === "BUSINESS";
 
   return (
     <DashboardShell
       title="Pro Services"
       subtitle="CRM, websites and expert advice from the RoomsNow team, for Professional and Business members. Prices are plus VAT."
       nav={nav}
-      active="/provider/pro-services"
+      active={preview ? "/admin/pro-services" : "/provider/pro-services"}
     >
-      <MembershipTabs active="pro" />
+      {preview ? (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-card border border-pine/30 bg-pine-light/60 p-4 text-[14.5px] text-pine-dark">
+          <span><strong>Admin preview.</strong> This is the page Professional and Business providers see. Enquiry forms are switched off here.</span>
+          <Link href="/admin/pro-services" className="btn-secondary">Back to enquiries</Link>
+        </div>
+      ) : (
+        <MembershipTabs active="pro" />
+      )}
       {query.sent && <div className="mb-5"><FormSuccess message={`Pack sent to ${user.email} (reference ${query.sent}). Reply to that email with any questions. If you asked for a call or meeting, we'll email you to confirm the time.`} /></div>}
       {query.queued && <div className="mb-5"><FormSuccess message={`Enquiry saved (reference ${query.queued}). We couldn't send the email just now, so the team will email you the pack.`} /></div>}
       {query.error && <div className="mb-5"><FormError message={ERRORS[query.error] ?? "Something went wrong. Please try again."} /></div>}
@@ -215,7 +231,7 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
         <div className="grid items-center gap-6 lg:grid-cols-[1fr_260px]">
           <div>
             <span className="inline-flex items-center gap-2 rounded-pill bg-white/15 px-3 py-1.5 text-[12px] font-semibold tracking-[0.08em]">
-              PRO SERVICES · {business ? "BUSINESS MEMBER" : allowed ? "PROFESSIONAL MEMBER" : "FOR PAID MEMBERS"}
+              PRO SERVICES · {preview ? "ADMIN PREVIEW" : business ? "BUSINESS MEMBER" : allowed ? "PROFESSIONAL MEMBER" : "FOR PAID MEMBERS"}
             </span>
             <h2 className="mt-4 max-w-[22ch] font-display text-[30px] leading-[1.1] [text-wrap:balance] sm:text-[40px]">Run a tighter housing business, with people who've done it</h2>
             <p className="mt-3 max-w-[56ch] text-[15.5px] leading-relaxed text-white/85">A staff CRM based on how we run our own supported accommodation, websites that bring in referrals, and advice from managers who run services like yours. Enquire about any of them and your full pack arrives by email.</p>
@@ -229,7 +245,7 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
         </div>
       </section>
 
-      {!allowed && (
+      {!allowed && limits && (
         <div className="card mt-5 flex flex-wrap items-center justify-between gap-3 p-5">
           <p className="text-[15px] text-ink-soft">You're on <strong className="text-ink">{limits.membership.name}</strong>. Pro Services come with Professional and Business. You can look at the prices now.</p>
           <Link href="/provider/membership" className="btn-primary">See plans</Link>
@@ -367,7 +383,7 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
                 )}
 
                 <p className="mt-5 text-[13px] leading-relaxed text-ink-faint">{s.terms}</p>
-                <div className="mt-5"><EnquiryForm service={s} experts={experts} allowed={allowed} /></div>
+                <div className="mt-5"><EnquiryForm service={s} experts={experts} allowed={allowed} preview={preview} /></div>
               </div>
             </section>
           );
