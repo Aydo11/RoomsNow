@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calendarDate, cleanNewsLink, httpsUrl, isNewsCategory, newsBannerCopy, newsParagraphs, newsSlug, readMinutes, ukLongDate, validateNewsPost, canEditNews } from "../src/lib/news";
+import { calendarDate, cleanNewsLink, httpsUrl, isNewsCategory, newsBannerCopy, newsParagraphs, newsSlug, readMinutes, ukLongDate, validateNewsPost, canEditNews, donateLabel } from "../src/lib/news";
 
 test("news slugs are tidy and URL-safe", () => {
   assert.equal(newsSlug("Support our Gambia project!"), "support-our-gambia-project");
@@ -98,4 +98,36 @@ test("moderators only edit the news posts assigned to them", () => {
   assert.ok(!canEditNews(mod, { assigneeId: "x" }));
   assert.ok(!canEditNews(mod, { assigneeId: null }));
   assert.ok(!canEditNews(mod, null));
+});
+
+test("appeals can take bank transfers and name GoFundMe links", () => {
+  const appeal = { ...base, category: "CHARITY", appealStatus: "OPEN", appealOrganiser: "Ayden", appealRelationship: "Founder of RoomsNow", appealPurpose: "Food parcels", appealDonationRecipient: "Ayden Yafai", appealCharityRegistration: "Not a registered charity", appealGiftAidStatus: "Not available" };
+  const ok = validateNewsPost({ ...appeal, appealBankAccountName: "A Yafai", appealBankSortCode: "12 34 56", appealBankAccountNumber: "12345678", appealBankReference: "FOOD RUN" }, true);
+  assert.ok(ok.ok && ok.data.appealBankSortCode === "12-34-56" && ok.data.appealBankAccountNumber === "12345678");
+  const bad = validateNewsPost({ ...appeal, appealBankAccountName: "A Yafai", appealBankSortCode: "1234", appealBankAccountNumber: "123" }, false);
+  assert.ok(!bad.ok && bad.errors.appealBankSortCode && bad.errors.appealBankAccountNumber);
+  const bankOnlyNeedsRecipient = validateNewsPost({ ...appeal, appealDonationRecipient: "", appealBankAccountName: "A Yafai", appealBankSortCode: "123456", appealBankAccountNumber: "12345678" }, true);
+  assert.ok(!bankOnlyNeedsRecipient.ok && bankOnlyNeedsRecipient.errors.appealDonationRecipient);
+  assert.equal(donateLabel("https://www.gofundme.com/f/food-run"), "Donate on GoFundMe");
+  assert.equal(donateLabel("https://example.org/give"), "Go to donation page");
+});
+
+import { renderToStaticMarkup } from "react-dom/server";
+import { NewsBody, stripNewsMarks } from "../src/lib/news-format";
+
+test("news formatting renders safely", () => {
+  const html = renderToStaticMarkup(NewsBody({ body: "## Big news\n\nThis is **bold**, *italic*, __underlined__ and ==bright==. [Site](/news) [bad](javascript:alert(1))\n\n- one\n- two\n\n1. first\n2. second\n\n> said someone\n\n<script>alert(1)</script>", font: "SERIF" }));
+  assert.match(html, /<h2[^>]*>Big news<\/h2>/);
+  assert.match(html, /<strong>bold<\/strong>/);
+  assert.match(html, /<em>italic<\/em>/);
+  assert.match(html, /<u>underlined<\/u>/);
+  assert.match(html, /<mark[^>]*>bright<\/mark>/);
+  assert.match(html, /<a href="\/news"[^>]*>Site<\/a>/);
+  assert.ok(!html.includes('href="javascript'));
+  assert.match(html, /<ul[^>]*><li>one<\/li><li>two<\/li><\/ul>/);
+  assert.match(html, /<ol[^>]*><li>first<\/li>/);
+  assert.match(html, /<blockquote/);
+  assert.ok(html.includes("&lt;script&gt;"));
+  assert.ok(html.includes("font-serif"));
+  assert.equal(stripNewsMarks("## Hi **there** [x](/y)"), "Hi there x");
 });
