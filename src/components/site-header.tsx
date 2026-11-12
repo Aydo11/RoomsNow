@@ -46,6 +46,7 @@ export async function SiteHeader() {
             <Link href="/services" className="font-medium text-pine-dark transition-colors hover:text-ink">Provider Services</Link>
           )}
           <Link href="/tools" className="transition-colors hover:text-ink">Tools & guides</Link>
+          <Link href="/news" className="transition-colors hover:text-ink">News</Link>
           <Link href="/people" className="hidden transition-colors hover:text-ink 2xl:inline">People looking</Link>
           <Link href="/advertise-accommodation" className="transition-colors hover:text-ink">Advertise</Link>
           <Link href="/pricing" className={user ? "hidden transition-colors hover:text-ink 2xl:inline" : "transition-colors hover:text-ink"}>Membership</Link>
@@ -91,6 +92,7 @@ export async function SiteHeader() {
               <MobileLink href={vettedHref} icon="badge" hint="Rooms from CQC or BVSC-checked providers">Vetted providers</MobileLink>
               <MobileLink href="/tools" icon="search" hint="Rent calculator, matching check and neighbourhood guides">Tools & guides</MobileLink>
               <MobileLink href="/support-services" icon="heart" hint="Mental health, drugs and alcohol, housing help and crisis lines">Support services</MobileLink>
+              <MobileLink href="/news" icon="heart" hint="RoomsNow news, charity appeals and sector updates">News & charities</MobileLink>
               <MobileLink href="/how-it-works" icon="info">How it works</MobileLink>
             </MobileSection>
 
@@ -239,6 +241,7 @@ export function SiteFooter() {
             ["Accommodation referrals", "/accommodation-referrals"],
             ["Referrer accounts", "/register?type=REFERRER"],
             ["Live area data for councils", "/insights"],
+            ["News & charity appeals", "/news"],
             ["Send feedback", "/feedback"],
             ["Privacy", "/privacy"],
             ["Terms", "/terms"],
