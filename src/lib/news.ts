@@ -98,6 +98,7 @@ export type NewsFields = {
   body: string;
   linkUrl: string | null;
   linkLabel: string | null;
+  bodyFont: string | null;
   appealStatus: AppealStatus | null;
   appealOrganiser: string | null;
   appealRelationship: string | null;
@@ -107,6 +108,10 @@ export type NewsFields = {
   appealGiftAidStatus: string | null;
   appealDonateUrl: string | null;
   appealVolunteerUrl: string | null;
+  appealBankAccountName: string | null;
+  appealBankSortCode: string | null;
+  appealBankAccountNumber: string | null;
+  appealBankReference: string | null;
   sectorSourceName: string | null;
   sectorSourceUrl: string | null;
   sectorReviewedOn: Date | null;
@@ -148,9 +153,11 @@ export function validateNewsPost(input: NewsInput, publishing: boolean, now = ne
     category, title, summary, body,
     linkUrl: link ?? null,
     linkLabel: get("linkLabel").slice(0, 40) || null,
+    bodyFont: ["SERIF", "ROUNDED"].includes(get("bodyFont")) ? get("bodyFont") : null,
     appealStatus: null, appealOrganiser: null, appealRelationship: null, appealPurpose: null,
     appealDonationRecipient: null, appealCharityRegistration: null, appealGiftAidStatus: null,
     appealDonateUrl: null, appealVolunteerUrl: null,
+    appealBankAccountName: null, appealBankSortCode: null, appealBankAccountNumber: null, appealBankReference: null,
     sectorSourceName: null, sectorSourceUrl: null, sectorReviewedOn: null,
   };
 
@@ -174,16 +181,33 @@ export function validateNewsPost(input: NewsInput, publishing: boolean, now = ne
         if (!url) errors[key] = "Use a full https:// link.";
         else data[key] = url;
       }
+      // Bank transfer: all-or-nothing, UK sort code and account number.
+      const bankName = get("appealBankAccountName");
+      const sortDigits = get("appealBankSortCode").replace(/[\s-]/g, "");
+      const accountDigits = get("appealBankAccountNumber").replace(/\s/g, "");
+      const reference = get("appealBankReference");
+      const hasBank = Boolean(bankName || sortDigits || accountDigits || reference);
+      if (hasBank) {
+        if (!bankName || bankName.length > 100) errors.appealBankAccountName = "Enter the name on the account (up to 100 characters).";
+        if (!/^\d{6}$/.test(sortDigits)) errors.appealBankSortCode = "Enter a 6-digit sort code, e.g. 12-34-56.";
+        if (!/^\d{8}$/.test(accountDigits)) errors.appealBankAccountNumber = "Enter an 8-digit account number.";
+        if (reference.length > 18) errors.appealBankReference = "Bank references can be up to 18 characters.";
+        data.appealBankAccountName = bankName || null;
+        data.appealBankSortCode = /^\d{6}$/.test(sortDigits) ? `${sortDigits.slice(0, 2)}-${sortDigits.slice(2, 4)}-${sortDigits.slice(4)}` : null;
+        data.appealBankAccountNumber = /^\d{8}$/.test(accountDigits) ? accountDigits : null;
+        data.appealBankReference = reference || null;
+      }
       if (publishing) {
         for (const key of ["appealOrganiser", "appealRelationship", "appealPurpose"] as const) {
           if (!data[key]) errors[key] ??= "Needed before this appeal goes live.";
         }
-        if (status === "OPEN" && !get("appealDonateUrl") && !get("appealVolunteerUrl")) {
-          errors.appealDonateUrl ??= "An open appeal needs a donation page, a volunteer page, or both.";
+        if (status === "OPEN" && !get("appealDonateUrl") && !get("appealVolunteerUrl") && !hasBank) {
+          errors.appealDonateUrl ??= "An open appeal needs a donation link, bank details or a volunteer page.";
         }
-        if (get("appealDonateUrl")) {
+        // Anyone asked for money should see who gets it, whether it's a registered charity and about Gift Aid.
+        if (get("appealDonateUrl") || hasBank) {
           for (const key of ["appealDonationRecipient", "appealCharityRegistration", "appealGiftAidStatus"] as const) {
-            if (!data[key]) errors[key] ??= "Needed when there's a donation link.";
+            if (!data[key]) errors[key] ??= "Needed when you're asking for donations (write \"Not a registered charity\" or \"Not available\" if that's the case).";
           }
         }
       }
@@ -230,7 +254,8 @@ export function newsBannerCopy(category: string, appealStatus: string | null): {
 
 /** Rough reading time at 200 words a minute, never less than 1. */
 export function readMinutes(body: string): number {
-  return Math.max(1, Math.ceil(body.trim().split(/\s+/).filter(Boolean).length / 200));
+  const words = body.replace(/[*_=#>\[\]()]/g, " ").trim().split(/\s+/).filter(Boolean);
+  return Math.max(1, Math.ceil(words.length / 200));
 }
 
 /** Solid pill colour per category, for cards with a photo behind them. */
@@ -247,4 +272,13 @@ export const NEWS_PILL: Record<string, string> = {
 export function canEditNews(user: { id: string; fullAdmin: boolean }, post: { assigneeId: string | null } | null): boolean {
   if (user.fullAdmin) return true;
   return Boolean(post && post.assigneeId === user.id);
+}
+
+/** Button wording for a donation link, naming well-known fundraising sites. */
+export function donateLabel(url: string): string {
+  const host = (() => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } })();
+  if (host.endsWith("gofundme.com")) return "Donate on GoFundMe";
+  if (host.endsWith("justgiving.com")) return "Donate on JustGiving";
+  if (host.endsWith("paypal.com") || host.endsWith("paypal.me")) return "Donate with PayPal";
+  return "Go to donation page";
 }
