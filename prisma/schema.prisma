@@ -2251,8 +2251,10 @@ model NewsPost {
   category    String
   title       String
   summary     String
-  /// Plain text; blank lines separate paragraphs.
+  /// Plain text with simple marks (**bold**, ## heading…, see lib/news-format.tsx).
   body        String
+  /// SERIF or ROUNDED; null means the site font.
+  bodyFont    String?
   imageUrl    String?
   imageKey    String?
   /// Donate / read-more button, e.g. a charity's donation page or a news source.
@@ -2270,6 +2272,11 @@ model NewsPost {
   appealGiftAidStatus       String?
   appealDonateUrl           String?
   appealVolunteerUrl        String?
+  /// Bank transfer details for an appeal (UK account). Shown publicly while the appeal is open.
+  appealBankAccountName     String?
+  appealBankSortCode        String?
+  appealBankAccountNumber   String?
+  appealBankReference       String?
   /// Sector news: where it came from and when an editor last checked it.
   sectorSourceName          String?
   sectorSourceUrl           String?
