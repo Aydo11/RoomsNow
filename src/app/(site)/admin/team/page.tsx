@@ -16,8 +16,8 @@ export default async function TeamPage() {
       {users.map((user) => <article key={user.id} className="card p-5">
         <h2 className="text-lg">{user.firstName} {user.lastName}{user.id === actor.id ? " (you)" : ""}</h2>
         <p className="break-all text-sm text-ink-soft">{user.email}</p>
-        <p className="mt-2 text-sm">{user.adminPermissions.includes("ALL") ? "Full administrator" : "Moderator"} · {user.status.toLowerCase()} · {user.totpEnabledAt ? "two-step login on" : "two-step login not set up"}</p>
-        {user.id !== actor.id && <TeamAccessForm userId={user.id} permission={user.adminPermissions.includes("ALL") ? "ALL" : "MODERATION"} status={user.status} />}
+        <p className="mt-2 text-sm">{user.adminPermissions.includes("ALL") ? "Full administrator" : user.adminPermissions.includes("NEWS") ? "News & charities editor" : "Moderator"} · {user.status.toLowerCase()} · {user.totpEnabledAt ? "two-step login on" : "two-step login not set up"}</p>
+        {user.id !== actor.id && <TeamAccessForm userId={user.id} permission={user.adminPermissions.includes("ALL") ? "ALL" : user.adminPermissions.includes("NEWS") ? "NEWS" : "MODERATION"} status={user.status} />}
         {user.id !== actor.id && user.totpEnabledAt && <ResetTwoStepForm userId={user.id} />}
       </article>)}
     </section></div>
