@@ -23,7 +23,7 @@ export default async function EditNewsPostPage({ params, searchParams }: { param
   return (
     <DashboardShell title="Edit news post" subtitle={post.title} nav={nav} active="/admin/news">
       <p className="mb-4 text-[14px]"><Link href="/admin/news" className="text-pine-dark hover:underline">← All news posts</Link></p>
-      <NewsPostForm post={post} check={check === "1"} team={team} defaultAuthor={`${admin.firstName} ${admin.lastName}`.trim()} fullAdmin={fullAdmin} />
+      <NewsPostForm post={post} check={check === "1"} team={team} defaultAuthor="RoomsNow team" fullAdmin={fullAdmin} />
     </DashboardShell>
   );
 }
