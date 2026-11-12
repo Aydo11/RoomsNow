@@ -37,5 +37,5 @@ export async function newsTeam() {
     orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     select: { id: true, firstName: true, lastName: true, adminPermissions: true },
   });
-  return people.map((p) => ({ id: p.id, name: `${p.firstName} ${p.lastName}`.trim(), moderator: !p.adminPermissions.includes("ALL") }));
+  return people.map((p) => ({ id: p.id, name: `${p.firstName} ${p.lastName}`.trim(), moderator: !p.adminPermissions.includes("ALL") && !p.adminPermissions.includes("NEWS") }));
 }
