@@ -1,0 +1,161 @@
+"use client";
+
+import { useActionState, useState } from "react";
+import { saveNewsPostAction } from "@/server/actions/news";
+import { NEWS_CATEGORIES, type NewsCategory } from "@/lib/news";
+import { FormError, FormSuccess, SubmitButton } from "./ui";
+
+export type NewsPostDraft = {
+  id: string;
+  category: string;
+  title: string;
+  summary: string;
+  body: string;
+  linkUrl: string | null;
+  linkLabel: string | null;
+  imageUrl: string | null;
+  pinned: boolean;
+  publishedAt: Date | null;
+  appealStatus: string | null;
+  appealOrganiser: string | null;
+  appealRelationship: string | null;
+  appealPurpose: string | null;
+  appealDonationRecipient: string | null;
+  appealCharityRegistration: string | null;
+  appealGiftAidStatus: string | null;
+  appealDonateUrl: string | null;
+  appealVolunteerUrl: string | null;
+  sectorSourceName: string | null;
+  sectorSourceUrl: string | null;
+  sectorReviewedOn: Date | null;
+};
+
+type FieldProps = { name: string; label: string; help: string; value?: string | null; long?: boolean; type?: string; placeholder?: string; error?: string };
+
+function Field({ name, label, help, value, long, type = "text", placeholder, error }: FieldProps) {
+  const id = `news-${name}`;
+  return (
+    <div className={long ? "sm:col-span-2" : undefined}>
+      <label htmlFor={id} className="label">{label}</label>
+      {long ? (
+        <textarea id={id} name={name} rows={2} className="field" defaultValue={value ?? ""} placeholder={placeholder} aria-describedby={`${id}-help`} />
+      ) : (
+        <input id={id} name={name} type={type} className="field" defaultValue={value ?? ""} placeholder={placeholder} aria-describedby={`${id}-help`} />
+      )}
+      <p id={`${id}-help`} className="mt-1 text-[12.5px] text-ink-faint">{help}</p>
+      {error && <p className="mt-1 text-[12.5px] text-clay">{error}</p>}
+    </div>
+  );
+}
+
+/** Admin: write or edit a News post. Leaving "Publish" unticked saves a draft. */
+export function NewsPostForm({ post, check }: { post?: NewsPostDraft; check?: boolean }) {
+  const [state, action] = useActionState(saveNewsPostAction, { ok: false });
+  const [category, setCategory] = useState(post?.category ?? "ROOMSNOW");
+  const [appeal, setAppeal] = useState(post?.appealStatus ?? "");
+  const e = state.errors ?? {};
+  const err = (key: string) => e[key] && <p className="mt-1 text-[12.5px] text-clay">{e[key]}</p>;
+  const charity = category === "CHARITY";
+  const hasAppeal = charity && appeal !== "";
+  const reviewed = post?.sectorReviewedOn ? new Date(post.sectorReviewedOn).toISOString().slice(0, 10) : "";
+
+  // noValidate: hidden sections can hold half-typed links; the server checks only what applies.
+  return (
+    <form action={action} noValidate className="card grid gap-4 p-5 sm:grid-cols-2">
+      {post && <input type="hidden" name="id" value={post.id} />}
+      <div className="sm:col-span-2">
+        <FormSuccess message={state.ok ? state.message : undefined} />
+        <FormError message={e.form ?? (check && !state.ok && !state.errors ? "This post needs a few more details before it can go live. Fill in the highlighted section and tick Publish." : undefined)} />
+      </div>
+
+      <div>
+        <label htmlFor="news-category" className="label">Category</label>
+        <select id="news-category" name="category" className="field" value={category} onChange={(ev) => setCategory(ev.target.value)}>
+          {(Object.keys(NEWS_CATEGORIES) as NewsCategory[]).map((key) => (
+            <option key={key} value={key}>{NEWS_CATEGORIES[key].label}</option>
+          ))}
+        </select>
+        {err("category")}
+      </div>
+      <div>
+        <label htmlFor="news-image" className="label">Cover photo {post?.imageUrl ? "(choose one to replace it)" : "(optional)"}</label>
+        <input id="news-image" name="image" type="file" accept="image/*" className="field" />
+        {err("image")}
+      </div>
+
+      <div className="sm:col-span-2">
+        <label htmlFor="news-title" className="label">Headline</label>
+        <input id="news-title" name="title" required maxLength={120} className="field" defaultValue={post?.title} placeholder="e.g. Help us build a farm school in The Gambia" />
+        {err("title")}
+      </div>
+      <div className="sm:col-span-2">
+        <label htmlFor="news-summary" className="label">Summary</label>
+        <textarea id="news-summary" name="summary" required maxLength={240} rows={2} className="field" defaultValue={post?.summary} placeholder="One or two sentences. Shown on the News page and the homepage banner." />
+        {err("summary")}
+      </div>
+      <div className="sm:col-span-2">
+        <label htmlFor="news-body" className="label">Full post</label>
+        <textarea id="news-body" name="body" required rows={10} className="field" defaultValue={post?.body} placeholder="Leave a blank line between paragraphs." />
+        {err("body")}
+      </div>
+
+      {/* Charity appeal. Sections are hidden, not removed, so switching category and back keeps what was typed. */}
+      <fieldset hidden={!charity} className="grid gap-4 rounded-card border border-line p-4 sm:col-span-2 sm:grid-cols-2">
+        <legend className="px-1 text-[15px] font-semibold">Charity appeal</legend>
+        <div className="sm:col-span-2">
+          <label htmlFor="news-appealStatus" className="label">Appeal status</label>
+          <select id="news-appealStatus" name="appealStatus" className="field" value={appeal} onChange={(ev) => setAppeal(ev.target.value)} aria-describedby="news-appealStatus-help">
+            <option value="">No structured appeal</option>
+            <option value="OPEN">Open</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+          {err("appealStatus")}
+          <p id="news-appealStatus-help" className="mt-1 text-[12.5px] text-ink-faint">Choose Open to invite donations or volunteers. Closing the appeal removes those buttons from the public article.</p>
+        </div>
+        <div hidden={!hasAppeal} className="grid gap-4 sm:col-span-2 sm:grid-cols-2">
+          <Field name="appealOrganiser" label="Organised by" help="The public name of the person or organisation running the appeal." value={post?.appealOrganiser} error={e.appealOrganiser} />
+          <Field name="appealDonationRecipient" label="Who receives donations" help="Use the name shown on the donation page. If a partner receives the money, enter the partner's name." value={post?.appealDonationRecipient} error={e.appealDonationRecipient} />
+          <Field name="appealRelationship" label="Relationship to RoomsNow" long help="Explain any connection to RoomsNow, its founder or team, e.g. “This appeal is organised by RoomsNow's founder.”" value={post?.appealRelationship} error={e.appealRelationship} />
+          <Field name="appealPurpose" label="What the appeal supports" long help="What donations or volunteer time will pay for or do." value={post?.appealPurpose} error={e.appealPurpose} />
+          <Field name="appealCharityRegistration" label="Charity registration" help="Registered name, regulator and number (e.g. Charity Commission 1234567). If unregistered or unchecked, say so." value={post?.appealCharityRegistration} error={e.appealCharityRegistration} />
+          <Field name="appealGiftAidStatus" label="Gift Aid" help="e.g. “Available through the donation page”, “Not available” or “Eligibility unconfirmed”." value={post?.appealGiftAidStatus} error={e.appealGiftAidStatus} />
+          <Field name="appealDonateUrl" label="Donation page" type="url" help="The https:// page where supporters donate to this appeal." placeholder="https://" value={post?.appealDonateUrl} error={e.appealDonateUrl} />
+          <Field name="appealVolunteerUrl" label="Volunteer page" type="url" help="An https:// application or contact page for volunteers." placeholder="https://" value={post?.appealVolunteerUrl} error={e.appealVolunteerUrl} />
+        </div>
+      </fieldset>
+
+      <fieldset hidden={category !== "SECTOR"} className="grid gap-4 rounded-card border border-line p-4 sm:col-span-2 sm:grid-cols-3">
+        <legend className="px-1 text-[15px] font-semibold">Source</legend>
+        <Field name="sectorSourceName" label="Source name" help="Who published the guidance, report or article you checked." value={post?.sectorSourceName} error={e.sectorSourceName} />
+        <Field name="sectorSourceUrl" label="Source link" type="url" help="Link straight to the source." placeholder="https://" value={post?.sectorSourceUrl} error={e.sectorSourceUrl} />
+        <Field name="sectorReviewedOn" label="Last reviewed" type="date" help="The date you last checked the source. It doesn't change when you edit other things." value={reviewed} error={e.sectorReviewedOn} />
+      </fieldset>
+
+      {/* The general button is replaced by the appeal's own Donate / Volunteer buttons. */}
+      <div hidden={hasAppeal} className="grid gap-4 sm:col-span-2 sm:grid-cols-2">
+        <div>
+          <label htmlFor="news-link" className="label">Button link (optional)</label>
+          <input id="news-link" name="linkUrl" className="field" defaultValue={post?.linkUrl ?? ""} placeholder="https://… or /advertise" />
+          {err("linkUrl")}
+        </div>
+        <div>
+          <label htmlFor="news-link-label" className="label">Button text (optional)</label>
+          <input id="news-link-label" name="linkLabel" maxLength={40} className="field" defaultValue={post?.linkLabel ?? ""} placeholder="e.g. Find out more" />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-5 sm:col-span-2">
+        <label className="inline-flex items-center gap-2 text-[15px]">
+          <input type="checkbox" name="publish" defaultChecked={post ? Boolean(post.publishedAt) : true} /> Publish now
+        </label>
+        <label className="inline-flex items-center gap-2 text-[15px]">
+          <input type="checkbox" name="pinned" defaultChecked={post?.pinned ?? false} /> Show as the homepage banner
+        </label>
+        {charity && appeal === "CLOSED" && <p className="w-full text-[13px] text-ink-faint">Closed appeals stay in News and are hidden from the homepage banner.</p>}
+      </div>
+      <div className="sm:col-span-2">
+        <SubmitButton pendingLabel="Saving…">{post ? "Save changes" : "Save post"}</SubmitButton>
+      </div>
+    </form>
+  );
+}
