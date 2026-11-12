@@ -6,6 +6,7 @@ import { SubmitButton } from "./ui";
 function PermissionSelect({ value = "MODERATION" }: { value?: string }) {
   return <label className="block text-sm">Access level<select name="permission" defaultValue={value} className="field mt-1">
     <option value="MODERATION">Moderator — adverts and reports</option>
+    <option value="NEWS">News &amp; charities editor — the News section only</option>
     <option value="ALL">Full administrator — all admin areas</option>
   </select></label>;
 }
@@ -19,7 +20,7 @@ export function CreateTeamForm() {
     <div className="grid gap-4 sm:grid-cols-2">{["firstName", "lastName"].map((name) => <label key={name} className="block text-sm">{name === "firstName" ? "First name" : "Last name"}<input name={name} required maxLength={80} className="field mt-1" /></label>)}</div>
     <label className="block text-sm">Work email<input name="email" type="email" required className="field mt-1" /></label>
     <PermissionSelect /><ConfirmPassword />
-    <p className="text-sm text-ink-soft">Full administrators can manage accounts, billing and sensitive referrals. Moderators can review adverts and reports only. Neither role grants access to private message conversations.</p>
+    <p className="text-sm text-ink-soft">Full administrators can manage accounts, billing and sensitive referrals. Moderators can review adverts and reports only. News &amp; charities editors can write, publish and update News posts and charity appeals, and nothing else. Neither role grants access to private message conversations.</p>
     <SubmitButton pendingLabel="Creating account…">Create team account</SubmitButton>
     {state.message && <p role="status" className="text-sm">{state.message}</p>}
     {state.ok && state.redirect && <label className="block text-sm">Private setup link — copy and share securely<input readOnly className="field mt-1" value={`${typeof window !== "undefined" ? window.location.origin : ""}${state.redirect}`} onFocus={(event) => event.target.select()} /></label>}
