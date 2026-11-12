@@ -2274,6 +2274,8 @@ model NewsPost {
   sectorSourceName          String?
   sectorSourceUrl           String?
   sectorReviewedOn          DateTime? @db.Date
+  /// Article page views, for the "Popular" list.
+  views       Int       @default(0)
   /// Null while it's a draft.
   publishedAt DateTime?
   createdById String?
