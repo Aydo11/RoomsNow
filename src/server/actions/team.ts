@@ -15,7 +15,7 @@ const input = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
-  permission: z.enum(["ALL", "MODERATION"]),
+  permission: z.enum(["ALL", "MODERATION", "NEWS"]),
 });
 
 async function authorise(form: FormData) {
@@ -77,7 +77,7 @@ export async function updateTeamMember(_previous: FormState, form: FormData): Pr
   const actor = await authorise(form);
   if (!actor) return { ok: false, message: "Check your current password, or wait before trying again." };
   const id = String(form.get("userId") || "");
-  const permission = z.enum(["ALL", "MODERATION"]).safeParse(form.get("permission"));
+  const permission = z.enum(["ALL", "MODERATION", "NEWS"]).safeParse(form.get("permission"));
   const status = z.enum(["ACTIVE", "SUSPENDED"]).safeParse(form.get("status"));
   if (id === actor.id || !permission.success || !status.success) return { ok: false, message: "You cannot change your own access here." };
   try {
