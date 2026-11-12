@@ -31,7 +31,7 @@ export default async function AdminNewsPage() {
       nav={nav}
       active="/admin/news"
     >
-      {fullAdmin && <NewsPostForm team={team} defaultAuthor={`${admin.firstName} ${admin.lastName}`.trim()} fullAdmin />}
+      {fullAdmin && <NewsPostForm team={team} defaultAuthor="RoomsNow team" fullAdmin />}
 
       <h2 className="mt-8 text-lg">All posts</h2>
       {posts.length === 0 ? (
