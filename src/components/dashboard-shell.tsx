@@ -27,6 +27,7 @@ export function DashboardShell({
   active,
   action,
   children,
+  wide,
 }: {
   title: string;
   subtitle?: string;
@@ -34,6 +35,8 @@ export function DashboardShell({
   active: string;
   action?: React.ReactNode;
   children: React.ReactNode;
+  /** Use more of a wide screen. Grouped (admin) menus default to wide. */
+  wide?: boolean;
 }) {
   const isActive = (item: NavItem) => item.href === active || Boolean(item.also?.includes(active));
   const activeItem = nav.find(isActive);
@@ -73,11 +76,31 @@ export function DashboardShell({
     </li>
   );
 
-  const desktopLinks = groups.flatMap((group) => [...(group.name ? [heading(group.name)] : []), ...group.items.map(link)]);
+  // Named groups fold away so a long menu stays short: the group holding the
+  // current page starts open, and a closed group shows its badges added up.
+  const folding = (group: NavGroup, key: string) => {
+    const open = group.items.some(isActive);
+    const total = group.items.reduce((sum, item) => sum + (item.badge ?? 0), 0);
+    return (
+      <li key={key}>
+        <details open={open} className="group/nav">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 rounded-[10px] px-3.5 py-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-faint hover:bg-paper-sunk hover:text-ink [&::-webkit-details-marker]:hidden">
+            <span>{group.name}</span>
+            <span className="flex items-center gap-1.5">
+              {total > 0 && <span className="rounded-pill bg-clay/15 px-1.5 py-0.5 text-[11px] font-semibold normal-case tracking-normal text-clay group-open/nav:hidden">{total}</span>}
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-3.5 w-3.5 transition-transform group-open/nav:rotate-180" fill="none" stroke="currentColor" strokeWidth="2"><path d="m5 7.5 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </span>
+          </summary>
+          <ul className="mb-1 space-y-0.5 pl-1">{group.items.map(link)}</ul>
+        </details>
+      </li>
+    );
+  };
+  const desktopLinks = groups.flatMap((group, i) => (group.name ? [folding(group, `g-${i}`)] : group.items.map(link)));
   const mobileLinks = groups.flatMap((group) => [...(group.name ? [heading(group.name, "col-span-2")] : []), ...group.items.map(link)]);
 
   return (
-    <div className="shell grid min-w-0 gap-5 py-4 sm:py-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8 lg:py-8">
+    <div className={clsx("shell grid min-w-0 gap-5 py-4 sm:py-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8 lg:py-8", (wide ?? nav.some((item) => item.group)) && "xl:max-w-[1440px] 2xl:max-w-[1680px] 2xl:grid-cols-[240px_minmax(0,1fr)]")}>
       <nav aria-label="Dashboard" className="min-w-0 lg:sticky lg:top-24 lg:self-start">
         <details className="group lg:hidden">
           <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between rounded-[12px] border border-line bg-white px-4 py-3 font-semibold text-ink shadow-raise marker:hidden">
