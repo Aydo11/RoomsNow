@@ -7,11 +7,11 @@ import { ADVICE_FORMATS, DEMO_SLUG, DEMO_STORIES, HOW_IT_WORKS_STEPS, PRO_SERVIC
  * never drifts from the website. An emailed copy is stamped with the reference.
  */
 
-const C = { navy: hex("#171F2E"), blue: hex("#1666AA"), sky: hex("#549DE5"), mist: hex("#DCE8F5"), paper: hex("#F4F7FB"), ink: hex("#171F2E"), soft: hex("#4A5568"), faint: hex("#8A94A6"), white: hex("#FFFFFF"), green: hex("#2E9E6B"), amber: hex("#F5B544") };
+export const C = { navy: hex("#171F2E"), blue: hex("#1666AA"), sky: hex("#549DE5"), mist: hex("#DCE8F5"), paper: hex("#F4F7FB"), ink: hex("#171F2E"), soft: hex("#4A5568"), faint: hex("#8A94A6"), white: hex("#FFFFFF"), green: hex("#2E9E6B"), amber: hex("#F5B544") };
 
 export type PackOptions = { reference?: string; preparedFor?: string; date?: Date; siteUrl?: string };
 
-function heading(doc: PdfDoc, title: string) {
+export function heading(doc: PdfDoc, title: string) {
   doc.ensure(44);
   doc.y -= 18;
   doc.rect(doc.margin.side, doc.y - 3, 3, 15, C.blue);
@@ -19,7 +19,7 @@ function heading(doc: PdfDoc, title: string) {
   doc.y -= 10;
 }
 
-function bullets(doc: PdfDoc, items: string[], opts: { numbered?: boolean; size?: number; x?: number } = {}) {
+export function bullets(doc: PdfDoc, items: string[], opts: { numbered?: boolean; size?: number; x?: number } = {}) {
   const x = opts.x ?? doc.margin.side;
   const size = opts.size ?? 10.5;
   const lead = size * 1.45;
@@ -35,13 +35,13 @@ function bullets(doc: PdfDoc, items: string[], opts: { numbered?: boolean; size?
   });
 }
 
-function cover(doc: PdfDoc, title: string, subtitle: string, o: PackOptions) {
+export function cover(doc: PdfDoc, title: string, subtitle: string, o: PackOptions, eyebrow = "PRO SERVICES · INFORMATION PACK") {
   const top = A4.h;
   doc.rect(0, top - 210, A4.w, 210, C.navy);
   doc.rect(0, top - 214, A4.w, 4, C.blue);
   doc.text("Rooms", doc.margin.side, top - 58, 22, C.white, true);
   doc.text("Now", doc.margin.side + textWidth("Rooms", 22, true), top - 58, 22, C.sky, true);
-  doc.text("PRO SERVICES · INFORMATION PACK", doc.margin.side, top - 80, 9, hex("#9CC9F2"), true);
+  doc.text(eyebrow, doc.margin.side, top - 80, 9, hex("#9CC9F2"), true);
   wrap(title, doc.width, 28, true).forEach((l, i) => doc.text(l, doc.margin.side, top - 126 - i * 32, 28, C.white, true));
   wrap(subtitle, doc.width, 12).slice(0, 3).forEach((l, i) => doc.text(l, doc.margin.side, top - 162 - i * 16 - (wrap(title, doc.width, 28, true).length - 1) * 32, 12, hex("#D6E8F8")));
   doc.y = top - 236;
