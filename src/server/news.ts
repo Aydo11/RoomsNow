@@ -24,3 +24,8 @@ export function pinnedNews() {
     select: { slug: true, title: true, summary: true, category: true, appealStatus: true },
   });
 }
+
+/** Most-read published posts, for the News sidebar. */
+export function popularNews(take = 4) {
+  return db.newsPost.findMany({ where: live(), orderBy: [{ views: "desc" }, { publishedAt: "desc" }], take });
+}
