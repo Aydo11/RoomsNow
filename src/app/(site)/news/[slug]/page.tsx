@@ -35,7 +35,7 @@ export default async function NewsPostPage({ params }: Props) {
   const category = isNewsCategory(post.category) ? post.category : null;
   const cat = category ? NEWS_CATEGORIES[category] : null;
   const appeal = category === "CHARITY" ? post.appealStatus : null;
-  const external = post.linkUrl && !post.linkUrl.startsWith("/");
+  const external = post.linkUrl && /^https?:/.test(post.linkUrl);
   // A structured appeal has its own Donate / Volunteer buttons instead of the general one.
   const button = !appeal && post.linkUrl && (
     <a
@@ -61,6 +61,7 @@ export default async function NewsPostPage({ params }: Props) {
           image: post.imageUrl ? [post.imageUrl] : undefined,
           mainEntityOfPage: absoluteUrl(`/news/${post.slug}`),
           publisher: { "@type": "Organization", name: "RoomsNow" },
+          author: post.authorName ? { "@type": "Person", name: post.authorName } : { "@type": "Organization", name: "RoomsNow" },
         }}
       />
       <p className="text-[14px]"><Link href="/news" className="text-pine-dark hover:underline">← All news</Link></p>
@@ -74,7 +75,11 @@ export default async function NewsPostPage({ params }: Props) {
       <h1 className="mt-3 text-[32px] leading-tight sm:text-[42px]">{post.title}</h1>
       <p className="mt-4 text-[19px] leading-relaxed text-ink-soft">{post.summary}</p>
       <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[14px] text-ink-soft">
-        <span>Published by <strong className="font-semibold text-ink">RoomsNow</strong></span>
+        {post.authorName ? (
+          <span>By <strong className="font-semibold text-ink">{post.authorName}</strong> · Published by RoomsNow</span>
+        ) : (
+          <span>Published by <strong className="font-semibold text-ink">RoomsNow</strong></span>
+        )}
         <ShareNewsButton url={absoluteUrl(`/news/${post.slug}`)} title={post.title} />
         {category === "SECTOR" && post.sectorSourceName && post.sectorSourceUrl && (
           <span>
