@@ -2241,3 +2241,45 @@ model LicensingItem {
 
   @@unique([companyId, key])
 }
+
+/// A post in the public News section (/news): RoomsNow announcements,
+/// charity appeals and sector news. Written by admins.
+model NewsPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  /// ROOMSNOW, CHARITY or SECTOR (see lib/news.ts).
+  category    String
+  title       String
+  summary     String
+  /// Plain text; blank lines separate paragraphs.
+  body        String
+  imageUrl    String?
+  imageKey    String?
+  /// Donate / read-more button, e.g. a charity's donation page or a news source.
+  linkUrl     String?
+  linkLabel   String?
+  /// Pinned posts show as a banner on the homepage (newest pinned wins).
+  pinned      Boolean   @default(false)
+  /// Charity appeal panel. appealStatus: null (no appeal), OPEN or CLOSED.
+  appealStatus              String?
+  appealOrganiser           String?
+  appealRelationship        String?
+  appealPurpose             String?
+  appealDonationRecipient   String?
+  appealCharityRegistration String?
+  appealGiftAidStatus       String?
+  appealDonateUrl           String?
+  appealVolunteerUrl        String?
+  /// Sector news: where it came from and when an editor last checked it.
+  sectorSourceName          String?
+  sectorSourceUrl           String?
+  sectorReviewedOn          DateTime? @db.Date
+  /// Null while it's a draft.
+  publishedAt DateTime?
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([publishedAt])
+  @@index([category, publishedAt])
+}
