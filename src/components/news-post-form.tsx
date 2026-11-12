@@ -28,7 +28,11 @@ export type NewsPostDraft = {
   sectorSourceName: string | null;
   sectorSourceUrl: string | null;
   sectorReviewedOn: Date | null;
+  authorName: string | null;
+  assigneeId: string | null;
 };
+
+type TeamMember = { id: string; name: string; moderator: boolean };
 
 type FieldProps = { name: string; label: string; help: string; value?: string | null; long?: boolean; type?: string; placeholder?: string; error?: string };
 
@@ -49,7 +53,7 @@ function Field({ name, label, help, value, long, type = "text", placeholder, err
 }
 
 /** Admin: write or edit a News post. Leaving "Publish" unticked saves a draft. */
-export function NewsPostForm({ post, check }: { post?: NewsPostDraft; check?: boolean }) {
+export function NewsPostForm({ post, check, team = [], defaultAuthor = "", fullAdmin = true }: { post?: NewsPostDraft; check?: boolean; team?: TeamMember[]; defaultAuthor?: string; fullAdmin?: boolean }) {
   const [state, action] = useActionState(saveNewsPostAction, { ok: false });
   const [category, setCategory] = useState(post?.category ?? "ROOMSNOW");
   const [appeal, setAppeal] = useState(post?.appealStatus ?? "");
@@ -82,6 +86,27 @@ export function NewsPostForm({ post, check }: { post?: NewsPostDraft; check?: bo
         <input id="news-image" name="image" type="file" accept="image/*" className="field" />
         {err("image")}
       </div>
+
+      <div>
+        <label htmlFor="news-author" className="label">Written by</label>
+        <input id="news-author" name="authorName" maxLength={80} className="field" defaultValue={post ? (post.authorName ?? "") : defaultAuthor} placeholder="e.g. Ayden, founder of RoomsNow" aria-describedby="news-author-help" />
+        <p id="news-author-help" className="mt-1 text-[12.5px] text-ink-faint">Shown as the byline. Leave blank to show it as from RoomsNow.</p>
+      </div>
+      {fullAdmin ? (
+        <div>
+          <label htmlFor="news-assignee" className="label">Kept up to date by</label>
+          <select id="news-assignee" name="assigneeId" className="field" defaultValue={post?.assigneeId ?? ""} aria-describedby="news-assignee-help">
+            <option value="">Nobody assigned</option>
+            {team.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}{m.moderator ? " (moderator)" : ""}</option>
+            ))}
+          </select>
+          <p id="news-assignee-help" className="mt-1 text-[12.5px] text-ink-faint">They get a notification and can edit this post from their admin menu. Add people under Team &amp; permissions.</p>
+          {err("assigneeId")}
+        </div>
+      ) : (
+        <div />
+      )}
 
       <div className="sm:col-span-2">
         <label htmlFor="news-title" className="label">Headline</label>
@@ -135,7 +160,7 @@ export function NewsPostForm({ post, check }: { post?: NewsPostDraft; check?: bo
       <div hidden={hasAppeal} className="grid gap-4 sm:col-span-2 sm:grid-cols-2">
         <div>
           <label htmlFor="news-link" className="label">Button link (optional)</label>
-          <input id="news-link" name="linkUrl" className="field" defaultValue={post?.linkUrl ?? ""} placeholder="https://… or /advertise" />
+          <input id="news-link" name="linkUrl" className="field" defaultValue={post?.linkUrl ?? ""} placeholder="https://…, /advertise or mailto:info@roomsnow.co.uk" />
           {err("linkUrl")}
         </div>
         <div>
@@ -144,7 +169,7 @@ export function NewsPostForm({ post, check }: { post?: NewsPostDraft; check?: bo
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-5 sm:col-span-2">
+      <div hidden={!fullAdmin} className="flex flex-wrap gap-5 sm:col-span-2">
         <label className="inline-flex items-center gap-2 text-[15px]">
           <input type="checkbox" name="publish" defaultChecked={post ? Boolean(post.publishedAt) : true} /> Publish now
         </label>
@@ -153,6 +178,7 @@ export function NewsPostForm({ post, check }: { post?: NewsPostDraft; check?: bo
         </label>
         {charity && appeal === "CLOSED" && <p className="w-full text-[13px] text-ink-faint">Closed appeals stay in News and are hidden from the homepage banner.</p>}
       </div>
+      {!fullAdmin && <p className="text-[13px] text-ink-faint sm:col-span-2">You can update the words and photo. An admin controls publishing and the homepage banner.</p>}
       <div className="sm:col-span-2">
         <SubmitButton pendingLabel="Saving…">{post ? "Save changes" : "Save post"}</SubmitButton>
       </div>
