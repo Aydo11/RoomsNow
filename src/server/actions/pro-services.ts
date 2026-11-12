@@ -14,6 +14,7 @@ import { reference } from "@/server/form";
 import { money } from "@/lib/format";
 import {
   PRO_SERVICES,
+  EXPERT_PLANS,
   SESSION_HOURS,
   canUseProServices,
   isEnquiryStatus,
@@ -42,7 +43,7 @@ function pack(service: ProService, ref: string, opts: { expert?: Expert | null; 
       detail: `${opts.expert.specialism}. ${sessionLabel(hours)}: ${money(sessionPrice(opts.expert.hourlyRate, hours, opts.business))}${opts.business ? " with your Business 10% discount" : ""}.`,
     });
   }
-  const priceLines = prices.map((p) => `${p.label}: ${p.price} (${p.detail})`);
+  const priceLines = prices.map((p) => `${p.label}: ${p.price} (${p.detail}${p.includes ? ` Includes: ${p.includes.join("; ")}.` : ""})`);
   const closing = `If you have a question or want to go ahead, reply to this email and keep reference ${ref} in the subject so we can pick up your enquiry. A copy of this pack has been sent to RoomsNow for our records.`;
 
   const html = [
@@ -95,6 +96,8 @@ export async function proServiceEnquiryAction(form: FormData) {
 
   let expert: (Expert & { id: string }) | null = null;
   let hours: number | null = null;
+  const planInput = String(form.get("plan") ?? "");
+  const plan = serviceKey === "EXPERT" && EXPERT_PLANS.includes(planInput) ? planInput : null;
   if (serviceKey === "EXPERT") {
     const expertId = String(form.get("expertId") ?? "");
     expert = expertId ? await db.proExpert.findFirst({ where: { id: expertId, active: true }, select: { id: true, name: true, role: true, specialism: true, hourlyRate: true } }) : null;
@@ -118,7 +121,7 @@ export async function proServiceEnquiryAction(form: FormData) {
       contactName,
       contactEmail: user.email,
       phone: text(form, "phone", 30) || null,
-      message: text(form, "message", 1500) || null,
+      message: [plan && `Option: ${plan}`, text(form, "message", 1500)].filter(Boolean).join("\n") || null,
     },
   });
 
