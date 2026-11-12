@@ -27,11 +27,13 @@ export function newsSlug(title: string): string {
   );
 }
 
-/** A button link must be a full http(s) URL or a page on RoomsNow. Returns null for empty, undefined for invalid. */
+/** A button link must be a full http(s) URL, a page on RoomsNow or a mailto: address. Returns null for empty, undefined for invalid. */
 export function cleanNewsLink(value: unknown): string | null | undefined {
   const raw = typeof value === "string" ? value.trim() : "";
   if (!raw) return null;
   if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+  // "Get in touch" buttons can open an email.
+  if (/^mailto:[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(raw)) return raw;
   try {
     const url = new URL(raw);
     return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : undefined;
@@ -237,3 +239,12 @@ export const NEWS_PILL: Record<string, string> = {
   CHARITY: "bg-clay text-white",
   SECTOR: "bg-[#3a5a85] text-white",
 };
+
+/**
+ * Who may edit a post: full admins edit everything; a moderator only edits
+ * posts assigned to them (and can't create, delete, pin or reassign).
+ */
+export function canEditNews(user: { id: string; fullAdmin: boolean }, post: { assigneeId: string | null } | null): boolean {
+  if (user.fullAdmin) return true;
+  return Boolean(post && post.assigneeId === user.id);
+}
