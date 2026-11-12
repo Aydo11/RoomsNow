@@ -12,6 +12,7 @@ export async function adminNav(): Promise<NavItem[]> {
     { group: "To review", href: "/admin/reviews", label: "Resident reviews" },
     { group: "Directory", href: "/admin/marketplace", label: "Services marketplace" },
     { group: "Directory", href: "/admin/support-services", label: "Support services" },
+    { group: "Directory", href: "/admin/news", label: "News posts assigned to me" },
   ];
   // One query for every badge in the menu; this runs on every admin page.
   const [counts] = await db.$queryRaw<
