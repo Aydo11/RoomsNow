@@ -43,8 +43,8 @@ async function freeSlug(title: string, exceptId?: string) {
 /** Create a post, or update one when the form carries an id. */
 export async function saveNewsPostAction(_prev: FormState, form: FormData): Promise<FormState> {
   // Moderators can open News too, but only to edit posts assigned to them.
-  const admin = await requireAdmin("MODERATION");
-  const fullAdmin = hasAdminPermission(admin);
+  const admin = await requireAdmin(["MODERATION", "NEWS"]);
+  const fullAdmin = hasAdminPermission(admin, "NEWS");
   const id = text(form, "id") || undefined;
   const existing = id ? await db.newsPost.findUnique({ where: { id } }) : null;
   if (id && !existing) return { ok: false, errors: { form: "That post no longer exists." } };
@@ -108,14 +108,14 @@ export async function saveNewsPostAction(_prev: FormState, form: FormData): Prom
 }
 
 export async function setNewsPinnedAction(id: string, pinned: boolean) {
-  const admin = await requireAdmin("ALL");
+  const admin = await requireAdmin("NEWS");
   const post = await db.newsPost.update({ where: { id }, data: { pinned } });
   await audit({ actorId: admin.id, action: pinned ? "news.pinned" : "news.unpinned", targetType: "NewsPost", targetId: id });
   refresh(post.slug);
 }
 
 export async function setNewsPublishedAction(id: string, publish: boolean) {
-  const admin = await requireAdmin("ALL");
+  const admin = await requireAdmin("NEWS");
   const current = await db.newsPost.findUnique({ where: { id } });
   if (!current) return;
   if (publish && !validateNewsPost(asInput(current), true).ok) {
@@ -134,7 +134,7 @@ export async function setNewsPublishedAction(id: string, publish: boolean) {
 }
 
 export async function deleteNewsPostAction(id: string) {
-  const admin = await requireAdmin("ALL");
+  const admin = await requireAdmin("NEWS");
   const post = await db.newsPost.delete({ where: { id } }).catch(() => null);
   if (!post) return;
   if (post.imageKey) await storage.remove(post.imageKey).catch(() => undefined);
