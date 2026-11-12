@@ -12,7 +12,8 @@ export const metadata = { title: "Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
-  const admin = await requireAdmin("MODERATION");
+  const admin = await requireAdmin(["MODERATION", "NEWS"]);
+  if (!hasAdminPermission(admin, "MODERATION")) redirect("/admin/news");
   if (!hasAdminPermission(admin)) redirect("/admin/reports");
   const nav = await adminNav();
 
