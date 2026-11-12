@@ -7,9 +7,10 @@ import { money, shortDate } from "@/lib/format";
 import { DashboardShell, DataTable } from "@/components/dashboard-shell";
 import { FormError, FormSuccess, SubmitButton } from "@/components/ui";
 import { MembershipTabs } from "@/components/membership-tabs";
+import { ProDemo } from "@/components/pro-demo";
 import { providerNav } from "../nav";
 import { proServiceEnquiryAction } from "@/server/actions/pro-services";
-import { EXPERT_PLANS, PRO_SERVICES, PRO_SERVICE_KEYS, SESSION_HOURS, SESSION_STEPS, canUseProServices, sessionLabel, sessionPrice, type ProService, type ProServiceKey } from "@/lib/pro-services";
+import { DEMO_SLUG, DEMO_STORIES, MEETING_TYPES, TIME_WINDOWS, ukMeetingTime, EXPERT_PLANS, PRO_SERVICES, PRO_SERVICE_KEYS, SESSION_HOURS, SESSION_STEPS, canUseProServices, sessionLabel, sessionPrice, type ProService, type ProServiceKey } from "@/lib/pro-services";
 
 export const metadata = { title: "Pro Services" };
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ const ERRORS: Record<string, string> = {
   plan: "Pro Services are part of Professional and Business memberships. Upgrade to send an enquiry.",
   busy: "You've sent several enquiries in the last hour. Please try again a bit later, or email info@roomsnow.co.uk.",
   service: "Choose a service to enquire about.",
+  meeting: "Choose a weekday between tomorrow and 60 days ahead for your call, or leave the date blank and we'll suggest one.",
 };
 
 /** 24px outline icons, drawn with the current text colour. */
@@ -84,6 +86,8 @@ function HeroArt() {
 
 type Expert = { id: string; name: string; role: string; specialism: string; bio: string; hourlyRate: number };
 
+const tomorrow = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date(Date.now() + 86_400_000));
+
 function EnquiryForm({ service, experts, allowed }: { service: ProService; experts: Expert[]; allowed: boolean }) {
   if (!allowed) {
     return <Link href="/provider/membership" className="btn-secondary">Upgrade to enquire</Link>;
@@ -92,7 +96,7 @@ function EnquiryForm({ service, experts, allowed }: { service: ProService; exper
   return (
     <details className="group rounded-card border border-line bg-paper-sunk/40 p-4 open:bg-paper-card">
       <summary className="btn-primary cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-        <Icon name="inbox" className="h-4 w-4" /> Enquire: email me the pack
+        <Icon name="inbox" className="h-4 w-4" /> Enquire, book a call or get the pack
       </summary>
       <form action={proServiceEnquiryAction} className="mt-4 grid gap-3 sm:grid-cols-2">
         <input type="hidden" name="service" value={service.key} />
@@ -121,6 +125,29 @@ function EnquiryForm({ service, experts, allowed }: { service: ProService; exper
             </label>
           </>
         )}
+        <fieldset className="rounded-card border border-line p-4 sm:col-span-2">
+          <legend className="px-1 text-[14px] font-semibold text-ink">Would you like a call or meeting?</legend>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {[["", "No, just email me the pack"], ...Object.entries(MEETING_TYPES)].map(([v, l]) => (
+              <label key={v || "none"} className="flex cursor-pointer items-center gap-2 rounded-pill border border-line px-3 py-1.5 text-[14px] has-[:checked]:border-pine has-[:checked]:bg-pine-light has-[:checked]:text-pine-dark">
+                <input type="radio" name="meetingType" value={v} defaultChecked={!v} className="accent-[#1666AA]" id={`${id}-meet-${v || "none"}`} /> {l}
+              </label>
+            ))}
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="label">Preferred day (optional)</span>
+              <input id={`${id}-meet-date`} name="meetingDate" type="date" min={tomorrow()} className="field" />
+            </label>
+            <label className="block">
+              <span className="label">Preferred time</span>
+              <select id={`${id}-meet-window`} name="meetingWindow" className="field" defaultValue={TIME_WINDOWS[0]}>
+                {TIME_WINDOWS.map((w) => <option key={w} value={w}>{w}</option>)}
+              </select>
+            </label>
+          </div>
+          <p className="mt-2 text-[12.5px] text-ink-faint">Weekdays, UK time. We'll confirm the exact time by email with an add-to-calendar link.</p>
+        </fieldset>
         <label className="block">
           <span className="label">Phone (optional)</span>
           <input id={`${id}-phone`} name="phone" type="tel" maxLength={30} className="field" autoComplete="tel" />
@@ -178,7 +205,7 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
       active="/provider/pro-services"
     >
       <MembershipTabs active="pro" />
-      {query.sent && <div className="mb-5"><FormSuccess message={`Pack sent to ${user.email} (reference ${query.sent}). Reply to that email with any questions and we'll pick it up.`} /></div>}
+      {query.sent && <div className="mb-5"><FormSuccess message={`Pack sent to ${user.email} (reference ${query.sent}). Reply to that email with any questions. If you asked for a call or meeting, we'll email you to confirm the time.`} /></div>}
       {query.queued && <div className="mb-5"><FormSuccess message={`Enquiry saved (reference ${query.queued}). We couldn't send the email just now, so the team will email you the pack.`} /></div>}
       {query.error && <div className="mb-5"><FormError message={ERRORS[query.error] ?? "Something went wrong. Please try again."} /></div>}
 
@@ -191,7 +218,7 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
               PRO SERVICES · {business ? "BUSINESS MEMBER" : allowed ? "PROFESSIONAL MEMBER" : "FOR PAID MEMBERS"}
             </span>
             <h2 className="mt-4 max-w-[22ch] font-display text-[30px] leading-[1.1] [text-wrap:balance] sm:text-[40px]">Run a tighter housing business, with people who've done it</h2>
-            <p className="mt-3 max-w-[56ch] text-[15.5px] leading-relaxed text-white/85">A CRM built for supported accommodation and HMOs, websites that bring in referrals, and advice from managers who run services like yours. Enquire about any of them and your full pack arrives by email.</p>
+            <p className="mt-3 max-w-[56ch] text-[15.5px] leading-relaxed text-white/85">A staff CRM based on how we run our own supported accommodation, websites that bring in referrals, and advice from managers who run services like yours. Enquire about any of them and your full pack arrives by email.</p>
             <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13.5px] text-white/90">
               {["Prices up front, plus VAT", "Housing operators, not generic consultants", business ? "10% off expert time" : "Written pack for every enquiry"].map((t) => (
                 <li key={t} className="flex items-center gap-1.5"><Icon name="check" className="h-4 w-4" />{t}</li>
@@ -252,6 +279,18 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
               </div>
 
               <div className="p-5 sm:p-6">
+                <div className="mb-7 grid items-center gap-5 lg:grid-cols-[1.6fr_1fr]">
+                  <ProDemo kind={key} />
+                  <div>
+                    <p className="eyebrow">Watch the demo · {DEMO_STORIES[key].captions.length * 4} seconds</p>
+                    <ol className="mt-3 space-y-2">
+                      {DEMO_STORIES[key].captions.map((c, i) => (
+                        <li key={c} className="flex gap-2.5 text-[14.5px] text-ink"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-pine-light text-[12px] font-bold text-pine-dark">{i + 1}</span>{c}</li>
+                      ))}
+                    </ol>
+                    <a href={`/demos/${DEMO_SLUG[key]}`} target="_blank" rel="noopener" className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-semibold text-pine-dark underline underline-offset-4">Open the shareable demo page</a>
+                  </div>
+                </div>
                 {isExpert && (
                   <>
                     <h3 className="text-[16px] font-semibold">Ways to get advice</h3>
@@ -340,12 +379,19 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
           <h2 className="text-[20px]">Your enquiries</h2>
           <p className="mt-1 text-[14px] text-ink-soft">Each one has a reference. Keep it in the subject when you reply so the conversation stays together.</p>
           <div className="mt-3">
-            <DataTable head={["Date", "Reference", "Service", "Pack emailed", "Status"]}>
+            <DataTable head={["Date", "Reference", "Service", "Call or meeting", "Pack emailed", "Status"]}>
               {enquiries.map((e) => (
                 <tr key={e.id}>
                   <td className="px-4 py-3">{shortDate(e.createdAt)}</td>
                   <td className="px-4 py-3 font-mono text-[13px]">{e.reference}</td>
                   <td className="px-4 py-3">{PRO_SERVICES[e.service as ProServiceKey]?.name ?? e.service}{e.expertName ? ` · ${e.expertName}` : ""}</td>
+                  <td className="px-4 py-3 text-[14px]">
+                    {e.meetingAt ? (
+                      <span className="font-semibold text-[#1D6E49]">Booked: {ukMeetingTime(e.meetingAt)}</span>
+                    ) : e.meetingType ? (
+                      <span className="text-ink-soft">Requested: {MEETING_TYPES[e.meetingType as keyof typeof MEETING_TYPES] ?? e.meetingType}, {e.meetingWish}</span>
+                    ) : "—"}
+                  </td>
                   <td className="px-4 py-3">{e.packSentAt ? shortDate(e.packSentAt) : "Pending"}</td>
                   <td className="px-4 py-3 capitalize text-ink-soft">{e.status.toLowerCase()}</td>
                 </tr>
