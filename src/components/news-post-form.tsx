@@ -95,7 +95,7 @@ export function NewsPostForm({ post, check, team = [], defaultAuthor = "", fullA
 
       <div>
         <label htmlFor="news-author" className="label">Written by</label>
-        <input id="news-author" name="authorName" maxLength={80} className="field" defaultValue={post ? (post.authorName ?? "") : defaultAuthor} placeholder="e.g. Ayden, founder of RoomsNow" aria-describedby="news-author-help" />
+        <input id="news-author" name="authorName" maxLength={80} className="field" defaultValue={post ? (post.authorName ?? "") : defaultAuthor} placeholder="e.g. RoomsNow team" aria-describedby="news-author-help" />
         <p id="news-author-help" className="mt-1 text-[12.5px] text-ink-faint">Shown as the byline. Leave blank to show it as from RoomsNow.</p>
       </div>
       {fullAdmin ? (
