@@ -1,4 +1,5 @@
 import { whatsappPlanLine } from "@/lib/whatsapp-access";
+import { ProServicesNudge } from "@/components/membership-tabs";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { money } from "@/lib/format";
@@ -215,6 +216,8 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
           }
         />
       </div>
+
+      <ProServicesNudge className="mt-8" />
 
       <section id="boosts" className="mt-12 overflow-hidden rounded-card border border-pine/25 bg-white shadow-[0_1px_2px_rgba(21,42,58,.03)]">
         <div className="bg-pine p-6 text-white sm:p-8">
