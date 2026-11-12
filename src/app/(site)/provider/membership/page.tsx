@@ -10,6 +10,7 @@ import { money, shortDate } from "@/lib/format";
 import { cancelWhatsappAddonAction, startWhatsappAddonAction } from "@/server/actions/billing";
 import { WHATSAPP_ADDON_PRICE, whatsappAccess } from "@/lib/whatsapp-access";
 import { WhatsappSetupPrompt } from "@/components/whatsapp-setup-prompt";
+import { MembershipTabs } from "@/components/membership-tabs";
 
 export const metadata = { title: "Membership" };
 export const dynamic = "force-dynamic";
@@ -43,6 +44,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       nav={nav}
       active="/provider/membership"
     >
+      <MembershipTabs active="plans" />
       {whatsapp.allowed && (!addon.whatsappEnabled || !addon.whatsappNumber) && <WhatsappSetupPrompt initialNumber={addon.whatsappNumber} autoOpen={query.whatsapp === "complete"} source={whatsapp.reason === "GRANTED" ? "granted" : whatsapp.reason === "INCLUDED" ? "included" : "paid"} />}
       {query.billing === "complete" && <SuccessCelebration kind="membership" clearQueryParam="billing" />}
       {query.billing === "complete" && <div className="mb-5"><FormSuccess message="Payment completed. Your membership will update as soon as Stripe confirms it." /></div>}
