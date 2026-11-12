@@ -34,6 +34,7 @@ const staticPages: Array<[string, MetadataRoute.Sitemap[number]["changeFrequency
   ["/safety", "monthly", 0.4],
   ["/verification", "monthly", 0.4],
   ["/guides", "weekly", 0.7],
+  ["/news", "daily", 0.6],
   ["/tools", "monthly", 0.7],
   ["/housing-benefit-calculator", "monthly", 0.7],
   ["/areas/birmingham", "monthly", 0.7],
@@ -53,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   try {
-    const [listings, companies, cities, areaListings] = await Promise.all([
+    const [listings, companies, cities, areaListings, news] = await Promise.all([
       db.listing.findMany({
         where: { status: "ACTIVE", company: { status: "ACTIVE" }, rooms: { some: { status: "AVAILABLE" } } },
         select: { id: true, updatedAt: true },
@@ -78,6 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
         select: { supportTypes: true, updatedAt: true, property: { select: { city: true, area: true } } },
       }),
+      db.newsPost.findMany({ where: { publishedAt: { not: null, lte: new Date() } }, select: { slug: true, updatedAt: true } }),
     ]);
 
     // Area pages ("Supported housing in Handsworth", "Mental health accommodation in
@@ -109,6 +111,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: listing.updatedAt,
         changeFrequency: "daily" as const,
         priority: 0.8,
+      })),
+      ...news.map((post) => ({
+        url: absoluteUrl(`/news/${post.slug}`),
+        lastModified: post.updatedAt,
+        changeFrequency: "monthly" as const,
+        priority: 0.5,
       })),
       ...companies.map((company) => ({
         url: absoluteUrl(`/companies/${company.slug}`),
