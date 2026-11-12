@@ -15,3 +15,15 @@ export function MembershipTabs({ active }: { active: "plans" | "pro" }) {
     </nav>
   );
 }
+
+/** A quiet one-line pointer to Pro Services for the plans and pricing pages. */
+export function ProServicesNudge({ className = "" }: { className?: string }) {
+  return (
+    <Link href="/provider/pro-services" className={clsx("group flex flex-wrap items-center justify-between gap-2 rounded-card border border-dashed border-pine/40 px-4 py-3 text-[14.5px] transition hover:border-pine hover:bg-pine-light/40", className)}>
+      <span className="text-ink-soft">
+        <strong className="text-ink">Want Pro Services?</strong> A staff CRM, a website for your service or 1:1 advice from our housing managers.
+      </span>
+      <span className="font-semibold text-pine-dark group-hover:underline">See Pro Services →</span>
+    </Link>
+  );
+}
