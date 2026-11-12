@@ -4,8 +4,8 @@ import { dateTime, money } from "@/lib/format";
 import { DashboardShell, DataTable, StatCard } from "@/components/dashboard-shell";
 import { FormError, FormSuccess, SubmitButton } from "@/components/ui";
 import { adminNav } from "../nav";
-import { saveProExpertAction, updateProEnquiryAction } from "@/server/actions/pro-services";
-import { ENQUIRY_STATUSES, PRO_SERVICES, sessionLabel } from "@/lib/pro-services";
+import { confirmProMeetingAction, saveProExpertAction, updateProEnquiryAction } from "@/server/actions/pro-services";
+import { ENQUIRY_STATUSES, MEETING_TYPES, PRO_SERVICES, sessionLabel, ukMeetingTime } from "@/lib/pro-services";
 
 export const metadata = { title: "Pro Services" };
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ function ExpertForm({ expert }: { expert?: Expert }) {
 }
 
 /** Pro Services enquiries (each one already emailed to the provider and to info@) and the managers who sell their time. */
-export default async function AdminProServicesPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
+export default async function AdminProServicesPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string; booked?: string }> }) {
   await requireAdmin();
   const query = await searchParams;
   const [nav, enquiries, experts, open, won] = await Promise.all([
@@ -58,13 +58,16 @@ export default async function AdminProServicesPage({ searchParams }: { searchPar
 
       <section className="mt-8">
         <h2 className="text-[20px]">Enquiries</h2>
+        {query.booked && <div className="mt-3"><FormSuccess message="Booked. The provider has been emailed the time with an add-to-calendar link, and info@ has a copy." /></div>}
+        {query.error === "meeting" && <div className="mt-3"><FormError message="Choose the call type and a time that isn't in the past. A link must start with https://, or enter a phone number or address." /></div>}
+        {query.error === "meeting-email" && <div className="mt-3"><FormError message="The time was saved but the confirmation email didn't send. Please email the provider yourself." /></div>}
         <div className="mt-3">
           {enquiries.length === 0 ? (
             <p className="card p-5 text-[15px] text-ink-soft">No enquiries yet.</p>
           ) : (
             <DataTable head={["Received", "Provider", "Service", "Message", "Status and note"]}>
               {enquiries.map((e) => (
-                <tr key={e.id} className="align-top">
+                <tr key={e.id} id={`e-${e.id}`} className="scroll-mt-24 align-top">
                   <td className="px-4 py-3 text-[13px]">
                     {dateTime(e.createdAt)}
                     <span className="block font-mono text-ink-soft">{e.reference}</span>
@@ -79,6 +82,27 @@ export default async function AdminProServicesPage({ searchParams }: { searchPar
                   <td className="px-4 py-3 text-[14px]">
                     {PRO_SERVICES[e.service as keyof typeof PRO_SERVICES]?.name ?? e.service}
                     {e.expertName && <span className="block text-ink-soft">{e.expertName}{e.hours ? `, ${sessionLabel(e.hours)}` : ""}</span>}
+                    {e.meetingAt ? (
+                      <span className="mt-2 block rounded-[8px] bg-[#DDF2E8] px-2 py-1 text-[13px] font-semibold text-[#1D6E49]">
+                        Booked: {MEETING_TYPES[e.meetingType as keyof typeof MEETING_TYPES] ?? "Call"}, {ukMeetingTime(e.meetingAt)}{e.meetingLink ? ` · ${e.meetingLink}` : ""}
+                      </span>
+                    ) : e.meetingType ? (
+                      <span className="mt-2 block rounded-[8px] bg-[#FDEFD3] px-2 py-1 text-[13px] font-semibold text-[#8A5A00]">
+                        Wants: {MEETING_TYPES[e.meetingType as keyof typeof MEETING_TYPES] ?? e.meetingType}, {e.meetingWish}
+                      </span>
+                    ) : null}
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-[13px] font-semibold text-pine-dark">{e.meetingAt ? "Change time" : "Book a call or meeting"}</summary>
+                      <form action={confirmProMeetingAction} className="mt-2 grid min-w-[220px] gap-2">
+                        <input type="hidden" name="id" value={e.id} />
+                        <select id={`mt-${e.id}`} name="meetingType" defaultValue={e.meetingType ?? "PHONE"} aria-label="Call type" className="field h-9 py-1 text-[14px]">
+                          {Object.entries(MEETING_TYPES).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                        <input id={`ma-${e.id}`} name="meetingAt" type="datetime-local" required aria-label="Date and time (UK)" className="field h-9 py-1 text-[14px]" />
+                        <input id={`ml-${e.id}`} name="meetingLink" maxLength={300} defaultValue={e.meetingLink ?? ""} aria-label="Video link, phone number or address" placeholder="Video link, number or address" className="field h-9 py-1 text-[14px]" />
+                        <SubmitButton className="btn-primary">Confirm and email</SubmitButton>
+                      </form>
+                    </details>
                   </td>
                   <td className="max-w-[280px] whitespace-pre-line px-4 py-3 text-[14px] text-ink-soft">{e.message ?? "—"}</td>
                   <td className="px-4 py-3">
@@ -102,7 +126,7 @@ export default async function AdminProServicesPage({ searchParams }: { searchPar
         <h2 className="text-[20px]">Managers selling their time</h2>
         <p className="mt-1 text-[14px] text-ink-soft">Providers see these on the Pro Services page with prices for 1 hour, 2 hours and a half day. Business members get 10% off automatically.</p>
         {query.saved && <div className="mt-3"><FormSuccess message="Saved." /></div>}
-        {query.error && <div className="mt-3"><FormError message="Add a name, role, specialism and an hourly rate between £10 and £1,000." /></div>}
+        {query.error === "expert" && <div className="mt-3"><FormError message="Add a name, role, specialism and an hourly rate between £10 and £1,000." /></div>}
         <div className="mt-4 space-y-4">
           {experts.map((e) => (
             <div key={e.id} className="card p-5">
