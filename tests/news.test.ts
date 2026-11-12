@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calendarDate, cleanNewsLink, httpsUrl, isNewsCategory, newsBannerCopy, newsParagraphs, newsSlug, ukLongDate, validateNewsPost } from "../src/lib/news";
+import { calendarDate, cleanNewsLink, httpsUrl, isNewsCategory, newsBannerCopy, newsParagraphs, newsSlug, readMinutes, ukLongDate, validateNewsPost } from "../src/lib/news";
 
 test("news slugs are tidy and URL-safe", () => {
   assert.equal(newsSlug("Support our Gambia project!"), "support-our-gambia-project");
@@ -79,4 +79,10 @@ test("homepage banner wording follows the category and hides closed appeals", ()
   assert.equal(newsBannerCopy("CHARITY", null)?.label, "Charity spotlight");
   assert.equal(newsBannerCopy("SECTOR", null)?.cta, "Read article");
   assert.equal(newsBannerCopy("ROOMSNOW", null)?.label, "RoomsNow update");
+});
+
+test("reading time is at least a minute and rounds up", () => {
+  assert.equal(readMinutes(""), 1);
+  assert.equal(readMinutes("word ".repeat(200)), 1);
+  assert.equal(readMinutes("word ".repeat(201)), 2);
 });
