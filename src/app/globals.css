@@ -1557,37 +1557,36 @@ html[data-theme="dark"] .assist-link { color: rgb(var(--rn-ink)); }
 }
 
 /* ------------------------------------------------------------------
-   Homepage street (components/hero-street.tsx). A row of houses whose
-   rooms quietly light up one at a time. Only transform
+   Homepage live map (components/hero-street.tsx). Pins drop onto a faint
+   street grid with a ripple and a tag; light pulses run along the roads. Only transform
    and opacity animate, so it stays cheap on phones.
    ------------------------------------------------------------------ */
 :root {
-  --street-house: 255 255 255;
   --street-roof: 15 79 135;
-  --street-win: 214 228 244;
-  --street-door: 22 102 170;
-  --street-ground: 22 102 170;
 }
 html[data-theme="dark"] {
-  --street-house: 27 41 62;
   --street-roof: 38 74 116;
-  --street-win: 40 57 82;
-  --street-door: 84 157 229;
-  --street-ground: 84 157 229;
 }
 .hero-street { position: relative; width: 100%; pointer-events: none; user-select: none; }
-.hero-street-svg { display: block; width: 100%; height: clamp(110px, 13.75vw, 220px); }
+.hero-street-svg { display: block; width: 100%; height: clamp(130px, 18vw, 290px); }
 /* Phones: a slimmer street so the rooms below come into view sooner. */
-@media (max-width: 639px) { .hero-street-svg { height: 72px; } }
-.street-house { fill: rgb(var(--street-house)); stroke: rgb(var(--rn-pine) / 0.22); stroke-width: 1.5; }
-.street-roof { fill: rgb(var(--street-roof)); }
-.street-win { fill: rgb(var(--street-win)); }
-.street-door { fill: rgb(var(--street-door)); }
-.street-knob { fill: #f5b544; }
-.street-ground { fill: rgb(var(--street-ground) / 0.16); }
-.street-lit { fill: #f5b544; }
-.street-lit-scan { opacity: 0.92; }
-.street-lit-home { opacity: 0.55; }
+@media (max-width: 639px) { .hero-street-svg { height: 104px; } }
+.map-road { fill: none; stroke: rgb(var(--street-roof) / 0.14); stroke-width: 2; }
+.map-road-major { stroke: rgb(var(--street-roof) / 0.22); stroke-width: 5; }
+.map-canal { fill: none; stroke: rgb(84 157 229 / 0.22); stroke-width: 9; stroke-linecap: round; }
+.map-park { fill: rgb(34 160 107 / 0.08); }
+.map-pulse { opacity: 0; }
+.map-pulse-head { fill: #f5b544; }
+.map-ripple { fill: none; stroke: #f5b544; stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.map-pin-body { fill: #f5b544; stroke: rgb(var(--street-roof)); stroke-width: 2; }
+.map-pin-eye { fill: rgb(var(--street-roof)); }
+.map-pin-shadow { fill: rgb(0 0 0 / 0.25); }
+.map-tag-bg { fill: rgb(var(--rn-paper-card, 255 255 255)); stroke: rgb(var(--rn-pine) / 0.2); }
+html[data-theme="dark"] .map-tag-bg { fill: rgb(22 33 50); stroke: rgb(84 157 229 / 0.35); }
+html[data-theme="dark"] .map-road { stroke: rgb(84 157 229 / 0.16); }
+html[data-theme="dark"] .map-road-major { stroke: rgb(84 157 229 / 0.24); }
+.map-tag-dot { fill: #22a06b; }
+.map-tag-text { fill: rgb(var(--rn-ink)); font-size: 13px; font-weight: 700; font-family: inherit; }
 
 .street-pill {
   position: absolute;
@@ -1618,16 +1617,39 @@ html[data-theme="dark"] .street-pill { background: rgb(22 33 50); border-color: 
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .street-lit-scan { opacity: 0; animation: street-light var(--street-cycle, 16s) ease-in-out infinite backwards; }
-  /* "Home" windows stay steadily lit: the old 0.4-0.62 shimmer was barely
-     visible but kept ~18 SVG layers repainting every frame. */
+  /* One pin drops every --street-cycle / 8; each pin, ripple and tag runs
+     the same keyframes with its own delay (set in hero-street.tsx). */
+  .map-pin { animation: map-pin-drop var(--street-cycle, 19.2s) cubic-bezier(.34,1.56,.64,1) infinite backwards; }
+  .map-ripple { animation: map-ripple var(--street-cycle, 19.2s) ease-out infinite backwards; }
+  .map-tag { animation: map-tag var(--street-cycle, 19.2s) cubic-bezier(.16,1,.3,1) infinite backwards; }
+  .map-pin-glow { transform-box: fill-box; transform-origin: center; animation: map-glow 1.4s ease-in-out infinite alternate; }
+  .map-pulse { animation: map-pulse 9s linear infinite backwards; }
   .street-pill { opacity: 0; animation: street-pill var(--street-cycle, 14s) cubic-bezier(.16,1,.3,1) infinite backwards; }
 }
-@keyframes street-light {
-  0% { opacity: 0; }
-  7% { opacity: 0.92; }
-  42% { opacity: 0.92; }
-  52%, 100% { opacity: 0; }
+/* A pin is on the map for ~a third of the cycle, so 2–3 show at once. */
+@keyframes map-pin-drop {
+  0% { opacity: 0; transform: translateY(-40px); }
+  3% { opacity: 1; transform: none; }
+  30% { opacity: 1; transform: none; }
+  34%, 100% { opacity: 0; transform: translateY(-10px); }
+}
+@keyframes map-ripple {
+  0%, 2.5% { opacity: 0; transform: scale(0.3); }
+  3% { opacity: 0.8; transform: scale(0.3); }
+  13%, 100% { opacity: 0; transform: scale(3.2); }
+}
+@keyframes map-tag {
+  0%, 4% { opacity: 0; transform: translateY(8px); }
+  7% { opacity: 1; transform: none; }
+  29% { opacity: 1; transform: none; }
+  32%, 100% { opacity: 0; transform: translateY(-6px); }
+}
+@keyframes map-glow { from { transform: scale(0.8); opacity: 0.5; } to { transform: scale(1.2); opacity: 1; } }
+@keyframes map-pulse {
+  0% { opacity: 0; transform: translateX(0); }
+  8% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(var(--run)); }
 }
 @keyframes street-pill {
   0% { opacity: 0; transform: translateY(10px) scale(0.92); }
@@ -1635,7 +1657,7 @@ html[data-theme="dark"] .street-pill { background: rgb(22 33 50); border-color: 
   38% { opacity: 1; transform: none; }
   44%, 100% { opacity: 0; transform: translateY(-6px); }
 }
-.hero-street-compact .hero-street-svg { height: clamp(84px, 9vw, 150px); }
+.hero-street-compact .hero-street-svg { height: clamp(100px, 12vw, 190px); }
 @media (min-width: 768px) { .hero-street-compact { padding-top: 40px; } }
 
 /* "Just listed" photo strip on the homepage (components/room-marquee.tsx). */
