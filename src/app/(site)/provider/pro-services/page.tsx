@@ -12,7 +12,7 @@ import { MembershipTabs } from "@/components/membership-tabs";
 import { ProDemo } from "@/components/pro-demo";
 import { providerNav } from "../nav";
 import { proServiceEnquiryAction } from "@/server/actions/pro-services";
-import { DEMO_SLUG, DEMO_STORIES, MEETING_TYPES, TIME_WINDOWS, ukMeetingTime, EXPERT_PLANS, PRO_SERVICES, PRO_SERVICE_KEYS, SESSION_HOURS, SESSION_STEPS, canUseProServices, sessionLabel, sessionPrice, type ProService, type ProServiceKey } from "@/lib/pro-services";
+import { packPdfPath, ADVICE_FORMATS, HOW_IT_WORKS_STEPS, DEMO_SLUG, DEMO_STORIES, MEETING_TYPES, TIME_WINDOWS, ukMeetingTime, EXPERT_PLANS, PRO_SERVICES, PRO_SERVICE_KEYS, SESSION_HOURS, SESSION_STEPS, canUseProServices, sessionLabel, sessionPrice, type ProService, type ProServiceKey } from "@/lib/pro-services";
 
 export const metadata = { title: "Pro Services" };
 export const dynamic = "force-dynamic";
@@ -51,19 +51,11 @@ function Icon({ name, className = "h-5 w-5" }: { name: keyof typeof ICONS; class
 const SERVICE_ICON: Record<ProServiceKey, keyof typeof ICONS> = { CRM: "crm", BESPOKE_CRM: "bespoke", WEBSITE: "website", EXPERT: "expert" };
 const STARTS_AT: Record<ProServiceKey, string> = { CRM: "From £59/month", BESPOKE_CRM: "From £1,000", WEBSITE: "From £499", EXPERT: "From £150" };
 
-const FORMATS: { icon: keyof typeof ICONS; label: string; body: string }[] = [
-  { icon: "phone", label: "WhatsApp calls", body: "Talk it through from your phone, wherever you are." },
-  { icon: "video", label: "1:1 video sessions", body: "Share your screen and work through documents together." },
-  { icon: "message", label: "Daily WhatsApp advice", body: "Message a question on any working day and get a written reply." },
-  { icon: "calendar", label: "Weekly catch-ups", body: "A regular slot with the same manager to keep your plan moving." },
-];
+const FORMAT_ICONS: (keyof typeof ICONS)[] = ["phone", "video", "message", "calendar"];
+const FORMATS = ADVICE_FORMATS.map((f, i) => ({ ...f, icon: FORMAT_ICONS[i] }));
 
-const HOW_IT_WORKS: { icon: keyof typeof ICONS; title: string; body: string }[] = [
-  { icon: "check", title: "Enquire", body: "Pick a service and tell us a little about your business." },
-  { icon: "inbox", title: "Get your pack", body: "Prices, what's included and next steps land in your inbox straight away." },
-  { icon: "reply", title: "Reply to agree", body: "Ask questions on the same email thread. We confirm scope and price in writing." },
-  { icon: "rocket", title: "We get started", body: "Pay the agreed deposit or first month and we set things up." },
-];
+const HOW_ICONS: (keyof typeof ICONS)[] = ["check", "inbox", "reply", "rocket"];
+const HOW_IT_WORKS = HOW_IT_WORKS_STEPS.map((s, i) => ({ ...s, icon: HOW_ICONS[i] }));
 
 /** Decorative hero art: a dashboard card, a chat bubble and a little house, in white lines. */
 function HeroArt() {
@@ -242,6 +234,7 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
             </ul>
           </div>
           <div className="hidden h-[200px] lg:block"><HeroArt /></div>
+          <a href={packPdfPath("ALL")} target="_blank" rel="noopener" className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-4 py-2 text-[14px] font-bold text-[#0F4F87] shadow-lg hover:bg-[#E8F2FC] lg:col-span-2">Download the full Pro Services guide (PDF)</a>
         </div>
       </section>
 
@@ -304,7 +297,10 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
                         <li key={c} className="flex gap-2.5 text-[14.5px] text-ink"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-pine-light text-[12px] font-bold text-pine-dark">{i + 1}</span>{c}</li>
                       ))}
                     </ol>
-                    <a href={`/demos/${DEMO_SLUG[key]}`} target="_blank" rel="noopener" className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-semibold text-pine-dark underline underline-offset-4">Open the shareable demo page</a>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <a href={packPdfPath(key)} target="_blank" rel="noopener" className="btn-secondary"><Icon name="inbox" className="h-4 w-4" /> Download the PDF guide</a>
+                      <a href={`/demos/${DEMO_SLUG[key]}`} target="_blank" rel="noopener" className="inline-flex items-center px-2 text-[14px] font-semibold text-pine-dark underline underline-offset-4">Shareable demo page</a>
+                    </div>
                   </div>
                 </div>
                 {isExpert && (
