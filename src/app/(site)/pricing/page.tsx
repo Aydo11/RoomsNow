@@ -1,4 +1,4 @@
-import { whatsappPlanLine } from "@/lib/whatsapp-access";
+import { WHATSAPP_ADDON_LABEL, whatsappPlanLine } from "@/lib/whatsapp-access";
 import { ProServicesNudge } from "@/components/membership-tabs";
 import Link from "next/link";
 import { db } from "@/lib/db";
@@ -12,6 +12,10 @@ import { SERVICE_PLANS, SERVICE_TRIAL_DAYS } from "@/lib/service-marketplace";
 import { SponsorDurationPicker } from "@/components/sponsor-duration-picker";
 import { BOOST_PACKAGES } from "@/lib/boost-packages";
 import { pageMetadata } from "@/lib/seo";
+import { PlanDemo } from "@/components/plan-demo";
+import { PlanShowcase } from "@/components/plan-showcase";
+import { PLAN_GUIDES, PLAN_GUIDE_KEYS, planPdfPath, saleLines, type PlanGuideKey } from "@/lib/plan-guides";
+import { SPONSOR_PACKAGES } from "@/lib/sponsor-packages";
 
 export const metadata = pageMetadata({
   title: "Membership & Pricing for Accommodation Providers | RoomsNow",
@@ -35,18 +39,76 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
   const signedIn = Boolean(user);
   const referrer = user?.role === "REFERRER";
   const serviceBusiness = user?.role === "SERVICE_PROVIDER";
+  const prices = Object.fromEntries([...plans, ...referrerPlans].map((p) => [p.tier, p.priceMonthly]));
+  const sale = saleLines(prices);
 
   return (
-    <div className="shell py-14">
-      <h1 className="max-w-[22ch] text-[38px] leading-tight">Membership and pricing</h1>
-      <p className="mt-3 max-w-[62ch] text-[17px] leading-relaxed text-ink-soft">
-        People looking for accommodation always use {brand.name} free. Providers pay to advertise,
-        professional referrers can upgrade for a bigger caseload and unlimited sharing, and trades
-        and suppliers can advertise their services to providers.{" "}
-        {livePayments ? "Payments are handled securely by Stripe." : "Online payments are being configured."}
-      </p>
+    <div className="shell py-10 sm:py-14">
+      <section className="relative overflow-hidden rounded-[28px] bg-[#171F2E] px-6 py-10 text-white sm:px-10 sm:py-14">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(#549DE533 1.5px, transparent 1.5px)", backgroundSize: "30px 30px" }} />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-[360px] w-[360px] rounded-full bg-[#1666AA]/40 blur-3xl" />
+        <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center">
+          <div>
+            <p className="text-[12.5px] font-semibold uppercase tracking-[0.1em] text-[#9CC9F2]!">Membership and pricing</p>
+            <h1 className="mt-2 max-w-[20ch] font-display text-[34px] leading-[1.08] text-white! [text-wrap:balance] sm:text-[46px]">Fill rooms faster, with a plan that fits your portfolio</h1>
+            <p className="mt-4 max-w-[58ch] text-[16.5px] leading-relaxed text-white/80!">
+              People looking for accommodation always use {brand.name} free. Providers pay to advertise and promote,
+              referral agencies can upgrade for a bigger caseload, and trades can advertise to providers.
+              Watch a short demo of every plan and extra below.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              <a href="#see-it" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-[15px] font-bold text-[#0F4F87] transition hover:scale-[1.03]">
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg> Watch the demos
+              </a>
+              <a href={planPdfPath("ALL")} target="_blank" rel="noopener" className="inline-flex items-center rounded-full bg-white/10 px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-white/20">Download the pricing guide (PDF)</a>
+            </div>
+            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[13.5px] text-white/75!">
+              <li>✓ Free for people looking for a room</li>
+              <li>✓ Monthly plans, cancel any time</li>
+              <li>✓ {livePayments ? "Secure card payments by Stripe" : "Online payments being configured"}</li>
+            </ul>
+          </div>
+          <div className="min-w-0 rounded-[20px] bg-white/5 p-2 ring-1 ring-white/10">
+            <PlanDemo kind="BOOST" autoPlay loop />
+            <p className="px-2 pb-1 pt-2.5 text-[13px] text-white/70!">A boost puts your advert at the top of search for 24 hours. <a href="#boosts" className="font-semibold text-white! underline">How boosts work</a></p>
+          </div>
+        </div>
+      </section>
 
-      <div className="mt-8">
+      {sale.length > 0 && (
+        <section aria-labelledby="sale-heading" className="mt-6 rounded-card border-2 border-dashed border-clay/50 bg-clay/5 p-5 sm:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <span className="inline-block rounded-pill bg-clay px-3 py-1 text-[12px] font-bold uppercase tracking-[0.06em] text-white">Limited-time offer</span>
+              <h2 id="sale-heading" className="mt-2 text-[24px] [text-wrap:balance]">Up to {Math.max(...sale.map((s) => s.percent))}% off Professional and Business</h2>
+              <p className="mt-1.5 max-w-[60ch] text-[14.5px] leading-relaxed text-ink-soft">
+                Join a paid plan while the offer is on and you pay the offer price shown at checkout, every month. No setup fee, no contract, and you can cancel from your Membership page whenever you like.
+              </p>
+            </div>
+            <a href={planPdfPath("ALL")} target="_blank" rel="noopener" className="btn-secondary shrink-0">Offer details (PDF)</a>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {sale.map((s) => (
+              <div key={s.tier} className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] bg-white p-4 ring-1 ring-line">
+                <div>
+                  <p className="text-[15px] font-semibold">{s.name}</p>
+                  <p className="mt-0.5 flex items-baseline gap-2">
+                    <s className="text-[16px] text-ink-faint decoration-clay decoration-2">{money(s.was)}</s>
+                    <span className="font-display text-[28px] leading-none">{money(s.now)}</span>
+                    <span className="text-[13px] text-ink-soft">a month</span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="rounded-pill bg-clay/10 px-2.5 py-0.5 text-[13px] font-bold text-clay">Save {s.percent}%</p>
+                  <p className="mt-1 text-[12.5px] text-ink-soft">{money(s.monthly)} a month · {money(s.yearly)} a year</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="mt-10">
         <PricingTabs
           initialTab={initialTab}
           servicesPanel={
@@ -91,7 +153,10 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                   Provider Services, where paying accommodation providers message you and send quote requests.
                   Every business is checked before its adverts go live.
                 </p>
-                <Link href="/advertise-services" className="btn-ghost mt-3 px-0">How Provider Services works →</Link>
+                <div className="mt-3 flex flex-wrap items-center gap-x-4">
+                  <Link href="/advertise-services" className="btn-ghost px-0">How Provider Services works →</Link>
+                  <GuideLinks guide="SERVICES" />
+                </div>
               </div>
             </div>
           }
@@ -100,6 +165,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
               {plans.map((plan) => (
           <div
             key={plan.id}
+            id={guideFor(plan.tier) ? PLAN_GUIDES[guideFor(plan.tier)!].slug : undefined}
             data-spotlight
             className={plan.tier === "PROFESSIONAL" ? "rounded-card border-2 border-pine bg-white p-7 shadow-raise transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-float" : "card interactive-card p-7"}
           >
@@ -149,6 +215,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
             >
               {plan.priceMonthly === 0 ? "Start free" : `Choose ${plan.name}`}
             </Link>
+            <GuideLinks guide={guideFor(plan.tier)} />
                 </div>
               ))}
             </div>
@@ -191,6 +258,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                     >
                       {plan.priceMonthly === 0 ? "Start free" : `Choose ${plan.name}`}
                     </Link>
+                    {plan.tier === "REFERRER_PRO" && <GuideLinks guide="REFERRER_PRO" />}
                   </div>
                 ))}
               </div>
@@ -217,6 +285,49 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
         />
       </div>
 
+      <section aria-labelledby="compare-heading" className="mt-12">
+        <h2 id="compare-heading" className="text-[26px]">Provider plans side by side</h2>
+        <p className="mt-1.5 text-[14.5px] text-ink-soft">Everything each plan includes, so you can see exactly what you get for the money.</p>
+        <div className="mt-5 overflow-x-auto rounded-card border border-line bg-white">
+          <table className="w-full min-w-[620px] text-left text-[14px]">
+            <thead>
+              <tr className="border-b border-line bg-paper-sunk/60">
+                <th scope="col" className="px-4 py-3 font-semibold text-ink-soft">What you get</th>
+                {plans.map((p) => (
+                  <th key={p.id} scope="col" className={`px-4 py-3 text-[15px] font-bold ${p.tier === "PROFESSIONAL" ? "bg-pine-light/50" : ""}`}>
+                    {p.name}
+                    <span className="block text-[13px] font-medium text-ink-soft">{p.priceMonthly ? `${money(p.priceMonthly)} a month` : "Free"}</span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line tabular-nums">
+              {compareRows(plans).map(([label, ...cells]) => (
+                <tr key={label as string}>
+                  <th scope="row" className="px-4 py-2.5 font-medium text-ink">{label}</th>
+                  {cells.map((c, i) => (
+                    <td key={i} className={`px-4 py-2.5 ${plans[i]?.tier === "PROFESSIONAL" ? "bg-pine-light/25" : ""} ${c === "—" ? "text-ink-faint" : c === "✓" ? "font-bold text-pine" : ""}`}>{c}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="see-it" aria-labelledby="see-it-heading" className="relative mt-12 scroll-mt-24 rounded-[28px] border border-line bg-white p-5 sm:p-8">
+        {PLAN_GUIDE_KEYS.map((k) => <span key={k} id={`demo-${PLAN_GUIDES[k].slug}`} className="absolute -top-24" aria-hidden="true" />)}
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-pine-dark">See it in action</p>
+            <h2 id="see-it-heading" className="mt-1 text-[28px] [text-wrap:balance]">A short demo of every plan and paid extra</h2>
+            <p className="mt-1.5 max-w-[62ch] text-[14.5px] text-ink-soft">Pick one to watch how it works, read what's included in depth, and download its PDF guide.</p>
+          </div>
+          <a href={planPdfPath("ALL")} target="_blank" rel="noopener" className="btn-secondary">Full pricing guide (PDF)</a>
+        </div>
+        <PlanShowcase prices={prices} />
+      </section>
+
       <ProServicesNudge className="mt-8" />
 
       <section id="boosts" className="mt-12 overflow-hidden rounded-card border border-pine/25 bg-white shadow-[0_1px_2px_rgba(21,42,58,.03)]">
@@ -228,9 +339,22 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
           </p>
         </div>
         <div className="p-6 sm:p-8">
+          <div className="mb-7 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center">
+            <PlanDemo kind="BOOST" />
+            <div>
+              <h3 className="text-[19px]">What happens when you boost</h3>
+              <ol className="mt-3 space-y-3 text-[14.5px] text-ink-soft">
+                <li><strong className="text-ink">Hours 0 to 3:</strong> your advert leads matching search results.</li>
+                <li><strong className="text-ink">Hours 3 to 24:</strong> it shares the top positions with other boosted adverts, rotating every hour.</li>
+                <li><strong className="text-ink">After 24 hours:</strong> it ends by itself. Nothing to cancel.</li>
+              </ol>
+              <p className="mt-4 text-[13.5px] text-ink-soft">Professional includes 3 boosts and Business 1 boost every billing period.</p>
+              <a href={planPdfPath("BOOST")} target="_blank" rel="noopener" className="btn-ghost mt-2 px-0">Boosts guide (PDF) →</a>
+            </div>
+          </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {Object.entries(BOOST_PACKAGES).map(([key, pack]) => (
-              <div key={key} className="rounded-card border border-line p-5">
+              <div key={key} className={`rounded-card border p-5 transition hover:-translate-y-0.5 hover:shadow-raise ${key === "THREE" ? "border-2 border-pine" : "border-line"}`}>
                 <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-pine-dark">{pack.shortLabel}</span>
                 <h3 className="mt-1 text-[20px] font-bold">{pack.label}</h3>
                 <p className="mt-3 font-display text-[30px]">{money(pack.amount)}</p>
@@ -271,12 +395,58 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
             <Feature>Does not affect verification, moderation or organic ranking</Feature>
           </ul>
         </div>
+        <div className="grid gap-6 border-b border-line p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-center lg:p-8">
+          <PlanDemo kind="SPONSORED" />
+          <div>
+            <h3 className="text-[19px]">Sponsored or boosted?</h3>
+            <p className="mt-2 text-[14.5px] leading-relaxed text-ink-soft">
+              A <strong className="text-ink">boost</strong> is a 24-hour push to the top of results. A <strong className="text-ink">sponsored advert</strong> keeps a reserved, labelled spot on the first page for {SPONSOR_PACKAGES.WEEK.days}, {SPONSOR_PACKAGES.MONTH.days} or {SPONSOR_PACKAGES.QUARTER.days} days, with a highlighted map pin. You can sponsor your main property and boost a room when it comes free.
+            </p>
+            <p className="mt-3 text-[13.5px] text-ink-soft">Professional includes one free 7-day placement at a time, Business two.</p>
+            <a href={planPdfPath("SPONSORED")} target="_blank" rel="noopener" className="btn-ghost mt-2 px-0">Sponsored adverts guide (PDF) →</a>
+          </div>
+        </div>
         <div className="p-6 lg:p-8">
           <SponsorDurationPicker provider={provider} signedIn={signedIn} livePayments={livePayments} />
         </div>
       </section>
     </div>
   );
+}
+
+const guideFor = (tier: string): PlanGuideKey | undefined => (tier === "FREE" || tier === "PROFESSIONAL" || tier === "BUSINESS" ? tier : undefined);
+
+function GuideLinks({ guide }: { guide?: PlanGuideKey }) {
+  if (!guide) return null;
+  return (
+    <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[13.5px] font-semibold">
+      <a href={`#demo-${PLAN_GUIDES[guide].slug}`} className="text-pine-dark hover:underline">▶ Watch the demo</a>
+      <a href={planPdfPath(guide)} target="_blank" rel="noopener" className="text-pine-dark hover:underline">PDF guide</a>
+    </div>
+  );
+}
+
+type PlanRow = { tier: string; maxListings: number; maxRooms: number; maxStaff: number; maxPhotos: number; videoUploads: boolean; analytics: boolean; priorityPlacement: boolean; featuredCredits: number; includedBoosts: number; prioritySupport: boolean };
+
+/** Rows for the provider comparison table, read from the live catalogue. */
+function compareRows(plans: PlanRow[]): string[][] {
+  const lim = (n: number) => (n === -1 ? "Unlimited" : String(n));
+  const yes = (b: boolean) => (b ? "✓" : "—");
+  return [
+    ["Live adverts", ...plans.map((p) => lim(p.maxListings))],
+    ["Rooms", ...plans.map((p) => lim(p.maxRooms))],
+    ["Staff accounts", ...plans.map((p) => lim(p.maxStaff))],
+    ["Photos per advert", ...plans.map((p) => lim(p.maxPhotos))],
+    ["Video uploads", ...plans.map((p) => yes(p.videoUploads))],
+    ["Stories on search", ...plans.map((p) => (p.tier === "FREE" ? "—" : p.videoUploads ? "Photo and video" : "Photo"))],
+    ["Advert analytics", ...plans.map((p) => yes(p.analytics))],
+    ["Priority placement in search", ...plans.map((p) => yes(p.priorityPlacement))],
+    ["Included 24-hour boosts", ...plans.map((p) => (p.includedBoosts ? `${p.includedBoosts} per billing period` : "—"))],
+    ["Free 7-day sponsored placements", ...plans.map((p) => (p.featuredCredits ? `${p.featuredCredits} at a time` : "—"))],
+    ["WhatsApp enquiry button", ...plans.map((p) => (p.tier === "BUSINESS" ? "Included" : p.tier === "PROFESSIONAL" ? `${WHATSAPP_ADDON_LABEL} add-on` : "—"))],
+    ["Priority support", ...plans.map((p) => yes(p.prioritySupport))],
+    ["Buy extra boosts and sponsorship", ...plans.map(() => "✓")],
+  ];
 }
 
 function Feature({ children, enabled = true }: { children: React.ReactNode; enabled?: boolean }) {
