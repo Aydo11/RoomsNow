@@ -57,7 +57,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
               Watch a short demo of every plan and extra below.
             </p>
             <div className="mt-6 flex flex-wrap gap-2.5">
-              <a href="#see-it" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-[15px] font-bold text-[#0F4F87] transition hover:scale-[1.03]">
+              <a href="#see-it" className="inline-flex items-center gap-2 rounded-full bg-[#fff] px-5 py-3 text-[15px] font-bold text-[#0F4F87] transition hover:scale-[1.03]">
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg> Watch the demos
               </a>
               <a href={planPdfPath("ALL")} target="_blank" rel="noopener" className="inline-flex items-center rounded-full bg-white/10 px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-white/20">Download the pricing guide (PDF)</a>
