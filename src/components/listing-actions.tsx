@@ -15,7 +15,7 @@ type ListingActionProps = {
 
 export function ListingCardActions({ listingId, title, saved = false, canSave = false }: ListingActionProps) {
   return (
-    <div className="absolute bottom-3 right-3 z-20 flex gap-2">
+    <div className="absolute right-3 top-3 z-20 flex gap-2">
       <SaveListingIcon listingId={listingId} title={title} saved={saved} canSave={canSave} />
       <ShareListingButton listingId={listingId} title={title} compact />
     </div>
