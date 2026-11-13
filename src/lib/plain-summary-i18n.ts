@@ -1,4 +1,4 @@
-import { money as formatMoney } from "./format";
+import { money as formatMoney, weeklyRentBounds } from "./format";
 import { plainSummary, type PlainSummaryInput } from "./plain-summary";
 
 /**
@@ -309,9 +309,9 @@ function translated(input: PlainSummaryInput, lang: Other, now: Date): string[] 
     lines.push(t.free(input.availableRooms));
   }
 
-  if (input.weeklyRentFrom || input.weeklyRentTo) {
-    const low = input.weeklyRentFrom ?? input.weeklyRentTo;
-    const high = input.weeklyRentTo ?? input.weeklyRentFrom;
+  const bounds = weeklyRentBounds(input.weeklyRentFrom, input.weeklyRentTo);
+  if (bounds) {
+    const { low, high } = bounds;
     lines.push(low !== high ? t.rentRange(money(low), money(high)) : t.rentOne(money(low)));
   } else {
     lines.push(t.rentAsk);

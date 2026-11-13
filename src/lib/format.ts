@@ -8,10 +8,20 @@ export function money(pence: number | null | undefined, suffix = "") {
   return `${brand.currencySymbol}${formatted}${suffix}`;
 }
 
+export function weeklyRentBounds(from?: number | null, to?: number | null) {
+  const amounts = [from, to].filter(
+    (amount): amount is number => typeof amount === "number" && Number.isFinite(amount) && amount > 0,
+  );
+  if (amounts.length === 0) return null;
+  return { low: Math.min(...amounts), high: Math.max(...amounts) };
+}
+
 export function rentRange(from?: number | null, to?: number | null) {
-  if (!from && !to) return "Rent on request";
-  if (from && to && from !== to) return `${money(from)}–${money(to)} per week`;
-  return `${money(from ?? to)} per week`;
+  const bounds = weeklyRentBounds(from, to);
+  if (!bounds) return "Rent on request";
+  const { low, high } = bounds;
+  if (low !== high) return `${money(low)}–${money(high)} per week`;
+  return `${money(low)} per week`;
 }
 
 export function shortDate(date: Date | string | null | undefined) {

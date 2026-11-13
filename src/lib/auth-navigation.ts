@@ -9,6 +9,12 @@ export function authHref(path: string, target?: string | null) {
   return next ? `${path}${path.includes("?") ? "&" : "?"}next=${encodeURIComponent(next)}` : path;
 }
 
+/** Identify the public advert behind an accommodation request return path. */
+export function requestAdvertPath(target?: string | null) {
+  const match = /^\/listings\/([a-zA-Z0-9_-]+)\/request\/?$/.exec(safeRedirect(target));
+  return match ? `/listings/${match[1]}` : null;
+}
+
 /** Resume the actual room search after joining, without carrying campaign IDs or arbitrary input. */
 export function searchReturnPath(params: Record<string, string | string[] | undefined>) {
   const allowed = new Set(["q", "where", "support", "type", "from", "gender", "minAge", "wheelchair", "furnished", "ensuite", "selfContained", "petsAllowed", "resident", "hb", "referral", "verified", "vetted", "maxRent", "minRent", "radius", "bbox", "sort", "page", "view"]);

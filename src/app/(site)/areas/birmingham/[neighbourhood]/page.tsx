@@ -43,6 +43,12 @@ export default async function NeighbourhoodPage({ params }: Props) {
       <p className="mt-2 text-ink-soft">Active adverts with available rooms and a provider-entered {guide.name} neighbourhood. Confirm current availability before travelling.</p>
       {listings.length ? <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div> : <div className="card mt-5 p-6"><p>No available rooms are currently labelled {guide.name}. Explore Birmingham or save a search to hear about new rooms.</p><Link href="/search?where=Birmingham" className="btn-primary mt-4">Search Birmingham accommodation</Link></div>}
       <Link href={`/search?where=${encodeURIComponent(`${guide.name}, Birmingham`)}`} className="btn-secondary mt-5">Search around {guide.name}</Link>
+      <p className="mt-4 text-[15px] text-ink-soft">
+        Open to other neighbourhoods?{" "}
+        <Link href="/hmo-rooms-birmingham" className="font-semibold text-pine-dark underline">
+          Compare HMO rooms across Birmingham
+        </Link>.
+      </p>
     </section>
     <p className="mt-8 text-[12px] text-ink-faint">Local sources checked 7 October 2026. Service links are information, not endorsements. NHS and DWP postcode tools identify nearby services; this guide does not claim a specific practice or office is nearest to every property.</p>
   </main>;

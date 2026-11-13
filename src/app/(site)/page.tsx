@@ -207,7 +207,7 @@ export default function HomePage() {
               icon="search"
               eyebrow="LOOKING FOR A HOME"
               title="Search available rooms"
-              body="See rooms free now and message the provider."
+              body="See available rooms and message the provider."
               href="/search"
               cta="Find a room"
             />

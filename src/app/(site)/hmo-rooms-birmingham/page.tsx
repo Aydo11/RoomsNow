@@ -37,14 +37,10 @@ const RESOURCES = [
   { label: "Birmingham City Council: supported exempt accommodation", href: "https://www.birmingham.gov.uk/info/20006/housing/2333/supported_exempt_accommodation" },
 ];
 
-export async function generateMetadata(): Promise<Metadata> {
-  const data = await loadBirminghamRooms().catch(() => null);
-  const free = data?.stats.roomsFree ?? 0;
+export function generateMetadata(): Metadata {
   return pageMetadata({
-    title: free ? `HMO Rooms to Rent in Birmingham | ${free} Available` : "HMO Rooms to Rent in Birmingham",
-    description: free
-      ? `${free} shared rooms listed as available in Birmingham from ${data!.stats.providers} providers. Compare costs, bills, areas and benefit information, then contact the provider.`
-      : "Search HMO rooms and shared accommodation in Birmingham. Compare rent, bills, areas and Housing Benefit, then message the provider directly.",
+    title: "HMO Rooms to Rent in Birmingham",
+    description: "Browse HMO rooms and shared accommodation in Birmingham. Compare neighbourhoods, advertised weekly costs, bills and benefits information before contacting a provider.",
     path: PATH,
   });
 }
@@ -113,9 +109,10 @@ export default async function HmoRoomsBirminghamPage() {
           </p>
           <p className="mt-3 max-w-[68ch] text-[15px] leading-relaxed text-ink-soft">Available means the provider has marked a room as available; it does not mean accommodation is free of charge. Shared homes may include supported accommodation. Check each advert's eligibility, costs and any licensing details.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href={SEARCH} className="btn-primary">{content.primaryCta.label}</Link>
-            <Link href={listings.length ? "#live-rooms" : "/rooms/birmingham"} className="btn-secondary">{listings.length ? "View available rooms below" : "Other Birmingham accommodation"}</Link>
+            {listings.length > 0 && <a href="#live-rooms" className="btn-primary">View available rooms</a>}
+            <Link href={SEARCH} className={listings.length ? "btn-secondary" : "btn-primary"}>Filter Birmingham rooms</Link>
           </div>
+          <p className="mt-3 text-[14px] text-ink-soft">Browse without an account. Sign in when you’re ready to enquire.</p>
           <nav aria-label="Birmingham room search options" className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-[15px] font-semibold text-pine-dark">
             <Link href={`${SEARCH}&hb=1`} className="underline">Shared rooms accepting Housing Benefit</Link>
             <Link href="/supported-accommodation-birmingham" className="underline">Looking for supported accommodation?</Link>
@@ -137,7 +134,7 @@ export default async function HmoRoomsBirminghamPage() {
         {listings.length > 0 && (
           <section className="mt-12" aria-labelledby="live-rooms">
             <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2 id="live-rooms" className="text-[28px]">Available shared rooms in Birmingham</h2>
+              <h2 id="live-rooms" className="scroll-mt-24 text-[28px]">Available shared rooms in Birmingham</h2>
               <Link href={SEARCH} className="text-[15px] font-semibold text-pine-dark hover:underline">
                 See all {stats!.adverts} adverts
               </Link>

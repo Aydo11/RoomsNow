@@ -50,7 +50,7 @@ export function RoomMarquee({ rooms }: { rooms: MarqueeRoom[] }) {
                 {free > 0 && (
                   <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-pill bg-black/65 px-2.5 py-1 text-[11px] font-semibold text-white">
                     <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#f5b544]" />
-                    {free} room{free === 1 ? "" : "s"} free
+                    {free} room{free === 1 ? "" : "s"} available
                   </span>
                 )}
               </span>

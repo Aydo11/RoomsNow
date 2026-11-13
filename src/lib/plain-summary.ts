@@ -1,4 +1,4 @@
-import { money } from "./format";
+import { money, weeklyRentBounds } from "./format";
 import { supportLabel } from "./taxonomy";
 
 /**
@@ -57,12 +57,12 @@ export function plainSummary(input: PlainSummaryInput, now = new Date()): string
   if (from && from.getTime() > now.getTime()) {
     lines.push(`You can move in from ${from.toLocaleDateString("en-GB", { day: "numeric", month: "long" })}.`);
   } else if (input.availableRooms > 0) {
-    lines.push(input.availableRooms === 1 ? "1 room is free now." : `${input.availableRooms} rooms are free now.`);
+    lines.push(input.availableRooms === 1 ? "1 room is available now." : `${input.availableRooms} rooms are available now.`);
   }
 
-  if (input.weeklyRentFrom || input.weeklyRentTo) {
-    const low = input.weeklyRentFrom ?? input.weeklyRentTo;
-    const high = input.weeklyRentTo ?? input.weeklyRentFrom;
+  const bounds = weeklyRentBounds(input.weeklyRentFrom, input.weeklyRentTo);
+  if (bounds) {
+    const { low, high } = bounds;
     lines.push(low !== high ? `The rent is ${money(low)} to ${money(high)} a week.` : `The rent is ${money(low)} a week.`);
   } else {
     lines.push("Ask the provider how much the rent is.");

@@ -156,6 +156,15 @@ export function GoogleAnalyticsConsent() {
     // Query-only filter changes must not inflate page views of the same public URL.
     if (lastPage.current !== location) {
       window.gtag?.("event", "page_view", parameters);
+      if (/^\/listings\/[^/]+\/?$/.test(pathname)) {
+        window.gtag?.("event", "roomsnow_listing_view", {
+          send_to: MEASUREMENT_ID,
+          page_path: "/listings",
+          page_location: `${window.location.origin}/listings`,
+          page_title: "Accommodation advert",
+          page_referrer: parameters.page_referrer,
+        });
+      }
       lastPage.current = location;
     }
     if (pathname === "/search") {
