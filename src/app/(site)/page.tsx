@@ -202,7 +202,7 @@ export default function HomePage() {
       <section className="border-b border-line bg-white">
         <div className="shell py-10 sm:py-12">
           <h2 data-reveal className="text-center text-[26px]">What would you like to do?</h2>
-          <div data-reveal="stagger" className="mt-6 grid gap-4 md:grid-cols-3">
+          <div data-reveal="stagger" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <AudienceCard
               icon="search"
               eyebrow="LOOKING FOR A HOME"
@@ -227,6 +227,14 @@ export default function HomePage() {
               href="/advertise-accommodation"
               cta="Advertise your rooms"
               highlighted
+            />
+            <AudienceCard
+              icon="referral"
+              eyebrow="COUNCILS AND COMMISSIONERS"
+              title="See your area’s housing activity"
+              body="Preview the council dashboard, browse recently confirmed vacancies and request a pilot."
+              href="/for-councils"
+              cta="Explore council access"
             />
           </div>
         </div>

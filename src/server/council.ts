@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { inCouncilArea } from "@/lib/council-areas";
 import { median } from "@/lib/response-label";
 import { supportLabel } from "@/lib/taxonomy";
+import { firstProviderResponseDays, latestPlacementAtRisk } from "@/lib/council-outcomes";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -30,15 +31,15 @@ export async function councilStats(areas: string[], range: CouncilRange) {
       take: 5000,
     }),
     db.referral.findMany({
-      where: { OR: [{ createdAt: { gte: since } }, { events: { some: { status: "MOVED_IN", createdAt: { gte: since } } } }], listingId: { not: null } },
+      where: { OR: [{ createdAt: { gte: since } }, { events: { some: { status: "MOVED_IN", createdAt: { gte: since } } } }, { status: "MOVED_IN" }], listingId: { not: null } },
       select: {
         id: true,
         createdAt: true,
         status: true,
         referrerId: true,
         supportTypes: true,
-        listing: { select: { property: { select: { city: true, area: true, postcode: true } } } },
-        events: { orderBy: { createdAt: "asc" }, select: { status: true, createdAt: true } },
+        listing: { select: { property: { select: { city: true, area: true, postcode: true } }, company: { select: { staff: { select: { userId: true, createdAt: true } } } } } },
+        events: { orderBy: { createdAt: "asc" }, select: { status: true, createdAt: true, actorId: true } },
         checkIns: { select: { week: true, health: true } },
       },
       take: 10000,
@@ -75,18 +76,17 @@ export async function councilStats(areas: string[], range: CouncilRange) {
   }
   const placed = localReferrals.filter((referral) => referral.events.some((e) => e.status === "MOVED_IN" && e.createdAt >= since));
   const daysToPlace = placed.map((referral) => {
-    const movedIn = referral.events.find((e) => e.status === "MOVED_IN")!;
+    const movedIn = referral.events.find((e) => e.status === "MOVED_IN" && e.createdAt >= since)!;
     return (movedIn.createdAt.getTime() - referral.createdAt.getTime()) / DAY;
   });
   const daysToReply = made.flatMap((referral) => {
-    const reply = referral.events.find((e) => e.status !== "SUBMITTED");
-    const days = reply ? (reply.createdAt.getTime() - referral.createdAt.getTime()) / DAY : -1;
-    return days >= 0 ? [days] : [];
+    const days = firstProviderResponseDays(referral.createdAt, referral.events, referral.listing?.company.staff ?? []);
+    return days === null ? [] : [days];
   });
 
   // Sustainment from the 12-week check-ins (falls back to 4-week while few exist).
   const outcomes = (week: number) => {
-    const answered = localReferrals.filter((referral) => referral.checkIns.some((c) => c.week === week));
+    const answered = placed.filter((referral) => referral.checkIns.some((c) => c.week === week));
     const worst = answered.map((referral) => {
       const healths = referral.checkIns.filter((c) => c.week === week).map((c) => c.health);
       if (healths.includes("ENDED")) return "ENDED";
@@ -105,7 +105,7 @@ export async function councilStats(areas: string[], range: CouncilRange) {
   };
   const week4 = outcomes(4);
   const week12 = outcomes(12);
-  const currentlyAtRisk = localReferrals.filter((referral) => referral.status === "MOVED_IN" && referral.checkIns.some((c) => c.health === "AT_RISK")).length;
+  const currentlyAtRisk = localReferrals.filter((referral) => latestPlacementAtRisk(referral.status, referral.checkIns)).length;
 
   return {
     adverts: local.length,
@@ -122,6 +122,7 @@ export async function councilStats(areas: string[], range: CouncilRange) {
     placementRate: made.length ? Math.round((made.filter((r) => r.status === "MOVED_IN").length / made.length) * 100) : null,
     medianDaysToPlace: median(daysToPlace),
     medianDaysToReply: median(daysToReply),
+    providerReplySample: daysToReply.length,
     week4,
     week12,
     currentlyAtRisk,

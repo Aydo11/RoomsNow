@@ -37,8 +37,8 @@ export async function requireAdmin(permission: AdminPermission | AdminPermission
   return user;
 }
 
-export async function requireReferrer(): Promise<CurrentUser> {
-  const user = await requireUser("/referrals");
+export async function requireReferrer(next = "/referrals"): Promise<CurrentUser> {
+  const user = await requireUser(next);
   if (user.role !== "REFERRER" && !hasAdminPermission(user)) denyArea("referrals");
   return user;
 }

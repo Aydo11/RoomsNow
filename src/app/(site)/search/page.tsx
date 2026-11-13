@@ -17,6 +17,7 @@ import { db } from "@/lib/db";
 import { authHref, searchReturnPath } from "@/lib/auth-navigation";
 import { StoriesRail } from "@/components/stories";
 import { liveStoryGroups } from "@/server/stories";
+import { normaliseSearchParams } from "@/lib/search-query";
 
 export const metadata = pageMetadata({
   title: "Search HMO Rooms & Accommodation Across the UK",
@@ -33,7 +34,7 @@ export default async function SearchPage({
   // Next.js 16 provides searchParams asynchronously. Awaiting them here is
   // important: otherwise view=map (and the other search filters) are silently
   // ignored during the server render.
-  const params = await searchParams;
+  const { params, rentCorrected } = normaliseSearchParams(await searchParams);
   const view = params.view === "map" ? "map" : "list";
 
   const [results, facets, user, map] = await Promise.all([
@@ -141,6 +142,7 @@ export default async function SearchPage({
         <div className="shell py-6">
           <Suspense fallback={<div className="h-[76px]" />}>
             <SearchPanel size="compact" />
+            {rentCorrected && <p role="status" className="mt-3 text-[14px] text-clay">Some rent filters were invalid or repeated. Check your minimum and maximum weekly rent.</p>}
           </Suspense>
         </div>
       </div>

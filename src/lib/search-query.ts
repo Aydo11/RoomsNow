@@ -44,3 +44,29 @@ export function appliedSearchFilters(params: URLSearchParams) {
   }
   return applied;
 }
+export function normaliseSearchParams<T extends Record<string, unknown>>(input: T): { params: T; rentCorrected: boolean } {
+  const params: Record<string, unknown> = { ...input };
+  const multi = new Set(["support", "type", "referral"]);
+  const single = (key: string) => Array.isArray(params[key]) ? (params[key] as unknown[])[0] : params[key];
+  let rentCorrected = false;
+  for (const key of Object.keys(params)) {
+    if (multi.has(key)) continue;
+    const value = single(key);
+    if (key === "minRent" || key === "maxRent") {
+      if (Array.isArray(params[key])) rentCorrected = true;
+      if (typeof value === "string" && value.trim() && /^\d+(\.\d{1,2})?$/.test(value.trim()) && Number(value) <= 1_000_000) {
+        params[key] = value.trim();
+      } else {
+        if (value !== "" && value !== undefined) rentCorrected = true;
+        delete params[key];
+      }
+    } else if (typeof value === "string") params[key] = value;
+    else delete params[key];
+  }
+  if (params.minRent !== undefined && params.maxRent !== undefined && Number(params.minRent) > Number(params.maxRent)) {
+    delete params.minRent;
+    delete params.maxRent;
+    rentCorrected = true;
+  }
+  return { params: params as T, rentCorrected };
+}

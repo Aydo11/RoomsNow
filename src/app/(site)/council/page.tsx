@@ -48,7 +48,7 @@ export default async function CouncilPage({ searchParams }: { searchParams: Prom
   return (
     <DashboardShell
       title={`${access.councilName}: council view`}
-      subtitle={`Supported accommodation across ${access.areas.join(", ")}. Referral and outcome figures cover the last ${rangeLabel}.`}
+      subtitle={`RoomsNow activity across ${access.areas.join(", ")}. This is not a count of the whole local market.`}
       nav={nav}
       active="/council"
       action={<PrintButton label="Save as PDF" />}
@@ -79,7 +79,7 @@ export default async function CouncilPage({ searchParams }: { searchParams: Prom
         <StatCard label="Referrals made" value={stats.referralsMade} hint={`by ${stats.agencies} referrer${stats.agencies === 1 ? "" : "s"}`} />
         <StatCard label="People moved in" value={stats.placed} hint={stats.placementRate !== null ? `${stats.placementRate}% of referrals made` : undefined} />
         <StatCard label="Typical time to move in" value={days(stats.medianDaysToPlace)} hint="median, referral to move-in" />
-        <StatCard label="Typical first reply" value={days(stats.medianDaysToReply)} hint="median, provider's first update" />
+        <StatCard label="Typical first reply" value={days(stats.medianDaysToReply)} hint={`Median of ${stats.providerReplySample} referrals with a recorded provider update`} />
       </div>
 
       <h2 className="mt-8 text-[18px] font-bold">How placements are going</h2>
@@ -89,7 +89,7 @@ export default async function CouncilPage({ searchParams }: { searchParams: Prom
       <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_1.2fr]">
         <div className="grid grid-cols-2 gap-3">
           <StatCard label={`Still in place at ${outcomeWeek} weeks`} value={pct(sustained, outcome.answered)} hint={`${outcome.answered} placement${outcome.answered === 1 ? "" : "s"} checked`} />
-          <StatCard label="Flagged at risk now" value={stats.currentlyAtRisk} hint="moved in, latest answer at risk" />
+          <StatCard label="Flagged at risk now" value={stats.currentlyAtRisk} hint="Latest check-in week, across ongoing placements" />
         </div>
         <div className="card space-y-3 p-5">
           <MetricBar label="Going well" value={outcome.goingWell} total={outcome.answered} tone="bg-emerald-600" />

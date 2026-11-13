@@ -15,8 +15,15 @@ export default async function NewReferralPage({
 }: {
   searchParams: Promise<{ listingId?: string; clientId?: string }>;
 }) {
-  const query = await searchParams;
-  const user = await requireReferrer();
+  const raw = await searchParams;
+  const query = {
+    listingId: typeof raw.listingId === "string" ? raw.listingId : undefined,
+    clientId: typeof raw.clientId === "string" ? raw.clientId : undefined,
+  };
+  const destination = new URLSearchParams();
+  if (typeof query.listingId === "string") destination.set("listingId", query.listingId);
+  if (typeof query.clientId === "string") destination.set("clientId", query.clientId);
+  const user = await requireReferrer(`/referrals/new${destination.size ? `?${destination}` : ""}`);
   const teamIds = await teamMemberIds(user.id);
   // A referral always goes to a specific advert, so its provider is known. With
   // a client but no advert, send the referrer to that client's ranked matches.

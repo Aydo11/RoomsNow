@@ -6,7 +6,6 @@ import { MetricBar, StatCard } from "@/components/dashboard-shell";
 import { councilStats } from "@/server/council";
 import { liveCities, responseLeague } from "@/server/response-league";
 import { formatReplyTime } from "@/lib/response-league";
-import { brand } from "@/brand.config";
 
 export const dynamic = "force-dynamic";
 
@@ -127,7 +126,7 @@ export default async function InsightsPage({ searchParams }: Props) {
           <p className="mt-2 max-w-[64ch] text-[15px] leading-relaxed text-[#c6d3e1]">
             Get the full council view for your area: placement outcomes, 4 and 12-week check-ins, placements at risk and a printable report for your supported housing strategy.
           </p>
-          <a href={`mailto:${brand.supportEmail}?subject=${encodeURIComponent(`Council view for ${city ?? "our area"}`)}`} className="mt-4 inline-flex rounded-[10px] bg-[#ffd56b] px-5 py-3 font-bold text-[#17202e] hover:brightness-95">Ask for council access</a>
+          <Link href="/for-councils#pilot" className="mt-4 inline-flex rounded-[10px] bg-[#ffd56b] px-5 py-3 font-bold text-[#17202e] hover:brightness-95">Request a council pilot</Link>
         </section>
       </div>
     </>

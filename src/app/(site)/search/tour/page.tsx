@@ -2,6 +2,7 @@ import { searchListings, type SearchParams } from "@/server/search";
 import { tourSlides } from "@/server/tour";
 import { getCurrentUser } from "@/lib/session";
 import { TourFeed } from "@/components/tour-feed";
+import { normaliseSearchParams } from "@/lib/search-query";
 
 export const metadata = { title: "Tour mode", robots: { index: false, follow: true } };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ function queryString(params: Record<string, string | string[] | undefined>, omit
  * filters (boosted and sponsored first, then the rest), one full screen at a time.
  */
 export default async function SearchTourPage({ searchParams }: { searchParams: Promise<SearchParams & { view?: string }> }) {
-  const params = await searchParams;
+  const { params } = normaliseSearchParams(await searchParams);
   const [results, user] = await Promise.all([searchListings(params), getCurrentUser()]);
   const ids = [...results.boosted, ...results.sponsored, ...results.items].map((listing) => listing.id);
   const slides = await tourSlides(ids, { userId: user?.id });

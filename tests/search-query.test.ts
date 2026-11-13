@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { appliedSearchFilters, removeSearchFilter, submitSearchQuery } from "../src/lib/search-query";
+import { appliedSearchFilters, normaliseSearchParams, removeSearchFilter, submitSearchQuery } from "../src/lib/search-query";
+
+test("rent query values are safe for search and contradictory bounds are cleared", () => {
+  const { params, rentCorrected } = normaliseSearchParams({ minRent: "abc", maxRent: ["100", "200"], support: ["mental-health", "homelessness"], where: ["Birmingham", "Leeds"] });
+  assert.equal(rentCorrected, true);
+  assert.deepEqual(params, { maxRent: "100", support: ["mental-health", "homelessness"], where: "Birmingham" });
+  assert.deepEqual(normaliseSearchParams({ minRent: "100", maxRent: "1" }), { params: {}, rentCorrected: true });
+  assert.deepEqual(normaliseSearchParams({ minRent: "0", maxRent: "50.25" }), { params: { minRent: "0", maxRent: "50.25" }, rentCorrected: false });
+});
 
 test("Find rooms preserves selected filters and sort, resets paging and removes cleared form fields", () => {
  const query = submitSearchQuery("where=Birmingham&type=MOTHER_AND_BABY_UNIT&ensuite=1&maxRent=80&sort=rent&support=mental-health&vetted=1&from=2026-11-01&page=3", { where: " Birmingham ", support: "", from: "", vetted: false });
