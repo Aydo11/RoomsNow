@@ -126,12 +126,6 @@ export function ListingCard({
           </div>
           {showActions && <ListingCardActions listingId={listing.id} title={listing.title} saved={saved} canSave={canSave} />}
         </div>
-      {listing.housingBenefit && (
-        <div className="flex items-center justify-between gap-3 bg-pine px-4 py-2 text-white">
-          <strong className="text-[13px] uppercase tracking-[0.08em]">Benefits accepted</strong>
-          <span className="text-[12px] font-semibold">Incl. Universal Credit</span>
-        </div>
-      )}
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -148,6 +142,18 @@ export function ListingCard({
             {match !== undefined && <MatchScore score={match} />}
           </div>
         </div>
+
+        {listing.housingBenefit && (
+          <div className="benefits-strip mt-3 flex items-center gap-2.5 rounded-[12px] border px-3 py-2">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#1F9D6B] text-white" aria-hidden="true">
+              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="currentColor"><path d="M6.2 11.6 2.6 8l1-1 2.6 2.6L12.4 3.4l1 1-7.2 7.2Z" /></svg>
+            </span>
+            <span className="min-w-0 leading-tight">
+              <strong className="block text-[13.5px] font-bold">Benefits accepted</strong>
+              <span className="benefits-strip-sub block text-[12px]">Including Universal Credit</span>
+            </span>
+          </div>
+        )}
 
         <dl className="mt-3 grid grid-cols-2 gap-y-1.5 text-[14px]">
           <div className="flex gap-1.5">
