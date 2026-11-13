@@ -406,6 +406,7 @@ export function Phone({ children, dark = false }: { children: ReactNode; dark?: 
 
 const CSS = `
 .pd-stage *{box-sizing:border-box}
+html[data-theme="dark"] .pd-stage .bg-white,html[data-theme="dark"] .pd-stage [class~="bg-white/90"]{background-color:#fff}
 @keyframes pd-in{from{opacity:0;transform:translateY(18px)}}
 @keyframes pd-pop{0%{opacity:0;transform:scale(.85)}70%{transform:scale(1.04)}}
 @keyframes pd-fly{from{opacity:0;transform:translate(var(--fx,0),var(--fy,0)) scale(.9)}}
