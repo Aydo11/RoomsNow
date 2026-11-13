@@ -234,7 +234,7 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
             </ul>
           </div>
           <div className="hidden h-[200px] lg:block"><HeroArt /></div>
-          <a href={packPdfPath("ALL")} target="_blank" rel="noopener" className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-4 py-2 text-[14px] font-bold text-[#0F4F87] shadow-lg hover:bg-[#E8F2FC] lg:col-span-2">Download the full Pro Services guide (PDF)</a>
+          <a href={packPdfPath("ALL")} target="_blank" rel="noopener" className="inline-flex w-fit items-center gap-2 rounded-full bg-fixed-white px-4 py-2 text-[14px] font-bold text-[#0F4F87] shadow-lg hover:bg-[#E8F2FC] lg:col-span-2">Download the full Pro Services guide (PDF)</a>
         </div>
       </section>
 
@@ -399,7 +399,7 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
                   <td className="px-4 py-3">{PRO_SERVICES[e.service as ProServiceKey]?.name ?? e.service}{e.expertName ? ` · ${e.expertName}` : ""}</td>
                   <td className="px-4 py-3 text-[14px]">
                     {e.meetingAt ? (
-                      <span className="font-semibold text-[#1D6E49]">Booked: {ukMeetingTime(e.meetingAt)}</span>
+                      <span className="font-semibold text-positive">Booked: {ukMeetingTime(e.meetingAt)}</span>
                     ) : e.meetingType ? (
                       <span className="text-ink-soft">Requested: {MEETING_TYPES[e.meetingType as keyof typeof MEETING_TYPES] ?? e.meetingType}, {e.meetingWish}</span>
                     ) : "—"}

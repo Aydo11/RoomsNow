@@ -84,11 +84,11 @@ export default async function AdminProServicesPage({ searchParams }: { searchPar
                     {PRO_SERVICES[e.service as keyof typeof PRO_SERVICES]?.name ?? e.service}
                     {e.expertName && <span className="block text-ink-soft">{e.expertName}{e.hours ? `, ${sessionLabel(e.hours)}` : ""}</span>}
                     {e.meetingAt ? (
-                      <span className="mt-2 block rounded-[8px] bg-[#DDF2E8] px-2 py-1 text-[13px] font-semibold text-[#1D6E49]">
+                      <span className="mt-2 block rounded-[8px] bg-positive-surface px-2 py-1 text-[13px] font-semibold text-positive">
                         Booked: {MEETING_TYPES[e.meetingType as keyof typeof MEETING_TYPES] ?? "Call"}, {ukMeetingTime(e.meetingAt)}{e.meetingLink ? ` · ${e.meetingLink}` : ""}
                       </span>
                     ) : e.meetingType ? (
-                      <span className="mt-2 block rounded-[8px] bg-[#FDEFD3] px-2 py-1 text-[13px] font-semibold text-[#8A5A00]">
+                      <span className="mt-2 block rounded-[8px] bg-caution-surface px-2 py-1 text-[13px] font-semibold text-caution">
                         Wants: {MEETING_TYPES[e.meetingType as keyof typeof MEETING_TYPES] ?? e.meetingType}, {e.meetingWish}
                       </span>
                     ) : null}

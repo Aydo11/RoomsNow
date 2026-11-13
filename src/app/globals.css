@@ -11,6 +11,13 @@
 
   --color-pine: rgb(var(--rn-pine));
   --color-pine-dark: rgb(var(--rn-pine-dark));
+  --color-pine-strong: #0f4f87;
+  --color-on-light: #171f2e;
+  --color-fixed-white: #fff;
+  --color-positive: rgb(var(--rn-positive));
+  --color-positive-surface: rgb(var(--rn-positive-surface));
+  --color-caution: rgb(var(--rn-caution));
+  --color-caution-surface: rgb(var(--rn-caution-surface));
   --color-pine-light: rgb(var(--rn-pine-light));
 
   --color-clay: rgb(var(--rn-clay));
@@ -222,7 +229,7 @@
 }
 
 @utility btn-primary {
-  @apply btn bg-pine text-white shadow-[0_3px_8px_rgba(22,102,170,.18)] hover:-translate-y-px hover:bg-pine-dark hover:shadow-[0_7px_16px_rgba(22,102,170,.24)] active:translate-y-0 active:scale-[0.98];
+  @apply btn bg-pine text-white shadow-[0_3px_8px_rgba(22,102,170,.18)] hover:-translate-y-px hover:bg-pine-strong hover:shadow-[0_7px_16px_rgba(22,102,170,.24)] active:translate-y-0 active:scale-[0.98];
 }
 
 @utility btn-secondary {
@@ -851,12 +858,16 @@
     color-scheme: light;
     --rn-ink: 23 31 46;
     --rn-ink-soft: 68 80 100;
-    --rn-ink-faint: 117 129 150;
+    --rn-ink-faint: 95 108 127;
     --rn-paper: 246 248 251;
     --rn-paper-card: 255 255 255;
     --rn-paper-sunk: 237 242 247;
     --rn-pine: 22 102 170;
     --rn-pine-dark: 15 79 135;
+    --rn-positive: 29 110 73;
+    --rn-positive-surface: 221 242 232;
+    --rn-caution: 138 68 16;
+    --rn-caution-surface: 253 240 227;
     --rn-pine-light: 232 242 252;
     --rn-clay: 164 85 18;
     --rn-clay-light: 255 244 232;
@@ -875,7 +886,11 @@
     --rn-paper-card: 22 32 47;
     --rn-paper-sunk: 29 42 60;
     --rn-pine: 22 102 170;
-    --rn-pine-dark: 15 79 135;
+    --rn-pine-dark: 142 202 255;
+    --rn-positive: 147 230 188;
+    --rn-positive-surface: 24 57 46;
+    --rn-caution: 245 214 154;
+    --rn-caution-surface: 62 50 31;
     --rn-pine-light: 28 55 81;
     --rn-clay: 242 171 99;
     --rn-clay-light: 62 43 27;
@@ -979,45 +994,61 @@ html[data-theme="dark"] [class~="bg-white/90"],
 html[data-theme="dark"] [class~="bg-white/85"],
 html[data-theme="dark"] [class~="bg-white/80"],
 html[data-theme="dark"] [class~="bg-white/70"],
-html[data-theme="dark"] [class~="bg-white/60"] {
+html[data-theme="dark"] [class~="bg-white/60"],
+html[data-theme="dark"] .hover\:bg-white:hover,
+html[data-theme="dark"] .hover\:bg-white\/90:hover,
+html[data-theme="dark"] .hover\:bg-white\/60:hover,
+html[data-theme="dark"] .group:hover .group-hover\:bg-white {
   background-color: rgb(var(--rn-paper-card) / 0.98);
 }
 
 html[data-theme="dark"] .text-brand,
 html[data-theme="dark"] .hover\:text-brand:hover,
-html[data-theme="dark"] .text-pine-dark,
-html[data-theme="dark"] .hover\:text-pine-dark:hover,
+html[data-theme="dark"] .text-pine,
 html[data-theme="dark"] .text-blue-800,
 html[data-theme="dark"] .text-blue-900,
-html[data-theme="dark"] .text-sky-700,
-html[data-theme="dark"] .text-emerald-800,
-html[data-theme="dark"] .text-green-800 {
-  color: #8ecaff;
+html[data-theme="dark"] .text-sky-700 {
+  color: rgb(var(--rn-pine-dark));
 }
 
 /* `ink` is a foreground token, so it becomes light in dark mode. When the
    same token is used as a selected-control background (`bg-ink`), keep that
    surface dark; otherwise its white label disappears against the highlight. */
-html[data-theme="dark"] .bg-ink {
+html[data-theme="dark"] .bg-ink,
+html[data-theme="dark"] .focus\:bg-ink:focus,
+html[data-theme="dark"] .peer-checked\:bg-ink:is(:where(.peer):checked ~ *) {
   background-color: #24547d;
 }
 
 html[data-theme="dark"] .bg-blue-50,
+html[data-theme="dark"] .bg-blue-100,
+html[data-theme="dark"] .hover\:bg-blue-100:hover,
 html[data-theme="dark"] .bg-sky-50,
-html[data-theme="dark"] .bg-sky-100,
+html[data-theme="dark"] .bg-sky-100 {
+  background-color: #19344b;
+}
+
 html[data-theme="dark"] .bg-emerald-50,
 html[data-theme="dark"] .bg-green-50 {
-  background-color: #19344b;
+  background-color: rgb(var(--rn-positive-surface));
+}
+
+html[data-theme="dark"] .text-emerald-700,
+html[data-theme="dark"] .text-emerald-800,
+html[data-theme="dark"] .text-green-800 {
+  color: rgb(var(--rn-positive));
 }
 
 html[data-theme="dark"] .bg-amber-50,
 html[data-theme="dark"] .bg-yellow-50 {
-  background-color: #3e321f;
+  background-color: rgb(var(--rn-caution-surface));
 }
 
+html[data-theme="dark"] .text-amber-700,
+html[data-theme="dark"] .text-amber-800,
 html[data-theme="dark"] .text-amber-950,
 html[data-theme="dark"] .text-yellow-900 {
-  color: #f5d69a;
+  color: rgb(var(--rn-caution));
 }
 
 html[data-theme="dark"] .bg-red-50 {
@@ -1535,7 +1566,7 @@ html[data-theme="dark"] .assist-link { color: rgb(var(--rn-ink)); }
 }
 .assist-input::placeholder { color: rgb(var(--rn-ink-faint)); }
 .assist-send { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: rgb(var(--rn-pine)); color: #fff; transition: opacity 150ms ease, background-color 150ms ease; }
-.assist-send:hover:not(:disabled) { background: rgb(var(--rn-pine-dark)); }
+.assist-send:hover:not(:disabled) { background: #0f4f87; }
 .assist-send:disabled { opacity: .45; cursor: not-allowed; }
 .assist-hint { grid-column: 1 / -1; font-size: 11.5px; line-height: 1.4; color: rgb(var(--rn-ink-faint)); }
 

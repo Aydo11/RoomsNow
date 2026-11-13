@@ -189,7 +189,7 @@ export function ListingCard({
               )}
               <span className="truncate text-[13px] text-ink-soft">{listing.company.name}</span>
               {verified && (
-                <span className="flex shrink-0 items-center gap-1 text-[12px] font-semibold text-[#1F9D6B]" title="Verified provider">
+                <span className="flex shrink-0 items-center gap-1 text-[12px] font-semibold text-positive" title="Verified provider">
                   <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true"><path d="M6.2 11.6 2.6 8l1-1 2.6 2.6L12.4 3.4l1 1-7.2 7.2Z" /></svg>
                   <span className="sr-only sm:not-sr-only">Verified</span>
                 </span>

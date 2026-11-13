@@ -31,7 +31,7 @@ export function RoomAlertForm({ where = "", whatsapp }: { where?: string; whatsa
           <legend className="label">Send alerts by</legend>
           <div className="grid grid-cols-2 gap-2">
             {(["whatsapp", "email"] as const).map((c) => (
-              <label key={c} htmlFor={`channel-${c}`} className={`flex cursor-pointer items-center justify-center gap-2 rounded-[12px] border-2 px-3 py-3 text-[15px] font-semibold ${channel === c ? (c === "whatsapp" ? "border-[#25d366] bg-[#e8f9ef]" : "border-pine bg-pine-light") : "border-line"}`}>
+              <label key={c} htmlFor={`channel-${c}`} className={`flex cursor-pointer items-center justify-center gap-2 rounded-[12px] border-2 px-3 py-3 text-[15px] font-semibold ${channel === c ? (c === "whatsapp" ? "border-[#25d366] bg-positive-surface text-positive" : "border-pine bg-pine-light") : "border-line"}`}>
                 <input id={`channel-${c}`} type="radio" name="channel" value={c} checked={channel === c} onChange={() => setChannel(c)} className="sr-only" />
                 {c === "whatsapp" ? "💬 WhatsApp" : "📧 Email"}
               </label>

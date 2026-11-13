@@ -67,9 +67,9 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
       )}
 
       {account?.foundHomeAt ? (
-        <section className="mb-8 rounded-card border border-[#2f9e5f]/40 bg-[#e8f6ee] p-5 sm:p-6">
-          <h2 className="text-[19px] text-[#17202e]">🎉 You found somewhere to live</h2>
-          <p className="mt-1 text-[15px] text-[#3a4757]">
+        <section className="mb-8 rounded-card border border-[#2f9e5f]/40 bg-positive-surface p-5 sm:p-6">
+          <h2 className="text-[19px] text-ink">🎉 You found somewhere to live</h2>
+          <p className="mt-1 text-[15px] text-ink-soft">
             You told us on {shortDate(account.foundHomeAt)}{account.foundHomeElsewhere ? " that you found a home outside RoomsNow" : ""}. Congratulations, and good luck in your new home.
           </p>
           <div className="mt-3">

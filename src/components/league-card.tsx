@@ -8,9 +8,9 @@ export async function LeagueCard({ companyId }: { companyId: string }) {
   const me = league.find((entry) => entry.companyId === companyId);
   const url = "https://www.roomsnow.co.uk/fastest-providers";
   return (
-    <section className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-card border border-[#e0a83a]/50 bg-[#fff7e6] p-5 text-[#17202e]">
+    <section className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-card border border-[#e0a83a]/50 bg-caution-surface p-5 text-ink">
       <div className="min-w-0">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#8a4410]">⚡ Fastest-replying providers</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-caution">⚡ Fastest-replying providers</p>
         {me ? (
           <p className="mt-1 text-[16px]">
             You're <strong>#{me.rank}</strong> on RoomsNow over the last {LEAGUE_DAYS} days, with a typical reply of <strong>{formatReplyTime(me.minutes)}</strong>. Share it with referrers.

@@ -116,7 +116,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
           <div className="mt-3"><FormSuccess message={whatsapp.allowed ? "WhatsApp access is active. Add your business WhatsApp number and switch on enquiries in Company profile to show the button on your adverts and search cards." : "Checkout finished. Waiting for Stripe to confirm your WhatsApp access; refresh shortly. Then add your business number and enable enquiries in Company profile."} /></div>
         )}
         <div className="card mt-3 flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e8f7ef] text-[#087f45]" aria-hidden="true">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-positive-surface text-positive" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.5 8.5 0 0 1-12.8 7.3L3 21l1.7-5.4A8.5 8.5 0 1 1 21 11.5Z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 7.5c0 4 3 7 7 7l1-2-2-1-1 1c-1.5-.5-2.5-1.5-3-3l1-1-1-2-2 1Z" />

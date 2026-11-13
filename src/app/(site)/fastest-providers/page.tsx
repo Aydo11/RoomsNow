@@ -72,7 +72,7 @@ export default async function FastestProvidersPage({ searchParams }: Props) {
                 <div className="min-w-0 flex-1">
                   <Link href={`/companies/${entry.company.slug}`} className="block truncate text-[17px] font-semibold hover:text-pine-dark">{entry.company.name}</Link>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
-                    {entry.minutes <= 60 && <span className="rounded-pill bg-[#fdf0e3] px-2 py-0.5 text-[11.5px] font-semibold text-[#8a4410]">⚡ Top responder</span>}
+                    {entry.minutes <= 60 && <span className="rounded-pill bg-caution-surface px-2 py-0.5 text-[11.5px] font-semibold text-caution">⚡ Top responder</span>}
                     {entry.company.verification === "APPROVED" && <VerifiedBadge compact />}
                   </div>
                 </div>

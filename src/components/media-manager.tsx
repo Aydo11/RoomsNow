@@ -134,7 +134,7 @@ export function MediaManager({ listingId, status, media, rooms, permanentStorage
               type="file"
               accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/quicktime,video/webm"
               multiple
-              className="field file:mr-3 file:rounded-md file:border-0 file:cursor-pointer file:bg-pine file:px-3 file:py-1.5 file:font-semibold file:text-white hover:file:bg-pine-dark"
+              className="field file:mr-3 file:rounded-md file:border-0 file:cursor-pointer file:bg-pine file:px-3 file:py-1.5 file:font-semibold file:text-white hover:file:bg-pine-strong"
               onChange={async (event) => {
                 const input = event.currentTarget;
                 if (!input.files || input.files.length === 0) return;

@@ -395,7 +395,7 @@ function Slide({
           </p>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {slide.match && (
-              <span className="rounded-full bg-white px-2.5 py-1 text-[12px] font-bold text-[#0F4F87]">{slide.match.score}% {slide.match.label.toLowerCase()}</span>
+              <span className="rounded-full bg-fixed-white px-2.5 py-1 text-[12px] font-bold text-pine-strong">{slide.match.score}% {slide.match.label.toLowerCase()}</span>
             )}
             <Chip>{slide.typeLabel}</Chip>
             {slide.roomsAvailable > 0 && (
@@ -530,12 +530,12 @@ function EndSlide({
         </p>
         <div className="mt-6 flex flex-col gap-2.5">
           {moreHref && (
-            <Link href={moreHref} className="rounded-full bg-white px-5 py-3 text-[15px] font-semibold text-[#0b1a2c] transition active:scale-95">
+            <Link href={moreHref} className="rounded-full bg-fixed-white px-5 py-3 text-[15px] font-semibold text-on-light transition active:scale-95">
               See more rooms
             </Link>
           )}
           {widenHref && (
-            <Link href={widenHref} className={clsx("rounded-full px-5 py-3 text-[15px] font-semibold transition active:scale-95", moreHref ? "bg-white/10 text-white" : "bg-white text-[#0b1a2c]")}>
+            <Link href={widenHref} className={clsx("rounded-full px-5 py-3 text-[15px] font-semibold transition active:scale-95", moreHref ? "bg-white/10 text-white" : "bg-fixed-white text-on-light")}>
               Widen the search
             </Link>
           )}

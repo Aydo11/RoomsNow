@@ -28,7 +28,7 @@ function Kpi({ href, title, value, hint, change, kind = "Last 30 days" }: { href
       </span>
       <span className="mt-2 font-display text-[30px] leading-none tabular-nums text-ink">{value}</span>
       {change && (
-        <span className={clsx("mt-2 inline-flex w-fit rounded-pill px-2 py-0.5 text-[12px] font-semibold", change.tone === "up" ? "bg-[#DDF2E8] text-[#1D6E49]" : change.tone === "down" ? "bg-clay/15 text-clay" : "bg-paper-sunk text-ink-soft")}>
+        <span className={clsx("mt-2 inline-flex w-fit rounded-pill px-2 py-0.5 text-[12px] font-semibold", change.tone === "up" ? "bg-positive-surface text-positive" : change.tone === "down" ? "bg-clay/15 text-clay" : "bg-paper-sunk text-ink-soft")}>
           {change.tone === "up" ? "▲ " : change.tone === "down" ? "▼ " : ""}{change.text}
         </span>
       )}
@@ -254,7 +254,7 @@ export default async function AdminHome() {
                   return (
                     <div key={k} className="flex items-baseline justify-between gap-2">
                       <dt className="text-ink-soft">{k}</dt>
-                      <dd className="text-right"><span className="font-semibold tabular-nums">{v}</span> <span className={clsx("text-[11.5px]", ch.tone === "up" ? "text-[#1D6E49]" : ch.tone === "down" ? "text-clay" : "text-ink-faint")}>{ch.text.replace(" vs previous 30 days", "")}</span></dd>
+                      <dd className="text-right"><span className="font-semibold tabular-nums">{v}</span> <span className={clsx("text-[11.5px]", ch.tone === "up" ? "text-positive" : ch.tone === "down" ? "text-clay" : "text-ink-faint")}>{ch.text.replace(" vs previous 30 days", "")}</span></dd>
                     </div>
                   );
                 })}

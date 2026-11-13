@@ -156,7 +156,7 @@ export function ResponseBadge({ label, compact = false }: { label: string | null
   if (label === "Usually replies within an hour") {
     return (
       <span
-        className={clsx("inline-flex shrink-0 items-center gap-1 rounded-pill bg-[#fdf0e3] font-semibold text-[#8a4410]", compact ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-[12px]")}
+        className={clsx("inline-flex shrink-0 items-center gap-1 rounded-pill bg-caution-surface font-semibold text-caution", compact ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-[12px]")}
         title="Top responder: usually replies to new messages within an hour (last 90 days)."
       >
         <span aria-hidden="true">⚡</span>

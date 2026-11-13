@@ -531,7 +531,7 @@ export function DemoPlayer({ story, scenes, autoPlay = false, loop = false, bare
       {/* Controls sit outside the scaled canvas so they stay a usable size. */}
       {!bare && (state === "idle" || state === "ended") && (
         <button type="button" onClick={play} aria-label={`${state === "ended" ? "Replay" : "Play"} the ${demo.title} demo`} className="group absolute inset-0 grid place-items-end justify-items-start p-[3%] focus-visible:outline-none">
-          <span className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[14px] font-bold text-[#0F4F87] shadow-lg transition hover:scale-105 group-focus-visible:ring-4 group-focus-visible:ring-[#549DE5]">
+          <span className="flex items-center gap-2 rounded-full bg-fixed-white px-4 py-2 text-[14px] font-bold text-[#0F4F87] shadow-lg transition hover:scale-105 group-focus-visible:ring-4 group-focus-visible:ring-[#549DE5]">
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">{state === "ended" ? <path d="M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z" /> : <path d="M8 5v14l11-7z" />}</svg>
             {state === "ended" ? "Replay" : "Play demo"}
           </span>

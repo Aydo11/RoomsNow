@@ -347,7 +347,7 @@ export function Thread({
               <p className="text-ink-soft">Providers often ring round when a room comes up. Leave a number and follow up with a call.</p>
               <button
                 type="button"
-                className="mt-1.5 rounded-pill bg-pine px-3 py-1 text-[12px] font-semibold text-white hover:bg-pine-dark"
+                className="mt-1.5 rounded-pill bg-pine px-3 py-1 text-[12px] font-semibold text-white hover:bg-pine-strong"
                 onClick={() => insertIntoMessage(phoneNudge?.savedPhone ? `My number is ${phoneNudge.savedPhone}, feel free to call or text. ` : "My number is ")}
               >
                 {phoneNudge?.savedPhone ? `Add ${phoneNudge.savedPhone}` : "Add my number"}

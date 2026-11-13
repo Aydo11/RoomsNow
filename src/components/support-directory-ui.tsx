@@ -171,7 +171,7 @@ export function SupportPostCard({ post, children }: { post: CardPost; children?:
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="rounded-pill bg-pine-light px-2 py-0.5 text-[11.5px] font-semibold text-pine-dark">{SUPPORT_POST_KINDS[post.kind as SupportPostKindValue] ?? "News"}</span>
-          {post.free && <span className="rounded-pill bg-[#e3f5ec] px-2 py-0.5 text-[11.5px] font-semibold text-[#166a43]">Free</span>}
+          {post.free && <span className="rounded-pill bg-positive-surface px-2 py-0.5 text-[11.5px] font-semibold text-positive">Free</span>}
           {post.audience !== "everyone" && <span className="rounded-pill bg-paper-sunk px-2 py-0.5 text-[11.5px] text-ink-soft">For {SUPPORT_AUDIENCES[post.audience as SupportAudience]?.toLowerCase() ?? post.audience}</span>}
         </div>
         <h3 className="mt-1.5 text-[16px] leading-snug">{post.title}</h3>
