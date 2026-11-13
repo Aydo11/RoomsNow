@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { FeaturedBadge, MatchScore, ResponseBadge } from "./badges";
+import { MatchScore, ResponseBadge } from "./badges";
 import { responseLabel } from "@/lib/response-label";
 import { monthYear, publicLocation, rentLead, tidyTitle } from "@/lib/format";
 import { supportLabel, ACCOMMODATION_TYPES } from "@/lib/taxonomy";
@@ -107,8 +107,10 @@ export function ListingCard({
           )}
           <div className="absolute left-3 top-3 z-[1] flex max-w-[calc(100%-6.5rem)] flex-wrap gap-2">
             {boosted ? (
-              <span className="inline-flex items-center gap-1 rounded-pill bg-[#F5B544] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#171F2E] shadow-sm"><LightningIcon /> Boosted</span>
-            ) : activelySponsored ? <FeaturedBadge /> : null}
+              <span className="inline-flex items-center gap-1 rounded-pill bg-[#1666AA] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#fff] shadow-sm"><LightningIcon /> Boosted</span>
+            ) : activelySponsored ? (
+              <span className="inline-flex items-center rounded-pill bg-[#fff] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#171F2E] shadow-sm">Sponsored</span>
+            ) : null}
             {vettedSchemes.length > 0 && (
               <span
                 className="inline-flex items-center gap-1 rounded-pill bg-[#fff]/95 px-2.5 py-1 text-[12px] font-semibold text-[#0F4F87]"
