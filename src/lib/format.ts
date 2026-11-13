@@ -14,6 +14,24 @@ export function rentRange(from?: number | null, to?: number | null) {
   return `${money(from ?? to)} per week`;
 }
 
+/** Rent for a photo overlay: "£140" or "£120–£150", with "/week" added by the caller. */
+export function rentLead(from?: number | null, to?: number | null) {
+  if (!from && !to) return "Rent on request";
+  if (from && to && from !== to) return `${money(from)}–${money(to)}`;
+  return money(from ?? to);
+}
+
+/** Calm an ALL-CAPS advert title for display, keeping short acronyms like DSS, HMO and UC. */
+export function tidyTitle(title: string) {
+  if (!/[A-Z]/.test(title) || title !== title.toUpperCase()) return title;
+  return title.toLowerCase().replace(/[a-z][a-z']*/g, (word, at: number) => {
+    const upper = word.toUpperCase();
+    if (word.length <= 3 && /^(DSS|HMO|UC|NHS|CQC|LTD|B\d)$/.test(upper)) return upper;
+    if (at > 0 && /^(and|of|the|for|in|with|to|a|on)$/.test(word)) return word;
+    return word[0].toUpperCase() + word.slice(1);
+  });
+}
+
 export function shortDate(date: Date | string | null | undefined) {
   if (!date) return "—";
   return new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
