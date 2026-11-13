@@ -1824,3 +1824,9 @@ html[data-theme="dark"] .street-pill { background: rgb(22 33 50); border-color: 
 [data-offscreen],
 [data-offscreen] *,
 [data-offscreen]::after { animation-play-state: paused !important; }
+
+/* "Benefits accepted" strip on advert cards: green reads as good news in both themes. */
+.benefits-strip { background: #e8f7ef; border-color: #bfe8d3; color: #145c3c; }
+.benefits-strip-sub { color: #2f7a57; }
+html[data-theme="dark"] .benefits-strip { background: linear-gradient(90deg, #163a2c, #183326); border-color: #275e46; color: #e8fff4; }
+html[data-theme="dark"] .benefits-strip-sub { color: #8fd9b6; }
