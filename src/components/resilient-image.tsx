@@ -7,6 +7,8 @@ type Props = {
   src?: string | null;
   fallbackSrc: string;
   fallbackLabel?: string;
+  /** Where the fallback label sits; defaults to the bottom-left corner. */
+  labelClassName?: string;
   alt: string;
   className?: string;
   /** Passed straight to next/image; defaults to a reasonable card-sized guess. */
@@ -21,7 +23,7 @@ type Props = {
  * properly resized/re-encoded file instead of the original upload —
  * the direct parent must be `position: relative` with a defined size.
  */
-export function ResilientImage({ src, fallbackSrc, fallbackLabel, alt, className, sizes, priority }: Props) {
+export function ResilientImage({ src, fallbackSrc, fallbackLabel, labelClassName = "bottom-2 left-2", alt, className, sizes, priority }: Props) {
   const [failed, setFailed] = useState(!src);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export function ResilientImage({ src, fallbackSrc, fallbackLabel, alt, className
         onError={() => setFailed(true)}
       />
       {failed && fallbackLabel && (
-        <span className="absolute bottom-2 left-2 rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+        <span className={`absolute ${labelClassName} rounded-pill bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm`}>
           {fallbackLabel}
         </span>
       )}
