@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { requireCompany, requireUser } from "@/lib/rbac";
 import { hasAdminPermission } from "@/lib/admin-permissions";
 import { adminNav } from "../../admin/nav";
-import { planLimits } from "@/lib/billing";
+import { billingIsLive, planLimits } from "@/lib/billing";
 import { clsx } from "@/lib/clsx";
 import { money, shortDate } from "@/lib/format";
 import { DashboardShell, DataTable } from "@/components/dashboard-shell";
@@ -11,8 +11,8 @@ import { FormError, FormSuccess, SubmitButton } from "@/components/ui";
 import { MembershipTabs } from "@/components/membership-tabs";
 import { ProDemo } from "@/components/pro-demo";
 import { providerNav } from "../nav";
-import { proServiceEnquiryAction } from "@/server/actions/pro-services";
-import { packPdfPath, ADVICE_FORMATS, HOW_IT_WORKS_STEPS, DEMO_SLUG, DEMO_STORIES, MEETING_TYPES, TIME_WINDOWS, ukMeetingTime, EXPERT_PLANS, PRO_SERVICES, PRO_SERVICE_KEYS, SESSION_HOURS, SESSION_STEPS, canUseProServices, sessionLabel, sessionPrice, type ProService, type ProServiceKey } from "@/lib/pro-services";
+import { buyProServiceAction, proServiceEnquiryAction } from "@/server/actions/pro-services";
+import { packPdfPath, ADVICE_FORMATS, HOW_IT_WORKS_STEPS, DEMO_SLUG, DEMO_STORIES, MEETING_TYPES, TIME_WINDOWS, ukMeetingTime, EXPERT_PLANS, PRO_SERVICES, PRO_SERVICE_KEYS, SESSION_HOURS, SESSION_STEPS, canUseProServices, sessionLabel, sessionPrice, PRO_BUYABLES, MAX_HOURS_PER_PURCHASE, STANDARD_HOURLY_RATE, hourlyCharge, type ProService, type ProServiceKey } from "@/lib/pro-services";
 
 export const metadata = { title: "Pro Services" };
 export const dynamic = "force-dynamic";
@@ -22,7 +22,61 @@ const ERRORS: Record<string, string> = {
   busy: "You've sent several enquiries in the last hour. Please try again a bit later, or email info@roomsnow.co.uk.",
   service: "Choose a service to enquire about.",
   meeting: "Choose a weekday between tomorrow and 60 days ahead for your call, or leave the date blank and we'll suggest one.",
+  payments: "Card payments aren't switched on yet. Send an enquiry and we'll invoice you instead.",
+  checkout: "We couldn't open the payment page. Please try again, or email info@roomsnow.co.uk.",
 };
+
+type BuyExpert = { id: string; name: string; hourlyRate: number };
+
+/** Pay by card for a service, a monthly plan or hours of expert time. */
+function BuyPanel({ serviceKey, experts, business, blocked }: { serviceKey: ProServiceKey; experts: BuyExpert[]; business: boolean; blocked: string | null }) {
+  const items = PRO_BUYABLES.filter((b) => b.service === serviceKey);
+  const disabled = Boolean(blocked);
+  return (
+    <div className="rounded-card border border-pine/30 bg-pine-light/25 p-4 sm:p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="text-[16px] font-semibold">Buy online</h3>
+        <span className="text-[12.5px] text-ink-soft">Secure card payment by Stripe. Prices are plus VAT. Monthly plans can be cancelled any time.</span>
+      </div>
+      <div className="mt-3 grid gap-2.5 md:grid-cols-2">
+        {items.map((b) => (
+          <form key={b.key} action={buyProServiceAction} className="flex items-center justify-between gap-3 rounded-[12px] border border-line bg-white p-3">
+            <input type="hidden" name="item" value={b.key} />
+            <span className="min-w-0">
+              <span className="block text-[14.5px] font-semibold text-ink">{b.label}</span>
+              <span className="block text-[12.5px] text-ink-soft">{b.note}</span>
+            </span>
+            <span className="flex shrink-0 items-center gap-2.5">
+              <span className="text-[15px] font-bold tabular-nums text-ink">{money(b.amount)}{b.mode === "subscription" && <span className="text-[12px] font-medium text-ink-soft">/mo</span>}</span>
+              <button type="submit" disabled={disabled} className="btn-primary min-h-0 px-3! py-1.5! text-[13px]! disabled:opacity-50">{b.mode === "subscription" ? "Subscribe" : "Pay"}</button>
+            </span>
+          </form>
+        ))}
+      </div>
+      {serviceKey === "EXPERT" && (
+        <form action={buyProServiceAction} className="mt-3 flex flex-wrap items-end gap-3 rounded-[12px] border border-line bg-white p-3">
+          <input type="hidden" name="item" value="hours" />
+          <div className="min-w-[180px] flex-1">
+            <label className="label" htmlFor="buy-expert">Buy hours with</label>
+            <select id="buy-expert" name="expertId" className="input" defaultValue="">
+              <option value="">Any manager · {money(hourlyCharge(STANDARD_HOURLY_RATE, business))}/hour</option>
+              {experts.map((e) => <option key={e.id} value={e.id}>{e.name} · {money(hourlyCharge(e.hourlyRate, business))}/hour</option>)}
+            </select>
+          </div>
+          <div className="w-[120px]">
+            <label className="label" htmlFor="buy-hours">Hours</label>
+            <select id="buy-hours" name="hours" className="input" defaultValue="1">
+              {Array.from({ length: MAX_HOURS_PER_PURCHASE }, (_, i) => i + 1).map((h) => <option key={h} value={h}>{h}</option>)}
+            </select>
+          </div>
+          <button type="submit" disabled={disabled} className="btn-primary disabled:opacity-50">Buy hours</button>
+          {business && <p className="w-full text-[12.5px] text-pine-dark">Your Business 10% discount is already taken off.</p>}
+        </form>
+      )}
+      {blocked && <p className="mt-3 text-[13px] text-ink-soft">{blocked}</p>}
+    </div>
+  );
+}
 
 /** 24px outline icons, drawn with the current text colour. */
 const ICONS = {
@@ -182,7 +236,7 @@ function PriceCard({ p }: { p: ProService["prices"][number] }) {
   );
 }
 
-export default async function ProServicesPage({ searchParams }: { searchParams: Promise<{ sent?: string; queued?: string; error?: string }> }) {
+export default async function ProServicesPage({ searchParams }: { searchParams: Promise<{ sent?: string; queued?: string; error?: string; paid?: string }> }) {
   // Admins without a provider company see a read-only preview of the page providers get.
   const signedIn = await requireUser("/provider/pro-services");
   const preview = !signedIn.staffOf[0] && hasAdminPermission(signedIn);
@@ -197,6 +251,13 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
   const tier = limits?.membership.tier ?? "PROFESSIONAL";
   const allowed = canUseProServices(tier);
   const business = tier === "BUSINESS";
+  const buyBlocked = preview
+    ? "Admin preview: buying is switched off here. Sign in with a provider account to test a payment."
+    : !allowed
+      ? "Buying online comes with Professional and Business memberships."
+      : !billingIsLive()
+        ? "Card payments are being switched on. Send an enquiry below and we'll invoice you."
+        : null;
 
   return (
     <DashboardShell
@@ -215,6 +276,7 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
       )}
       {query.sent && <div className="mb-5"><FormSuccess message={`Pack sent to ${user.email} (reference ${query.sent}). Reply to that email with any questions. If you asked for a call or meeting, we'll email you to confirm the time.`} /></div>}
       {query.queued && <div className="mb-5"><FormSuccess message={`Enquiry saved (reference ${query.queued}). We couldn't send the email just now, so the team will email you the pack.`} /></div>}
+      {query.paid && <div className="mb-5"><FormSuccess message="Payment received, thank you. We've emailed your receipt and will be in touch within 1 working day to get started." /></div>}
       {query.error && <div className="mb-5"><FormError message={ERRORS[query.error] ?? "Something went wrong. Please try again."} /></div>}
 
       <section className="relative isolate overflow-hidden rounded-[22px] bg-linear-to-br from-pine-dark via-pine to-[#3d8fd6] p-6 text-white sm:p-10">
@@ -379,6 +441,7 @@ export default async function ProServicesPage({ searchParams }: { searchParams: 
                 )}
 
                 <p className="mt-5 text-[13px] leading-relaxed text-ink-faint">{s.terms}</p>
+                <div className="mt-5"><BuyPanel serviceKey={key} experts={experts} business={business} blocked={buyBlocked} /></div>
                 <div className="mt-5"><EnquiryForm service={s} experts={experts} allowed={allowed} preview={preview} /></div>
               </div>
             </section>
