@@ -4,7 +4,7 @@ import { dateTime, money } from "@/lib/format";
 import { DashboardShell, DataTable, StatCard } from "@/components/dashboard-shell";
 import { FormError, FormSuccess, SubmitButton } from "@/components/ui";
 import { adminNav } from "../nav";
-import { confirmProMeetingAction, saveProExpertAction, updateProEnquiryAction } from "@/server/actions/pro-services";
+import { confirmProMeetingAction, saveProExpertAction, syncProCatalogueAction, updateProEnquiryAction } from "@/server/actions/pro-services";
 import { ENQUIRY_STATUSES, MEETING_TYPES, PRO_SERVICES, sessionLabel, ukMeetingTime } from "@/lib/pro-services";
 
 export const metadata = { title: "Pro Services" };
@@ -32,7 +32,7 @@ function ExpertForm({ expert }: { expert?: Expert }) {
 }
 
 /** Pro Services enquiries (each one already emailed to the provider and to info@) and the managers who sell their time. */
-export default async function AdminProServicesPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string; booked?: string }> }) {
+export default async function AdminProServicesPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string; booked?: string; synced?: string }> }) {
   await requireAdmin();
   const query = await searchParams;
   const [nav, enquiries, experts, open, won] = await Promise.all([
@@ -49,8 +49,15 @@ export default async function AdminProServicesPage({ searchParams }: { searchPar
       subtitle="Each enquiry emails the provider their pack and copies info@roomsnow.co.uk with the same reference. Reply from that email to keep the trail together, then update the status here."
       nav={nav}
       active="/admin/pro-services"
-      action={<a href="/provider/pro-services" className="btn-secondary">View the provider page</a>}
+      action={
+        <div className="flex flex-wrap gap-2">
+          <form action={syncProCatalogueAction}><SubmitButton className="btn-secondary">Create products in Stripe</SubmitButton></form>
+          <a href="/provider/pro-services" className="btn-secondary">View the provider page</a>
+        </div>
+      }
     >
+      {query.synced && <div className="mb-5"><FormSuccess message={`${query.synced} Pro Services prices are set up in the connected Stripe account. Providers can now pay online.`} /></div>}
+      {(query.error === "stripe" || query.error === "payments") && <div className="mb-5"><FormError message={query.error === "payments" ? "Card payments aren't switched on (BILLING_DRIVER and STRIPE_SECRET_KEY in Render)." : "Stripe didn't accept the request. Check the Render logs for details."} /></div>}
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Open enquiries" value={open} />
         <StatCard label="Won" value={won} />
