@@ -156,7 +156,7 @@ export function BoostPanel({
   );
 }
 
-function BoostBalance({
+export function BoostBalance({
   total,
   included,
   includedTotal,
@@ -187,7 +187,7 @@ function BoostBalance({
   );
 }
 
-function LightningIcon() {
+export function LightningIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
       <path d="M13.2 1.8 4.7 13.1a1 1 0 0 0 .8 1.6h5.1l-.8 7a.5.5 0 0 0 .9.4l8.6-11.3a1 1 0 0 0-.8-1.6h-5.2l.8-7a.5.5 0 0 0-.9-.4Z" />
