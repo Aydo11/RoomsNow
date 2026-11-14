@@ -19,7 +19,7 @@ const csp = [
   "font-src 'self' https://fonts.gstatic.com data:",
   // Map tiles and uploaded images.
   "img-src 'self' data: blob: https: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.google-analytics.com",
-  `connect-src 'self' https://api.postcodes.io https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://analytics.tiktok.com https://*.tiktok.com ${sentryOrigin}`,
+  `connect-src 'self' https://api.postcodes.io https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://stats.g.doubleclick.net https://ad.doubleclick.net https://www.google.com https://analytics.tiktok.com https://*.tiktok.com https://*.tiktokw.us ${sentryOrigin}`,
   // Own-origin empty conversion relay, plus the gallery's video embeds.
   // Private pages retain DENY / frame-ancestors 'none'.
   "frame-src 'self' https://www.youtube.com https://player.vimeo.com",
