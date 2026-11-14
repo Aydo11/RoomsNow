@@ -11,6 +11,7 @@ export function MembershipTabs({ active }: { active: "plans" | "pro" }) {
   return (
     <nav aria-label="Membership sections" className="mb-6 inline-flex gap-1 rounded-full border border-line bg-white p-1">
       {tab("/provider/membership", "Plans & billing", active === "plans")}
+      {tab("/provider/membership#boosts", "Boosts & sponsored", false)}
       {tab("/provider/pro-services", "Pro Services pricing", active === "pro")}
     </nav>
   );
