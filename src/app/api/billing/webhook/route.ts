@@ -16,15 +16,24 @@ import { isPaidServicePlanTier, isServiceBoostKey, SERVICE_BOOSTS } from "@/lib/
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  // The current account's secret, plus the previous account's (the UK one) so
+  // renewals and cancellations of older subscriptions keep syncing after a move.
+  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_WEBHOOK_SECRET_PREVIOUS].filter((s): s is string => Boolean(s));
   const signature = request.headers.get("stripe-signature");
-  if (!webhookSecret || !signature) return NextResponse.json({ error: "Stripe webhook is not configured." }, { status: 503 });
+  if (!secrets.length || !signature) return NextResponse.json({ error: "Stripe webhook is not configured." }, { status: 503 });
 
-  let event: Stripe.Event;
-  try {
-    event = stripe().webhooks.constructEvent(await request.text(), signature, webhookSecret);
-  } catch (error) {
-    console.error("Invalid Stripe webhook:", error);
+  const body = await request.text();
+  let event: Stripe.Event | null = null;
+  for (const secret of secrets) {
+    try {
+      event = stripe().webhooks.constructEvent(body, signature, secret);
+      break;
+    } catch {
+      // try the next secret
+    }
+  }
+  if (!event) {
+    console.error("Invalid Stripe webhook: signature matched no configured secret.");
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
