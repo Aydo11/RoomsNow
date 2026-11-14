@@ -18,6 +18,8 @@ import { setupChecklistHidden } from "@/lib/setup-checklist";
 import { whatsappAccess } from "@/lib/whatsapp-access";
 import { WhatsappSetupPrompt } from "@/components/whatsapp-setup-prompt";
 import { LeagueCard } from "@/components/league-card";
+import { ProServicesPromo } from "@/components/pro-services-promo";
+import { cookies } from "next/headers";
 
 export const metadata = { title: "Provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -200,6 +202,8 @@ export default async function ProviderDashboard() {
       )}
 
       {!checklistHidden && <SetupChecklist steps={setupSteps} audience="provider" />}
+
+      {(await cookies()).get("rn-pro-promo-hidden")?.value !== "1" && <ProServicesPromo />}
 
       <LeagueCard companyId={companyId} />
 
