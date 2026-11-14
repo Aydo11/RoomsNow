@@ -12,6 +12,7 @@ import { activateSpotlight, orgSnapshot } from "@/lib/spotlight-server";
 import { cleanSpotlightText, isSpotlightPackage, SPOTLIGHT_PACKAGES } from "@/lib/spotlight";
 import { activateServiceBoost, activateServiceSponsorship, applyServicePlan, grantServiceBoostPack } from "@/lib/service-billing";
 import { isPaidServicePlanTier, isServiceBoostKey, SERVICE_BOOSTS } from "@/lib/service-marketplace";
+import { recordProPurchase } from "@/lib/pro-billing";
 
 export const runtime = "nodejs";
 
@@ -43,7 +44,8 @@ export async function POST(request: Request) {
       await subscriptionChanged(event.data.object);
     } else if (event.type === "invoice.payment_failed") {
       const customerId = stringId(event.data.object.customer);
-      if (customerId) {
+      // A failed Pro Services payment must not mark the membership past due.
+      if (customerId && !(await proInvoiceMeta(event.data.object))) {
         await db.subscription.updateMany({ where: { externalCustomerId: customerId }, data: { status: "PAST_DUE" } });
         await db.referrerSubscription.updateMany({ where: { externalCustomerId: customerId }, data: { status: "PAST_DUE" } });
         await db.serviceSubscription.updateMany({ where: { externalCustomerId: customerId }, data: { status: "PAST_DUE" } });
@@ -62,6 +64,11 @@ export async function POST(request: Request) {
 async function checkoutCompleted(session: Stripe.Checkout.Session) {
   const kind = session.metadata?.kind;
   if (session.payment_status === "unpaid") return;
+
+  if (kind === "pro_service") {
+    await recordProPurchase(session);
+    return;
+  }
 
   if (kind === "service_plan") {
     const businessId = session.metadata?.businessId ?? session.client_reference_id;
@@ -249,6 +256,7 @@ async function checkoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 async function subscriptionChanged(subscription: Stripe.Subscription) {
+  if (subscription.metadata.kind === "pro_service") return;
   if (subscription.metadata.kind === "whatsapp_addon") {
     const companyId = subscription.metadata.companyId;
     if (!companyId) return;
@@ -331,6 +339,17 @@ async function invoicePaid(invoice: Stripe.Invoice) {
   const raw = invoice as unknown as { subscription?: string | { id: string } | null; parent?: { subscription_details?: { subscription?: string | { id: string } | null } | null } | null };
   const invoiceSubscription = stringId(raw.subscription ?? raw.parent?.subscription_details?.subscription ?? null);
   if (invoiceSubscription) {
+    const pro = await proInvoiceMeta(invoice);
+    if (pro) {
+      if (pro.companyId) {
+        await db.payment.upsert({
+          where: { externalPaymentId: `invoice:${invoice.id}` },
+          create: { companyId: pro.companyId, kind: "OTHER", amount: invoice.amount_paid, currency: invoice.currency?.toUpperCase() ?? "GBP", status: "PAID", description: `Pro Services: ${pro.label ?? "monthly plan"}`, externalPaymentId: `invoice:${invoice.id}`, invoiceUrl: invoice.hosted_invoice_url ?? null },
+          update: { status: "PAID", invoiceUrl: invoice.hosted_invoice_url ?? null },
+        });
+      }
+      return;
+    }
     const addonCompany = await db.company.findFirst({ where: { whatsappAddonSubscriptionId: invoiceSubscription }, select: { id: true } });
     if (addonCompany) {
       await db.payment.upsert({
@@ -382,4 +401,13 @@ function stripeStatus(status: Stripe.Subscription.Status): SubscriptionStatus {
   if (status === "past_due" || status === "unpaid") return "PAST_DUE";
   if (status === "incomplete" || status === "incomplete_expired") return "INCOMPLETE";
   return "CANCELLED";
+}
+
+/** The Pro Services metadata on a subscription invoice, or null for any other invoice. */
+async function proInvoiceMeta(invoice: Stripe.Invoice): Promise<Record<string, string> | null> {
+  const raw = invoice as unknown as { subscription?: string | { id: string } | null; parent?: { subscription_details?: { subscription?: string | { id: string } | null; metadata?: Record<string, string> | null } | null } | null };
+  const subscriptionId = stringId(raw.subscription ?? raw.parent?.subscription_details?.subscription ?? null);
+  if (!subscriptionId) return null;
+  const metadata = raw.parent?.subscription_details?.metadata ?? (await stripe().subscriptions.retrieve(subscriptionId)).metadata;
+  return metadata?.kind === "pro_service" ? metadata : null;
 }
