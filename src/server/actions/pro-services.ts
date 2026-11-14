@@ -322,6 +322,28 @@ export async function buyProServiceAction(form: FormData) {
   redirect(url ?? "/provider/pro-services?error=checkout");
 }
 
+const ANNOUNCE_TITLE = "New: Pro Services for providers";
+
+/** One in-app notification about Pro Services for every provider staff member who hasn't had it yet. */
+export async function announceProServicesAction() {
+  const admin = await requireAdmin();
+  const [staff, already] = await Promise.all([
+    db.companyStaff.findMany({ select: { userId: true }, distinct: ["userId"] }),
+    db.notification.findMany({ where: { title: ANNOUNCE_TITLE }, select: { userId: true } }),
+  ]);
+  const done = new Set(already.map((n) => n.userId));
+  const data = staff.filter((s) => !done.has(s.userId)).map((s) => ({
+    userId: s.userId,
+    type: "SYSTEM" as const,
+    title: ANNOUNCE_TITLE,
+    body: "A staff CRM from £59/month, a website for your service, and 1:1 hours or monthly mentoring with our housing managers. Pay online or book a free call.",
+    href: "/provider/pro-services",
+  }));
+  if (data.length) await db.notification.createMany({ data });
+  await audit({ actorId: admin.id, action: "pro_services.announced", targetType: "Notification", targetId: "pro_services", metadata: { count: data.length } });
+  redirect(`/admin/pro-services?announced=${data.length}`);
+}
+
 /** Creates every Pro Services product and price in the connected Stripe account. */
 export async function syncProCatalogueAction() {
   const admin = await requireAdmin();
