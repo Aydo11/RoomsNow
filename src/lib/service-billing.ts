@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "./db";
-import { billingAvailable, billingIsLive, stripe } from "./billing";
+import { billingAvailable, billingIsLive, liveCustomerId, stripe } from "./billing";
 import { audit } from "./audit";
 import {
   boostWindow,
@@ -31,7 +31,8 @@ const withParam = (url: string, param: string) => `${url}${url.includes("?") ? "
 
 async function serviceCustomer(businessId: string) {
   const existing = await db.serviceSubscription.findUnique({ where: { businessId }, select: { externalCustomerId: true } });
-  if (existing?.externalCustomerId) return existing.externalCustomerId;
+  const saved = await liveCustomerId(existing?.externalCustomerId);
+  if (saved) return saved;
   const business = await db.serviceBusiness.findUniqueOrThrow({ where: { id: businessId }, select: { name: true, email: true } });
   const customer = await stripe().customers.create({ name: business.name, email: business.email, metadata: { serviceBusinessId: businessId } });
   await db.serviceSubscription.updateMany({ where: { businessId }, data: { externalCustomerId: customer.id, billingProvider: "stripe" } });
