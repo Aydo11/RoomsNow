@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { requireCompany } from "@/lib/rbac";
-import { billingAvailable, billingIsLive, planLimits } from "@/lib/billing";
+import { billingAvailable, billingIsLive, boostAllowance, planLimits } from "@/lib/billing";
 import { FormSuccess } from "@/components/ui";
 import { DashboardShell, DataTable, StatCard } from "@/components/dashboard-shell";
 import { PlanPicker } from "@/components/plan-picker";
@@ -11,16 +11,17 @@ import { cancelWhatsappAddonAction, startWhatsappAddonAction } from "@/server/ac
 import { WHATSAPP_ADDON_PRICE, whatsappAccess } from "@/lib/whatsapp-access";
 import { WhatsappSetupPrompt } from "@/components/whatsapp-setup-prompt";
 import { MembershipTabs, ProServicesNudge } from "@/components/membership-tabs";
+import { MembershipBoosts } from "@/components/membership-boosts";
 
 export const metadata = { title: "Membership" };
 export const dynamic = "force-dynamic";
 
-export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ billing?: string; whatsapp?: string }> }) {
+export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ billing?: string; whatsapp?: string; boost_pack?: string }> }) {
   const { companyId } = await requireCompany();
   const query = await searchParams;
   const billingLive = billingIsLive();
   const paymentsEnabled = billingAvailable();
-  const [nav, limits, plans, payments, addon] = await Promise.all([
+  const [nav, limits, plans, payments, addon, boosts, adverts] = await Promise.all([
     providerNav(companyId),
     planLimits(companyId),
     db.membership.findMany({
@@ -31,6 +32,13 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
     db.company.findUniqueOrThrow({
       where: { id: companyId },
       select: { whatsappNumber: true, whatsappAddonStatus: true, whatsappAddonPeriodEnd: true, whatsappAddonCancelAtPeriodEnd: true, whatsappEnabled: true, whatsappGrantActive: true, whatsappGrantExpiresAt: true },
+    }),
+    boostAllowance(companyId),
+    db.listing.findMany({
+      where: { companyId, status: "ACTIVE" },
+      orderBy: { updatedAt: "desc" },
+      take: 50,
+      select: { id: true, title: true, boostedUntil: true, featured: true, featuredUntil: true },
     }),
   ]);
   const whatsapp = whatsappAccess(limits.membership.tier, addon.whatsappAddonStatus, addon);
@@ -103,6 +111,26 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
               includedBoosts: plan.includedBoosts,
               analytics: plan.analytics,
               priorityPlacement: plan.priorityPlacement,
+            }))}
+          />
+        </div>
+      </section>
+
+      <section id="boosts" className="mt-8 scroll-mt-24">
+        <h2 className="text-[20px]">Boosts &amp; sponsored adverts</h2>
+        <p className="mt-1 text-[14px] text-ink-soft">Buy boost credits and use them on any live advert from here. Sponsoring opens that advert&apos;s sponsor options.</p>
+        <div className="mt-3">
+          <MembershipBoosts
+            purchased={query.boost_pack === "complete"}
+            includedTotal={boosts.includedTotal}
+            includedRemaining={boosts.includedRemaining}
+            purchasedRemaining={boosts.purchasedRemaining}
+            paymentsEnabled={paymentsEnabled}
+            adverts={adverts.map((a) => ({
+              id: a.id,
+              title: a.title,
+              boostedUntil: a.boostedUntil && a.boostedUntil > new Date() ? a.boostedUntil.toISOString() : null,
+              sponsored: a.featured && (!a.featuredUntil || a.featuredUntil > new Date()),
             }))}
           />
         </div>
