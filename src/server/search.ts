@@ -15,6 +15,8 @@ const resolveAreaOnce = cache(resolveArea);
 export type SearchParams = {
   q?: string;
   where?: string;
+  /** Exact town or city from the "Narrow it down" chips, so the chip's count matches the results. */
+  city?: string;
   support?: string[];
   type?: string[];
   from?: string;
@@ -124,6 +126,7 @@ async function buildWhere(params: SearchParams) {
   const box = bbox ?? (centre ? boundingBox(centre, radius) : null);
 
   const AND: Prisma.ListingWhereInput[] = [...textFilter(params.q)];
+  if (params.city) AND.push({ property: { city: { equals: params.city, mode: "insensitive" } } });
 
   if (box) {
     AND.push({
