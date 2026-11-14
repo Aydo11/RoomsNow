@@ -25,6 +25,7 @@ export function appliedSearchFilters(params: URLSearchParams) {
   const add = (key: string, label: string) => { if (params.get(key)) applied.push({ key, label }); };
   add("q", `"${params.get("q")}"`);
   add("where", params.get("where") ?? "");
+  add("city", params.get("city") ?? "");
   add("bbox", "This map area");
   for (const [key, label] of Object.entries({ verified: "Verified providers", vetted: "Vetted providers", wheelchair: "Wheelchair accessible", petsAllowed: "Pets allowed", ensuite: "En-suite", selfContained: "Self-contained", furnished: "Furnished", hb: "Accepts Housing Benefit" })) {
     if (params.get(key) === "1") applied.push({ key, label });
