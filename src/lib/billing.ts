@@ -134,7 +134,7 @@ export async function liveCustomerId(id: string | null | undefined) {
   }
 }
 
-async function stripeCustomer(companyId: string) {
+export async function stripeCustomer(companyId: string) {
   const subscription = await db.subscription.findUnique({ where: { companyId }, select: { externalCustomerId: true } });
   const saved = await liveCustomerId(subscription?.externalCustomerId);
   if (saved) return saved;
