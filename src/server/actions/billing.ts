@@ -248,15 +248,16 @@ export async function recordSponsoredClickAction(listingId: string) {
 }
 
 /** Purchases credits that can later be used on any live advert. */
-export async function purchaseBoostPackAction(pack: BoostPack) {
+export async function purchaseBoostPackAction(pack: BoostPack, from: "adverts" | "membership" = "adverts") {
   const { user, companyId } = await requireCompany();
   if (!isBoostPack(pack)) return { ok: false, message: "Unknown boost pack." };
   const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const back = `${appUrl}/provider/${from === "membership" ? "membership" : "adverts"}`;
   const session = await billing.startBoostCheckout({
     companyId,
     pack,
-    successUrl: `${appUrl}/provider/adverts`,
-    cancelUrl: `${appUrl}/provider/adverts`,
+    successUrl: back,
+    cancelUrl: back,
   });
   await audit({
     actorId: user.id,
