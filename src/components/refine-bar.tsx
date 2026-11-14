@@ -31,7 +31,16 @@ export function RefineBar({ facets, total }: { facets: Facets; total: number }) 
 
   const applied = appliedSearchFilters(new URLSearchParams(params.toString()));
 
-  const topCities = facets.cities.filter((c) => c.city !== params.get("where"));
+  const topCities = facets.cities.filter((c) => c.city !== params.get("city") && c.city !== params.get("where"));
+
+  // An area chip shows only adverts in that town, matching the count on the chip
+  // (a "where" search would widen to everything within 15 miles).
+  function pickCity(city: string) {
+    const next = new URLSearchParams(params.toString());
+    for (const key of ["where", "bbox", "radius", "page"]) next.delete(key);
+    next.set("city", city);
+    router.push(`/search?${next.toString()}`);
+  }
 
   return (
     <div className="mt-4 space-y-3">
@@ -60,7 +69,7 @@ export function RefineBar({ facets, total }: { facets: Facets; total: number }) 
         <div className="flex flex-wrap items-center gap-2 text-[13px]">
           <span className="text-ink-faint">Narrow it down:</span>
           {topCities.slice(0, 5).map((city) => (
-            <button key={city.city} onClick={() => set("where", city.city)} className="chip">
+            <button key={city.city} onClick={() => pickCity(city.city)} className="chip">
               {city.city} <span className="ml-1 text-ink-faint">{city.count}</span>
             </button>
           ))}
