@@ -20,18 +20,20 @@ export type CataloguePlan = {
   key: string;
   name: string;
   description: string;
-  /** Pence per month. */
+  /** Pence per month, or the one-off amount when `once` is set. */
   unitAmount: number;
+  /** A one-off payment price rather than a monthly subscription price. */
+  once?: boolean;
 };
 
-export function catalogueLookupKey(plan: Pick<CataloguePlan, "key" | "unitAmount">) {
-  return `roomsnow_${plan.key}_gbp_${plan.unitAmount}_monthly`;
+export function catalogueLookupKey(plan: Pick<CataloguePlan, "key" | "unitAmount" | "once">) {
+  return `roomsnow_${plan.key}_gbp_${plan.unitAmount}_${plan.once ? "once" : "monthly"}`;
 }
 
 const cache = new Map<string, string>();
 
 export async function cataloguePriceId(client: Stripe, plan: CataloguePlan): Promise<string> {
-  if (!Number.isInteger(plan.unitAmount) || plan.unitAmount <= 0) throw new Error(`${plan.name} has no monthly price to charge.`);
+  if (!Number.isInteger(plan.unitAmount) || plan.unitAmount <= 0) throw new Error(`${plan.name} has no price to charge.`);
   const lookupKey = catalogueLookupKey(plan);
   const cached = cache.get(lookupKey);
   if (cached) return cached;
@@ -45,10 +47,10 @@ export async function cataloguePriceId(client: Stripe, plan: CataloguePlan): Pro
         product: product.id,
         currency: "gbp",
         unit_amount: plan.unitAmount,
-        recurring: { interval: "month" },
+        ...(plan.once ? {} : { recurring: { interval: "month" as const } }),
         lookup_key: lookupKey,
         transfer_lookup_key: true,
-        nickname: `${plan.name} (monthly)`,
+        nickname: `${plan.name} (${plan.once ? "one-off" : "monthly"})`,
         metadata: { app: "roomsnow", plan: plan.key },
       },
       { idempotencyKey: `roomsnow-price-${lookupKey}` },
