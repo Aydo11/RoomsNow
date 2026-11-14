@@ -117,9 +117,27 @@ export function stripe() {
   return stripeClient;
 }
 
+/**
+ * A saved customer id only helps if it exists in the Stripe account the site
+ * is using now. After moving accounts (UK to UAE) old ids return "No such
+ * customer", so callers make a fresh customer instead.
+ */
+export async function liveCustomerId(id: string | null | undefined) {
+  if (!id) return null;
+  try {
+    const customer = await stripe().customers.retrieve(id);
+    return customer.deleted ? null : customer.id;
+  } catch (error) {
+    const e = error as { code?: string; statusCode?: number };
+    if (e.code === "resource_missing" || e.statusCode === 404) return null;
+    throw error;
+  }
+}
+
 async function stripeCustomer(companyId: string) {
   const subscription = await db.subscription.findUnique({ where: { companyId }, select: { externalCustomerId: true } });
-  if (subscription?.externalCustomerId) return subscription.externalCustomerId;
+  const saved = await liveCustomerId(subscription?.externalCustomerId);
+  if (saved) return saved;
   const company = await db.company.findUniqueOrThrow({ where: { id: companyId }, select: { name: true, email: true } });
   const customer = await stripe().customers.create({ name: company.name, email: company.email, metadata: { companyId } });
   await db.subscription.updateMany({ where: { companyId }, data: { externalCustomerId: customer.id, billingProvider: "stripe" } });
@@ -128,7 +146,8 @@ async function stripeCustomer(companyId: string) {
 
 async function stripeReferrerCustomer(userId: string) {
   const subscription = await db.referrerSubscription.findUnique({ where: { userId }, select: { externalCustomerId: true } });
-  if (subscription?.externalCustomerId) return subscription.externalCustomerId;
+  const saved = await liveCustomerId(subscription?.externalCustomerId);
+  if (saved) return saved;
   const user = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { firstName: true, lastName: true, email: true } });
   const customer = await stripe().customers.create({ name: `${user.firstName} ${user.lastName}`, email: user.email, metadata: { userId } });
   await db.referrerSubscription.updateMany({ where: { userId }, data: { externalCustomerId: customer.id, billingProvider: "stripe" } });
@@ -349,18 +368,18 @@ async function membershipCataloguePrice(tier: MembershipTier) {
 }
 
 export function priceIdFor(tier: MembershipTier) {
-  return { FREE: null, PROFESSIONAL: process.env.STRIPE_PRICE_PROFESSIONAL ?? null, BUSINESS: process.env.STRIPE_PRICE_BUSINESS ?? null, REFERRER_FREE: null, REFERRER_PRO: null }[tier];
+  return { FREE: null, PROFESSIONAL: process.env.STRIPE_PRICE_PROFESSIONAL || null, BUSINESS: process.env.STRIPE_PRICE_BUSINESS || null, REFERRER_FREE: null, REFERRER_PRO: null }[tier];
 }
 
 export function referrerPriceIdFor(tier: MembershipTier) {
-  return { REFERRER_FREE: null, REFERRER_PRO: process.env.STRIPE_PRICE_REFERRER_PRO ?? null, FREE: null, PROFESSIONAL: null, BUSINESS: null }[tier];
+  return { REFERRER_FREE: null, REFERRER_PRO: process.env.STRIPE_PRICE_REFERRER_PRO || null, FREE: null, PROFESSIONAL: null, BUSINESS: null }[tier];
 }
 
 export function boostPriceIdFor(pack: BoostPack) {
   return {
-    SINGLE: process.env.STRIPE_PRICE_BOOST_1 ?? null,
-    THREE: process.env.STRIPE_PRICE_BOOST_3 ?? null,
-    TEN: process.env.STRIPE_PRICE_BOOST_10 ?? null,
+    SINGLE: process.env.STRIPE_PRICE_BOOST_1 || null,
+    THREE: process.env.STRIPE_PRICE_BOOST_3 || null,
+    TEN: process.env.STRIPE_PRICE_BOOST_10 || null,
   }[pack];
 }
 
