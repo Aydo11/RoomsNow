@@ -58,14 +58,14 @@ function BuyPanel({ serviceKey, experts, business, blocked }: { serviceKey: ProS
           <input type="hidden" name="item" value="hours" />
           <div className="min-w-[180px] flex-1">
             <label className="label" htmlFor="buy-expert">Buy hours with</label>
-            <select id="buy-expert" name="expertId" className="input" defaultValue="">
+            <select id="buy-expert" name="expertId" className="input bg-[#fff]! text-[#111]! [color-scheme:light]" defaultValue="">
               <option value="">Any manager · {money(hourlyCharge(STANDARD_HOURLY_RATE, business))}/hour</option>
               {experts.map((e) => <option key={e.id} value={e.id}>{e.name} · {money(hourlyCharge(e.hourlyRate, business))}/hour</option>)}
             </select>
           </div>
           <div className="w-[120px]">
             <label className="label" htmlFor="buy-hours">Hours</label>
-            <select id="buy-hours" name="hours" className="input" defaultValue="1">
+            <select id="buy-hours" name="hours" className="input bg-[#fff]! text-[#111]! [color-scheme:light]" defaultValue="1">
               {Array.from({ length: MAX_HOURS_PER_PURCHASE }, (_, i) => i + 1).map((h) => <option key={h} value={h}>{h}</option>)}
             </select>
           </div>
