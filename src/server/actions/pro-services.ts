@@ -6,7 +6,8 @@ import { brand } from "@/brand.config";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { requireAdmin, requireCompany } from "@/lib/rbac";
-import { planLimits } from "@/lib/billing";
+import { billingIsLive, planLimits } from "@/lib/billing";
+import { startProCheckout, syncProCatalogue } from "@/lib/pro-billing";
 import { sendEmail } from "@/lib/notify";
 import { escapeHtml, renderEmail } from "@/lib/email-template";
 import { LIMITS, rateLimit } from "@/lib/rate-limit";
@@ -31,6 +32,10 @@ import {
   sessionLabel,
   sessionPrice,
   type ProService,
+  MAX_HOURS_PER_PURCHASE,
+  STANDARD_HOURLY_RATE,
+  hourlyCharge,
+  proBuyable,
 } from "@/lib/pro-services";
 
 const text = (form: FormData, key: string, max: number) => String(form.get(key) ?? "").trim().slice(0, max);
@@ -278,4 +283,57 @@ export async function confirmProMeetingAction(form: FormData) {
   revalidatePath("/admin/pro-services");
   revalidatePath("/provider/pro-services");
   redirect(`/admin/pro-services?booked=1#e-${id}`);
+}
+
+/* ---------- Buying online ---------- */
+
+/** Card checkout for a Pro Services item or for hours of expert time. */
+export async function buyProServiceAction(form: FormData) {
+  const { user, companyId } = await requireCompany();
+  const base = `${APP_URL}/provider/pro-services`;
+  const tier = (await planLimits(companyId)).membership.tier;
+  if (!canUseProServices(tier)) redirect("/provider/pro-services?error=plan");
+  if (!billingIsLive()) redirect("/provider/pro-services?error=payments");
+  const item = text(form, "item", 60);
+  if (item !== "hours" && !proBuyable(item)) redirect("/provider/pro-services?error=service");
+
+  let url: string | null = null;
+  try {
+    if (item === "hours") {
+      const hours = Math.min(MAX_HOURS_PER_PURCHASE, Math.max(1, Math.floor(Number(form.get("hours"))) || 1));
+      const expertId = text(form, "expertId", 40);
+      const expert = expertId ? await db.proExpert.findFirst({ where: { id: expertId, active: true } }) : null;
+      url = await startProCheckout({
+        companyId,
+        userId: user.id,
+        successUrl: base,
+        cancelUrl: base,
+        hours,
+        perHour: hourlyCharge(expert?.hourlyRate ?? STANDARD_HOURLY_RATE, tier === "BUSINESS"),
+        expertId: expert?.id,
+        expertName: expert?.name,
+      });
+    } else {
+      url = await startProCheckout({ companyId, userId: user.id, successUrl: base, cancelUrl: base, item });
+    }
+  } catch (error) {
+    console.error("Pro Services checkout failed:", error);
+  }
+  redirect(url ?? "/provider/pro-services?error=checkout");
+}
+
+/** Creates every Pro Services product and price in the connected Stripe account. */
+export async function syncProCatalogueAction() {
+  const admin = await requireAdmin();
+  if (!billingIsLive()) redirect("/admin/pro-services?error=payments");
+  let count = 0;
+  try {
+    const experts = await db.proExpert.findMany({ where: { active: true }, select: { hourlyRate: true } });
+    count = await syncProCatalogue([STANDARD_HOURLY_RATE, ...experts.map((e) => e.hourlyRate)]);
+    await audit({ actorId: admin.id, action: "pro_services.catalogue_synced", targetType: "Stripe", targetId: "pro_services", metadata: { count } });
+  } catch (error) {
+    console.error("Pro Services catalogue sync failed:", error);
+    redirect("/admin/pro-services?error=stripe");
+  }
+  redirect(`/admin/pro-services?synced=${count}`);
 }
