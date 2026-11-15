@@ -37,17 +37,12 @@ const RESOURCES = [
   { label: "Birmingham City Council: supported exempt accommodation", href: "https://www.birmingham.gov.uk/info/20006/housing/2333/supported_exempt_accommodation" },
 ];
 
-export async function generateMetadata(): Promise<Metadata> {
-  const data = await loadBirminghamRooms().catch(() => null);
-  const free = data?.stats.roomsFree ?? 0;
-  return pageMetadata({
-    title: free ? `HMO Rooms to Rent in Birmingham | ${free} Available` : "HMO Rooms to Rent in Birmingham",
-    description: free
-      ? `${free} shared rooms listed as available in Birmingham from ${data!.stats.providers} providers. Compare costs, bills, areas and benefit information, then contact the provider.`
-      : "Search HMO rooms and shared accommodation in Birmingham. Compare rent, bills, areas and Housing Benefit, then message the provider directly.",
-    path: PATH,
-  });
-}
+export const metadata: Metadata = pageMetadata({
+  title: "HMO Rooms to Rent in Birmingham",
+  description:
+    "Browse HMO and shared rooms in Birmingham. Compare areas, advertised costs and provider requirements, then enquire directly.",
+  path: PATH,
+});
 
 export default async function HmoRoomsBirminghamPage() {
   const data = await loadBirminghamRooms().catch(() => null);
