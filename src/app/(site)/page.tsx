@@ -516,7 +516,7 @@ async function HomeListings() {
               <h2 className="mt-2 text-[28px]">Accommodation available now</h2>
             </div>
             <Link href="/search" className="btn-secondary shrink-0">
-              {featured.total > 3 ? `View all ${featured.total} vacancies` : "View all vacancies"}
+              {featured.total > 3 ? `View all ${featured.total} adverts` : "View all adverts"}
             </Link>
           </div>
           <div data-reveal="stagger" className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
