@@ -22,6 +22,8 @@ export async function register() {
     scheduleResponseTimeRefresh();
     const { scheduleRequestChasers } = await import("./lib/request-chasers");
     scheduleRequestChasers();
+    const { scheduleProviderActivationNudges } = await import("./lib/provider-activation");
+    scheduleProviderActivationNudges();
     const { scheduleWeeklySummary } = await import("./lib/weekly-summary");
     scheduleWeeklySummary();
     const { schedulePlacementCheckIns } = await import("./lib/placement-checkins");
