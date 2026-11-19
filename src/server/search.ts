@@ -6,6 +6,7 @@ import { boundingBox, distanceMiles, resolveArea, type Point } from "@/lib/geo";
 import { rankBoosted, rotateHourly } from "@/lib/boost-packages";
 import type { Prisma } from "@prisma/client";
 import { COVER_MEDIA } from "@/lib/cover-image";
+import { FRESH_ADVERT_MS, NEW_PROVIDER_JOINED_MS, NEW_PROVIDER_SPOTLIGHT_MS } from "@/lib/new-provider";
 import type { WhatsappDisplayCompany } from "@/lib/whatsapp-display";
 
 // Search results, facets and map pins all resolve the same location during one
@@ -208,6 +209,19 @@ function orderFor(sort: string | undefined): Prisma.ListingOrderByWithRelationIn
   }
 }
 
+/** Companies that joined recently and published nothing before the last 72 hours. */
+function newProviderCompany(now: Date): Prisma.CompanyWhereInput {
+  return {
+    createdAt: { gte: new Date(now.getTime() - NEW_PROVIDER_JOINED_MS) },
+    listings: { none: { publishedAt: { lt: new Date(now.getTime() - NEW_PROVIDER_SPOTLIGHT_MS) } } },
+  };
+}
+
+/** "Just added": adverts published in the last 48 hours, plus every advert from a new provider. */
+function newProviderLane(now: Date): Prisma.ListingWhereInput {
+  return { OR: [{ publishedAt: { gte: new Date(now.getTime() - FRESH_ADVERT_MS) } }, { company: newProviderCompany(now) }] };
+}
+
 function paidMemberLane(now: Date): Prisma.ListingWhereInput {
   return {
     OR: [
@@ -298,11 +312,19 @@ export async function searchListings(params: SearchParams) {
   const organicWhere: Prisma.ListingWhereInput = {
     AND: [where, inactiveSponsor, inactiveBoost],
   };
+  // The new-provider spotlight only reorders the default sort; an explicit sort
+  // (cheapest, newest...) is left exactly as the person asked for.
+  const spotlight = !params.sort || params.sort === "featured";
+  const newLane = newProviderLane(now);
+  const restWhere: Prisma.ListingWhereInput = spotlight ? { AND: [organicWhere, { NOT: newLane }] } : organicWhere;
   const memberLane = paidMemberLane(now);
-  const paidWhere: Prisma.ListingWhereInput = { AND: [organicWhere, memberLane] };
-  const freeWhere: Prisma.ListingWhereInput = { AND: [organicWhere, { NOT: memberLane }] };
+  const paidWhere: Prisma.ListingWhereInput = { AND: [restWhere, memberLane] };
+  const freeWhere: Prisma.ListingWhereInput = { AND: [restWhere, { NOT: memberLane }] };
 
-  const [boostedPool, sponsoredPool, paidCount, freeCount, total] = await Promise.all([
+  const [newProviderPool, boostedPool, sponsoredPool, paidCount, freeCount, total] = await Promise.all([
+    spotlight && page === 1
+      ? db.listing.findMany({ where: { AND: [organicWhere, newLane] }, orderBy: { publishedAt: "desc" }, take: 24, include: LISTING_CARD_SELECT })
+      : Promise.resolve([]),
     page === 1
       ? db.listing.findMany({ where: boostedWhere, orderBy: { boostStartsAt: "desc" }, take: PROMOTED_POOL_LIMIT, include: LISTING_CARD_SELECT })
       : Promise.resolve([]),
@@ -313,6 +335,11 @@ export async function searchListings(params: SearchParams) {
     db.listing.count({ where: freeWhere }),
     db.listing.count({ where }),
   ]);
+  // Everyone in the lane takes turns at the top, changing every hour.
+  const newProviders = rotateHourly(newProviderPool, now);
+  const newProviderIds = new Set(newProviders.length
+    ? (await db.company.findMany({ where: { id: { in: [...new Set(newProviders.map((l) => l.companyId))] }, ...newProviderCompany(now) }, select: { id: true } })).map((c) => c.id)
+    : []);
   const boosted = rankBoosted(boostedPool, now);
   const sponsored = rankSponsored(sponsoredPool, now);
 
@@ -363,6 +390,12 @@ export async function searchListings(params: SearchParams) {
 
   return {
     items: items.map((listing) => ({ ...listing, distanceMiles: distanceFrom(listing.property) })),
+    newProviders: newProviders.map((listing) => ({
+      ...listing,
+      memberListing: false,
+      newProvider: newProviderIds.has(listing.companyId),
+      distanceMiles: distanceFrom(listing.property),
+    })),
     boosted: boosted.map((listing) => ({
       ...listing,
       memberListing: true,
