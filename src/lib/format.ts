@@ -65,6 +65,14 @@ export function timeAgo(date: Date | string) {
   return shortDate(date);
 }
 
+/** "New" tag for adverts published in the last 7 days: "today", "1 day ago", "6 days ago"; null after that. */
+export function newListingLabel(publishedAt: Date | string | null | undefined, now = Date.now()) {
+  if (!publishedAt) return null;
+  const days = Math.floor((now - new Date(publishedAt).getTime()) / 86_400_000);
+  if (days < 0 || days >= 7) return null;
+  return days === 0 ? "today" : `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
 export function ageFrom(dob: Date | string | null | undefined) {
   if (!dob) return null;
   const d = new Date(dob);
