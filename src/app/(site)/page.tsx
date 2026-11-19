@@ -493,7 +493,7 @@ async function HomeListings() {
   const homepageListings = [
     ...featured.boosted.map((listing) => ({ listing, placement: "boosted" as const })),
     ...featured.sponsored.map((listing) => ({ listing, placement: "sponsored" as const })),
-    ...featured.newProviders.map((listing) => ({ listing, placement: "new" as const })),
+    ...featured.newProviders.map((listing) => ({ listing, placement: listing.newProvider ? "new" as const : "free" as const })),
     ...featured.items.map((listing) => ({ listing, placement: listing.memberListing ? "member" as const : "free" as const })),
   ]
     // A boosted advert can also appear in the normal results; show it once.
