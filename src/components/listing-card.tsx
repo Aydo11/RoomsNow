@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MatchScore, ResponseBadge } from "./badges";
 import { responseLabel } from "@/lib/response-label";
-import { monthYear, publicLocation, rentLead, tidyTitle } from "@/lib/format";
+import { monthYear, newListingLabel, publicLocation, rentLead, tidyTitle } from "@/lib/format";
 import { supportLabel, ACCOMMODATION_TYPES } from "@/lib/taxonomy";
 import type { SearchResult } from "@/server/search";
 import { demoListingImage } from "@/lib/demo-listings";
@@ -52,6 +52,7 @@ export function ListingCard({
       : `/listings/${listing.id}`;
   const available = listing.rooms.filter((r) => r.status === "AVAILABLE").length;
   const verified = listing.company.verification === "APPROVED";
+  const isNew = newListingLabel(listing.publishedAt);
   const now = Date.now();
   const vettedSchemes = [...new Set(
     (listing.company.accreditations ?? [])
@@ -111,6 +112,11 @@ export function ListingCard({
             ) : activelySponsored ? (
               <span className="inline-flex items-center rounded-pill bg-[#fff] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#171F2E] shadow-sm">Sponsored</span>
             ) : null}
+            {isNew && (
+              <span className="inline-flex items-center gap-1 rounded-pill bg-[#1D6E49] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#fff] shadow-sm" title={`Added ${isNew}`}>
+                New <span className="font-semibold normal-case tracking-normal">· {isNew}</span>
+              </span>
+            )}
             {vettedSchemes.length > 0 && (
               <span
                 className="inline-flex items-center gap-1 rounded-pill bg-[#fff]/95 px-2.5 py-1 text-[12px] font-semibold text-[#0F4F87]"
