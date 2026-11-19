@@ -19,7 +19,7 @@ import { whatsappAccess } from "@/lib/whatsapp-access";
 import { WhatsappSetupPrompt } from "@/components/whatsapp-setup-prompt";
 import { LeagueCard } from "@/components/league-card";
 import { ProServicesPromo } from "@/components/pro-services-promo";
-import { spotlightEndsAt } from "@/lib/new-provider";
+import { NEW_PROVIDER_JOINED_MS, spotlightEndsAt } from "@/lib/new-provider";
 import { cookies } from "next/headers";
 
 export const metadata = { title: "Provider dashboard" };
@@ -205,7 +205,12 @@ export default async function ProviderDashboard() {
       {!checklistHidden && <SetupChecklist steps={setupSteps} audience="provider" />}
 
       {await (async () => {
-        const first = await db.listing.findFirst({ where: { companyId, publishedAt: { not: null } }, orderBy: { publishedAt: "asc" }, select: { publishedAt: true } });
+        const [first, joined] = await Promise.all([
+          db.listing.findFirst({ where: { companyId, publishedAt: { not: null } }, orderBy: { publishedAt: "asc" }, select: { publishedAt: true } }),
+          db.company.findUnique({ where: { id: companyId }, select: { createdAt: true } }),
+        ]);
+        // Same rule as search: only providers who joined in the last 14 days get the welcome spot.
+        if (!joined || Date.now() - joined.createdAt.getTime() > NEW_PROVIDER_JOINED_MS) return null;
         const ends = spotlightEndsAt(first?.publishedAt);
         if (first && !ends) return null;
         return (
@@ -217,7 +222,7 @@ export default async function ProviderDashboard() {
               </h2>
               <p className="mt-1.5 text-[14px] leading-relaxed text-ink-soft">
                 {ends
-                  ? "Every advert you publish in this window shows first with a New provider tag. Reply to enquiries and referrals quickly: fast replies earn you a response badge that keeps working after the welcome spot ends."
+                  ? "Every advert you publish in this window shows first with a New provider tag. After that, every new or re-approved advert still gets 48 hours in the Just added section. Reply to enquiries and referrals quickly: fast replies earn you a response badge that keeps working after the welcome spot ends."
                   : "New providers get a free welcome spot: for 72 hours after your first advert goes live, your adverts appear first in search with a New provider tag. Add photos and rooms first so you make the most of it."}
               </p>
             </div>
