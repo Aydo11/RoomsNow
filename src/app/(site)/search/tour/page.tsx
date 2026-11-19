@@ -26,7 +26,7 @@ function queryString(params: Record<string, string | string[] | undefined>, omit
 export default async function SearchTourPage({ searchParams }: { searchParams: Promise<SearchParams & { view?: string }> }) {
   const { params } = normaliseSearchParams(await searchParams);
   const [results, user] = await Promise.all([searchListings(params), getCurrentUser()]);
-  const ids = [...results.boosted, ...results.sponsored, ...results.items].map((listing) => listing.id);
+  const ids = [...results.boosted, ...results.sponsored, ...results.newProviders, ...results.items].map((listing) => listing.id);
   const slides = await tourSlides(ids, { userId: user?.id });
 
   const raw = params as Record<string, string | string[] | undefined>;
