@@ -19,6 +19,7 @@ import { whatsappAccess } from "@/lib/whatsapp-access";
 import { WhatsappSetupPrompt } from "@/components/whatsapp-setup-prompt";
 import { LeagueCard } from "@/components/league-card";
 import { ProServicesPromo } from "@/components/pro-services-promo";
+import { spotlightEndsAt } from "@/lib/new-provider";
 import { cookies } from "next/headers";
 
 export const metadata = { title: "Provider dashboard" };
@@ -202,6 +203,28 @@ export default async function ProviderDashboard() {
       )}
 
       {!checklistHidden && <SetupChecklist steps={setupSteps} audience="provider" />}
+
+      {await (async () => {
+        const first = await db.listing.findFirst({ where: { companyId, publishedAt: { not: null } }, orderBy: { publishedAt: "asc" }, select: { publishedAt: true } });
+        const ends = spotlightEndsAt(first?.publishedAt);
+        if (first && !ends) return null;
+        return (
+          <section className="card mb-5 flex flex-col gap-3 border-positive/40 bg-positive-surface/60 p-5 sm:flex-row sm:items-center" aria-labelledby="spotlight-heading">
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-semibold uppercase tracking-wide text-positive">New provider welcome · free</p>
+              <h2 id="spotlight-heading" className="mt-1 text-[20px]">
+                {ends ? `Your adverts are at the top of search until ${ends.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" })}` : "Publish your first advert and get 72 hours at the top of search"}
+              </h2>
+              <p className="mt-1.5 text-[14px] leading-relaxed text-ink-soft">
+                {ends
+                  ? "Every advert you publish in this window shows first with a New provider tag. Reply to enquiries and referrals quickly: fast replies earn you a response badge that keeps working after the welcome spot ends."
+                  : "New providers get a free welcome spot: for 72 hours after your first advert goes live, your adverts appear first in search with a New provider tag. Add photos and rooms first so you make the most of it."}
+              </p>
+            </div>
+            <Link href={ends ? "/provider/referrals" : "/provider/adverts/new"} className="btn-primary shrink-0 text-center">{ends ? "See referrals" : "Post your first advert"}</Link>
+          </section>
+        );
+      })()}
 
       {(await cookies()).get("rn-pro-promo-hidden")?.value !== "1" && <ProServicesPromo />}
 
