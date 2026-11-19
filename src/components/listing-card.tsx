@@ -20,6 +20,7 @@ export function ListingCard({
   sponsored = false,
   boosted = false,
   memberListing = false,
+  newProvider = false,
   distance,
   showActions = false,
   saved = false,
@@ -34,6 +35,8 @@ export function ListingCard({
   boosted?: boolean;
   /** Organic advert from a provider with an active paid membership. */
   memberListing?: boolean;
+  /** Free 72-hour welcome placement for a provider's first adverts. */
+  newProvider?: boolean;
   distance?: number | null;
   showActions?: boolean;
   saved?: boolean;
@@ -112,9 +115,9 @@ export function ListingCard({
             ) : activelySponsored ? (
               <span className="inline-flex items-center rounded-pill bg-[#fff] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#171F2E] shadow-sm">Sponsored</span>
             ) : null}
-            {isNew && (
-              <span className="inline-flex items-center gap-1 rounded-pill bg-[#1D6E49] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#fff] shadow-sm" title={`Added ${isNew}`}>
-                New <span className="font-semibold normal-case tracking-normal">· {isNew}</span>
+            {(isNew || newProvider) && (
+              <span className="inline-flex items-center gap-1 rounded-pill bg-[#1D6E49] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#fff] shadow-sm" title={isNew ? `Added ${isNew}` : "New provider on RoomsNow"}>
+                {newProvider ? "New provider" : "New"}{isNew && <span className="font-semibold normal-case tracking-normal">· {isNew}</span>}
               </span>
             )}
             {vettedSchemes.length > 0 && (
