@@ -44,7 +44,7 @@ export default async function UserDashboard() {
     support: seeker.supportTypes,
   });
 
-  const scored = suggestions.items
+  const scored = [...suggestions.newProviders, ...suggestions.items]
     .map((listing) => ({
       listing,
       score: matchScore(seeker, {
