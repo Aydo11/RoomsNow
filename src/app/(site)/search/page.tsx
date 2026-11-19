@@ -116,6 +116,7 @@ export default async function SearchPage({
   const visibleListingIds = [...new Set([
     ...results.boosted.map((listing) => listing.id),
     ...results.sponsored.map((listing) => listing.id),
+    ...results.newProviders.map((listing) => listing.id),
     ...results.items.map((listing) => listing.id),
     ...(map?.pins ?? []).map((listing) => listing.id),
   ])];
@@ -222,7 +223,7 @@ export default async function SearchPage({
                 canSave={Boolean(user)}
               />
             </div>
-          ) : results.items.length === 0 && results.sponsored.length === 0 && results.boosted.length === 0 ? (
+          ) : results.items.length === 0 && results.sponsored.length === 0 && results.boosted.length === 0 && results.newProviders.length === 0 ? (
             <div className="mt-6">
               <EmptyState
                 title="Nothing matches those filters yet"
@@ -273,6 +274,20 @@ export default async function SearchPage({
                     ))}
                   </div>
                   <hr className="mt-7 border-line" />
+                </section>
+              )}
+
+              {results.newProviders.length > 0 && (
+                <section className="mt-6" aria-label="Just added">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="text-[16px] font-bold text-ink">Just added</h2>
+                    <span className="text-[12px] text-ink-faint">New adverts for 48 hours, new providers for 72 hours · takes turns hourly · not paid</span>
+                  </div>
+                  <div className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {results.newProviders.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing} match={scoreFor(listing)} distance={listing.distanceMiles} newProvider={listing.newProvider} showActions saved={savedListingIds.has(listing.id)} canSave={Boolean(user)} />
+                    ))}
+                  </div>
                 </section>
               )}
 
