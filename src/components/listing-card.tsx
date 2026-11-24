@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MatchScore, ResponseBadge } from "./badges";
 import { responseLabel } from "@/lib/response-label";
+import { slowReplyLabel } from "@/lib/reply-health";
 import { monthYear, newListingLabel, publicLocation, rentLead, tidyTitle } from "@/lib/format";
 import { supportLabel, ACCOMMODATION_TYPES } from "@/lib/taxonomy";
 import type { SearchResult } from "@/server/search";
@@ -205,6 +206,12 @@ export function ListingCard({
               )}
             </span>
             <ResponseBadge label={responseLabel(listing.company.responseMinutes, listing.company.responseSampleSize)} compact />
+            {slowReplyLabel(listing.company.replyTier) && (
+              <span className="inline-flex items-center gap-1 text-[12px] font-medium text-clay" title="This provider hasn't replied to messages for over two weeks">
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.2" /><path strokeLinecap="round" d="M8 4.6V8l2.2 1.4" /></svg>
+                {slowReplyLabel(listing.company.replyTier)}
+              </span>
+            )}
           </div>
         </div>
       </div>
