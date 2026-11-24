@@ -147,7 +147,9 @@ export default async function ProviderAdvertsPage({
                       Paused automatically —{" "}
                       {listing.pausedReason === "STALE"
                         ? "nobody confirmed it was still available."
-                        : "every room was marked unavailable."}{" "}
+                        : listing.pausedReason === "NO_REPLIES"
+                          ? "people have waited over 30 days for a reply. Reply in Messages and it comes back automatically."
+                          : "every room was marked unavailable."}{" "}
                       <Link href={`/provider/adverts/${listing.id}`} className="underline">Review it</Link>
                     </p>
                   )}
