@@ -21,6 +21,8 @@ import { LeagueCard } from "@/components/league-card";
 import { ProServicesPromo } from "@/components/pro-services-promo";
 import { NEW_PROVIDER_JOINED_MS, spotlightEndsAt } from "@/lib/new-provider";
 import { cookies } from "next/headers";
+import { peopleWaitingFor } from "@/lib/response-time";
+import { slowReplyLabel } from "@/lib/reply-health";
 
 export const metadata = { title: "Provider dashboard" };
 export const dynamic = "force-dynamic";
@@ -161,6 +163,42 @@ export default async function ProviderDashboard() {
         </Link>
       }
     >
+      {await (async () => {
+        const [messages, waitingRequests, waitingReferrals, health] = await Promise.all([
+          peopleWaitingFor(companyId),
+          db.accommodationRequest.count({ where: { listing: { companyId }, status: { in: ["SUBMITTED", "RECEIVED"] } } }),
+          db.referral.count({ where: { listing: { companyId }, status: { in: ["SUBMITTED", "RECEIVED"] } } }),
+          db.company.findUnique({ where: { id: companyId }, select: { replyTier: true } }),
+        ]);
+        const total = messages + waitingRequests + waitingReferrals;
+        if (!total) return null;
+        const slow = slowReplyLabel(health?.replyTier);
+        const parts = [
+          messages ? { href: "/messages", label: `${messages} ${messages === 1 ? "message" : "messages"}` } : null,
+          waitingRequests ? { href: "/provider/requests", label: `${waitingRequests} ${waitingRequests === 1 ? "request" : "requests"}` } : null,
+          waitingReferrals ? { href: "/provider/referrals", label: `${waitingReferrals} ${waitingReferrals === 1 ? "referral" : "referrals"}` } : null,
+        ].filter((part): part is { href: string; label: string } => Boolean(part));
+        return (
+          <section className={`card mb-5 flex flex-col gap-3 p-5 sm:flex-row sm:items-center ${slow ? "border-clay/40 bg-clay-light/60" : "border-pine/30 bg-pine-light/40"}`} aria-labelledby="waiting-heading">
+            <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-[20px] font-bold text-white ${slow ? "bg-clay" : "bg-pine"}`} aria-hidden="true">{total}</span>
+            <div className="min-w-0 flex-1">
+              <h2 id="waiting-heading" className="text-[20px]">{total} {total === 1 ? "person is" : "people are"} waiting for you</h2>
+              <p className="mt-1 text-[14px] text-ink-soft">
+                {slow
+                  ? "Your adverts now show \u201cmay be slow to reply\u201d. Reply today: after 30 days without a reply your adverts are paused until you do."
+                  : "Quick replies move your adverts up in search. After 14 days without a reply, your adverts are labelled \u201cmay be slow to reply\u201d."}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {parts.map((part) => (
+                  <Link key={part.href} href={part.href} className="rounded-pill border border-line bg-white px-3 py-1 text-[13px] font-semibold text-pine-dark hover:border-pine">{part.label} →</Link>
+                ))}
+              </div>
+            </div>
+            <Link href={parts[0].href} className="btn-primary shrink-0 text-center">Reply now</Link>
+          </section>
+        );
+      })()}
+
       {(!company.whatsappEnabled || !company.whatsappNumber) && whatsappAccess(limits.membership.tier, company.whatsappAddonStatus, company).allowed && (
         <WhatsappSetupPrompt
           initialNumber={company.whatsappNumber}
