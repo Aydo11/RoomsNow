@@ -185,7 +185,7 @@ export default async function ProviderDashboard() {
               <h2 id="waiting-heading" className="text-[20px]">{total} {total === 1 ? "person is" : "people are"} waiting for you</h2>
               <p className="mt-1 text-[14px] text-ink-soft">
                 {slow
-                  ? "Your adverts now show \u201cmay be slow to reply\u201d. Reply today: after 30 days without a reply your adverts are paused until you do."
+                  ? "Your adverts now show \u201cmay be slow to reply\u201d and sit lower in search. Reply today to remove the label."
                   : "Quick replies move your adverts up in search. After 14 days without a reply, your adverts are labelled \u201cmay be slow to reply\u201d."}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
