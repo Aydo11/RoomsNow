@@ -1,10 +1,16 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import Link from "next/link";
 import { startConversationAction } from "@/server/actions/engagement";
 import { FormError, SubmitButton } from "./ui";
 import { ContactTip } from "./contact-tip";
+import { money } from "@/lib/format";
+
+/** Rooms someone can ask at the same time as this one (this one + 2 = 3). */
+const MAX_EXTRA = 2;
+
+type SimilarRoom = { id: string; title: string; provider: string; place: string; rent: number | null };
 
 export function MessageProviderForm({
   listingId,
@@ -12,6 +18,7 @@ export function MessageProviderForm({
   signedIn,
   companyName,
   defaultPhone,
+  similar = [],
 }: {
   listingId?: string;
   lookingForAdId?: string;
@@ -19,8 +26,11 @@ export function MessageProviderForm({
   companyName?: string;
   /** The person's saved number, filled in for them. */
   defaultPhone?: string | null;
+  /** Similar rooms from other providers that can be asked in the same go. */
+  similar?: SimilarRoom[];
 }) {
   const [state, action] = useActionState(startConversationAction, { ok: false });
+  const [picked, setPicked] = useState<string[]>([]);
 
   if (!signedIn) {
     return (
@@ -84,7 +94,36 @@ export function MessageProviderForm({
           )}
         </div>
       )}
-      <SubmitButton className="btn-primary w-full" pendingLabel="Sending…">Send message</SubmitButton>
+      {listingId && similar.length > 0 && (
+        <fieldset className="rounded-[12px] border border-line bg-paper-sunk/50 p-3">
+          <legend className="px-1 text-[14px] font-semibold text-ink">Ask similar rooms too</legend>
+          <p className="text-[12.5px] text-ink-soft">Send the same message to up to {MAX_EXTRA} more rooms, so you aren&apos;t stuck if one provider is slow to reply.</p>
+          <div className="mt-2 space-y-1.5">
+            {similar.map((room) => {
+              const checked = picked.includes(room.id);
+              const disabled = !checked && picked.length >= MAX_EXTRA;
+              return (
+                <label key={room.id} className={`flex cursor-pointer items-start gap-2.5 rounded-[10px] border bg-white p-2.5 ${checked ? "border-pine" : "border-line"} ${disabled ? "opacity-50" : ""}`}>
+                  <input
+                    type="checkbox"
+                    name="alsoListingId"
+                    value={room.id}
+                    checked={checked}
+                    disabled={disabled}
+                    onChange={(event) => setPicked((now) => (event.target.checked ? [...now, room.id] : now.filter((id) => id !== room.id)))}
+                    className="mt-0.5 h-4 w-4 accent-[#1666AA]"
+                  />
+                  <span className="min-w-0">
+                    <span className="block truncate text-[13.5px] font-semibold text-ink">{room.title}</span>
+                    <span className="block truncate text-[12px] text-ink-soft">{room.provider} · {room.place}{room.rent ? ` · from ${money(room.rent)}/week` : ""}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
+      <SubmitButton className="btn-primary w-full" pendingLabel="Sending…">{picked.length ? `Send to ${picked.length + 1} rooms` : "Send message"}</SubmitButton>
     </form>
   );
 }
