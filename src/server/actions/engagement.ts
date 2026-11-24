@@ -26,6 +26,7 @@ import { BLOCKED_MESSAGE_TEXT, checkBlockedContent } from "@/lib/blocked-content
 import { isNewHousingEnquiry } from "@/lib/conversion-outcomes";
 import { whatsappProviderNewRequest } from "@/lib/provider-request-whatsapp";
 import { recordConversionOutcome } from "@/server/conversion-outcomes";
+import { resumeNoReplyListings } from "@/lib/response-time";
 
 /**
  * Service businesses only ever reply inside threads a paying provider opened
@@ -76,21 +77,27 @@ export async function startConversationAction(_prev: FormState, formData: FormDa
     if (!user.phone) await db.user.update({ where: { id: user.id }, data: { phone } });
   }
 
+  if (listingId) {
+    const main = await openListingEnquiry(user, listingId, body);
+    if ("error" in main) return { ok: false, errors: { form: main.error } };
+    // "Ask similar rooms too": the same message to up to 2 more providers, so
+    // one silent provider doesn't leave someone stuck.
+    const also = [...new Set(formData.getAll("alsoListingId").map(String))].filter((id) => id && id !== listingId).slice(0, MAX_EXTRA_ENQUIRIES);
+    let alsoSent = 0;
+    for (const id of also) {
+      const extra = await openListingEnquiry(user, id, body, { onlyLive: true, skipCompanyId: main.companyId }).catch(() => ({ error: "failed" }));
+      if (!("error" in extra)) alsoSent += 1;
+    }
+    await audit({ actorId: user.id, action: "conversation.started", targetType: "Conversation", targetId: main.conversationId, metadata: alsoSent ? { alsoSent } : undefined });
+    if (isNewHousingEnquiry(user.role, true, main.existing)) await recordConversionOutcome("generate_lead");
+    redirect(`/messages/${main.conversationId}${alsoSent ? `?also=${alsoSent}` : ""}`);
+  }
+
   let companyId: string | null = null;
   let recipientIds: string[] = [];
   let subject = "";
 
-  if (listingId) {
-    const listing = await db.listing.findUnique({
-      where: { id: listingId },
-      include: { company: { include: { staff: { select: { userId: true } } } } },
-    });
-    if (!listing) return { ok: false, errors: { form: "Advert not found." } };
-    await assertListingAccess(user, listingId);
-    companyId = listing.companyId;
-    recipientIds = listing.company.staff.map((s) => s.userId);
-    subject = listing.title;
-  } else if (lookingForAdId) {
+  if (lookingForAdId) {
     // Provider or referrer contacting someone who has made themselves discoverable.
     const ad = await db.lookingForAd.findUnique({
       where: { id: lookingForAdId },
@@ -111,8 +118,7 @@ export async function startConversationAction(_prev: FormState, formData: FormDa
 
   const existing = await db.conversation.findFirst({
     where: {
-      listingId: listingId ?? undefined,
-      lookingForAdId: lookingForAdId ?? undefined,
+      lookingForAdId,
       participants: { some: { userId: user.id } },
     },
   });
@@ -122,15 +128,12 @@ export async function startConversationAction(_prev: FormState, formData: FormDa
     (await db.conversation.create({
       data: {
         subject,
-        listingId,
         lookingForAdId,
         companyId,
         participants: {
           create: [
-            { userId: user.id, companyId: listingId ? null : companyId },
-            ...recipientIds
-              .filter((id) => id !== user.id)
-              .map((id) => ({ userId: id, companyId: listingId ? companyId : null })),
+            { userId: user.id, companyId },
+            ...recipientIds.filter((id) => id !== user.id).map((id) => ({ userId: id, companyId: null })),
           ],
         },
       },
@@ -140,35 +143,83 @@ export async function startConversationAction(_prev: FormState, formData: FormDa
   await db.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: new Date() } });
   void flagScamSignals({ messageId: first.id, conversationId: conversation.id, senderId: user.id, body });
 
-  if (listingId) {
-    await db.listing.update({ where: { id: listingId }, data: { enquiries: { increment: 1 } } });
-    if (companyId) {
-      await notifyCompany(companyId, {
+  await Promise.all(
+    recipientIds.map((id) =>
+      notify({
+        userId: id,
         type: "MESSAGE",
-        title: "New enquiry",
-        body: `${user.firstName || "A room seeker"} messaged you about ${subject}.`,
+        title: "A provider has messaged you",
+        body: `About your advert: ${subject}`,
         href: `/messages/${conversation.id}`,
         email: true,
-      });
-    }
-  } else {
-    await Promise.all(
-      recipientIds.map((id) =>
-        notify({
-          userId: id,
-          type: "MESSAGE",
-          title: "A provider has messaged you",
-          body: `About your advert: ${subject}`,
-          href: `/messages/${conversation.id}`,
-          email: true,
-        }),
-      ),
-    );
-  }
+      }),
+    ),
+  );
 
   await audit({ actorId: user.id, action: "conversation.started", targetType: "Conversation", targetId: conversation.id });
-  if (isNewHousingEnquiry(user.role, Boolean(listingId), Boolean(existing))) await recordConversionOutcome("generate_lead");
+  if (isNewHousingEnquiry(user.role, false, Boolean(existing))) await recordConversionOutcome("generate_lead");
   redirect(`/messages/${conversation.id}`);
+}
+
+/** How many similar rooms someone can ask at the same time as the one they're on. */
+const MAX_EXTRA_ENQUIRIES = 2;
+
+/**
+ * Opens (or reuses) the conversation about one advert and posts the message.
+ * Used for the advert someone is on and for the similar rooms they ticked.
+ */
+async function openListingEnquiry(
+  user: Awaited<ReturnType<typeof requireUser>>,
+  listingId: string,
+  body: string,
+  options: { onlyLive?: boolean; skipCompanyId?: string } = {},
+): Promise<{ conversationId: string; companyId: string; existing: boolean } | { error: string }> {
+  const listing = await db.listing.findUnique({
+    where: { id: listingId },
+    include: { company: { include: { staff: { select: { userId: true } } } } },
+  });
+  if (!listing) return { error: "Advert not found." };
+  if (options.onlyLive && (listing.status !== "ACTIVE" || listing.company.status !== "ACTIVE")) return { error: "Advert not live." };
+  if (options.skipCompanyId && listing.companyId === options.skipCompanyId) return { error: "Same provider." };
+  await assertListingAccess(user, listingId);
+  const companyId = listing.companyId;
+  const recipientIds = listing.company.staff.map((s) => s.userId);
+  const subject = listing.title;
+
+  const blocked = await db.block.findFirst({ where: { blockerId: { in: recipientIds }, blockedId: user.id } });
+  if (blocked) return { error: "You can't message this account." };
+
+  const existing = await db.conversation.findFirst({
+    where: { listingId, participants: { some: { userId: user.id } } },
+  });
+  const conversation =
+    existing ??
+    (await db.conversation.create({
+      data: {
+        subject,
+        listingId,
+        companyId,
+        participants: {
+          create: [
+            { userId: user.id, companyId: null },
+            ...recipientIds.filter((id) => id !== user.id).map((id) => ({ userId: id, companyId })),
+          ],
+        },
+      },
+    }));
+
+  const first = await db.message.create({ data: { conversationId: conversation.id, senderId: user.id, body } });
+  await db.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: new Date() } });
+  void flagScamSignals({ messageId: first.id, conversationId: conversation.id, senderId: user.id, body });
+  await db.listing.update({ where: { id: listingId }, data: { enquiries: { increment: 1 } } });
+  await notifyCompany(companyId, {
+    type: "MESSAGE",
+    title: "New enquiry",
+    body: `${user.firstName || "A room seeker"} messaged you about ${subject}.`,
+    href: `/messages/${conversation.id}`,
+    email: true,
+  });
+  return { conversationId: conversation.id, companyId, existing: Boolean(existing) };
 }
 
 /**
@@ -353,10 +404,22 @@ export async function sendMessageAction(_prev: FormState, formData: FormData): P
       ...(storedMedia ? { attachmentUrl: storedMedia.url, attachmentName: storedMedia.name, attachmentType: storedMedia.type } : {}),
     },
   });
-  await db.conversation.update({
+  const updated = await db.conversation.update({
     where: { id: parsed.data.conversationId },
     data: { lastMessageAt: new Date() },
+    select: { companyId: true },
   });
+  // A reply from the provider's team clears "may be slow to reply" and brings
+  // back adverts paused for not replying, without waiting for the hourly check.
+  if (updated.companyId && user.staffOf.some((s) => s.companyId === updated.companyId)) {
+    const companyId = updated.companyId;
+    await Promise.all([
+      db.company.update({ where: { id: companyId }, data: { lastTeamReplyAt: new Date() }, select: { id: true } }),
+      // Fast repliers keep their tier; only "slow" or "silent" drop back to normal.
+      db.company.updateMany({ where: { id: companyId, replyTier: { gte: 2 } }, data: { replyTier: 1 } }),
+      resumeNoReplyListings(companyId),
+    ]).catch((error) => console.error("[reply-health] reply update failed", error));
+  }
   // Possible scam wording (asking for money before a viewing, bank transfers,
   // gift cards…) alerts an admin. The message still goes through.
   void flagScamSignals({ messageId: created.id, conversationId: parsed.data.conversationId, senderId: user.id, body: body.trim() });
