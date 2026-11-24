@@ -20,14 +20,13 @@ test("a conversation waits from the first unanswered outside message", () => {
   assert.equal(conversationWaiting([{ senderId: "s", createdAt: daysAgo(3) }, { senderId: "p", createdAt: daysAgo(2) }], team).waitingSince, null);
 });
 
-test("tiers: fast, normal, slow after 14 silent days, paused after 30", () => {
+test("tiers: fast, normal, slow after 14 silent days, never paused", () => {
   const base = { responseMinutes: 30, responseSampleSize: 5 };
   assert.equal(replyTier({ ...base, waitingSince: null, lastTeamReplyAt: null }, now), REPLY_TIER.FAST);
   assert.equal(replyTier({ responseMinutes: null, responseSampleSize: 0, waitingSince: null, lastTeamReplyAt: null }, now), REPLY_TIER.NORMAL);
   assert.equal(replyTier({ ...base, waitingSince: daysAgo(15), lastTeamReplyAt: daysAgo(40) }, now), REPLY_TIER.SLOW);
-  assert.equal(replyTier({ ...base, waitingSince: daysAgo(31), lastTeamReplyAt: null }, now), REPLY_TIER.SILENT);
-  // Before launch + 30 days, old silence only earns the label, not a pause.
-  assert.equal(replyTier({ ...base, waitingSince: new Date(Date.UTC(2026, 8, 1)), lastTeamReplyAt: null }, Date.UTC(2026, 11, 1)), REPLY_TIER.SLOW);
+  // However long the silence, the worst is the label: adverts are never paused.
+  assert.equal(replyTier({ ...base, waitingSince: daysAgo(90), lastTeamReplyAt: null }, now), REPLY_TIER.SLOW);
   // Replying to anyone recently means they are not silent, even with an old wait elsewhere.
   assert.equal(replyTier({ ...base, waitingSince: daysAgo(31), lastTeamReplyAt: daysAgo(2) }, now), REPLY_TIER.FAST);
   assert.equal(slowReplyLabel(REPLY_TIER.SLOW), "May be slow to reply");
