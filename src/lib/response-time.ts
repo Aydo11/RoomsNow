@@ -1,5 +1,7 @@
 import { db } from "./db";
 import { firstReplyMinutes, median } from "./response-label";
+import { NO_REPLIES_PAUSE, REPLY_TIER, conversationWaiting, replyTier } from "./reply-health";
+import { notifyCompany } from "./notify";
 
 /**
  * "Usually replies within…" badges. Once an hour, work out each provider's
@@ -59,7 +61,104 @@ export async function refreshResponseTimes(now = new Date()) {
     where: { responseSampleSize: { gt: 0 }, id: { notIn: [...samples.keys()] } },
     data: { responseMinutes: null, responseSampleSize: 0 },
   });
-  return { companies: samples.size };
+  const health = await refreshReplyHealth(now);
+  return { companies: samples.size, ...health };
+}
+
+const team = async (companyIds: string[]) => {
+  const staff = await db.companyStaff.findMany({ where: { companyId: { in: companyIds } }, select: { companyId: true, userId: true } });
+  const teams = new Map<string, Set<string>>();
+  for (const member of staff) {
+    const set = teams.get(member.companyId) ?? new Set<string>();
+    set.add(member.userId);
+    teams.set(member.companyId, set);
+  }
+  return teams;
+};
+
+/** Conversations with recent activity, newest messages last (only the latest 30 are read). */
+async function recentConversations(where: { companyId: string | { in: string[] } | { not: null } }, since: Date) {
+  const rows = await db.conversation.findMany({
+    where: { ...where, lastMessageAt: { gte: since } },
+    select: { companyId: true, messages: { where: { isDeleted: false }, orderBy: { createdAt: "desc" }, take: 30, select: { senderId: true, createdAt: true } } },
+    take: 10000,
+  });
+  return rows.map((row) => ({ companyId: row.companyId!, messages: row.messages.reverse() }));
+}
+
+/** People currently waiting for a reply from this company: one count per person. */
+export async function peopleWaitingFor(companyId: string, now = new Date()) {
+  const [conversations, teams] = await Promise.all([
+    recentConversations({ companyId }, new Date(now.getTime() - 60 * 24 * 60 * 60_000)),
+    team([companyId]),
+  ]);
+  const members = teams.get(companyId) ?? new Set<string>();
+  const waiting = new Set<string>();
+  for (const conversation of conversations) {
+    const { waitingFrom } = conversationWaiting(conversation.messages, members);
+    if (waitingFrom) waiting.add(waitingFrom);
+  }
+  return waiting.size;
+}
+
+/**
+ * Works out each provider's reply tier (see lib/reply-health.ts), pauses the
+ * adverts of providers who have left people waiting for 30 days, and brings
+ * them back once the provider is replying again.
+ */
+export async function refreshReplyHealth(now = new Date()) {
+  const conversations = await recentConversations({ companyId: { not: null } }, new Date(now.getTime() - 120 * 24 * 60 * 60_000));
+  const companyIds = [...new Set(conversations.map((c) => c.companyId))];
+  const teams = await team(companyIds);
+  const state = new Map<string, { waitingSince: Date | null; lastTeamReplyAt: Date | null }>();
+  for (const conversation of conversations) {
+    const members = teams.get(conversation.companyId);
+    if (!members) continue;
+    const { waitingSince, lastTeamAt } = conversationWaiting(conversation.messages, members);
+    const current = state.get(conversation.companyId) ?? { waitingSince: null, lastTeamReplyAt: null };
+    if (waitingSince && (!current.waitingSince || waitingSince < current.waitingSince)) current.waitingSince = waitingSince;
+    if (lastTeamAt && (!current.lastTeamReplyAt || lastTeamAt > current.lastTeamReplyAt)) current.lastTeamReplyAt = lastTeamAt;
+    state.set(conversation.companyId, current);
+  }
+
+  const companies = await db.company.findMany({
+    select: { id: true, replyTier: true, responseMinutes: true, responseSampleSize: true, lastTeamReplyAt: true },
+  });
+  let paused = 0;
+  let resumed = 0;
+  for (const company of companies) {
+    const found = state.get(company.id) ?? { waitingSince: null, lastTeamReplyAt: null };
+    // Keep a reply recorded straight from the message action if it's newer.
+    const lastTeamReplyAt = [found.lastTeamReplyAt, company.lastTeamReplyAt].filter(Boolean).sort((a, b) => b!.getTime() - a!.getTime())[0] ?? null;
+    const tier = replyTier({ waitingSince: found.waitingSince, lastTeamReplyAt, responseMinutes: company.responseMinutes, responseSampleSize: company.responseSampleSize }, now.getTime());
+    await db.company.update({ where: { id: company.id }, data: { replyTier: tier, waitingSince: found.waitingSince, lastTeamReplyAt } });
+
+    if (tier === REPLY_TIER.SILENT) {
+      const { count } = await db.listing.updateMany({ where: { companyId: company.id, status: "ACTIVE" }, data: { status: "PAUSED", pausedReason: NO_REPLIES_PAUSE } });
+      if (count) {
+        paused += count;
+        await notifyCompany(company.id, {
+          type: "LISTING",
+          title: "Your adverts are paused: people are waiting for a reply",
+          body: `Nobody on your team has replied to messages for ${30} days, so ${count === 1 ? "your advert is" : `${count} adverts are`} hidden from search. Reply to the people waiting in Messages and they come back automatically.`,
+          href: "/messages",
+          email: true,
+        }).catch((error) => console.error("[reply-health] notify failed", error));
+      }
+    } else {
+      resumed += await resumeNoReplyListings(company.id);
+    }
+  }
+  return { paused, resumed };
+}
+
+/** Brings back adverts paused for not replying. Returns how many came back. */
+export async function resumeNoReplyListings(companyId: string) {
+  const { count } = await db.listing.updateMany({
+    where: { companyId, status: "PAUSED", pausedReason: NO_REPLIES_PAUSE },
+    data: { status: "ACTIVE", pausedReason: null },
+  });
+  return count;
 }
 
 let scheduled = false;
