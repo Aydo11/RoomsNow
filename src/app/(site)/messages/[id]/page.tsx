@@ -13,8 +13,9 @@ import { conversationCounterparty, counterpartyProfileUrl } from "@/lib/conversa
 export const metadata = { title: "Conversation" };
 export const dynamic = "force-dynamic";
 
-export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ConversationPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ also?: string }> }) {
   const { id } = await params;
+  const also = Math.min(2, Math.max(0, Number((await searchParams).also) || 0));
   const user = await requireUser(`/messages/${id}`);
   const teamIds = await teamMemberIds(user.id);
 
@@ -176,6 +177,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           )}
         </div>
       </header>
+      {also > 0 && (
+        <p className="mt-2 rounded-[10px] bg-positive-surface px-3 py-2 text-[13px] text-positive" role="status">
+          Sent. Your message also went to {also} similar {also === 1 ? "room" : "rooms"}; their replies appear in <Link href="/messages" className="underline">Messages</Link>.
+        </p>
+      )}
       {conversation.listing && !viewerIsProvider && <ScamWarning compact className="mt-2" />}
 
       <Thread
