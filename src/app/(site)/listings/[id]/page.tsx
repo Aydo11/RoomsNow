@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { SimpleSummary } from "@/components/simple-summary";
 import { plainSummaries } from "@/lib/plain-summary-i18n";
 import { htmlToText } from "@/lib/html-text";
-import { getListing } from "@/server/search";
+import { getListing, similarRoomsFor } from "@/server/search";
+import { slowReplyLabel } from "@/lib/reply-health";
 import { getCurrentUser } from "@/lib/session";
 import { Gallery } from "@/components/gallery";
 import { SaveButton } from "@/components/save-button";
@@ -118,7 +119,10 @@ export default async function ListingPage({
     }
   }
 
-  const residents = await residentReviewsFor(listing.companyId, { take: 3, listingFirst: listing.id });
+  const [residents, similar] = await Promise.all([
+    residentReviewsFor(listing.companyId, { take: 3, listingFirst: listing.id }),
+    user && !isOwner && listing.status === "ACTIVE" ? similarRoomsFor(listing).catch(() => []) : Promise.resolve([]),
+  ]);
   const [saved, existingRequest] = user
     ? await Promise.all([
         db.savedListing.findUnique({ where: { userId_listingId: { userId: user.id, listingId: listing.id } } }),
@@ -487,6 +491,11 @@ export default async function ListingPage({
                 <ResponseBadge label={responseLabel(listing.company.responseMinutes, listing.company.responseSampleSize)} />
               </div>
             )}
+            {slowReplyLabel(listing.company.replyTier) && (
+              <p className="mt-3 rounded-[10px] bg-clay-light px-3 py-2 text-[13px] text-clay">
+                <strong>{slowReplyLabel(listing.company.replyTier)}.</strong> This provider hasn&apos;t replied to messages for over two weeks. Ask a similar room at the same time so you aren&apos;t left waiting.
+              </p>
+            )}
             <ResidentRatingLine summary={residents.summary} href="#resident-reviews" />
             {listing.company.about && (
               <p className="mt-3 line-clamp-4 text-[14px] leading-relaxed text-ink-soft">{listing.company.about}</p>
@@ -498,7 +507,13 @@ export default async function ListingPage({
 
           <div id="message" className="scroll-mt-24">
             <ScamWarning className="mb-3" />
-            <MessageProviderForm listingId={listing.id} signedIn={Boolean(user)} companyName={listing.company.name} defaultPhone={user?.phone ?? null} />
+            <MessageProviderForm
+              listingId={listing.id}
+              signedIn={Boolean(user)}
+              companyName={listing.company.name}
+              defaultPhone={user?.phone ?? null}
+              similar={similar.map((room) => ({ id: room.id, title: room.title, provider: room.company.name, place: room.property.area ? `${room.property.area}, ${room.property.city}` : room.property.city, rent: room.weeklyRentFrom }))}
+            />
           </div>
         </aside>
       </div>
