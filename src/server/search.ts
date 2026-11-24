@@ -56,7 +56,7 @@ export const MAP_PIN_LIMIT = 500;
 export const LISTING_CARD_SELECT = {
   company: {
     select: {
-      id: true, name: true, slug: true, logoUrl: true, verification: true, responseMinutes: true, responseSampleSize: true,
+      id: true, name: true, slug: true, logoUrl: true, verification: true, responseMinutes: true, responseSampleSize: true, replyTier: true,
       status: true, whatsappEnabled: true, whatsappNumber: true, whatsappAddonStatus: true,
       whatsappGrantActive: true, whatsappGrantExpiresAt: true,
       subscription: { select: { status: true, membership: { select: { tier: true } } } },
@@ -204,8 +204,9 @@ function orderFor(sort: string | undefined): Prisma.ListingOrderByWithRelationIn
     case "newest":
       return [{ publishedAt: "desc" }];
     default:
-      // Default order still favours adverts people can actually move into soon.
-      return [{ availableFrom: "asc" }, { publishedAt: "desc" }];
+      // Providers who reply quickly come first (see lib/reply-health.ts), then
+      // adverts people can actually move into soon.
+      return [{ company: { replyTier: "asc" } }, { availableFrom: "asc" }, { publishedAt: "desc" }];
   }
 }
 
@@ -260,11 +261,16 @@ function rankSponsored<T extends { id: string }>(items: T[], now: Date) {
  * positions among the set already selected by relevance and availability,
  * while keeping one consistent order for every visitor during that day.
  */
-function rotateOrganicDaily<T>(items: T[], now: Date): T[] {
+function rotateOrganicDaily<T extends { company: { replyTier: number } }>(items: T[], now: Date): T[] {
   if (items.length < 2) return items;
   const day = Math.floor(now.getTime() / (24 * 60 * 60 * 1000));
-  const offset = day % items.length;
-  return [...items.slice(offset), ...items.slice(0, offset)];
+  // Rotate within each reply tier so fast repliers stay ahead of slower ones.
+  const tiers = [...new Set(items.map((item) => item.company.replyTier))].sort((a, b) => a - b);
+  return tiers.flatMap((tier) => {
+    const group = items.filter((item) => item.company.replyTier === tier);
+    const offset = day % group.length;
+    return [...group.slice(offset), ...group.slice(0, offset)];
+  });
 }
 
 /**
@@ -421,7 +427,7 @@ type RankedCompany = RankedSearchResult["company"];
 /** Cards are also built from other queries, so the vetted accreditations are optional. */
 export type SearchResult = Omit<RankedSearchResult, "memberListing" | "company"> & {
   memberListing?: boolean;
-  company: Omit<RankedCompany, "accreditations" | keyof WhatsappDisplayCompany> & WhatsappDisplayCompany & { accreditations?: RankedCompany["accreditations"] };
+  company: Omit<RankedCompany, "accreditations" | "replyTier" | keyof WhatsappDisplayCompany> & WhatsappDisplayCompany & { accreditations?: RankedCompany["accreditations"]; replyTier?: number };
 };
 
 /** How many live adverts match, for the eligibility check's running total. */
@@ -562,7 +568,7 @@ export async function getListing(id: string) {
         select: {
           id: true, name: true, slug: true, about: true, logoUrl: true,
           verification: true, orgType: true, city: true, status: true,
-          responseMinutes: true, responseSampleSize: true,
+          responseMinutes: true, responseSampleSize: true, replyTier: true,
           whatsappEnabled: true, whatsappNumber: true, whatsappAddonStatus: true, whatsappGrantActive: true, whatsappGrantExpiresAt: true,
           subscription: { include: { membership: true } },
           membershipGrants: {
@@ -583,3 +589,25 @@ export async function getListing(id: string) {
 }
 
 export type ListingDetail = NonNullable<Awaited<ReturnType<typeof getListing>>>;
+
+/**
+ * Up to 3 similar live rooms from other providers who are replying, for
+ * "ask similar rooms too" on an advert. Same city; same type of
+ * accommodation first, then anything else with rooms free.
+ */
+export async function similarRoomsFor(listing: { id: string; companyId: string; accommodationType: string; property: { city: string } }) {
+  const base: Prisma.ListingWhereInput = {
+    id: { not: listing.id },
+    status: "ACTIVE",
+    company: { status: "ACTIVE", id: { not: listing.companyId }, replyTier: { lt: 2 } },
+    property: { city: { equals: listing.property.city, mode: "insensitive" } },
+    rooms: { some: { status: "AVAILABLE" } },
+  };
+  const select = { id: true, title: true, weeklyRentFrom: true, companyId: true, company: { select: { name: true } }, property: { select: { area: true, city: true } } } as const;
+  const orderBy: Prisma.ListingOrderByWithRelationInput[] = [{ company: { replyTier: "asc" } }, { publishedAt: "desc" }];
+  const sameType = await db.listing.findMany({ where: { ...base, accommodationType: listing.accommodationType as Prisma.ListingWhereInput["accommodationType"] }, select, orderBy, take: 12 });
+  const rest = sameType.length >= 3 ? [] : await db.listing.findMany({ where: { ...base, id: { notIn: [listing.id, ...sameType.map((l) => l.id)] } }, select, orderBy, take: 12 });
+  // One room per provider, so each pick reaches someone different.
+  const seen = new Set<string>();
+  return [...sameType, ...rest].filter((l) => !seen.has(l.companyId) && seen.add(l.companyId)).slice(0, 3);
+}
