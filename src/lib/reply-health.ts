@@ -3,21 +3,13 @@ import { responseLabel } from "./response-label";
 /**
  * Reply health: how quickly a provider answers the people who message them.
  * Fast repliers rank higher in search; providers who leave people waiting are
- * labelled "may be slow to reply" after 14 days of silence, and their adverts
- * are paused after 30 days until they reply.
+ * labelled "may be slow to reply" after 14 days of silence. Adverts are never
+ * paused for not replying.
  */
 export const SLOW_AFTER_DAYS = 14;
-export const PAUSE_AFTER_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/**
- * Pauses only count silence from launch day, so switching this on doesn't
- * pause every provider with old unanswered messages at once. The 14-day
- * label uses the full history.
- */
-export const PAUSES_COUNT_FROM = Date.UTC(2026, 10, 24);
-
-export const REPLY_TIER = { FAST: 0, NORMAL: 1, SLOW: 2, SILENT: 3 } as const;
+export const REPLY_TIER = { FAST: 0, NORMAL: 1, SLOW: 2 } as const;
 export const SLOW_REPLY_LABEL = "May be slow to reply";
 export const NO_REPLIES_PAUSE = "NO_REPLIES";
 
@@ -62,14 +54,12 @@ export function replyTier(
     !!waitingSince &&
     now - waitingSince.getTime() >= days * DAY_MS &&
     (!lastTeamReplyAt || now - lastTeamReplyAt.getTime() >= days * DAY_MS);
-  const pauseClock = waitingSince ? Math.max(waitingSince.getTime(), PAUSES_COUNT_FROM) : null;
-  if (silentFor(PAUSE_AFTER_DAYS) && pauseClock != null && now - pauseClock >= PAUSE_AFTER_DAYS * DAY_MS) return REPLY_TIER.SILENT;
   if (silentFor(SLOW_AFTER_DAYS)) return REPLY_TIER.SLOW;
   if (responseLabel(responseMinutes, responseSampleSize)) return REPLY_TIER.FAST;
   return REPLY_TIER.NORMAL;
 }
 
-/** Card and advert label, or null. Tier 3 adverts are paused, so never seen. */
+/** Card and advert label, or null. */
 export function slowReplyLabel(tier: number | null | undefined) {
   return tier != null && tier >= REPLY_TIER.SLOW ? SLOW_REPLY_LABEL : null;
 }
