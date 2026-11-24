@@ -1,7 +1,6 @@
 import { db } from "./db";
 import { firstReplyMinutes, median } from "./response-label";
-import { NO_REPLIES_PAUSE, REPLY_TIER, conversationWaiting, replyTier } from "./reply-health";
-import { notifyCompany } from "./notify";
+import { NO_REPLIES_PAUSE, conversationWaiting, replyTier } from "./reply-health";
 
 /**
  * "Usually replies within…" badges. Once an hour, work out each provider's
@@ -102,9 +101,8 @@ export async function peopleWaitingFor(companyId: string, now = new Date()) {
 }
 
 /**
- * Works out each provider's reply tier (see lib/reply-health.ts), pauses the
- * adverts of providers who have left people waiting for 30 days, and brings
- * them back once the provider is replying again.
+ * Works out each provider's reply tier (see lib/reply-health.ts) for search
+ * ranking and the "may be slow to reply" label.
  */
 export async function refreshReplyHealth(now = new Date()) {
   const conversations = await recentConversations({ companyId: { not: null } }, new Date(now.getTime() - 120 * 24 * 60 * 60_000));
@@ -124,7 +122,6 @@ export async function refreshReplyHealth(now = new Date()) {
   const companies = await db.company.findMany({
     select: { id: true, replyTier: true, responseMinutes: true, responseSampleSize: true, lastTeamReplyAt: true },
   });
-  let paused = 0;
   let resumed = 0;
   for (const company of companies) {
     const found = state.get(company.id) ?? { waitingSince: null, lastTeamReplyAt: null };
@@ -133,23 +130,10 @@ export async function refreshReplyHealth(now = new Date()) {
     const tier = replyTier({ waitingSince: found.waitingSince, lastTeamReplyAt, responseMinutes: company.responseMinutes, responseSampleSize: company.responseSampleSize }, now.getTime());
     await db.company.update({ where: { id: company.id }, data: { replyTier: tier, waitingSince: found.waitingSince, lastTeamReplyAt } });
 
-    if (tier === REPLY_TIER.SILENT) {
-      const { count } = await db.listing.updateMany({ where: { companyId: company.id, status: "ACTIVE" }, data: { status: "PAUSED", pausedReason: NO_REPLIES_PAUSE } });
-      if (count) {
-        paused += count;
-        await notifyCompany(company.id, {
-          type: "LISTING",
-          title: "Your adverts are paused: people are waiting for a reply",
-          body: `Nobody on your team has replied to messages for ${30} days, so ${count === 1 ? "your advert is" : `${count} adverts are`} hidden from search. Reply to the people waiting in Messages and they come back automatically.`,
-          href: "/messages",
-          email: true,
-        }).catch((error) => console.error("[reply-health] notify failed", error));
-      }
-    } else {
-      resumed += await resumeNoReplyListings(company.id);
-    }
+    // Adverts are no longer paused for not replying; bring back any that were.
+    resumed += await resumeNoReplyListings(company.id);
   }
-  return { paused, resumed };
+  return { resumed };
 }
 
 /** Brings back adverts paused for not replying. Returns how many came back. */
