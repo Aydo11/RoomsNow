@@ -9,6 +9,7 @@ import { toast } from "./toast";
 const REASON_COPY: Record<string, string> = {
   NO_AVAILABILITY: "This was paused automatically because every room was marked unavailable.",
   STALE: "This was paused automatically because nobody confirmed it was still available.",
+  NO_REPLIES: "This was paused automatically because people have been waiting over 30 days for a reply to their messages.",
 };
 
 /**
@@ -44,7 +45,9 @@ export function AvailabilityBanner({
       <div className="card mt-4 border-clay/30 bg-clay-light/60 p-4">
         <p className="text-[14px] font-semibold text-clay">Paused automatically</p>
         <p className="mt-1 text-[14px] text-ink-soft">{REASON_COPY[pausedReason]}</p>
-        {pausedReason === "STALE" ? (
+        {pausedReason === "NO_REPLIES" ? (
+          <a href="/messages" className="btn-primary mt-3 inline-flex">Reply to messages to bring it back</a>
+        ) : pausedReason === "STALE" ? (
           <button className="btn-primary mt-3" disabled={pending} onClick={() => confirm(true)}>
             Yes, still available — bring it back
           </button>
