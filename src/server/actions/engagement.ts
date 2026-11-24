@@ -24,6 +24,7 @@ import { openRequestConversation, requestMessageBody } from "@/lib/request-conve
 import { flagScamSignals } from "@/lib/scam-signals";
 import { BLOCKED_MESSAGE_TEXT, checkBlockedContent } from "@/lib/blocked-content";
 import { isNewHousingEnquiry } from "@/lib/conversion-outcomes";
+import { whatsappProviderNewRequest } from "@/lib/provider-request-whatsapp";
 import { recordConversionOutcome } from "@/server/conversion-outcomes";
 
 /**
@@ -575,6 +576,7 @@ export async function createRequestAction(_prev: FormState, formData: FormData):
     href: `/provider/requests?request=${encodeURIComponent(request.id)}`,
     email: true,
   });
+  await whatsappProviderNewRequest(listing.companyId, listing.title, request.id);
   await checkFirstEnquiry(listing.companyId, request.id);
   await audit({ actorId: user.id, action: "request.created", targetType: "AccommodationRequest", targetId: request.id });
   if (isNewHousingEnquiry(user.role, true, Boolean(priorEnquiry))) await recordConversionOutcome("generate_lead");
