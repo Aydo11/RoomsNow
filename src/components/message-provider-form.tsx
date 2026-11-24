@@ -52,7 +52,7 @@ export function MessageProviderForm({
   }
 
   return (
-    <form action={action} className="card space-y-3 p-5">
+    <form action={action} className="card min-w-0 space-y-3 p-5">
       <h2 className="text-[17px]">Send a message</h2>
       {listingId && <input type="hidden" name="listingId" value={listingId} />}
       {lookingForAdId && <input type="hidden" name="lookingForAdId" value={lookingForAdId} />}
@@ -95,15 +95,15 @@ export function MessageProviderForm({
         </div>
       )}
       {listingId && similar.length > 0 && (
-        <fieldset className="rounded-[12px] border border-line bg-paper-sunk/50 p-3">
-          <legend className="px-1 text-[14px] font-semibold text-ink">Ask similar rooms too</legend>
-          <p className="text-[12.5px] text-ink-soft">Send the same message to up to {MAX_EXTRA} more rooms, so you aren&apos;t stuck if one provider is slow to reply.</p>
+        <div role="group" aria-labelledby="similar-rooms-heading" className="min-w-0 rounded-[12px] border border-line bg-paper-sunk/50 p-3">
+          <p id="similar-rooms-heading" className="text-[14px] font-semibold text-ink">Ask similar rooms too</p>
+          <p className="mt-0.5 text-[12.5px] text-ink-soft">Send the same message to up to {MAX_EXTRA} more rooms, so you aren&apos;t stuck if one provider is slow to reply.</p>
           <div className="mt-2 space-y-1.5">
             {similar.map((room) => {
               const checked = picked.includes(room.id);
               const disabled = !checked && picked.length >= MAX_EXTRA;
               return (
-                <label key={room.id} className={`flex cursor-pointer items-start gap-2.5 rounded-[10px] border bg-white p-2.5 ${checked ? "border-pine" : "border-line"} ${disabled ? "opacity-50" : ""}`}>
+                <label key={room.id} className={`flex min-w-0 cursor-pointer items-start gap-2.5 rounded-[10px] border bg-white p-2.5 ${checked ? "border-pine" : "border-line"} ${disabled ? "opacity-50" : ""}`}>
                   <input
                     type="checkbox"
                     name="alsoListingId"
@@ -111,17 +111,17 @@ export function MessageProviderForm({
                     checked={checked}
                     disabled={disabled}
                     onChange={(event) => setPicked((now) => (event.target.checked ? [...now, room.id] : now.filter((id) => id !== room.id)))}
-                    className="mt-0.5 h-4 w-4 accent-[#1666AA]"
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-[#1666AA]"
                   />
-                  <span className="min-w-0">
-                    <span className="block truncate text-[13.5px] font-semibold text-ink">{room.title}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13.5px] font-semibold text-ink" title={room.title}>{room.title}</span>
                     <span className="block truncate text-[12px] text-ink-soft">{room.provider} · {room.place}{room.rent ? ` · from ${money(room.rent)}/week` : ""}</span>
                   </span>
                 </label>
               );
             })}
           </div>
-        </fieldset>
+        </div>
       )}
       <SubmitButton className="btn-primary w-full" pendingLabel="Sending…">{picked.length ? `Send to ${picked.length + 1} rooms` : "Send message"}</SubmitButton>
     </form>
