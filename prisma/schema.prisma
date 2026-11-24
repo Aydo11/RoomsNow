@@ -476,7 +476,7 @@ model Company {
   responseSampleSize     Int                @default(0)
   /// Reply health, recalculated hourly by lib/response-time.ts.
   /// 0 = replies fast (ranked higher), 1 = normal, 2 = no replies for 14 days
-  /// while people wait ("may be slow to reply"), 3 = 30 days (adverts paused).
+  /// while people wait ("may be slow to reply"). Adverts are never paused for it.
   replyTier              Int                @default(1)
   /// Oldest message from someone outside the team still waiting for a reply.
   waitingSince           DateTime?
