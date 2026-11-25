@@ -28,9 +28,9 @@ const TABS = [
   {
     value: "WEBSITES",
     label: "Pro Services: websites",
-    subject: "A website that brings you the right referrals",
-    body: "Commissioners, councils and support workers look you up online before they make a referral. If your website is out of date, hard to use on a phone, or you don't have one yet, you could be losing placements to providers who look more established.\n\nRoomsNow now builds websites for supported accommodation and HMO providers: clear pages about who you support, a proper referral route, and your RoomsNow adverts linked in so people can see live availability.",
-    ctaLabel: "See website packages",
+    subject: "Do you need a professional website? Half price for RoomsNow providers",
+    body: "Commissioners, councils and support workers look you up online before they make a referral. If your website is out of date, hard to use on a phone, or you don't have one yet, you could be losing placements to providers who look more established.\n\nRoomsNow now builds websites for supported accommodation and HMO providers: clear pages about who you support, a proper referral route, and your RoomsNow adverts linked in so people can see live availability. For RoomsNow providers, every website build is now half price.",
+    ctaLabel: "See half-price packages",
     ctaUrl: "/provider/pro-services",
   },
   {
