@@ -526,7 +526,7 @@ export function renderProviderMailshotText(params: {
 }
 
 /** Three side-by-side price cards (stack on phones); the middle one can be highlighted. */
-function mkPriceCards(items: { label: string; price: string; detail: string; popular?: boolean }[]) {
+function mkPriceCards(items: { label: string; price: string; was?: string; detail: string; popular?: boolean }[]) {
   const cell = (item: (typeof items)[number], index: number) => {
     const hot = Boolean(item.popular);
     return `<td class="mk-stack" width="${Math.floor(100 / items.length)}%" valign="top" style="padding:0 ${index === items.length - 1 ? 0 : 6}px 0 ${index === 0 ? 0 : 6}px;">
@@ -535,6 +535,7 @@ function mkPriceCards(items: { label: string; price: string; detail: string; pop
                           ${hot ? `<p style="margin:0 0 8px; font-size:10px; font-weight:bold; letter-spacing:1.2px; text-transform:uppercase; color:${MKT.offerLabel};">Most popular</p>` : ""}
                           <p style="margin:0; font-size:13px; font-weight:bold; color:${hot ? "#FFFFFF" : COLORS.ink};">${item.label}</p>
                           <p style="margin:6px 0 0; font-family:${MKT.serif}; font-size:24px; line-height:28px; color:${hot ? "#FFFFFF" : COLORS.pineDark};">${item.price}</p>
+                          ${item.was ? `<p style="margin:4px 0 0; font-size:12px; color:${hot ? MKT.offerMuted : COLORS.inkFaint};"><span style="text-decoration:line-through;">${item.was}</span> &nbsp;<strong style="color:${hot ? "#FFFFFF" : COLORS.pine};">50% off</strong></p>` : ""}
                           <p style="margin:8px 0 0; font-size:13px; line-height:19px; color:${hot ? MKT.offerMuted : COLORS.inkSoft};">${item.detail}</p>
                         </td></tr>
                       </table>
@@ -544,9 +545,9 @@ function mkPriceCards(items: { label: string; price: string; detail: string; pop
 }
 
 const WEBSITE_PACKAGES = [
-  { label: "Single page", price: "&pound;499", detail: "One well-built page: your services, the areas you cover and how to get in touch." },
-  { label: "Brochure site", price: "From &pound;1,500", detail: "Around five pages: home, accommodation, who you support, about and contact.", popular: true },
-  { label: "Business site", price: "From &pound;3,000", detail: "More pages, referral routes and features agreed in a written scope." },
+  { label: "Single page", price: "&pound;249.50", was: "&pound;499", detail: "One well-built page: your services, the areas you cover and how to get in touch." },
+  { label: "Brochure site", price: "From &pound;750", was: "&pound;1,500", detail: "Around five pages: home, accommodation, who you support, about and contact.", popular: true },
+  { label: "Business site", price: "From &pound;1,500", was: "&pound;3,000", detail: "More pages, referral routes and features agreed in a written scope." },
 ];
 
 /**
@@ -577,7 +578,16 @@ export function renderProWebsitesEmail(params: { senderName: string; intro: stri
       ]),
       16,
     ),
-    mkRow(mkSectionHeading("Packages", "Clear prices, agreed in writing"), 34),
+    mkRow(
+      mkOfferPanel({
+        figure: "50%",
+        figureLabel: "off builds",
+        title: "Half-price websites for RoomsNow providers",
+        text: "Every website build is half price: a single page for &pound;249.50, a brochure site from &pound;750 and a business site from &pound;1,500.",
+      }),
+      30,
+    ),
+    mkRow(mkSectionHeading("Packages", "Half price, agreed in writing"), 34),
     mkRow(mkPriceCards(WEBSITE_PACKAGES), 16),
     mkRow(
       mkParagraph(
@@ -612,10 +622,10 @@ export function renderProWebsitesEmail(params: { senderName: string; intro: stri
   ].join("\n            ");
 
   return marketingDocument({
-    preheader: "A professional website for your housing service: clear referral routes, built for commissioners and phones, from £499.",
+    preheader: "Half-price websites for housing providers: clear referral routes, built for commissioners and phones, from £249.50.",
     badge: "Pro Services",
-    heroEyebrow: "New: websites for providers",
-    heroTitle: "A website that brings you the right referrals",
+    heroEyebrow: "Half-price websites",
+    heroTitle: "Do you need a professional website?",
     heroIntro: `${brand.name} now builds websites for supported accommodation and HMO providers, so referrers can see what you offer and contact you in one step.`,
     rows,
     footerReason: "You are receiving this because your organisation has a RoomsNow provider account.",
@@ -624,7 +634,7 @@ export function renderProWebsitesEmail(params: { senderName: string; intro: stri
 
 /** Plain-text fallback for renderProWebsitesEmail. */
 export function renderProWebsitesText(params: { senderName: string; intro: string; ctaLabel: string; ctaUrl: string }) {
-  return `A WEBSITE THAT BRINGS YOU THE RIGHT REFERRALS
+  return `DO YOU NEED A PROFESSIONAL WEBSITE? HALF-PRICE WEBSITES FOR ROOMSNOW PROVIDERS
 
 Hi {{{FIRST_NAME|there}}},
 
@@ -638,10 +648,10 @@ WHAT A GOOD WEBSITE DOES FOR YOUR SERVICE
 - Show your homes properly: photos, room types and your RoomsNow adverts linked in.
 - Looked after for you: optional hosting and managed care.
 
-PACKAGES
-- Single page: £499
-- Brochure site (around five pages): from £1,500
-- Business site: from £3,000
+PACKAGES (HALF PRICE)
+- Single page: £249.50 (was £499)
+- Brochure site (around five pages): from £750 (was £1,500)
+- Business site: from £1,500 (was £3,000)
 Hosting £59/month or managed care £129/month. 50% to book, 50% before launch. Your written quote says exactly what's included.
 
 HOW IT WORKS
