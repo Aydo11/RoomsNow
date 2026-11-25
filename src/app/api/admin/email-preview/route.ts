@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { requireAdmin } from "@/lib/rbac";
-import { renderPreLaunchInviteEmail, renderProviderMailshotEmail, renderSeekerAboutEmail } from "@/lib/email-template";
+import { renderPreLaunchInviteEmail, renderProWebsitesEmail, renderProviderMailshotEmail, renderSeekerAboutEmail } from "@/lib/email-template";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ const schema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("seeker"), senderName: text(80), note: text(2000) }),
   z.object({
     type: z.literal("provider"),
-    kind: z.enum(["PROMO", "NEWS", "CUSTOM"]).default("NEWS"),
+    kind: z.enum(["PROMO", "NEWS", "CUSTOM", "WEBSITES"]).default("NEWS"),
     senderName: text(80),
     subject: text(150),
     body: text(5000),
@@ -40,8 +40,9 @@ export async function POST(request: Request) {
     html = renderSeekerAboutEmail({ mode: "broadcast", appUrl, senderName: sender, note: data.note.trim() || undefined });
   } else if (data.type === "provider") {
     const cta = data.ctaUrl.trim();
-    html = renderProviderMailshotEmail({
-      kind: data.kind,
+    const ctaUrl = cta ? (/^https?:\/\//.test(cta) ? cta : `${appUrl}${cta.startsWith("/") ? "" : "/"}${cta}`) : `${appUrl}/dashboard`;
+    html = data.kind === "WEBSITES" ? renderProWebsitesEmail({ senderName: sender, intro: data.body.trim() || "Your intro will appear here.", ctaLabel: data.ctaLabel.trim() || "View in RoomsNow", ctaUrl }) : renderProviderMailshotEmail({
+      kind: data.kind as "PROMO" | "NEWS" | "CUSTOM",
       senderName: sender,
       heading: data.subject.trim() || "Your subject line",
       bodyText: data.body.trim() || "Your message will appear here.",
