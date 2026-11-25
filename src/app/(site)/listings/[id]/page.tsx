@@ -40,6 +40,7 @@ import { optimisedImage } from "@/lib/image-url";
 import { showWhatsappContact } from "@/lib/whatsapp-display";
 import { WhatsappContactLink } from "@/components/whatsapp-contact-link";
 import { ScamWarning } from "@/components/scam-warning";
+import { matchesNeighbourhood, neighbourhoodGuides } from "@/lib/neighbourhood-guides";
 
 export const dynamic = "force-dynamic";
 
@@ -310,6 +311,10 @@ export default async function ListingPage({
             <Fact label="Access" value={listing.wheelchairAccess ? "Step-free" : "Not step-free"} />
             <Fact label="Pets" value={listing.petsAllowed ? "Allowed" : "Not allowed"} />
           </section>
+          {(() => {
+            const area = neighbourhoodGuides.find((g) => matchesNeighbourhood(g, listing.property));
+            return area ? <Link href={`/areas/birmingham/${area.slug}`} className="mt-4 inline-block text-[15px] font-semibold text-pine-dark underline">More rooms in {area.name} →</Link> : null;
+          })()}
 
           <section className="mt-8">
             <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
