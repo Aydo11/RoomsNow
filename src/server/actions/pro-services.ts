@@ -56,7 +56,7 @@ function pack(service: ProService, ref: string, opts: { expert?: Expert | null; 
       detail: `${opts.expert.specialism}. ${sessionLabel(hours)}: ${money(sessionPrice(opts.expert.hourlyRate, hours, opts.business))}${opts.business ? " with your Business 10% discount" : ""}.`,
     });
   }
-  const priceLines = prices.map((p) => `${p.label}: ${p.price} (${p.detail}${p.includes ? ` Includes: ${p.includes.join("; ")}.` : ""})`);
+  const priceLines = prices.map((p) => `${p.label}: ${p.price}${p.was ? ` (half price, was ${p.was})` : ""} (${p.detail}${p.includes ? ` Includes: ${p.includes.join("; ")}.` : ""})`);
   const demoUrl = `${APP_URL}/demos/${DEMO_SLUG[service.key]}`;
   const closing = `If you have a question or want to go ahead, reply to this email and keep reference ${ref} in the subject so we can pick up your enquiry. A copy of this pack has been sent to RoomsNow for our records.`;
 
