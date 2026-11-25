@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
 import { rateLimit, refundRateLimit } from "@/lib/rate-limit";
 import { renderPreLaunchInviteEmail, renderPreLaunchInviteText } from "@/lib/email-template";
-import { prepareMarketingBroadcast, sendPreparedMarketingBroadcast } from "@/lib/resend-marketing";
+import { clearSubscribedMarketingContacts, prepareMarketingBroadcast, sendPreparedMarketingBroadcast } from "@/lib/resend-marketing";
+import { audit } from "@/lib/audit";
 import { email as emailSchema, type FormState } from "@/lib/validation";
 
 /** Hard cap per campaign-specific Resend contact import. */
@@ -209,5 +210,20 @@ export async function sendPreLaunchInvite(_previous: FormState, form: FormData):
     console.error("Pre-launch broadcast preparation failed", error);
     await refundRateLimit(prepareKey);
     return { ok: false, message: error instanceof Error ? error.message : "Could not prepare the outreach campaign." };
+  }
+}
+/** Admin button: clears subscribed Resend contacts when the plan's contact cap is hit. */
+export async function clearResendContactsAction(_previous: FormState, _form: FormData): Promise<FormState> {
+  const actor = await requireAdmin();
+  try {
+    const result = await clearSubscribedMarketingContacts();
+    await audit({ actorId: actor.id, action: "admin.resend_contacts_cleared", targetType: "Resend", metadata: result });
+    const more = result.remaining ? ` ${result.remaining} still to go: press the button again.` : "";
+    return {
+      ok: true,
+      message: `Removed ${result.deleted} contacts from Resend. Kept ${result.keptUnsubscribed} who unsubscribed so they're never emailed again.${more} Now prepare your campaign again.`,
+    };
+  } catch (error) {
+    return { ok: false, errors: { form: error instanceof Error ? error.message : "Could not clear Resend contacts." } };
   }
 }
