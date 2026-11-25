@@ -525,6 +525,144 @@ export function renderProviderMailshotText(params: {
   return lines.join("\n");
 }
 
+/** Three side-by-side price cards (stack on phones); the middle one can be highlighted. */
+function mkPriceCards(items: { label: string; price: string; detail: string; popular?: boolean }[]) {
+  const cell = (item: (typeof items)[number], index: number) => {
+    const hot = Boolean(item.popular);
+    return `<td class="mk-stack" width="${Math.floor(100 / items.length)}%" valign="top" style="padding:0 ${index === items.length - 1 ? 0 : 6}px 0 ${index === 0 ? 0 : 6}px;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${hot ? COLORS.pineDark : COLORS.paper}; border:1px solid ${hot ? COLORS.pineDark : MKT.surfaceLine}; border-radius:12px;">
+                        <tr><td style="padding:18px 16px;">
+                          ${hot ? `<p style="margin:0 0 8px; font-size:10px; font-weight:bold; letter-spacing:1.2px; text-transform:uppercase; color:${MKT.offerLabel};">Most popular</p>` : ""}
+                          <p style="margin:0; font-size:13px; font-weight:bold; color:${hot ? "#FFFFFF" : COLORS.ink};">${item.label}</p>
+                          <p style="margin:6px 0 0; font-family:${MKT.serif}; font-size:24px; line-height:28px; color:${hot ? "#FFFFFF" : COLORS.pineDark};">${item.price}</p>
+                          <p style="margin:8px 0 0; font-size:13px; line-height:19px; color:${hot ? MKT.offerMuted : COLORS.inkSoft};">${item.detail}</p>
+                        </td></tr>
+                      </table>
+                    </td>`;
+  };
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${items.map(cell).join("")}</tr></table>`;
+}
+
+const WEBSITE_PACKAGES = [
+  { label: "Single page", price: "&pound;499", detail: "One well-built page: your services, the areas you cover and how to get in touch." },
+  { label: "Brochure site", price: "From &pound;1,500", detail: "Around five pages: home, accommodation, who you support, about and contact.", popular: true },
+  { label: "Business site", price: "From &pound;3,000", detail: "More pages, referral routes and features agreed in a written scope." },
+];
+
+/**
+ * Pro Services: websites. A ready-made provider campaign (the "Websites" tab
+ * on /admin/provider-mailshot) promoting website builds for housing
+ * providers. The intro paragraph comes from the admin form so it can be
+ * tweaked per send; the rest is fixed, in the same layout as the other
+ * marketing emails. Prices match PRO_SERVICES.WEBSITE in lib/pro-services.ts.
+ */
+export function renderProWebsitesEmail(params: { senderName: string; intro: string; ctaLabel: string; ctaUrl: string }) {
+  const sender = escapeHtml(params.senderName);
+  const url = params.ctaUrl;
+  const rows = [
+    mkRow(
+      `<p style="margin:0; font-size:16px; line-height:26px; color:${COLORS.ink};">Hi {{{FIRST_NAME|there}}},</p>
+                <div style="margin-top:14px;">${paragraphsHtml(params.intro, COLORS.inkSoft)}</div>`,
+      34,
+    ),
+    mkRow(mkSectionHeading("Why it matters", "What a good website does for your service"), 34),
+    mkRow(
+      mkFeatureGrid([
+        { icon: "&#10003;", title: "Look credible to commissioners", text: "Councils, probation and support teams check you online before they refer. A clear, professional site answers their questions first." },
+        { icon: "&#9993;", title: "A proper referral route", text: "A simple referral or enquiry form that comes straight to you, so professionals don't have to chase a phone number." },
+        { icon: "&#9719;", title: "Explain who you support", text: "Set out your eligibility, support levels, areas and Housing Benefit position, so you get referrals that actually fit." },
+        { icon: "&#9906;", title: "Get found on Google", text: "Built to load fast on phones and to be found when people search for accommodation in your area." },
+        { icon: "&#8962;", title: "Show your homes properly", text: "Photos, room types and your RoomsNow adverts linked in, so people see live availability." },
+        { icon: "&#9733;", title: "Looked after for you", text: "Optional hosting and managed care: security updates, backups and small edits each month." },
+      ]),
+      16,
+    ),
+    mkRow(mkSectionHeading("Packages", "Clear prices, agreed in writing"), 34),
+    mkRow(mkPriceCards(WEBSITE_PACKAGES), 16),
+    mkRow(
+      mkParagraph(
+        `Keep it running with <strong>hosting at &pound;59/month</strong> (security updates and backups) or <strong>managed care at &pound;129/month</strong> (hosting plus up to an hour of edits each month). You pay 50% to book and 50% before launch, and your quote says exactly what&apos;s included, such as copywriting, domain and photography.`,
+        true,
+      ),
+      18,
+    ),
+    mkRow(mkSectionHeading("How it works", "From first call to live site"), 34),
+    mkRow(
+      mkSteps([
+        { title: "Tell us what you need", text: "Share your current site, if you have one, and what you want the new one to do. A short call is free." },
+        { title: "Get a written quote", text: "We confirm the pages, features, timeline and any ongoing costs before you pay anything." },
+        { title: "We build, you approve", text: "Book with a 50% deposit. You review the site before it goes live, then pay the balance." },
+      ]),
+      16,
+    ),
+    `<tr>
+              <td class="mk-px" align="center" style="padding:30px 40px 0;">
+                ${mkButton(escapeHtml(params.ctaLabel), url)}
+                <p style="margin:12px 0 0; font-size:12px; line-height:19px; color:${COLORS.inkFaint};">
+                  Available to Professional and Business members. You can pay a deposit online or ask for a free call first.
+                </p>
+              </td>
+            </tr>`,
+    mkRow(
+      mkTintNote(`<strong>Prefer to talk first?</strong> Just reply to this email with your organisation name and the best time to call, and we&apos;ll get back to you within one working day.`),
+      22,
+    ),
+    mkRow(`<p style="margin:0; font-size:15px; line-height:22px; color:${COLORS.ink};">Kind regards,<br /><strong>${sender}</strong></p>`, 30),
+    `<tr><td style="padding:34px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr>`,
+  ].join("\n            ");
+
+  return marketingDocument({
+    preheader: "A professional website for your housing service: clear referral routes, built for commissioners and phones, from £499.",
+    badge: "Pro Services",
+    heroEyebrow: "New: websites for providers",
+    heroTitle: "A website that brings you the right referrals",
+    heroIntro: `${brand.name} now builds websites for supported accommodation and HMO providers, so referrers can see what you offer and contact you in one step.`,
+    rows,
+    footerReason: "You are receiving this because your organisation has a RoomsNow provider account.",
+  });
+}
+
+/** Plain-text fallback for renderProWebsitesEmail. */
+export function renderProWebsitesText(params: { senderName: string; intro: string; ctaLabel: string; ctaUrl: string }) {
+  return `A WEBSITE THAT BRINGS YOU THE RIGHT REFERRALS
+
+Hi {{{FIRST_NAME|there}}},
+
+${params.intro.trim()}
+
+WHAT A GOOD WEBSITE DOES FOR YOUR SERVICE
+- Look credible to commissioners: councils, probation and support teams check you online before they refer.
+- A proper referral route: an enquiry or referral form that comes straight to you.
+- Explain who you support: eligibility, support levels, areas and Housing Benefit position.
+- Get found on Google: fast on phones and built to be found in local searches.
+- Show your homes properly: photos, room types and your RoomsNow adverts linked in.
+- Looked after for you: optional hosting and managed care.
+
+PACKAGES
+- Single page: £499
+- Brochure site (around five pages): from £1,500
+- Business site: from £3,000
+Hosting £59/month or managed care £129/month. 50% to book, 50% before launch. Your written quote says exactly what's included.
+
+HOW IT WORKS
+1. Tell us what you need. A short call is free.
+2. Get a written quote before you pay anything.
+3. We build, you approve, then it goes live.
+
+${params.ctaLabel}: ${params.ctaUrl}
+Available to Professional and Business members. Prefer to talk first? Reply to this email.
+
+Kind regards,
+${params.senderName}
+
+---
+${brand.name} · ${brand.tagline}
+Questions? Email ${brand.supportEmail}
+
+You are receiving this because your organisation has a RoomsNow provider account.
+Unsubscribe from RoomsNow marketing emails: ${RESEND_UNSUBSCRIBE_URL}`;
+}
+
 // ---------------------------------------------------------------- people looking
 
 
