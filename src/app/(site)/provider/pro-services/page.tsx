@@ -103,7 +103,7 @@ function Icon({ name, className = "h-5 w-5" }: { name: keyof typeof ICONS; class
 }
 
 const SERVICE_ICON: Record<ProServiceKey, keyof typeof ICONS> = { CRM: "crm", BESPOKE_CRM: "bespoke", WEBSITE: "website", EXPERT: "expert" };
-const STARTS_AT: Record<ProServiceKey, string> = { CRM: "From £59/month", BESPOKE_CRM: "From £1,000", WEBSITE: "From £499", EXPERT: "From £150" };
+const STARTS_AT: Record<ProServiceKey, string> = { CRM: "From £59/month", BESPOKE_CRM: "From £1,000", WEBSITE: "From £249.50", EXPERT: "From £150" };
 
 const FORMAT_ICONS: (keyof typeof ICONS)[] = ["phone", "video", "message", "calendar"];
 const FORMATS = ADVICE_FORMATS.map((f, i) => ({ ...f, icon: FORMAT_ICONS[i] }));
@@ -223,6 +223,7 @@ function PriceCard({ p }: { p: ProService["prices"][number] }) {
       {p.popular && <span className="absolute -top-3 left-5 rounded-pill bg-pine px-2.5 py-1 text-[11.5px] font-semibold tracking-wide text-white">Most popular</span>}
       <p className="text-[14px] font-semibold text-ink-soft">{p.label}</p>
       <p className="mt-1 font-display text-[26px] leading-tight text-ink">{p.price}</p>
+      {p.was && <p className="text-[13px] text-ink-soft"><span className="line-through">{p.was}</span> <span className="font-semibold text-positive">Half price</span></p>}
       <p className="mt-2 text-[13.5px] leading-relaxed text-ink-soft">{p.detail}</p>
       {p.includes && (
         <ul className="mt-3 space-y-1.5 text-[13.5px] text-ink">
