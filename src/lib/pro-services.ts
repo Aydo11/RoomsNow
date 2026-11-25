@@ -4,7 +4,9 @@
  * plus VAT and stored in pence.
  */
 
-export type ProPrice = { label: string; price: string; detail: string; popular?: boolean; includes?: string[]; suits?: string };
+export type ProPrice = { label: string; price: string; detail: string; popular?: boolean; includes?: string[]; suits?: string;
+  /** The full price when an offer is running, shown struck through. */
+  was?: string };
 export type ProService = {
   key: ProServiceKey;
   name: string;
@@ -76,9 +78,10 @@ export const PRO_SERVICES: Record<ProServiceKey, ProService> = {
       "Keep it up to date with hosting or managed care from the same team.",
     ],
     prices: [
-      { label: "Single page", price: "£499", detail: "One well-built page with your services, areas and contact route." },
-      { label: "Brochure site", price: "From £1,500", detail: "Around five pages: home, accommodation, who we support, about and contact.", popular: true },
-      { label: "Business site", price: "From £3,000", detail: "More pages, referral routes and features agreed in a written scope." },
+      // Half-price website offer for RoomsNow providers.
+      { label: "Single page", price: "£249.50", was: "£499", detail: "One well-built page with your services, areas and contact route." },
+      { label: "Brochure site", price: "From £750", was: "£1,500", detail: "Around five pages: home, accommodation, who we support, about and contact.", popular: true },
+      { label: "Business site", price: "From £1,500", was: "£3,000", detail: "More pages, referral routes and features agreed in a written scope." },
       { label: "Hosting", price: "£59/month", detail: "Hosting, security updates and backups." },
       { label: "Managed care", price: "£129/month", detail: "Hosting plus up to one hour of content edits each month." },
     ],
@@ -267,9 +270,9 @@ export const PRO_BUYABLES: ProBuyable[] = [
   { key: "bespoke_configured_care", service: "BESPOKE_CRM", label: "Configured CRM maintenance", amount: 25000, mode: "subscription", note: "Hosting, backups, updates and fixes" },
   { key: "bespoke_custom_deposit", service: "BESPOKE_CRM", label: "Custom CRM: kick-off deposit", amount: 150000, mode: "payment", note: "50% of the £3,000 starting price" },
   { key: "bespoke_custom_care", service: "BESPOKE_CRM", label: "Custom CRM maintenance", amount: 40000, mode: "subscription", note: "Hosting, backups, updates and fixes" },
-  { key: "web_single_deposit", service: "WEBSITE", label: "Single page website: booking deposit", amount: 24950, mode: "payment", note: "50% of £499" },
-  { key: "web_brochure_deposit", service: "WEBSITE", label: "Brochure site: booking deposit", amount: 75000, mode: "payment", note: "50% of the £1,500 starting price" },
-  { key: "web_business_deposit", service: "WEBSITE", label: "Business site: booking deposit", amount: 150000, mode: "payment", note: "50% of the £3,000 starting price" },
+  { key: "web_single_deposit", service: "WEBSITE", label: "Single page website: booking deposit", amount: 12475, mode: "payment", note: "50% of £249.50 (half price, was £499)" },
+  { key: "web_brochure_deposit", service: "WEBSITE", label: "Brochure site: booking deposit", amount: 37500, mode: "payment", note: "50% of the £750 starting price (half price)" },
+  { key: "web_business_deposit", service: "WEBSITE", label: "Business site: booking deposit", amount: 75000, mode: "payment", note: "50% of the £1,500 starting price (half price)" },
   { key: "web_hosting", service: "WEBSITE", label: "Website hosting", amount: 5900, mode: "subscription", note: "Hosting, security updates and backups" },
   { key: "web_managed", service: "WEBSITE", label: "Website managed care", amount: 12900, mode: "subscription", note: "Hosting plus up to an hour of edits a month" },
   { key: "expert_weekly", service: "EXPERT", label: "Weekly catch-ups", amount: 52500, mode: "subscription", note: "Four 45-minute calls a month" },
