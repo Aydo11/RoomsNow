@@ -95,8 +95,11 @@ async function resendRequest<T>(path: string, init: RequestInit = {}): Promise<T
       );
     }
     if (response.status === 403) {
+      // Resend uses 403 for more than key scope (e.g. an unverified sending domain), so show its own reason.
+      let reason = "";
+      try { reason = String(JSON.parse(detail).message ?? ""); } catch { reason = detail.slice(0, 300); }
       throw fail(
-        "Resend authenticated the key but it cannot manage marketing campaigns. Replace it with a Full access Resend API key and redeploy.",
+        `Resend refused this request (403)${reason ? `: ${reason}` : ""}. If it mentions permissions, use a Full access API key; if it mentions the domain, verify roomsnow.co.uk in Resend.`,
       );
     }
     if (response.status === 422) {
