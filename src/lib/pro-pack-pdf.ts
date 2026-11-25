@@ -75,7 +75,8 @@ function serviceSection(doc: PdfDoc, key: ProServiceKey, o: PackOptions) {
     const top = doc.y - 6;
     doc.rect(doc.margin.side, top - h, doc.width, h, p.popular ? hex("#EEF5FC") : C.paper, p.popular ? C.blue : C.mist);
     doc.text(p.label, doc.margin.side + 14, top - 20, 12, C.navy, true);
-    doc.text(p.price, A4.w - doc.margin.side - 14 - textWidth(p.price, 12.5, true), top - 20, 12.5, C.blue, true);
+    const shown = p.was ? `${p.price} (was ${p.was})` : p.price;
+    doc.text(shown, A4.w - doc.margin.side - 14 - textWidth(shown, 12.5, true), top - 20, 12.5, C.blue, true);
     if (p.popular) {
       const tag = "MOST POPULAR";
       const tx = doc.margin.side + 20 + textWidth(p.label, 12, true);
