@@ -26,6 +26,14 @@ const TABS = [
     ctaUrl: "/provider/membership",
   },
   {
+    value: "WEBSITES",
+    label: "Pro Services: websites",
+    subject: "A website that brings you the right referrals",
+    body: "Commissioners, councils and support workers look you up online before they make a referral. If your website is out of date, hard to use on a phone, or you don't have one yet, you could be losing placements to providers who look more established.\n\nRoomsNow now builds websites for supported accommodation and HMO providers: clear pages about who you support, a proper referral route, and your RoomsNow adverts linked in so people can see live availability.",
+    ctaLabel: "See website packages",
+    ctaUrl: "/provider/pro-services",
+  },
+  {
     value: "CUSTOM",
     label: "Custom message",
     subject: "",
@@ -73,7 +81,7 @@ export function ProviderMailshotForm({
           opt-outs and tracks bounces, complaints and unsubscribes.
         </p>
 
-        <div className="grid grid-cols-1 gap-1 rounded-[10px] border border-line bg-paper-sunk p-1 sm:grid-cols-3" role="tablist">
+        <div className="grid grid-cols-1 gap-1 rounded-[10px] border border-line bg-paper-sunk p-1 sm:grid-cols-2 lg:grid-cols-4" role="tablist">
           {TABS.map((tab) => (
             <button
               key={tab.value}
