@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/rbac";
 import { rateLimit, refundRateLimit } from "@/lib/rate-limit";
 import { mailshotRecipientEmails } from "@/lib/audit";
-import { renderProviderMailshotEmail, renderProviderMailshotText } from "@/lib/email-template";
+import { renderProWebsitesEmail, renderProWebsitesText, renderProviderMailshotEmail, renderProviderMailshotText } from "@/lib/email-template";
 import { prepareMarketingBroadcast, sendPreparedMarketingBroadcast } from "@/lib/resend-marketing";
 import type { FormState } from "@/lib/validation";
 
@@ -14,7 +14,7 @@ import type { FormState } from "@/lib/validation";
 const MAX_RECIPIENTS = 500;
 
 const input = z.object({
-  kind: z.enum(["PROMO", "NEWS", "CUSTOM"]),
+  kind: z.enum(["PROMO", "NEWS", "CUSTOM", "WEBSITES"]),
   senderName: z.string().trim().min(1, "Enter your name.").max(80),
   subject: z.string().trim().min(1, "Enter a subject line.").max(150),
   body: z.string().trim().min(1, "Enter a message.").max(5000),
@@ -151,7 +151,8 @@ export async function sendProviderMailshot(_previous: FormState, form: FormData)
   const limit = await rateLimit(prepareKey, CAMPAIGN_LIMITS.prepare);
   if (!limit.ok) return { ok: false, errors: { form: "Please wait before preparing another provider campaign." } };
 
-  const text = renderProviderMailshotText({
+  const websites = kind === "WEBSITES";
+  const text = websites ? renderProWebsitesText({ senderName, intro: body, ctaLabel: finalCtaLabel, ctaUrl: finalCtaUrl }) : renderProviderMailshotText({
     senderName,
     bodyText: body,
     promoCode: kind === "PROMO" ? promoCode || undefined : undefined,
@@ -159,7 +160,7 @@ export async function sendProviderMailshot(_previous: FormState, form: FormData)
     ctaLabel: finalCtaLabel,
     ctaUrl: finalCtaUrl,
   });
-  const html = renderProviderMailshotEmail({
+  const html = websites ? renderProWebsitesEmail({ senderName, intro: body, ctaLabel: finalCtaLabel, ctaUrl: finalCtaUrl }) : renderProviderMailshotEmail({
     kind,
     senderName,
     heading: subject,
