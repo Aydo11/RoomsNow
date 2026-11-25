@@ -6,6 +6,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { AdminFilters, AdminFilterField } from "@/components/admin-filters";
 import { ProviderMailshotForm } from "@/components/provider-mailshot-form";
 import { CampaignTabs } from "@/components/campaign-tabs";
+import { ResendContactsCleanup } from "@/components/resend-contacts-cleanup";
 import { adminNav } from "../nav";
 
 export const metadata = { title: "Provider mailshot" };
@@ -89,6 +90,7 @@ export default async function ProviderMailshotPage({
             </p>
             <p>Apply the filters first. Preparing creates a reviewable draft; a separate confirmation sends it.</p>
           </div>
+          <ResendContactsCleanup />
         </div>
         <ProviderMailshotForm filters={{ status, verification, source }} recipientCount={recipientCount} />
       </div>
