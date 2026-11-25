@@ -271,3 +271,31 @@ export async function sendPreparedMarketingBroadcast(params: { broadcastId: stri
   });
   return { sent: true as const, counts: contactImport.counts };
 }
+type ResendContact = { id: string; email: string; unsubscribed?: boolean };
+
+/**
+ * Frees room under the plan's contact cap by deleting contacts who are still
+ * subscribed. Every campaign re-imports its own recipients, so nothing is lost.
+ * Unsubscribed contacts are kept on purpose: Resend's flag on them is the only
+ * record of the opt-out, and deleting one would let the next import mail them.
+ */
+export async function clearSubscribedMarketingContacts(maxDeletes = 1500) {
+  const contacts: ResendContact[] = [];
+  let after: string | undefined;
+  for (let page = 0; page < 200; page += 1) {
+    const query = new URLSearchParams({ limit: "100", ...(after ? { after } : {}) });
+    const list = await resendRequest<{ data: ResendContact[]; has_more?: boolean }>(`/contacts?${query}`);
+    contacts.push(...list.data);
+    if (!list.has_more || list.data.length === 0) break;
+    after = list.data.at(-1)!.id;
+    await sleep(150);
+  }
+  const subscribed = contacts.filter((contact) => !contact.unsubscribed);
+  let deleted = 0;
+  for (const contact of subscribed.slice(0, maxDeletes)) {
+    await resendRequest<unknown>(`/contacts/${encodeURIComponent(contact.id)}`, { method: "DELETE" });
+    deleted += 1;
+    await sleep(150); // stays under Resend's 10 requests a second
+  }
+  return { deleted, keptUnsubscribed: contacts.length - subscribed.length, remaining: subscribed.length - deleted };
+}
